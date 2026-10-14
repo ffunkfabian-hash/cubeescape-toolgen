@@ -1,0 +1,1171 @@
+Info: Saved as "CubeEscape_MagnetGripper.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:39:49 | INFO: Starting glTF 2.0 export
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerContactPad
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerContactRib0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerContactRib1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerContactRib2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerHinge
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerHingeCap1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerHingeCap-1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerHingeHub1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerHingeHub-1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerInnerContactRail
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawArmor
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.31
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.237
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.373
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.31
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.237
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.373
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawSpine
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_LowerJawStatus
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperContactPad
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperContactRib0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperContactRib1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperContactRib2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperHinge
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperHingeCap1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperHingeCap-1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperHingeHub1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperHingeHub-1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperInnerContactRail
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawArmor
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.31
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.237
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.373
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.31
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.237
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.373
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawSpine
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_UpperJawStatus
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_Chassis
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_CoolingSlot_0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_CoolingSlot_1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_CoolingSlot_2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_CoolingSlot_3
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_CoolingSlot_4
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_L0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_L1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_L2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_R0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_R1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_DisplayBar_R2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_FrontCuff
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_Grip
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_GripHeel
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_GripRib_0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_GripRib_1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_GripRib_2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_GripSocket
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_0
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_1
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_2
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_3
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_4
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_5
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_6
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoil_7
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCore
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoreGlow
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoreMount
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetCoreTrim
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetFaceArmor
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetHead
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetNeck
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MagnetRearBand
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_MainShell
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelAmber_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelAmber_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelInset_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelInset_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelSlot_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_PanelSlot_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_RearBand
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_RearCuff
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_RearDisplay
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_RearDisplayBezel
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_RearEndArmor
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.045
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.136
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_SidePanel_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_SidePanel_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_StatusScreen_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_StatusScreen_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_L
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_R
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_TopArmorTab
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Extracting primitive: ME_MG_TopServiceRail
+20:39:49 | INFO: Primitives created: 1
+20:39:49 | INFO: Finished glTF 2.0 export in 0.06857705116271973 s
+00:16.976  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/preview_white.png'
+00:29.719  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/view_side.png'
+00:43.650  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/view_front.png'
+00:51.020  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/view_top.png'
+01:03.622  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/preview_concept_colors.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper.fbx'
+export finished in 0.0403 sec.
+MAGNET_GRIPPER_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 109, "triangles": 25080, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "magnet-gripper", "handheld", "robot-classic", "white-shell"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.11300000548362732, -0.421500027179718, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.24449999630451202]], "dimensions_m": [0.226, 0.621, 0.365], "sockets": {"Socket_Hand": [0.0, 0.11599999666213989, -0.05700000002980232], "Socket_Muzzle": [0.0, -0.2370000034570694, 0.08399999886751175], "Socket_SupportHand": [0.0, -0.04500000178813934, -0.00800000037997961], "Socket_Grab": [0.0, -0.4059999883174896, 0.08399999886751175]}, "pivot": "asset root; use Socket_Hand for hand attachment"}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.723  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper.blend"
+Info: Saved as "CubeEscape_MagnetGripper_FPS.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:40:54 | INFO: Starting glTF 2.0 export
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerContactPad.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerContactRib0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerContactRib1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerContactRib2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerHinge.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerHingeCap1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerHingeCap-1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerHingeHub1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerHingeHub-1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerInnerContactRail.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawArmor.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.003
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.003
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawSpine.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_LowerJawStatus.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperContactPad.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperContactRib0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperContactRib1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperContactRib2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperHinge.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperHingeCap1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperHingeCap-1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperHingeHub1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperHingeHub-1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperInnerContactRail.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawArmor.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.003
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.003
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawSpine.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_UpperJawStatus.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_Chassis.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_CoolingSlot_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_CoolingSlot_1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_CoolingSlot_2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_CoolingSlot_3.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_CoolingSlot_4.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_L0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_L1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_L2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_R0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_R1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_DisplayBar_R2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_FrontCuff.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_Grip.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_GripHeel.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_GripRib_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_GripRib_1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_GripRib_2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_GripSocket.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_1.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_2.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_3.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_4.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_5.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_6.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoil_7.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCore.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoreGlow.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoreMount.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetCoreTrim.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetFaceArmor.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetHead.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetNeck.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MagnetRearBand.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_MainShell.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelAmber_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelAmber_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelInset_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelInset_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelSlot_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_PanelSlot_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_RearBand.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_RearCuff.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_RearDisplay.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_RearDisplayBezel.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_RearEndArmor.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.002
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_SidePanel_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_SidePanel_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_StatusScreen_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_StatusScreen_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_L.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_R.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_TopArmorTab.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Extracting primitive: ME_MG_TopServiceRail.001
+20:40:54 | INFO: Primitives created: 1
+20:40:54 | INFO: Finished glTF 2.0 export in 0.16219019889831543 s
+01:04.706  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/preview_first_person.png'
+01:18.676  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/preview_large.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper_FPS.fbx'
+export finished in 0.1318 sec.
+MAGNET_GRIPPER_FPS_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 109, "triangles": 25080, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "magnet-gripper", "handheld", "robot-classic", "white-shell", "first-person-large"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.4350006878376007, -1.4505072832107544, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, 0.0007136156782507896]], "dimensions_m": [0.3521, 0.9391, 0.5985], "sockets": {"Socket_Grab": [-0.20085911452770233, -1.4197317361831665, -0.2222747802734375], "Socket_Hand": [-0.25999999046325684, -0.6600000262260437, -0.5], "Socket_Muzzle": [-0.22046099603176117, -1.1679233312606812, -0.24396665394306183], "Socket_SupportHand": [-0.24181412160396576, -0.893618106842041, -0.40610453486442566], "Socket_Camera": [0.0, 0.0, 0.0]}, "pivot": "camera attachment at origin; all export object scales are 1", "variant": "first_person_large", "enlargement": 1.5, "camera": {"horizontal_fov_degrees": 75, "near_m": 0.03, "hand_position_blender_m": [-0.25999999046325684, -0.6600000262260437, -0.5], "hand_position_unity_m": [-0.25999999046325684, -0.5, 0.6600000262260437], "aim_target_blender_m": [0.0, -4.0, 0.0], "note": "Camera offset and enlargement are already baked; attach root with identity transform."}, "framing": {"min_camera_depth_m": 0.511402428150177, "screen_bounds_normalized": [[0.5583618879318237, -0.6053850650787354], [0.9813253879547119, 0.5006878972053528]], "reticle_clear": true, "render_resolution": [1600, 900], "muzzle_ray_error_m": 8.534167691942258e-07}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.647  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:42:13 | INFO: Starting glTF 2.0 export
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerContactPad
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerContactRib0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerContactRib1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerContactRib2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerHinge
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerHingeCap1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerHingeCap-1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerHingeHub1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerHingeHub-1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerInnerContactRail
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawArmor
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.31
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.237
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.373
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.31
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.237
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.373
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawSpine
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_LowerJawStatus
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperContactPad
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperContactRib0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperContactRib1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperContactRib2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperHinge
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperHingeCap1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperHingeCap-1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperHingeHub1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperHingeHub-1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperInnerContactRail
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawArmor
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.31
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.237
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.373
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.31
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.237
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.373
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawSpine
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_UpperJawStatus
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_Chassis
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_CoolingSlot_0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_CoolingSlot_1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_CoolingSlot_2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_CoolingSlot_3
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_CoolingSlot_4
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_L0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_L1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_L2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_R0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_R1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_DisplayBar_R2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_FrontCuff
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_Grip
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_GripHeel
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_GripRib_0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_GripRib_1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_GripRib_2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_GripSocket
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_0
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_1
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_2
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_3
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_4
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_5
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_6
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoil_7
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCore
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoreGlow
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoreMount
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetCoreTrim
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetFaceArmor
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetHead
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetNeck
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MagnetRearBand
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_MainShell
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelAmber_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelAmber_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelInset_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelInset_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelSlot_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_PanelSlot_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_RearBand
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_RearCuff
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_RearDisplay
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_RearDisplayBezel
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_RearEndArmor
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.045
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.136
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_SidePanel_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_SidePanel_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_StatusScreen_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_StatusScreen_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_L
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_R
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_TopArmorTab
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Extracting primitive: ME_MG_TopServiceRail
+20:42:13 | INFO: Primitives created: 1
+20:42:13 | INFO: Finished glTF 2.0 export in 0.2837951183319092 s
+00:06.966  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_001.png'
+00:11.658  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_013.png'
+00:16.714  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_028.png'
+00:22.060  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_043.png'
+00:29.866  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_058.png'
+00:38.926  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_073.png'
+00:46.218  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_085.png'
+00:56.064  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/animation_frames/apply_097.png'
+00:56.084  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper_FPS.blend"
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper.fbx'
+export finished in 0.3765 sec.
+Info: Saved as "CubeEscape_MagnetGripper.blend"
+MAGNET_ONE_SHOT_ANIMATION_OK  0.004938330501317978
+20:43:18 | INFO: Starting glTF 2.0 export
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerContactPad.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerContactRib0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerContactRib1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerContactRib2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerHinge.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerHingeCap1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerHingeCap-1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerHingeHub1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerHingeHub-1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerInnerContactRail.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawArmor.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt1-0.003
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawBolt-1-0.003
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawSpine.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_LowerJawStatus.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperContactPad.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperContactRib0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperContactRib1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperContactRib2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperHinge.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperHingeCap1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperHingeCap-1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperHingeHub1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperHingeHub-1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperInnerContactRail.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawArmor.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt1-0.003
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawBolt-1-0.003
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawSpine.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_UpperJawStatus.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_L_0.08_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_L_-0.077_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_R_0.08_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_BoltRecess_R_-0.077_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_Chassis.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_CoolingSlot_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_CoolingSlot_1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_CoolingSlot_2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_CoolingSlot_3.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_CoolingSlot_4.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_L0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_L1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_L2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_R0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_R1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_DisplayBar_R2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_FrontCuff.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_Grip.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_GripHeel.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_GripRib_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_GripRib_1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_GripRib_2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_GripSocket.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_1.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_2.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_3.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_4.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_5.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_6.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoil_7.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCore.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoreGlow.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoreMount.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetCoreTrim.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetFaceArmor.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetHead.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetNeck.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MagnetRearBand.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_MainShell.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelAmber_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelAmber_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelInset_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelInset_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelSlot_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_PanelSlot_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_RearBand.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_RearCuff.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_RearDisplay.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_RearDisplayBezel.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_RearEndArmor.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_L_0.08_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_L_-0.077_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_R_0.08_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_ShellBolt_R_-0.077_0.002
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_SidePanel_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_SidePanel_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_StatusScreen_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_StatusScreen_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_L.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_StatusScreenBezel_R.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_TopArmorTab.001
+20:43:18 | INFO: Primitives created: 1
+20:43:18 | INFO: Extracting primitive: ME_MG_TopServiceRail.001
+20:43:18 | INFO: Primitives created: 1
+20:43:19 | INFO: Finished glTF 2.0 export in 1.1627790927886963 s
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper_FPS.fbx'
+export finished in 0.7430 sec.
+Info: Saved as "CubeEscape_MagnetGripper_FPS.blend"
+MAGNET_ONE_SHOT_ANIMATION_OK _FPS 0.007407542550936341
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:01.774  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper.blend"
+20:43:28 | INFO: Data are loaded, start creating Blender stuff
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerContactPad
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerContactRib0
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerContactRib1
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerContactRib2
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerHinge
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerHingeCap1
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerHingeCap-1
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerHingeHub1
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerHingeHub-1
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerInnerContactRail
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawArmor
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.31
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.237
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.373
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.31
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.237
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.373
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawSpine
+20:43:28 | INFO: Blender create Mesh node ME_MG_LowerJawStatus
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperContactPad
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperContactRib0
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperContactRib1
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperContactRib2
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperHinge
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperHingeCap1
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperHingeCap-1
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperHingeHub1
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperHingeHub-1
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperInnerContactRail
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawArmor
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.31
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.237
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.373
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.31
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.237
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.373
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawSpine
+20:43:28 | INFO: Blender create Mesh node ME_MG_UpperJawStatus
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_0.08_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_0.08_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_-0.077_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_-0.077_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_0.08_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_0.08_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_-0.077_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_-0.077_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_Chassis
+20:43:28 | INFO: Blender create Mesh node ME_MG_CoolingSlot_0
+20:43:28 | INFO: Blender create Mesh node ME_MG_CoolingSlot_1
+20:43:28 | INFO: Blender create Mesh node ME_MG_CoolingSlot_2
+20:43:28 | INFO: Blender create Mesh node ME_MG_CoolingSlot_3
+20:43:28 | INFO: Blender create Mesh node ME_MG_CoolingSlot_4
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_L0
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_L1
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_L2
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_R0
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_R1
+20:43:28 | INFO: Blender create Mesh node ME_MG_DisplayBar_R2
+20:43:28 | INFO: Blender create Mesh node ME_MG_FrontCuff
+20:43:28 | INFO: Blender create Mesh node ME_MG_Grip
+20:43:28 | INFO: Blender create Mesh node ME_MG_GripHeel
+20:43:28 | INFO: Blender create Mesh node ME_MG_GripRib_0
+20:43:28 | INFO: Blender create Mesh node ME_MG_GripRib_1
+20:43:28 | INFO: Blender create Mesh node ME_MG_GripRib_2
+20:43:28 | INFO: Blender create Mesh node ME_MG_GripSocket
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_0
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_1
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_2
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_3
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_4
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_5
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_6
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoil_7
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCore
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoreGlow
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoreMount
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetCoreTrim
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetFaceArmor
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetHead
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetNeck
+20:43:28 | INFO: Blender create Mesh node ME_MG_MagnetRearBand
+20:43:28 | INFO: Blender create Mesh node ME_MG_MainShell
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelAmber_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelAmber_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelInset_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelInset_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelSlot_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_PanelSlot_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_RearBand
+20:43:28 | INFO: Blender create Mesh node ME_MG_RearCuff
+20:43:28 | INFO: Blender create Mesh node ME_MG_RearDisplay
+20:43:28 | INFO: Blender create Mesh node ME_MG_RearDisplayBezel
+20:43:28 | INFO: Blender create Mesh node ME_MG_RearEndArmor
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_0.08_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_0.08_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_-0.077_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_-0.077_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_0.08_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_0.08_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_-0.077_0.045
+20:43:28 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_-0.077_0.136
+20:43:28 | INFO: Blender create Mesh node ME_MG_SidePanel_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_SidePanel_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_StatusScreen_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_StatusScreen_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_StatusScreenBezel_L
+20:43:28 | INFO: Blender create Mesh node ME_MG_StatusScreenBezel_R
+20:43:28 | INFO: Blender create Mesh node ME_MG_TopArmorTab
+20:43:28 | INFO: Blender create Mesh node ME_MG_TopServiceRail
+20:43:28 | INFO: glTF import finished in 0.19s
+FBX version: 7400
+MAGNET_GRIPPER_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.11300000548362732, -0.421500027179718, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.24449999630451202]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 0, "duration_seconds": 4}}, "glb": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.11300000548362732, -0.421500027179718, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.24449999630451202]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 1.462837371235537e-07, "duration_seconds": 4}}, "fbx": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.11300000548362732, -0.421500027179718, -0.12050002813339233], [0.11300000548362732, 0.19950002431869507, 0.2445000410079956]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 4.768371724139797e-07, "duration_seconds": 4}}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:01.521  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Magnetgreifer/CubeEscape_MagnetGripper_FPS.blend"
+20:43:32 | INFO: Data are loaded, start creating Blender stuff
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerContactPad.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerContactRib0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerContactRib1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerContactRib2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerHinge.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerHingeCap1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerHingeCap-1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerHingeHub1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerHingeHub-1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerInnerContactRail.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawArmor.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt1-0.003
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawBolt-1-0.003
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawSpine.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_LowerJawStatus.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperContactPad.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperContactRib0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperContactRib1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperContactRib2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperHinge.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperHingeCap1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperHingeCap-1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperHingeHub1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperHingeHub-1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperInnerContactRail.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawArmor.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt1-0.003
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawBolt-1-0.003
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawSpine.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_UpperJawStatus.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_0.08_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_0.08_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_-0.077_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_L_-0.077_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_0.08_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_0.08_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_-0.077_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_BoltRecess_R_-0.077_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_Chassis.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_CoolingSlot_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_CoolingSlot_1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_CoolingSlot_2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_CoolingSlot_3.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_CoolingSlot_4.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_L0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_L1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_L2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_R0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_R1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_DisplayBar_R2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_FrontCuff.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_Grip.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_GripHeel.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_GripRib_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_GripRib_1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_GripRib_2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_GripSocket.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_1.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_2.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_3.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_4.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_5.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_6.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoil_7.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCore.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoreGlow.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoreMount.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetCoreTrim.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetFaceArmor.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetHead.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetNeck.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MagnetRearBand.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_MainShell.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelAmber_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelAmber_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelInset_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelInset_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelSlot_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_PanelSlot_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_RearBand.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_RearCuff.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_RearDisplay.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_RearDisplayBezel.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_RearEndArmor.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_0.08_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_0.08_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_-0.077_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_L_-0.077_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_0.08_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_0.08_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_-0.077_0.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_ShellBolt_R_-0.077_0.002
+20:43:32 | INFO: Blender create Mesh node ME_MG_SidePanel_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_SidePanel_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_StatusScreen_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_StatusScreen_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_StatusScreenBezel_L.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_StatusScreenBezel_R.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_TopArmorTab.001
+20:43:32 | INFO: Blender create Mesh node ME_MG_TopServiceRail.001
+20:43:32 | INFO: glTF import finished in 0.43s
+FBX version: 7400
+MAGNET_GRIPPER_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.4350006878376007, -1.4505072832107544, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, 0.0007136167259886861]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 0, "duration_seconds": 4}}, "glb": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.4350006878376007, -1.4505072832107544, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, 0.0007135665509849787]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 1.4662453118319263e-07, "duration_seconds": 4}}, "fbx": {"passed": true, "mesh_count": 109, "bounds_m": [[-0.4350006878376007, -1.4505071640014648, -0.5977885127067566], [-0.08293507993221283, -0.5114024877548218, 0.0007137811626307666]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true, "animation": {"passed": true, "sampled_poses": 8, "max_matrix_error": 4.865134002329796e-07, "duration_seconds": 4}}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

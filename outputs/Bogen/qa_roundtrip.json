@@ -1,0 +1,87 @@
+{
+  "blender": "5.2.2 LTS",
+  "variant": "world",
+  "checks": {
+    "blend": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.054999999701976776,
+          -0.5628378391265869,
+          -0.5149999856948853
+        ],
+        [
+          0.13199999928474426,
+          0.17500001192092896,
+          0.5149999856948853
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 0,
+        "max_morph_bounds_error_m": 0,
+        "duration_seconds": 4
+      }
+    },
+    "glb": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.054999999701976776,
+          -0.5628378391265869,
+          -0.5149999856948853
+        ],
+        [
+          0.13199999928474426,
+          0.17500001192092896,
+          0.5149999856948853
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 1.4551915228366852e-11,
+        "max_morph_bounds_error_m": 2.9103830456733704e-11,
+        "duration_seconds": 4
+      }
+    },
+    "fbx": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.054999999701976776,
+          -0.5628378391265869,
+          -0.51500004529953
+        ],
+        [
+          0.13199999928474426,
+          0.17500008642673492,
+          0.5149999856948853
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 1.6292068494294654e-07,
+        "max_morph_bounds_error_m": 8.195638656616211e-08,
+        "duration_seconds": 4
+      }
+    }
+  }
+}

@@ -1,0 +1,247 @@
+Info: Saved as "CubeEscape_Flashlight.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:43:38 | INFO: Starting glTF 2.0 export
+20:43:38 | INFO: Extracting primitive: ME_PG_BatteryCore
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_BatteryShell
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_BodyBand
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_BodySleeve
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_EmitterCore
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripCore
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripHeel
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripMount
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripRib_0
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripRib_1
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripRib_2
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripRib_3
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripSideArmor_L
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_GripSideArmor_R
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_HeadBackCollar
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_HeadFrontCollar
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_HeadHousing
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_Lens
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_RearCap
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_RearSeal
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ReflectorCup
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ReflectorRim
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ShellBolt_1_0.113
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ShellBolt_1_-0.019
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ShellBolt_-1_0.113
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_ShellBolt_-1_-0.019
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_SideDisplay_L
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_SideDisplay_R
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_SideDisplayBezel_L
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_SideDisplayBezel_R
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_TopRail
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: ME_PG_TopSwitch
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Extracting primitive: Cube
+20:43:38 | INFO: Primitives created: 1
+20:43:38 | INFO: Finished glTF 2.0 export in 0.13915109634399414 s
+00:49.911  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/preview_white.png'
+01:52.868  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/view_side.png'
+02:47.676  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/view_front.png'
+03:14.609  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/view_top.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/CubeEscape_Flashlight.fbx'
+export finished in 0.0504 sec.
+FLASHLIGHT_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 32, "triangles": 10628, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "flashlight", "handheld", "robot-classic", "white-shell"], "integration": "visual asset only; runtime light and input not included", "bounds_m": [[-0.08600001037120819, -0.17749999463558197, -0.11840096116065979], [0.08600001037120819, 0.18200001120567322, 0.1980000138282776]], "dimensions_m": [0.172, 0.3595, 0.3164], "sockets": {"Socket_Hand": [0.0, 0.08799999952316284, -0.02500000037252903], "Socket_SupportHand": [0.0, -0.017999999225139618, 0.017999999225139618], "Socket_Muzzle": [0.0, -0.17900000512599945, 0.1120000034570694], "Socket_CenterOfMass": [0.0, 0.03799999877810478, 0.06599999964237213]}, "pivot": "asset root; use Socket_Hand for hand attachment"}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:01.265  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/CubeEscape_Flashlight.blend"
+Info: Saved as "CubeEscape_Flashlight_FPS.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:46:54 | INFO: Starting glTF 2.0 export
+20:46:54 | INFO: Extracting primitive: ME_PG_BatteryCore.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_BatteryShell.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_BodyBand.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_BodySleeve.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_EmitterCore.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripCore.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripHeel.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripMount.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripRib_0.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripRib_1.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripRib_2.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripRib_3.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripSideArmor_L.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_GripSideArmor_R.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_HeadBackCollar.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_HeadFrontCollar.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_HeadHousing.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_Lens.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_RearCap.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_RearSeal.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ReflectorCup.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ReflectorRim.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ShellBolt_1_0.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ShellBolt_1_-0.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ShellBolt_-1_0.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_ShellBolt_-1_-0.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_SideDisplay_L.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_SideDisplay_R.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_SideDisplayBezel_L.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_SideDisplayBezel_R.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_TopRail.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: ME_PG_TopSwitch.001
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Extracting primitive: Cube
+20:46:54 | INFO: Primitives created: 1
+20:46:54 | INFO: Finished glTF 2.0 export in 0.11069202423095703 s
+01:41.930  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/preview_first_person.png'
+02:08.438  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/preview_large.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/CubeEscape_Flashlight_FPS.fbx'
+export finished in 0.0651 sec.
+FLASHLIGHT_FPS_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 32, "triangles": 10628, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "flashlight", "handheld", "robot-classic", "white-shell", "first-person-large"], "integration": "visual asset only; runtime light and input not included", "bounds_m": [[-0.3685278594493866, -1.0445581674575806, -0.644731879234314], [-0.10367362946271896, -0.49385955929756165, -0.13389554619789124]], "dimensions_m": [0.2649, 0.5507, 0.5108], "sockets": {"Socket_CenterOfMass": [-0.2551267445087433, -0.7226024866104126, -0.3574712574481964], "Socket_Hand": [-0.25999999046325684, -0.6600000262260437, -0.5], "Socket_Muzzle": [-0.2304290384054184, -1.0398725271224976, -0.2603065073490143], "Socket_SupportHand": [-0.24814440310001373, -0.8122984170913696, -0.4218597710132599], "Socket_Camera": [0.0, 0.0, 0.0]}, "pivot": "camera attachment at origin; all export object scales are 1", "variant": "first_person_large", "enlargement": 1.5, "camera": {"horizontal_fov_degrees": 75, "near_m": 0.03, "hand_position_blender_m": [-0.25999999046325684, -0.6600000262260437, -0.5], "hand_position_unity_m": [-0.25999999046325684, -0.5, 0.6600000262260437], "aim_target_blender_m": [0.0, -4.0, 0.0], "note": "Camera offset and enlargement are baked; attach root with identity transform."}, "framing": {"min_camera_depth_m": 0.49385955929756165, "screen_bounds_normalized": [[0.567150354385376, -0.7353888750076294], [0.9460040330886841, 0.34563368558883667]], "reticle_clear": true, "render_resolution": [1600, 900], "beam_axis_error_m": 1.0525395548715327e-06}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.691  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/CubeEscape_Flashlight.blend"
+20:49:02 | INFO: Data are loaded, start creating Blender stuff
+20:49:02 | INFO: Blender create Mesh node ME_PG_BatteryCore
+20:49:02 | INFO: Blender create Mesh node ME_PG_BatteryShell
+20:49:02 | INFO: Blender create Mesh node ME_PG_BodyBand
+20:49:02 | INFO: Blender create Mesh node ME_PG_BodySleeve
+20:49:02 | INFO: Blender create Mesh node ME_PG_EmitterCore
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripCore
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripHeel
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripMount
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripRib_0
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripRib_1
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripRib_2
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripRib_3
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripSideArmor_L
+20:49:02 | INFO: Blender create Mesh node ME_PG_GripSideArmor_R
+20:49:02 | INFO: Blender create Mesh node ME_PG_HeadBackCollar
+20:49:02 | INFO: Blender create Mesh node ME_PG_HeadFrontCollar
+20:49:02 | INFO: Blender create Mesh node ME_PG_HeadHousing
+20:49:02 | INFO: Blender create Mesh node ME_PG_Lens
+20:49:02 | INFO: Blender create Mesh node ME_PG_RearCap
+20:49:02 | INFO: Blender create Mesh node ME_PG_RearSeal
+20:49:02 | INFO: Blender create Mesh node ME_PG_ReflectorCup
+20:49:02 | INFO: Blender create Mesh node ME_PG_ReflectorRim
+20:49:02 | INFO: Blender create Mesh node ME_PG_ShellBolt_1_0.113
+20:49:02 | INFO: Blender create Mesh node ME_PG_ShellBolt_1_-0.019
+20:49:02 | INFO: Blender create Mesh node ME_PG_ShellBolt_-1_0.113
+20:49:02 | INFO: Blender create Mesh node ME_PG_ShellBolt_-1_-0.019
+20:49:02 | INFO: Blender create Mesh node ME_PG_SideDisplay_L
+20:49:02 | INFO: Blender create Mesh node ME_PG_SideDisplay_R
+20:49:02 | INFO: Blender create Mesh node ME_PG_SideDisplayBezel_L
+20:49:02 | INFO: Blender create Mesh node ME_PG_SideDisplayBezel_R
+20:49:02 | INFO: Blender create Mesh node ME_PG_TopRail
+20:49:02 | INFO: Blender create Mesh node ME_PG_TopSwitch
+20:49:02 | INFO: Blender create Mesh node Cube
+20:49:02 | INFO: glTF import finished in 0.05s
+FBX version: 7400
+FLASHLIGHT_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.08600001037120819, -0.17749999463558197, -0.11840096116065979], [0.08600001037120819, 0.18200001120567322, 0.1980000138282776]], "sockets": true, "uvs_and_materials": true}, "glb": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.08600001037120819, -0.17749999463558197, -0.11840096116065979], [0.08600001037120819, 0.18200001120567322, 0.1980000138282776]], "sockets": true, "uvs_and_materials": true}, "fbx": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.08600001037120819, -0.17749997973442078, -0.11840098351240158], [0.08600001037120819, 0.1820000261068344, 0.19800002872943878]], "sockets": true, "uvs_and_materials": true}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.449  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Taschenlampe/CubeEscape_Flashlight_FPS.blend"
+20:49:03 | INFO: Data are loaded, start creating Blender stuff
+20:49:03 | INFO: Blender create Mesh node ME_PG_BatteryCore.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_BatteryShell.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_BodyBand.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_BodySleeve.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_EmitterCore.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripCore.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripHeel.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripMount.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripRib_0.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripRib_1.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripRib_2.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripRib_3.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripSideArmor_L.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_GripSideArmor_R.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_HeadBackCollar.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_HeadFrontCollar.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_HeadHousing.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_Lens.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_RearCap.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_RearSeal.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ReflectorCup.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ReflectorRim.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ShellBolt_1_0.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ShellBolt_1_-0.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ShellBolt_-1_0.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_ShellBolt_-1_-0.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_SideDisplay_L.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_SideDisplay_R.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_SideDisplayBezel_L.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_SideDisplayBezel_R.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_TopRail.001
+20:49:03 | INFO: Blender create Mesh node ME_PG_TopSwitch.001
+20:49:03 | INFO: Blender create Mesh node Cube
+20:49:03 | INFO: glTF import finished in 0.04s
+FBX version: 7400
+FLASHLIGHT_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.3685278594493866, -1.0445581674575806, -0.644731879234314], [-0.10367362946271896, -0.49385955929756165, -0.13389554619789124]], "sockets": true, "uvs_and_materials": true}, "glb": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.3685278594493866, -1.0445581674575806, -0.644731879234314], [-0.10367362946271896, -0.49385955929756165, -0.13389554619789124]], "sockets": true, "uvs_and_materials": true}, "fbx": {"passed": true, "mesh_count": 32, "bounds_m": [[-0.3685278594493866, -1.0445581674575806, -0.6447318196296692], [-0.10367362946271896, -0.4938596189022064, -0.1338954120874405]], "sockets": true, "uvs_and_materials": true}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

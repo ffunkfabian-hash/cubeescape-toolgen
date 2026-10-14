@@ -1,5 +1,0 @@
-[('export_animations', 'BOOLEAN'), ('export_pointer_animation', 'BOOLEAN'), ('export_animation_mode', [('ACTIONS', 'Actions'), ('ACTIVE_ACTIONS', 'Active actions merged'), ('BROADCAST', 'Broadcast actions'), ('NLA_TRACKS', 'NLA Tracks'), ('SCENE', 'Scene')]), ('export_nla_strips_merged_animation_name', 'STRING'), ('export_optimize_animation_size', 'BOOLEAN'), ('export_optimize_animation_keep_anim_armature', 'BOOLEAN'), ('export_optimize_animation_keep_anim_object', 'BOOLEAN'), ('export_anim_slide_to_zero', 'BOOLEAN'), ('export_bake_animation', 'BOOLEAN'), ('export_merge_animation', [('NLA_TRACK', 'NLA Track Names'), ('ACTION', 'Actions'), ('NONE', 'No Merge')]), ('export_anim_single_armature', 'BOOLEAN'), ('export_anim_scene_split_object', 'BOOLEAN'), ('export_morph_animation', 'BOOLEAN'), ('export_convert_animation_pointer', 'BOOLEAN'), ('export_extra_animations', 'BOOLEAN')]
-['bake_anim', 'bake_anim_use_all_bones', 'bake_anim_use_nla_strips', 'bake_anim_use_all_actions', 'bake_anim_force_startend_keying', 'bake_anim_step', 'bake_anim_simplify_factor']
-Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
-
-Blender quit

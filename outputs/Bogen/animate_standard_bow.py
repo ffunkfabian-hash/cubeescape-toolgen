@@ -30,7 +30,19 @@ def finish_action(action,name,step=False):
 
 
 def find(scene,name):
-    return next(o for o in scene.objects if o.name.split('.')[0]==name)
+    """Exact object name first; a numeric Blender suffix (".001") is the only tolerated difference.
+
+    Splitting at the first dot is wrong here: generated names may legitimately
+    contain none, but a split would also truncate any name with a dot in it.
+    """
+    obj=scene.objects.get(name)
+    if obj is not None:
+        return obj
+    for candidate in scene.objects:
+        stem,dot,suffix=candidate.name.rpartition('.')
+        if dot and stem==name and suffix.isdigit():
+            return candidate
+    raise KeyError('Object not found: '+name)
 
 
 def setup(scene,root,factor):
@@ -95,7 +107,14 @@ def check_motion(scene,root,factor):
         deps=bpy.context.evaluated_depsgraph_get()
         carrier=find(scene,'ArrowCarrier')
         nock=find(scene,'Socket_Nock')
-        assert (carrier.matrix_world.translation-nock.matrix_world.translation).length<1e-5
+        presence=find(scene,'LoadedArrowPresence')
+        if presence.matrix_world.to_scale().x>.5:
+            assert (carrier.matrix_world.translation-nock.matrix_world.translation).length<1e-5, ('Loaded arrow leaves the nock',frame)
+        else:
+            # Hidden phase: the presence node is scaled to 0.001, so the model arrow collapses
+            # onto its pivot (the grip origin) instead of following the string.
+            collapsed=(carrier.matrix_world.translation-presence.matrix_world.translation).length
+            assert collapsed<.002*factor, ('Hidden arrow drifts from its pivot',frame,collapsed)
         for side in ('Upper','Lower'):
             string=find(scene,'SM_BW_'+side+'Bowstring')
             vertices=[string.evaluated_get(deps).matrix_world@v.co for v in string.evaluated_get(deps).data.vertices]

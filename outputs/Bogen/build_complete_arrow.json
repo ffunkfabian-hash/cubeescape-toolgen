@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_Arrow_Standard.blend",
+      "bytes": 117115,
+      "sha256": "b0ddcf97a2ea3e938ce669a63d244dc64fc2f64a81f9ad190ccf5c55b1d63e38"
+    },
+    {
+      "path": "CubeEscape_Arrow_Standard.glb",
+      "bytes": 59260,
+      "sha256": "ea43d59aeb97a87f0c185e0d970de179e37f0e0cb0f02e52681998696c9347e7"
+    },
+    {
+      "path": "CubeEscape_Arrow_Standard.fbx",
+      "bytes": 72924,
+      "sha256": "71f3471bda9b4bc7f070f133e318e7b01dd18fd5c6fd4d1532569ca4eb6e5718"
+    },
+    {
+      "path": "qa_arrow.json",
+      "bytes": 969,
+      "sha256": "e45d013626f2d89f8af0d88f140f1e324b9fb015e001bb8ffe2598a20d4a4d43"
+    },
+    {
+      "path": "qa_roundtrip_arrow.json",
+      "bytes": 1203,
+      "sha256": "585e06cf9e34dcc737f9082496f930223bcd43e31da742e2c0be384e733c0cdc"
+    }
+  ]
+}

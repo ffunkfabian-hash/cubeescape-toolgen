@@ -1,0 +1,33 @@
+{
+  "clip": "Bow_Use",
+  "autoplay": false,
+  "loop": false,
+  "duration_seconds": 4,
+  "trigger": "explicit ShootAction",
+  "default_state": "Idle_Loaded",
+  "phases_seconds": {
+    "draw": [
+      0,
+      1.25
+    ],
+    "hold": [
+      1.25,
+      1.75
+    ],
+    "release": [
+      1.75,
+      1.9583
+    ],
+    "reset": [
+      1.9583,
+      3.25
+    ],
+    "idle": [
+      3.25,
+      4
+    ]
+  },
+  "release_event_seconds": 1.7916666666666667,
+  "projectile": "Spawn the separate standard arrow through the game action at Socket_ArrowTip; no projectile physics is implemented.",
+  "visibility": "LoadedArrowPresence uses scale 0.001 while the model arrow is inactive; rest and authored mesh scales are 1."
+}

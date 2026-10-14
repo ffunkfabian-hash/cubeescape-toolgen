@@ -17,6 +17,15 @@ NOCK=Vector((0,.15,.065))
 DRAW_NOCK=Vector((0,.38,.065))
 
 
+def mm(value):
+    """Integer millimetres for object names: names must not contain a dot."""
+    return '%03d'%round(abs(value)*1000)
+
+
+def side_tag(value):
+    return 'L' if value<0 else 'R'
+
+
 def material_library():
     for key,pal,metal,rough,emit in [
         ('Armor','armor',.42,.30,0),('AccentArmor','armor',.42,.30,0),
@@ -65,7 +74,7 @@ def cable(name,a,b,draw_a,draw_b):
 def arrow(parent,prefix):
     g.cylinder(prefix+'Shaft',(0,-.34,0),.0036,.64,'Dark',parent=parent,n=16,bevel=.0005)
     for y in (-.02,-.05,-.60):
-        g.cylinder(prefix+'Band'+str(y),(0,y,0),.005,.013,'Metal',parent=parent,n=12,bevel=.001)
+        g.cylinder(prefix+'Band'+mm(y),(0,y,0),.005,.013,'Metal',parent=parent,n=12,bevel=.001)
     g.box(prefix+'Nock',(0,.006,0),(.010,.022,.010),'Amber',.002,parent=parent)
     bm=bmesh.new()
     verts=[bm.verts.new(p) for p in [(-.016,-.63,-.006),(.016,-.63,-.006),
@@ -90,7 +99,7 @@ def build_bow():
         g.box('RiserCollar'+str(s),(0,-.014,s*.175),(.103,.096,.113),'Dark',.016)
         g.box('RiserArmor'+str(s),(0,-.044,s*.175),(.110,.043,.090),'Armor',.012)
         for x in (-.042,.042):
-            g.cylinder('RiserBolt'+str(s)+str(x),(x,-.068,s*.175),.004,.004,'Metal',n=12,bevel=.0006)
+            g.cylinder('RiserBolt'+str(s)+side_tag(x),(x,-.068,s*.175),.004,.004,'Metal',n=12,bevel=.0006)
     g.box('ControlModule',(.079,.005,.012),(.075,.095,.094),'Dark',.014)
     g.box('ControlShell',(.087,-.038,.012),(.060,.016,.073),'Armor',.006)
     g.box('StatusBezel',(.119,.005,.012),(.013,.066,.069),'Visor',.006)
@@ -111,13 +120,13 @@ def build_bow():
         g.prism(label+'LimbArmor',[(y,s*z) for y,z in armor],.045,'Armor',g.ROOT)
         g.prism(label+'TipArmor',[(y,s*z) for y,z in upper],.042,'Armor',g.ROOT)
         for z,y in ((.277,-.010),(.417,.078)):
-            g.cylinder(label+'LimbJoint'+str(z),(0,y,s*z),.020,.054,'Dark',axis=(1,0,0),n=24,bevel=.002)
+            g.cylinder(label+'LimbJoint'+mm(z),(0,y,s*z),.020,.054,'Dark',axis=(1,0,0),n=24,bevel=.002)
             for side in (-1,1):
-                g.cylinder(label+'JointCap'+str(z)+str(side),(side*.030,y,s*z),.012,.008,'Metal',axis=(1,0,0),n=16)
+                g.cylinder(label+'JointCap'+mm(z)+side_tag(side),(side*.030,y,s*z),.012,.008,'Metal',axis=(1,0,0),n=16)
         tip=Vector((0,.15,s*.49))
         g.cylinder(label+'TipCam',tip,.025,.040,'Dark',axis=(1,0,0),n=32,bevel=.003)
         for side in (-1,1):
-            g.cylinder(label+'CamHub'+str(side),(side*.023,.15,s*.49),.010,.007,'Metal',axis=(1,0,0),n=16)
+            g.cylinder(label+'CamHub'+side_tag(side),(side*.023,.15,s*.49),.010,.007,'Metal',axis=(1,0,0),n=16)
         g.box(label+'LimbStatus',(0,.037,s*.355),(.027,.008,.037),'Cyan',.002)
         for obj in g.OBJECTS[before:]:
             if obj.type=='MESH': shape(obj,bent)
@@ -173,7 +182,7 @@ def main():
                 area.spaces.active.region_3d.view_rotation=cam.rotation_euler.to_quaternion()
                 area.spaces.active.shading.type='MATERIAL'
     save_asset(scene,NAME,'qa_geometry.json')
-    for filename,offset in [('preview_white.png',(1,-1,.5)),('view_side.png',(1,0,0)),('view_front.png',(0,-1,0))]:
+    for filename,offset in [('preview_white.png',(1,-1,.5)),('view_side.png',(1,0,0)),('view_front.png',(0,-1,0)),('view_top.png',(0,0,1))]:
         g.render(scene,cam,target,ROOT_DIR/filename,offset,1.65)
     # Independent arrow, with no bow, camera or extra geometry in its exports.
     arrow_scene=bpy.data.scenes.new('CubeEscape_Arrow_Standard'); bpy.context.window.scene=arrow_scene
@@ -189,6 +198,7 @@ def main():
                 if not obj.users_scene: bpy.data.objects.remove(obj,do_unlink=True)
     for obj in g.OBJECTS:
         obj.name=obj.name.removesuffix('.001')
+        if obj.type=='MESH': obj.data.name=obj.data.name.removesuffix('.001')
     save_asset(arrow_scene,'CubeEscape_Arrow_Standard','qa_arrow.json')
     print('STANDARD_BOW_AND_ARROW_OK')
 

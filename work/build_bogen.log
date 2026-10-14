@@ -1,0 +1,742 @@
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:49:29 | INFO: Starting glTF 2.0 export
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Band020
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Band050
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Band600
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Head
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Nock
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Arrow_Shaft
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_ArrowRest
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_ArrowRestPad
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_ControlModule
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_ControlShell
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_Grip
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_GripRib0
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_GripRib1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_GripRib2
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_GripRib3
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerBowstring
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerCamHubL
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerCamHubR
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerJointCap277L
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerJointCap277R
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerJointCap417L
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerJointCap417R
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerLimbArmor
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerLimbJoint277
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerLimbJoint417
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerLimbSpine
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerLimbStatus
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerTipArmor
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_LowerTipCam
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserArmor1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserArmor-1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserBolt1L
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserBolt1R
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserBolt-1L
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserBolt-1R
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserCollar1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserCollar-1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserWindowArmor
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_RiserWindowSide
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusAmber
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusBar0
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusBar1
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusBar2
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusBezel
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_StatusDisplay
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperBowstring
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperCamHubL
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperCamHubR
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperJointCap277L
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperJointCap277R
+20:49:29 | INFO: Primitives created: 1
+20:49:29 | INFO: Extracting primitive: ME_BW_UpperJointCap417L
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperJointCap417R
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperLimbArmor
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperLimbJoint277
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperLimbJoint417
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperLimbSpine
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperLimbStatus
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperTipArmor
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Extracting primitive: ME_BW_UpperTipCam
+20:49:30 | INFO: Primitives created: 1
+20:49:30 | INFO: Finished glTF 2.0 export in 0.0869910717010498 s
+00:09.290  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/preview_white.png'
+00:16.782  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/view_side.png'
+00:24.720  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/view_front.png'
+00:33.063  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/view_top.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard.fbx'
+export finished in 0.0510 sec.
+Info: Saved as "CubeEscape_Bow_Standard.blend"
+20:50:02 | INFO: Starting glTF 2.0 export
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Band020.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Band050.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Band600.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Head.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Nock.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Extracting primitive: ME_BW_Arrow_Shaft.001
+20:50:02 | INFO: Primitives created: 1
+20:50:02 | INFO: Finished glTF 2.0 export in 0.017843961715698242 s
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Arrow_Standard.fbx'
+export finished in 0.0133 sec.
+Info: Saved as "CubeEscape_Arrow_Standard.blend"
+STANDARD_BOW_AND_ARROW_OK
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.574  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard.blend"
+Info: Saved as "CubeEscape_Bow_Standard_FPS.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:50:03 | INFO: Starting glTF 2.0 export
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Band020.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Band050.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Band600.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Head.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Nock.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Arrow_Shaft.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_ArrowRest.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_ArrowRestPad.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_ControlModule.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_ControlShell.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_Grip.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_GripRib0.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_GripRib1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_GripRib2.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_GripRib3.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerBowstring.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerCamHubL.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerCamHubR.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerJointCap277L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerJointCap277R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerJointCap417L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerJointCap417R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerLimbArmor.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerLimbJoint277.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerLimbJoint417.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerLimbSpine.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerLimbStatus.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerTipArmor.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_LowerTipCam.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserArmor1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserArmor-1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserBolt1L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserBolt1R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserBolt-1L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserBolt-1R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserCollar1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserCollar-1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserWindowArmor.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_RiserWindowSide.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusAmber.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusBar0.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusBar1.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusBar2.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusBezel.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_StatusDisplay.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperBowstring.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperCamHubL.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperCamHubR.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperJointCap277L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperJointCap277R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperJointCap417L.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperJointCap417R.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperLimbArmor.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperLimbJoint277.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperLimbJoint417.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperLimbSpine.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperLimbStatus.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperTipArmor.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Extracting primitive: ME_BW_UpperTipCam.001
+20:50:03 | INFO: Primitives created: 1
+20:50:03 | INFO: Finished glTF 2.0 export in 0.09563088417053223 s
+00:48.767  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/preview_first_person.png'
+00:53.275  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/preview_large.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard_FPS.fbx'
+export finished in 0.0555 sec.
+STANDARD_BOW_FPS_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 62, "triangles": 11848, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "bow", "handheld", "robot-classic", "white-shell", "first-person-large"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.3420850336551666, -1.4841725826263428, -1.2939527034759521], [-0.05999557673931122, -0.31075721979141235, 0.24036505818367004]], "dimensions_m": [0.2821, 1.1734, 1.5343], "sockets": {"Socket_ArrowTip": [-0.19559496641159058, -1.4873557090759277, -0.30227041244506836], "Socket_Hand": [-0.25999999046325684, -0.6600000262260437, -0.5], "Socket_Muzzle": [-0.24703076481819153, -0.8266044855117798, -0.3817587196826935], "Socket_Nock": [-0.27823901176452637, -0.42569926381111145, -0.4299876093864441], "Socket_SupportHand": [-0.27823901176452637, -0.42569926381111145, -0.4299876093864441], "Socket_Camera": [0.0, 0.0, 0.0]}, "pivot": "camera attachment at origin; all export object scales are 1", "variant": "first_person_large", "enlargement": 1.5, "camera": {"horizontal_fov_degrees": 75, "near_m": 0.03, "hand_position_blender_m": [-0.25999999046325684, -0.6600000262260437, -0.5], "hand_position_unity_m": [-0.25999999046325684, -0.5, 0.6600000262260437], "aim_target_blender_m": [0.0, -4.0, 0.0], "note": "Camera offset and enlargement are already baked; attach root with identity transform."}, "framing": {"min_camera_depth_m": 0.31075727939605713, "screen_bounds_normalized": [[0.5576558113098145, -2.5165555477142334], [1.1500606536865234, 1.328278660774231]], "reticle_clear": true, "render_resolution": [1600, 900], "muzzle_ray_error_m": 6.447254996249261e-07}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.330  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:50:56 | INFO: Starting glTF 2.0 export
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Band020
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Band050
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Band600
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Head
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Nock
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Arrow_Shaft
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_ArrowRest
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_ArrowRestPad
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_ControlModule
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_ControlShell
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_Grip
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_GripRib0
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_GripRib1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_GripRib2
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_GripRib3
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerBowstring
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerCamHubL
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerCamHubR
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerJointCap277L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerJointCap277R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerJointCap417L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerJointCap417R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerLimbArmor
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerLimbJoint277
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerLimbJoint417
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerLimbSpine
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerLimbStatus
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerTipArmor
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_LowerTipCam
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserArmor1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserArmor-1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserBolt1L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserBolt1R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserBolt-1L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserBolt-1R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserCollar1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserCollar-1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserWindowArmor
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_RiserWindowSide
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusAmber
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusBar0
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusBar1
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusBar2
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusBezel
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_StatusDisplay
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperBowstring
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperCamHubL
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperCamHubR
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperJointCap277L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperJointCap277R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperJointCap417L
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperJointCap417R
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperLimbArmor
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperLimbJoint277
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperLimbJoint417
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperLimbSpine
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperLimbStatus
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperTipArmor
+20:50:56 | INFO: Primitives created: 1
+20:50:56 | INFO: Extracting primitive: ME_BW_UpperTipCam
+20:50:56 | INFO: Primitives created: 1
+20:50:57 | INFO: Finished glTF 2.0 export in 0.09717035293579102 s
+00:02.306  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_001.png'
+00:03.803  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_016.png'
+00:05.349  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_031.png'
+00:06.969  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_043.png'
+00:09.892  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_044.png'
+00:12.618  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_048.png'
+00:15.645  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_079.png'
+00:18.660  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/animation_frames/bow_097.png'
+00:18.664  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard_FPS.blend"
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard.fbx'
+export finished in 0.1021 sec.
+Info: Saved as "CubeEscape_Bow_Standard.blend"
+BOW_MOTION_OK CubeEscape_Bow_Standard 28
+20:51:19 | INFO: Starting glTF 2.0 export
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Band020.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Band050.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Band600.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Head.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Nock.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Arrow_Shaft.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_ArrowRest.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_ArrowRestPad.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_ControlModule.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_ControlShell.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_Grip.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_GripRib0.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_GripRib1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_GripRib2.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_GripRib3.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerBowstring.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerCamHubL.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerCamHubR.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerJointCap277L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerJointCap277R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerJointCap417L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerJointCap417R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerLimbArmor.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerLimbJoint277.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerLimbJoint417.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerLimbSpine.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerLimbStatus.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerTipArmor.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_LowerTipCam.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserArmor1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserArmor-1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserBolt1L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserBolt1R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserBolt-1L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserBolt-1R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserCollar1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserCollar-1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserWindowArmor.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_RiserWindowSide.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusAmber.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusBar0.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusBar1.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusBar2.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusBezel.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_StatusDisplay.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperBowstring.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperCamHubL.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperCamHubR.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperJointCap277L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperJointCap277R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperJointCap417L.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperJointCap417R.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperLimbArmor.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperLimbJoint277.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperLimbJoint417.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperLimbSpine.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperLimbStatus.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperTipArmor.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Extracting primitive: ME_BW_UpperTipCam.001
+20:51:19 | INFO: Primitives created: 1
+20:51:19 | INFO: Finished glTF 2.0 export in 0.29347801208496094 s
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard_FPS.fbx'
+export finished in 0.2665 sec.
+Info: Saved as "CubeEscape_Bow_Standard_FPS.blend"
+BOW_MOTION_OK CubeEscape_Bow_Standard_FPS 28
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.762  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard.blend"
+20:51:23 | INFO: Data are loaded, start creating Blender stuff
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Band020
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Band050
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Band600
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching0
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching1
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching2
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Head
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Nock
+20:51:23 | INFO: Blender create Mesh node ME_BW_Arrow_Shaft
+20:51:23 | INFO: Blender create Mesh node ME_BW_ArrowRest
+20:51:23 | INFO: Blender create Mesh node ME_BW_ArrowRestPad
+20:51:23 | INFO: Blender create Mesh node ME_BW_ControlModule
+20:51:23 | INFO: Blender create Mesh node ME_BW_ControlShell
+20:51:23 | INFO: Blender create Mesh node ME_BW_Grip
+20:51:23 | INFO: Blender create Mesh node ME_BW_GripRib0
+20:51:23 | INFO: Blender create Mesh node ME_BW_GripRib1
+20:51:23 | INFO: Blender create Mesh node ME_BW_GripRib2
+20:51:23 | INFO: Blender create Mesh node ME_BW_GripRib3
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerBowstring
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerCamHubL
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerCamHubR
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerJointCap277L
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerJointCap277R
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerJointCap417L
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerJointCap417R
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerLimbArmor
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerLimbJoint277
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerLimbJoint417
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerLimbSpine
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerLimbStatus
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerTipArmor
+20:51:23 | INFO: Blender create Mesh node ME_BW_LowerTipCam
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserArmor1
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserArmor-1
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserBolt1L
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserBolt1R
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserBolt-1L
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserBolt-1R
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserCollar1
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserCollar-1
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserWindowArmor
+20:51:23 | INFO: Blender create Mesh node ME_BW_RiserWindowSide
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusAmber
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusBar0
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusBar1
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusBar2
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusBezel
+20:51:23 | INFO: Blender create Mesh node ME_BW_StatusDisplay
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperBowstring
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperCamHubL
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperCamHubR
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperJointCap277L
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperJointCap277R
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperJointCap417L
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperJointCap417R
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperLimbArmor
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperLimbJoint277
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperLimbJoint417
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperLimbSpine
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperLimbStatus
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperTipArmor
+20:51:23 | INFO: Blender create Mesh node ME_BW_UpperTipCam
+20:51:23 | INFO: glTF import finished in 0.10s
+FBX version: 7400
+STANDARD_BOW_ROUNDTRIP_OK world {"blender": "5.2.2 LTS", "variant": "world", "checks": {"blend": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.054999999701976776, -0.5628378391265869, -0.5149999856948853], [0.13199999928474426, 0.17500001192092896, 0.5149999856948853]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 0, "max_morph_bounds_error_m": 0, "duration_seconds": 4}}, "glb": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.054999999701976776, -0.5628378391265869, -0.5149999856948853], [0.13199999928474426, 0.17500001192092896, 0.5149999856948853]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 1.4551915228366852e-11, "max_morph_bounds_error_m": 2.9103830456733704e-11, "duration_seconds": 4}}, "fbx": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.054999999701976776, -0.5628378391265869, -0.51500004529953], [0.13199999928474426, 0.17500008642673492, 0.5149999856948853]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 1.6292068494294654e-07, "max_morph_bounds_error_m": 8.195638656616211e-08, "duration_seconds": 4}}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.615  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Bow_Standard_FPS.blend"
+20:51:25 | INFO: Data are loaded, start creating Blender stuff
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Band020.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Band050.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Band600.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching0.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching2.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Head.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Nock.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Arrow_Shaft.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_ArrowRest.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_ArrowRestPad.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_ControlModule.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_ControlShell.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_Grip.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_GripRib0.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_GripRib1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_GripRib2.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_GripRib3.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerBowstring.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerCamHubL.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerCamHubR.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerJointCap277L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerJointCap277R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerJointCap417L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerJointCap417R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerLimbArmor.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerLimbJoint277.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerLimbJoint417.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerLimbSpine.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerLimbStatus.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerTipArmor.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_LowerTipCam.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserArmor1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserArmor-1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserBolt1L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserBolt1R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserBolt-1L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserBolt-1R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserCollar1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserCollar-1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserWindowArmor.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_RiserWindowSide.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusAmber.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusBar0.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusBar1.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusBar2.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusBezel.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_StatusDisplay.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperBowstring.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperCamHubL.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperCamHubR.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperJointCap277L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperJointCap277R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperJointCap417L.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperJointCap417R.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperLimbArmor.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperLimbJoint277.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperLimbJoint417.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperLimbSpine.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperLimbStatus.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperTipArmor.001
+20:51:25 | INFO: Blender create Mesh node ME_BW_UpperTipCam.001
+20:51:25 | INFO: glTF import finished in 0.05s
+FBX version: 7400
+STANDARD_BOW_ROUNDTRIP_OK fps {"blender": "5.2.2 LTS", "variant": "fps", "checks": {"blend": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.3420850336551666, -1.4841725826263428, -1.2939527034759521], [-0.05999557673931122, -0.31075721979141235, 0.24036505818367004]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 0, "max_morph_bounds_error_m": 0, "duration_seconds": 4}}, "glb": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.3420850336551666, -1.4841724634170532, -1.2939527034759521], [-0.05999557673931122, -0.31075721979141235, 0.24036505818367004]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 5.960464477539063e-08, "max_morph_bounds_error_m": 1.1920928955078125e-07, "duration_seconds": 4}}, "fbx": {"passed": true, "mesh_count": 62, "bounds_m": [[-0.3420850336551666, -1.4841723442077637, -1.2939525842666626], [-0.05999557673931122, -0.31075718998908997, 0.24036511778831482]], "sockets": true, "uvs_and_materials": true, "loaded_arrow_meshes": 9, "animation": {"passed": true, "sampled_poses": 9, "morph_meshes": 28, "max_matrix_error": 2.384185791015625e-07, "max_morph_bounds_error_m": 2.682209014892578e-07, "duration_seconds": 4}}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.414  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Bogen/CubeEscape_Arrow_Standard.blend"
+20:51:26 | INFO: Data are loaded, start creating Blender stuff
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Band020.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Band050.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Band600.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching0.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching1.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Fletching2.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Head.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Nock.001
+20:51:26 | INFO: Blender create Mesh node ME_BW_Arrow_Shaft.001
+20:51:26 | INFO: glTF import finished in 0.01s
+FBX version: 7400
+STANDARD_BOW_ROUNDTRIP_OK arrow {"blender": "5.2.2 LTS", "variant": "arrow", "checks": {"blend": {"passed": true, "mesh_count": 9, "bounds_m": [[-0.02260729670524597, -0.7128378748893738, -0.01358114555478096], [0.02260729856789112, 0.017000000923871994, 0.02591952309012413]], "sockets": true, "uvs_and_materials": true}, "glb": {"passed": true, "mesh_count": 9, "bounds_m": [[-0.02260729670524597, -0.7128378748893738, -0.01358114555478096], [0.02260729856789112, 0.017000000923871994, 0.02591952309012413]], "sockets": true, "uvs_and_materials": true}, "fbx": {"passed": true, "mesh_count": 9, "bounds_m": [[-0.02260729670524597, -0.7128378748893738, -0.01358113531023264], [0.02260729856789112, 0.017000000923871994, 0.025919534265995026]], "sockets": true, "uvs_and_materials": true}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

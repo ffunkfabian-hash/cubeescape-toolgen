@@ -1,8 +1,9 @@
-"""Deterministic Cube Escape magnet gripper. Blender 5.2.2, meters, forward -Y.
+"""Shared geometry, material, validation and export helpers of the Cube Escape bow.
 
-Run: Blender --background --factory-startup --python-exit-code 1
-     --python create_magnet_gripper.py -- --output <directory>
-Only the generated scene is replaced; other open scenes are preserved.
+Blender 5.2.2, meters, forward -Y. Imported by create_standard_bow.py and
+create_standard_bow_fps.py; not a generator on its own. Object names never
+contain a dot: Blender appends ".001" to duplicates, and the verification
+scripts strip exactly that suffix when they look objects up.
 """
 import argparse
 import hashlib
