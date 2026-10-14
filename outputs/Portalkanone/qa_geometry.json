@@ -1,0 +1,57 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 103,
+  "triangles": 31620,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "portal",
+    "handheld",
+    "robot-classic",
+    "white-shell"
+  ],
+  "integration": "visual asset only; no gameplay or Unity prefab",
+  "bounds_m": [
+    [
+      -0.11300000548362732,
+      -0.40628960728645325,
+      -0.12049999833106995
+    ],
+    [
+      0.11300000548362732,
+      0.19949999451637268,
+      0.23000000417232513
+    ]
+  ],
+  "dimensions_m": [
+    0.226,
+    0.6058,
+    0.3505
+  ],
+  "sockets": {
+    "Socket_Hand": [
+      0.0,
+      0.11599999666213989,
+      -0.05700000002980232
+    ],
+    "Socket_Muzzle": [
+      0.0,
+      -0.25699999928474426,
+      0.08399999886751175
+    ],
+    "Socket_SupportHand": [
+      0.0,
+      -0.04500000178813934,
+      -0.00800000037997961
+    ]
+  },
+  "pivot": "asset root; use Socket_Hand for hand attachment"
+}

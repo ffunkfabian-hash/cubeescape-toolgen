@@ -1,0 +1,14 @@
+{
+  "asset": "CubeEscape_Flashlight",
+  "category": "Interactive",
+  "forward_axis_blender": "-Y",
+  "beam_anchor": "Socket_Muzzle",
+  "beam_type": "spot",
+  "suggested_color_linear_rgb": [1.0, 0.78, 0.52],
+  "suggested_range_m": 12.0,
+  "suggested_outer_angle_degrees": 42.0,
+  "default_state": "off",
+  "toggle_action": "FlashlightToggle",
+  "autoplay": false,
+  "integration_status": "design guidance only; game-side light, shadows, reveal effects, and input are not implemented or tested"
+}

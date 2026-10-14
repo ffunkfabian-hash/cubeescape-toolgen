@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_MagnetGripper_FPS.blend",
+      "bytes": 349197,
+      "sha256": "ca0b60c6e1d8a7f4b1a66818b8fe654bee4dd991093c57aaa09b8b012b7fcf6f"
+    },
+    {
+      "path": "CubeEscape_MagnetGripper_FPS.glb",
+      "bytes": 925996,
+      "sha256": "4d7487606eacdd023d787fe655837055fcdfb1770c121ab6b4bb2a9b754f1376"
+    },
+    {
+      "path": "CubeEscape_MagnetGripper_FPS.fbx",
+      "bytes": 2044604,
+      "sha256": "270901bd29840615c9a8c57139100143b46d4717c1c9b89bdbf6fd0116025c58"
+    },
+    {
+      "path": "qa_geometry_fps.json",
+      "bytes": 2173,
+      "sha256": "cfe71fceada1180a6bd3048c1ab4de79138bf5906f2ea6bb191015823592a861"
+    },
+    {
+      "path": "qa_roundtrip_fps.json",
+      "bytes": 1741,
+      "sha256": "5adf9e976bcee8450029dc904c2c6edc45a0bd6abf6e396f244f58f0e8c27135"
+    },
+    {
+      "path": "qa_animation_fps.json",
+      "bytes": 31261,
+      "sha256": "cfdc6f7a577b5dbeaea675af281d52dbb7deeb3202231320c129a28372502596"
+    },
+    {
+      "path": "action_contract.json",
+      "bytes": 460,
+      "sha256": "552e2e5845feb0d23a0427d73c74bceb522fa2d2849b8a196c254fa914ae33ea"
+    },
+    {
+      "path": "preview_apply_once.gif",
+      "bytes": 1122057,
+      "sha256": "37dbf8e5e734c449aae71e88a18ed931a40b63d99770e0f7ec0686e9e73ea7bc"
+    },
+    {
+      "path": "qa_action_player.json",
+      "bytes": 575,
+      "sha256": "73a336c1ce8d675902d33bd9ec41d18aad6b53a7ec04095039cc887d795742b0"
+    },
+    {
+      "path": "preview_first_person.png",
+      "bytes": 1475585,
+      "sha256": "6cba7e57f08705db4f8a45a8323c2b08310c891c5b2cbd2e5dac9d06409c301e"
+    },
+    {
+      "path": "preview_large.png",
+      "bytes": 1580832,
+      "sha256": "748308abc98bcbc177651637cbb38bb7f2a90d0ed9ce18be17087e952ea861c5"
+    }
+  ]
+}

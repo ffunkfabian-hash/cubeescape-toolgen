@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Blender-Sicherungskopien
+*.blend1
+*.blend2
+
+# Kompilierte Unity-Prüfartefakte
+*.dll
+
+# Zwischenstände des Idempotenztests (Duplikate der Portalkanone)
+work/idempotence/
+
+# Veraltete Sammel-Zips (Inhalt liegt unter outputs/<Werkzeug>/)
+outputs/*.zip

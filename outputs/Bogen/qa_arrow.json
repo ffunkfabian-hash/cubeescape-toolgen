@@ -1,0 +1,54 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 9,
+  "triangles": 1388,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "bow",
+    "handheld",
+    "robot-classic",
+    "white-shell"
+  ],
+  "integration": "visual asset only; no gameplay or Unity prefab",
+  "bounds_m": [
+    [
+      -0.02260729670524597,
+      -0.7128378748893738,
+      -0.01358114555478096
+    ],
+    [
+      0.02260729856789112,
+      0.017000000923871994,
+      0.02591952309012413
+    ]
+  ],
+  "dimensions_m": [
+    0.0452,
+    0.7298,
+    0.0395
+  ],
+  "sockets": {
+    "Socket_Nock": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Socket_Tip": [
+      0.0,
+      -0.7149999737739563,
+      0.0
+    ]
+  },
+  "pivot": "asset root; use Socket_Hand for hand attachment",
+  "asset": "CubeEscape_Arrow_Standard",
+  "purpose": "standalone standard arrow; nock origin"
+}

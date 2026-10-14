@@ -1,0 +1,18 @@
+00:00.813  blend            | Read blend: "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/CubeEscape_Bow_Standard.blend"
+Traceback (most recent call last):
+  File "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/animate_standard_bow.py", line 186, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/animate_standard_bow.py", line 167, in main
+    motion=check_motion(scene,root,factor)
+  File "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/animate_standard_bow.py", line 118, in check_motion
+    'mesh_bounds':{name:bounds(find(scene,name),deps) for name in mesh_names}}
+                               ~~~~^^^^^^^^^^^^
+  File "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/animate_standard_bow.py", line 33, in find
+    return next(o for o in scene.objects if o.name.split('.')[0]==name)
+StopIteration
+
+Error: script failed, file: 'outputs/Bogen/animate_standard_bow.py', exiting.
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

@@ -1,0 +1,6 @@
+TRACE SM_BW_UpperBowstring -3.474007682582146e-06 -3.474007682582146e-06 [('Basis', 1.0), ('Draw', 0.0)]
+TRACE SM_BW_LowerBowstring 4.5366453128015e-06 4.5366453128015e-06 [('Basis', 1.0), ('Draw', 0.0)]
+FAIL Invalid volume: SM_BW_UpperBowstring
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_Flashlight_FPS.blend",
+      "bytes": 246814,
+      "sha256": "190bb9b6280332ee875da43122bbffd44e3e2b98f67b0b63029d2457924e8b0c"
+    },
+    {
+      "path": "CubeEscape_Flashlight_FPS.glb",
+      "bytes": 376208,
+      "sha256": "77d4b8336c66d32bab063deff4c8d7e8d2043ad9ee0d8e486cab0fccf9d05943"
+    },
+    {
+      "path": "CubeEscape_Flashlight_FPS.fbx",
+      "bytes": 322348,
+      "sha256": "e18cf1c1809b3528347f068d29bc2d5fa8515dc0321e8fc6f633b478278e52ae"
+    },
+    {
+      "path": "qa_geometry_fps.json",
+      "bytes": 2176,
+      "sha256": "8f74ae35892b2108e8b5c4755c81ab58e1ffd268615b3983fe0de1c91605f42a"
+    },
+    {
+      "path": "qa_roundtrip_fps.json",
+      "bytes": 1179,
+      "sha256": "b95bd478ee9406db3f64e1bfd1b37bf85c16868d6f6f4469378bc61de5f83098"
+    },
+    {
+      "path": "preview_first_person.png",
+      "bytes": 1432833,
+      "sha256": "9f87b35518ce8be862cbe814c408685cb43ad83d375bf89e3cc9ed2acbd8d36a"
+    },
+    {
+      "path": "preview_large.png",
+      "bytes": 1473987,
+      "sha256": "bb2ad69fc8459b5962b3d7b0d099056af1a246dd7d1ddfc36e71b25da860d39f"
+    }
+  ]
+}

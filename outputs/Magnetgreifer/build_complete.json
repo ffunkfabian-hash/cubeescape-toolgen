@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_MagnetGripper.blend",
+      "bytes": 294849,
+      "sha256": "1626ae9398802dc0600331863bd9144aea252d69bab27ec713d3b097778c6ddd"
+    },
+    {
+      "path": "CubeEscape_MagnetGripper.glb",
+      "bytes": 917964,
+      "sha256": "ce83a05453033a2f8136b16c4f47fb311e55d90461d0a96c7bd81156c8a5a688"
+    },
+    {
+      "path": "CubeEscape_MagnetGripper.fbx",
+      "bytes": 2017948,
+      "sha256": "d999c3220d268820699c82b4762d615ae4c7989c173d0df01eee4a9d8307eccb"
+    },
+    {
+      "path": "qa_geometry.json",
+      "bytes": 1128,
+      "sha256": "505429f18577c4ef2251debcccca5ddd0c0b0f7d5f53e7c478944c60a776af43"
+    },
+    {
+      "path": "qa_roundtrip.json",
+      "bytes": 1735,
+      "sha256": "1651a3721703ccd7a13a796b03f3ce3999f1395d2b6122e9fcec46fb2849ca06"
+    },
+    {
+      "path": "qa_animation.json",
+      "bytes": 24121,
+      "sha256": "f9252a27cae46b40f8a98ae965de77c3ac6b785a1aba72867bb0d5d42e4a73f6"
+    },
+    {
+      "path": "action_contract.json",
+      "bytes": 460,
+      "sha256": "552e2e5845feb0d23a0427d73c74bceb522fa2d2849b8a196c254fa914ae33ea"
+    },
+    {
+      "path": "preview_apply_once.gif",
+      "bytes": 1122057,
+      "sha256": "37dbf8e5e734c449aae71e88a18ed931a40b63d99770e0f7ec0686e9e73ea7bc"
+    },
+    {
+      "path": "qa_action_player.json",
+      "bytes": 575,
+      "sha256": "73a336c1ce8d675902d33bd9ec41d18aad6b53a7ec04095039cc887d795742b0"
+    },
+    {
+      "path": "preview_white.png",
+      "bytes": 1610819,
+      "sha256": "46bc450ced82aced49262f1c9f9c91975a48c6a28f1e29b52bd1a0bcce86f188"
+    },
+    {
+      "path": "preview_concept_colors.png",
+      "bytes": 1633130,
+      "sha256": "c94712755210464ec1d66b004c2adf3861a74ddd9e16c04ee5aa894e52111270"
+    },
+    {
+      "path": "view_side.png",
+      "bytes": 1559995,
+      "sha256": "8702c95b85d8c6ddcf20560c45412ac16833215bcea967ecf36141ed8d8ec810"
+    },
+    {
+      "path": "view_front.png",
+      "bytes": 1489258,
+      "sha256": "d7752ee37997b7d5bf506c80c55a9e2583b9dd576732eccc08dda66ea7f10b06"
+    },
+    {
+      "path": "view_top.png",
+      "bytes": 1430583,
+      "sha256": "c80f0822670279e85383b014bdd42bd9f7247680e791ce614ad8264737f4e8c1"
+    }
+  ]
+}

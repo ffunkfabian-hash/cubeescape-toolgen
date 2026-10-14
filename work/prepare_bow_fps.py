@@ -1,0 +1,10 @@
+from pathlib import Path
+p=Path('outputs/Magnetgreifer/create_magnet_gripper_fps.py').read_text()
+p=p.replace('CubeEscape_MagnetGripper','CubeEscape_Bow_Standard').replace('MG_','BW_')
+p=p.replace("helper=runpy.run_path(str(Path(__file__).with_name('create_magnet_gripper.py')))","helper=runpy.run_path(str(Path(__file__).with_name('bow_geometry.py')))")
+p=p.replace('new.data.transform(Matrix.Scale(ENLARGEMENT,4))','new.data.transform(Matrix.Scale(ENLARGEMENT,4),shape_keys=True)\n            if new.data.shape_keys: new.data.shape_keys.animation_data_clear()')
+p=p.replace('new=old.copy()','new=old.copy()\n        new.animation_data_clear()')
+p=p.replace("hero_data.ortho_scale=1.2","hero_data.ortho_scale=2.45")
+p=p.replace("'purpose':'standard bow'","'purpose':'standard bow'")
+p=p.replace("'MAGNET_GRIPPER_FPS_BUILD_OK'","'STANDARD_BOW_FPS_BUILD_OK'")
+Path('outputs/Bogen/create_standard_bow_fps.py').write_text(p)

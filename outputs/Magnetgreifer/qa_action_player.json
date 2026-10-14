@@ -1,0 +1,16 @@
+{
+  "unity_reference_version": "6000.6.2f1",
+  "standalone_csharp_compilation": "passed",
+  "warning": "CS0649 for the Inspector-assigned serialized AnimationClip field; expected without Unity serialization.",
+  "unity_scene_runtime_tested": false,
+  "clip_binding_tested_in_unity": false,
+  "entry_points": [
+    "ApplyGrab()",
+    "TryApplyGrab()",
+    "CancelAction()"
+  ],
+  "auto_play": false,
+  "loop": false,
+  "integration": "source supplied; not installed in the game project",
+  "source_sha256": "eb45d4f2a08bae744ab2147d135f8d88ce49ca84371a0282c90a45ac9c7a24ef"
+}

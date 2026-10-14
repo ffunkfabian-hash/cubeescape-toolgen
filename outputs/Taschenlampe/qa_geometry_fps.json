@@ -1,0 +1,109 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 32,
+  "triangles": 10628,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "flashlight",
+    "handheld",
+    "robot-classic",
+    "white-shell",
+    "first-person-large"
+  ],
+  "integration": "visual asset only; runtime light and input not included",
+  "bounds_m": [
+    [
+      -0.3685278594493866,
+      -1.0445581674575806,
+      -0.644731879234314
+    ],
+    [
+      -0.10367362946271896,
+      -0.49385955929756165,
+      -0.13389554619789124
+    ]
+  ],
+  "dimensions_m": [
+    0.2649,
+    0.5507,
+    0.5108
+  ],
+  "sockets": {
+    "Socket_CenterOfMass": [
+      -0.2551267445087433,
+      -0.7226024866104126,
+      -0.3574712574481964
+    ],
+    "Socket_Hand": [
+      -0.25999999046325684,
+      -0.6600000262260437,
+      -0.5
+    ],
+    "Socket_Muzzle": [
+      -0.2304290384054184,
+      -1.0398725271224976,
+      -0.2603065073490143
+    ],
+    "Socket_SupportHand": [
+      -0.24814440310001373,
+      -0.8122984170913696,
+      -0.4218597710132599
+    ],
+    "Socket_Camera": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "pivot": "camera attachment at origin; all export object scales are 1",
+  "variant": "first_person_large",
+  "enlargement": 1.5,
+  "camera": {
+    "horizontal_fov_degrees": 75,
+    "near_m": 0.03,
+    "hand_position_blender_m": [
+      -0.25999999046325684,
+      -0.6600000262260437,
+      -0.5
+    ],
+    "hand_position_unity_m": [
+      -0.25999999046325684,
+      -0.5,
+      0.6600000262260437
+    ],
+    "aim_target_blender_m": [
+      0.0,
+      -4.0,
+      0.0
+    ],
+    "note": "Camera offset and enlargement are baked; attach root with identity transform."
+  },
+  "framing": {
+    "min_camera_depth_m": 0.49385955929756165,
+    "screen_bounds_normalized": [
+      [
+        0.567150354385376,
+        -0.7353888750076294
+      ],
+      [
+        0.9460040330886841,
+        0.34563368558883667
+      ]
+    ],
+    "reticle_clear": true,
+    "render_resolution": [
+      1600,
+      900
+    ],
+    "beam_axis_error_m": 1.0525395548715327e-06
+  }
+}

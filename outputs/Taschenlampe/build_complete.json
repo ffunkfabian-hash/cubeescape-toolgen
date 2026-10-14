@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_Flashlight.blend",
+      "bytes": 218279,
+      "sha256": "aaa3b3379abc5ff4098f4a99540de6eefe7309e35025f73a273cbc697533baf8"
+    },
+    {
+      "path": "CubeEscape_Flashlight.glb",
+      "bytes": 372176,
+      "sha256": "469e1fdf2d4ec8cd05e6fd000c467dd511a660b4794b02136523b314f43c0acc"
+    },
+    {
+      "path": "CubeEscape_Flashlight.fbx",
+      "bytes": 315580,
+      "sha256": "12924bde5b30570a12ff8ac2c500d87c733ac17cea468ebaa592c65488ca68aa"
+    },
+    {
+      "path": "qa_geometry.json",
+      "bytes": 1144,
+      "sha256": "1a610339b7a6a14e31b6b3670e48a73e0c083abb64d1fca74b4f0dac1fd6afef"
+    },
+    {
+      "path": "qa_roundtrip.json",
+      "bytes": 1180,
+      "sha256": "efa24dbd4c3bc4698153367bb3fcb559f593d6ac676be950fc45d85ed06aad38"
+    },
+    {
+      "path": "preview_white.png",
+      "bytes": 1507853,
+      "sha256": "de420cd921f534fc837d4ca2c469343837ec223cc341fdb0f8a3fd11e42b59a1"
+    },
+    {
+      "path": "view_side.png",
+      "bytes": 1473731,
+      "sha256": "1d28ee2c8ba1169150425be53c2bae42094755a6faa484d0837f4c5717b45fd5"
+    },
+    {
+      "path": "view_front.png",
+      "bytes": 1449811,
+      "sha256": "db80e819efe9a14cd73ac9144339d6d124e7d79082c7c95e619829f37f70db4a"
+    },
+    {
+      "path": "view_top.png",
+      "bytes": 1394351,
+      "sha256": "e6ec98c24104b7665c50cc5a92bad0c3c00e0d4772cb0535857044b80b86d967"
+    },
+    {
+      "path": "flashlight_runtime_contract.json",
+      "bytes": 495,
+      "sha256": "12ea5e88c4c2a0dbfd499f1197013fd216da63fe45f879118d99081bcfce4745"
+    }
+  ]
+}

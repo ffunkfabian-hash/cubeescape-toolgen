@@ -1,0 +1,109 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 62,
+  "triangles": 11848,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "bow",
+    "handheld",
+    "robot-classic",
+    "white-shell",
+    "first-person-large"
+  ],
+  "integration": "visual asset only; no gameplay or Unity prefab",
+  "bounds_m": [
+    [
+      -0.3420850336551666,
+      -1.4841725826263428,
+      -1.2939527034759521
+    ],
+    [
+      -0.05999557673931122,
+      -0.31075721979141235,
+      0.24036505818367004
+    ]
+  ],
+  "dimensions_m": [
+    0.2821,
+    1.1734,
+    1.5343
+  ],
+  "sockets": {
+    "Socket_Hand": [
+      -0.25999999046325684,
+      -0.6600000262260437,
+      -0.5
+    ],
+    "Socket_Muzzle": [
+      -0.24703076481819153,
+      -0.8266044855117798,
+      -0.3817587196826935
+    ],
+    "Socket_Nock": [
+      -0.27823901176452637,
+      -0.42569926381111145,
+      -0.4299876093864441
+    ],
+    "Socket_SupportHand": [
+      -0.27823901176452637,
+      -0.42569926381111145,
+      -0.4299876093864441
+    ],
+    "Socket_Camera": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "pivot": "camera attachment at origin; all export object scales are 1",
+  "variant": "first_person_large",
+  "enlargement": 1.5,
+  "camera": {
+    "horizontal_fov_degrees": 75,
+    "near_m": 0.03,
+    "hand_position_blender_m": [
+      -0.25999999046325684,
+      -0.6600000262260437,
+      -0.5
+    ],
+    "hand_position_unity_m": [
+      -0.25999999046325684,
+      -0.5,
+      0.6600000262260437
+    ],
+    "aim_target_blender_m": [
+      0.0,
+      -4.0,
+      0.0
+    ],
+    "note": "Camera offset and enlargement are already baked; attach root with identity transform."
+  },
+  "framing": {
+    "min_camera_depth_m": 0.31075727939605713,
+    "screen_bounds_normalized": [
+      [
+        0.5576558113098145,
+        -2.5165555477142334
+      ],
+      [
+        1.1500606536865234,
+        1.328278660774231
+      ]
+    ],
+    "reticle_clear": true,
+    "render_resolution": [
+      1600,
+      900
+    ],
+    "muzzle_ray_error_m": 6.447254996249261e-07
+  }
+}

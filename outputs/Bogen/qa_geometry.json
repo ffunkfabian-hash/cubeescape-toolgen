@@ -1,0 +1,64 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 62,
+  "triangles": 11848,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "bow",
+    "handheld",
+    "robot-classic",
+    "white-shell"
+  ],
+  "integration": "visual asset only; no gameplay or Unity prefab",
+  "bounds_m": [
+    [
+      -0.054999999701976776,
+      -0.5628378391265869,
+      -0.5149999856948853
+    ],
+    [
+      0.13199999928474426,
+      0.17500001192092896,
+      0.5149999856948853
+    ]
+  ],
+  "dimensions_m": [
+    0.187,
+    0.7378,
+    1.03
+  ],
+  "sockets": {
+    "Socket_Hand": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Socket_SupportHand": [
+      0.0,
+      0.15000000596046448,
+      0.06499999761581421
+    ],
+    "Socket_Nock": [
+      0.0,
+      0.15000000596046448,
+      0.06499999761581421
+    ],
+    "Socket_Muzzle": [
+      0.0,
+      -0.11999999731779099,
+      0.06499999761581421
+    ]
+  },
+  "pivot": "asset root; use Socket_Hand for hand attachment",
+  "asset": "CubeEscape_Bow_Standard",
+  "purpose": "standard bow with flexing limbs and string"
+}

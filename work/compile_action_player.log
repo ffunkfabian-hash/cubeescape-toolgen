@@ -1,0 +1,1 @@
+outputs/Magnetgreifer/MagnetGripperActionPlayer.cs(14,44): warning CS0649: Dem Feld "MagnetGripperActionPlayer.applyClip" wird nie etwas zugewiesen, und es hat immer seinen Standardwert von "null".

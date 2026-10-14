@@ -1,0 +1,62 @@
+{
+  "blender": "5.2.2 LTS",
+  "meshes": 32,
+  "triangles": 10628,
+  "manifold": true,
+  "uv_projection": "per-face box; overlapping islands",
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "forward": "-Y",
+  "category": "Interactive",
+  "tags": [
+    "tool",
+    "flashlight",
+    "handheld",
+    "robot-classic",
+    "white-shell"
+  ],
+  "integration": "visual asset only; runtime light and input not included",
+  "bounds_m": [
+    [
+      -0.08600001037120819,
+      -0.17749999463558197,
+      -0.11840096116065979
+    ],
+    [
+      0.08600001037120819,
+      0.18200001120567322,
+      0.1980000138282776
+    ]
+  ],
+  "dimensions_m": [
+    0.172,
+    0.3595,
+    0.3164
+  ],
+  "sockets": {
+    "Socket_Hand": [
+      0.0,
+      0.08799999952316284,
+      -0.02500000037252903
+    ],
+    "Socket_SupportHand": [
+      0.0,
+      -0.017999999225139618,
+      0.017999999225139618
+    ],
+    "Socket_Muzzle": [
+      0.0,
+      -0.17900000512599945,
+      0.1120000034570694
+    ],
+    "Socket_CenterOfMass": [
+      0.0,
+      0.03799999877810478,
+      0.06599999964237213
+    ]
+  },
+  "pivot": "asset root; use Socket_Hand for hand attachment"
+}

@@ -1,0 +1,27 @@
+{
+  "default_state": "Idle_Open",
+  "auto_play": false,
+  "loop": false,
+  "clip": "MG_Apply",
+  "duration_seconds": 4,
+  "trigger": "GrabAction",
+  "timing_seconds": {
+    "close": [
+      0,
+      0.5
+    ],
+    "rotate_360": [
+      0.5,
+      3
+    ],
+    "open": [
+      3,
+      3.5
+    ],
+    "rest": [
+      3.5,
+      4
+    ]
+  },
+  "runtime": "Use the supplied action player or explicitly play the imported clip once; do not use an autoplay loop."
+}

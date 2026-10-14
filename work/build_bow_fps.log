@@ -1,0 +1,140 @@
+00:00.889  blend            | Read blend: "/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/CubeEscape_Bow_Standard.blend"
+Info: Saved as "CubeEscape_Bow_Standard_FPS.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:22:54 | INFO: Starting glTF 2.0 export
+20:22:54 | INFO: Extracting primitive: ME_BW_Arrow_Band-0.001
+20:22:54 | INFO: Primitives created: 1
+20:22:54 | INFO: Extracting primitive: ME_BW_Arrow_Band-0.003
+20:22:54 | INFO: Primitives created: 1
+20:22:54 | INFO: Extracting primitive: ME_BW_Arrow_Band-0.004
+20:22:54 | INFO: Primitives created: 1
+20:22:54 | INFO: Extracting primitive: ME_BW_Arrow_Fletching0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Arrow_Fletching1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Arrow_Fletching2.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Arrow_Head.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Arrow_Nock.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Arrow_Shaft.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_ArrowRest.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_ArrowRestPad.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_ControlModule.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_ControlShell.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_Grip.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_GripRib0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_GripRib1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_GripRib2.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_GripRib3.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerBowstring.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerCamHub1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerCamHub-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerJointCap0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerJointCap0.002
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerJointCap0.277-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerJointCap0.417-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerLimbArmor.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerLimbJoint0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerLimbJoint0.002
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerLimbSpine.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerLimbStatus.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerTipArmor.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_LowerTipCam.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserArmor1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserArmor-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserBolt1-0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserBolt10.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserBolt-1-0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserBolt-10.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserCollar1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserCollar-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserWindowArmor.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_RiserWindowSide.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusAmber.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusBar0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusBar1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusBar2.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusBezel.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_StatusDisplay.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperBowstring.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperCamHub1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperCamHub-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperJointCap0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperJointCap0.002
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperJointCap0.277-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperJointCap0.417-1.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperLimbArmor.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperLimbJoint0.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperLimbJoint0.002
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperLimbSpine.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperLimbStatus.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperTipArmor.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Extracting primitive: ME_BW_UpperTipCam.001
+20:22:55 | INFO: Primitives created: 1
+20:22:55 | INFO: Finished glTF 2.0 export in 0.14283013343811035 s
+01:01.990  render           | Saved: '/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/preview_first_person.png'
+01:12.108  render           | Saved: '/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/preview_large.png'
+
+
+FBX export starting... '/Users/ffunk/Documents/Codex/2026-10-14/ich-habe-die-konzepte-und-m/outputs/Bogen/CubeEscape_Bow_Standard_FPS.fbx'
+export finished in 0.0909 sec.
+STANDARD_BOW_FPS_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 62, "triangles": 11848, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "bow", "handheld", "robot-classic", "white-shell", "first-person-large"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.3420850336551666, -1.4841725826263428, -1.2939527034759521], [-0.05999557673931122, -0.31075721979141235, 0.24036505818367004]], "dimensions_m": [0.2821, 1.1734, 1.5343], "sockets": {"Socket_Hand": [-0.25999999046325684, -0.6600000262260437, -0.5], "Socket_Muzzle": [-0.24703076481819153, -0.8266044855117798, -0.3817587196826935], "Socket_Nock": [-0.27823901176452637, -0.42569926381111145, -0.4299876093864441], "Socket_SupportHand": [-0.27823901176452637, -0.42569926381111145, -0.4299876093864441], "Socket_Camera": [0.0, 0.0, 0.0]}, "pivot": "camera attachment at origin; all export object scales are 1", "variant": "first_person_large", "enlargement": 1.5, "camera": {"horizontal_fov_degrees": 75, "near_m": 0.03, "hand_position_blender_m": [-0.25999999046325684, -0.6600000262260437, -0.5], "hand_position_unity_m": [-0.25999999046325684, -0.5, 0.6600000262260437], "aim_target_blender_m": [0.0, -4.0, 0.0], "note": "Camera offset and enlargement are already baked; attach root with identity transform."}, "framing": {"min_camera_depth_m": 0.31075727939605713, "screen_bounds_normalized": [[0.5576558113098145, -2.5165555477142334], [1.1500606536865234, 1.328278660774231]], "reticle_clear": true, "render_resolution": [1600, 900], "muzzle_ray_error_m": 6.447254996249261e-07}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_PortalGun.blend",
+      "bytes": 357531,
+      "sha256": "39f46a2f18ed9c7aaaf095db9242d0c397955fad059d7f2e619f02bff802e799"
+    },
+    {
+      "path": "CubeEscape_PortalGun.glb",
+      "bytes": 1111688,
+      "sha256": "a5d6b961fde5b130acb1b86bbf94b2100c5264f3677695399630d343ff58159c"
+    },
+    {
+      "path": "CubeEscape_PortalGun.fbx",
+      "bytes": 892156,
+      "sha256": "5954d69f3e22ba1c57f32a78bc236bead2f129cb4861e67cc355fc81d991d6d1"
+    },
+    {
+      "path": "qa_geometry.json",
+      "bytes": 1033,
+      "sha256": "6db6daf9a1535da2541294ba63e6db643b41b2022712a3e013f2377637343b97"
+    },
+    {
+      "path": "qa_roundtrip.json",
+      "bytes": 1272,
+      "sha256": "65befc6d2e137d378240c86d407f01604bf8bcc5836ff35f3985b6c99cfe4be8"
+    },
+    {
+      "path": "preview_white.png",
+      "bytes": 1586632,
+      "sha256": "67baa2f0c2757c1f3a0b34d9c7569efb90faa39fb4f5c4b420cecab248a1f498"
+    },
+    {
+      "path": "preview_concept_colors.png",
+      "bytes": 1602432,
+      "sha256": "dfe6b7c81e9893ec79d1c91140d658880ede122374ac3c4dddc9f3b078ec6b6d"
+    },
+    {
+      "path": "view_side.png",
+      "bytes": 1506815,
+      "sha256": "357bf8fc74eb8d22d2434b8c0e8cc26ecaeb169caa2f59ad01eeabe8dc4420ef"
+    },
+    {
+      "path": "view_front.png",
+      "bytes": 1522457,
+      "sha256": "8365f5776b338a835f49f880a428cd93e382611be4cdc01db83cfba6348f4d3c"
+    },
+    {
+      "path": "view_top.png",
+      "bytes": 1432999,
+      "sha256": "00b5d18299ae5f983532f99e043b5bbd4dcf6c05b018698d0e56a5fa86ef5feb"
+    }
+  ]
+}
