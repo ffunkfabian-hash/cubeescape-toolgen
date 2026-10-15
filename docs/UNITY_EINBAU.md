@@ -1,6 +1,6 @@
 # Einbau in Cube Escape (Unity 6, URP) – Vorbereitung
 
-Stand 0.5.0 Trimline. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
+Stand 0.6.0 Sightline. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
 liest, damit der spätere Einbau keine Annahmen über Toolgen treffen muss. Das Spielprojekt wird aus diesem Repo nicht
 verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-Export.
 

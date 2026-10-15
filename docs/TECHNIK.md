@@ -18,6 +18,10 @@ der Playhead aktualisiert nur die Zeitleiste. FPS: Kamera am Ursprung, Blick +Z,
 (Datenwert, siehe Viewmodel-Sichtfeld), Near Clip 3 cm. Die Variante „Spielmodell“ (`game`) erscheint, wenn der Katalog sie
 enthält; ohne sie arbeitet der Viewer unverändert.
 Der Knopf „Ego“ lädt vor dem Kamerawechsel die passende FPS-Variante, auch für einen gespeicherten B-Vergleich.
+Varianten im Viewer: `world`, `fps`, `arrow`, `game` („Spielmodell“) und `fps_game` („Ego-Spielmodell“, Datei `<Asset>_FPS_Game`, Wurzel
+`<Asset>_FPS`, nur LOD0, Clip des Ego-Modells). Beide Spielvarianten sind optional; fehlen sie im Katalog, arbeitet der Viewer wie
+zuvor. „Ego“ öffnet aus dem Spielmodell das Ego-Spielmodell (sonst das gestaltete Ego-Modell); Werkzeugwechsel in der Ego-Ansicht behalten die Variante.
+Die Viewmodel-Kamera (Sichtfeld, Regler, A/B) gilt für beide Ego-Varianten, sie liest `viewmodel_camera.json` des Werkzeugs.
 Die Ego-Ansicht behält in App, A/B-Vergleich und Screenshot immer 16:9; freie Ränder füllen den restlichen Platz.
 So zeigt ein hohes App-Fenster nicht plötzlich mehr Arm als die geprüfte Vorschau.
 Andere Ansichten untersuchen die gewählte Variante; Werkzeugwechsel erhalten die FPS-Auswahl.
@@ -184,7 +188,7 @@ Collapse-Decimate-Modifier gleichmäßig auf das Budget verkleinert (Shape Keys 
 Dreieck; Iteration bis auf 4 % genau); LOD1 entsteht danach aus dem reduzierten LOD0. Die Maßprüfung `bounds_lod0` (1 mm gegen das
 Quellmodell in jedem Clipbild) gilt unverändert, `triangle_budget` prüft das Budget. Das Budget ist ein Datenwert: Ändern baut
 neu, ohne Änderung am Generator. Das Weltmodell vor dem Export bleibt unverändert, Viewer-Varianten „Welt“ und „Ego“ zeigen
-weiter das volle Modell.
+weiter das volle Modell; die Varianten „Spielmodell“ und „Ego-Spielmodell“ zeigen das reduzierte.
 
 **Ego-Modell (`game_fps`).** Dieselbe Pipeline für `<Asset>_FPS` (Hände, Arme, Werkzeug): `<Asset>_FPS_Game.blend/.fbx/.glb`,
 `unity_contract_fps.json`, `qa_game_fps.json`, `preview_game_fps.png` (ab Standard: Quelle, LOD0, LOD1). Unterschiede: eigenes
@@ -228,7 +232,7 @@ Offen bleibt der Einbau in Unity (siehe Grenzen).
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer
 Blender oder Python, Argumente, gelesene Dateien, zusätzliche Quellen, Bilder ja/nein, Stufen, QA-Dateien, Viewer-Varianten):
-Welt, FPS, Animation, Animations-GIF, Ego-Hände, Ego-Reimport, Spiel-Export; dazu je Viewer-Variante ein Export und in
+Welt, FPS, Animation, Animations-GIF, Ego-Hände, Ego-Reimport, Spiel-Export; dazu je Viewer-Variante ein Export (`fps_game` und `game` hängen an ihren Spiel-Stufen) und in
 Standard/Voll die Reimport-Prüfungen. Eine neue Stufe ist ein Eintrag; Manifest, Cache und Viewer-Variante folgen daraus.
 
 **Schlüssel.** Jede Stufe hat einen Inhaltsschlüssel aus: Stufendeklaration, Werkzeugeintrag, Blender-Version, Fingerabdruck der

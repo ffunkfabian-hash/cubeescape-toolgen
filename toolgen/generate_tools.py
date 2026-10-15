@@ -121,11 +121,12 @@ STAGES = (
           render_args=("--preview",), qa=("qa_game.json",),
           variants=(Variant("game", "{asset}_Game", clip=("clip",), node="{asset}"),)),
     # The same for the first-person model (hands, arms, tool): own triangle budget, no collision, camera data in
-    # unity_contract_fps.json. No viewer variant (the viewer's Ego view keeps showing the unreduced model).
+    # unity_contract_fps.json. Viewer model "fps_game" (root <asset>_FPS_Game, LOD0 only): the Ego view of the reduced model.
     Stage("game_fps", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--viewmodel"),
           reads=("{asset}_FPS.blend", "viewmodel_camera.json"),
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
-          render_args=("--preview",), qa=("qa_game_fps.json",)),
+          render_args=("--preview",), qa=("qa_game_fps.json",),
+          variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),
 )
 
 

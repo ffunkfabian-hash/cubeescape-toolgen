@@ -41,8 +41,8 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    Movie-Export und FFmpeg-Aufruf stehen im Systemdoc. Handgrößen/Haltungen sind Daten in `data/viewmodels.json`, Bewegungsprofile in `motion_profiles.py`.
 7. Spiel-Export (Stufe `game`): `<Werkzeug>/qa_game.json` muss `passed: true` sein, jede Prüfung (Palette, Renderer,
    Materialien, Maße, Anker, Clip bei animierten Werkzeugen, LOD1, Kollision, GLB-/FBX-Reimport) einzeln lesen; `preview_game.png` (ab Standard) ansehen:
-   Weltmodell, LOD0, LOD1, Kollisionsboxen. Kollision gegen das tatsächliche Modell, Öffnungen frei. Viewer-Variante
-   „Spielmodell“ mit ansehen. Dasselbe für das Ego-Modell (Stufe `game_fps`): `qa_game_fps.json` (zusätzlich `triangle_budget`),
+   Weltmodell, LOD0, LOD1, Kollisionsboxen. Kollision gegen das tatsächliche Modell, Öffnungen frei. Viewer-Varianten
+   „Spielmodell“ und „Ego-Spielmodell“ mit ansehen (Ego-Spielmodell neben dem gestalteten Ego-Modell: gleicher Bildausschnitt, matter). Dasselbe für das Ego-Modell (Stufe `game_fps`): `qa_game_fps.json` (zusätzlich `triangle_budget`),
    `preview_game_fps.png`; keine Kollision, Hände/Arme im Bild unverändert.
 8. Regeln/Profile: `python3 scripts/check_rules.py --shared <ce-agent-tools>`; jeder Hook hat treffende und nicht
    treffende Fälle, Profile erlauben Prüfungen/Doku und sperren Code-Änderungen des Testläufers.

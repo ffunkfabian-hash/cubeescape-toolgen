@@ -19,6 +19,8 @@ struct ModelInfo: Decodable, Identifiable, Hashable {
     let frames: Int
     let qa: String?
     var variantLabel: String { Self.label(variant) }
+    /// Ego models: the authored first-person model and its reduced game export.
+    var isEgo: Bool { variant == "fps" || variant == "fps_game" }
 
     /// Display names of every known variant; `game` comes from the game export and may be absent.
     static func label(_ variant: String) -> String {
@@ -27,6 +29,7 @@ struct ModelInfo: Decodable, Identifiable, Hashable {
         case "fps": return "Egoperspektive"
         case "arrow": return "Pfeil"
         case "game": return "Spielmodell"
+        case "fps_game": return "Ego-Spielmodell"
         default: return variant
         }
     }
@@ -134,6 +137,13 @@ final class ToolData {
     var tools: [ModelInfo] {
         var seen = Set<String>()
         return catalog.models.filter { seen.insert($0.tool).inserted }
+    }
+
+    /// The Ego model that matches `info`: the reduced game model for the game model, otherwise the authored one.
+    func egoPeer(of info: ModelInfo) -> ModelInfo? {
+        let preferred = info.variant == "game" ? "fps_game" : "fps"
+        return catalog.models.first { $0.tool == info.tool && $0.variant == preferred } ??
+               catalog.models.first { $0.tool == info.tool && $0.variant == "fps" }
     }
 
     func fieldOfView(tool: String) -> Double {

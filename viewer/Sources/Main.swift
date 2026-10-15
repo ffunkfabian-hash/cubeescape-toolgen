@@ -30,7 +30,7 @@ enum Main {
             try look.validate(catalog: data.catalog)
             model.select(data.catalog.models.first { $0.id == look.model }!); model.look = look
         }
-        model.setView(value(args, "--view") ?? (model.selected.variant == "fps" ? "FPS" : "Iso"))
+        model.setView(value(args, "--view") ?? (model.selected.isEgo ? "FPS" : "Iso"))
         if let text = value(args, "--fov") {
             guard let degrees = Double(text), ToolData.fieldOfViewRange.contains(degrees) else {
                 throw ViewerError.invalid("Sichtfeld muss zwischen 35 und 75 Grad liegen.")
@@ -120,13 +120,13 @@ enum Main {
                 try require(model.selected.variant == "fps" && model.viewName == "Front", "FPS inspection selected another asset")
                 checks += 1
             }
-            for info in model.data.catalog.models where info.variant != "fps" {
+            for info in model.data.catalog.models where !info.isEgo {
                 model.select(info)
                 try require(model.viewName == "Iso", "World/arrow selection did not restore overview")
                 model.setView("FPS")
                 for tool in Set(model.data.catalog.models.map(\.tool)) {
                     model.selectTool(tool)
-                    try require(model.selected.tool == tool && model.selected.variant == "fps" && model.viewName == "FPS",
+                    try require(model.selected.tool == tool && model.selected.isEgo && model.viewName == "FPS",
                                 "Tool switch lost Ego mode: \(tool)")
                 }
                 checks += 1
@@ -149,7 +149,7 @@ enum Main {
             try require(abs(arrow.simdScale.x - 0.001) < 0.0001, "Arrow was not hidden on the release frame")
             checks += 1
             // Ego field of view: data default per tool, override, A/B, reset, clamping, no idle timer.
-            for info in model.data.catalog.models where info.variant == "fps" {
+            for info in model.data.catalog.models where info.isEgo {
                 model.select(info)
                 let expected = model.data.fieldOfView(tool: info.tool)
                 guard let camera = model.scene.camera.camera else { throw ViewerError.invalid("Camera missing") }
@@ -174,7 +174,41 @@ enum Main {
                 model.select(info)
                 try require(model.viewName == "Iso" && model.selected.variantLabel == "Spielmodell", "Game model selection failed")
                 model.setView("FPS")
-                try require(model.selected.tool == info.tool && model.selected.variant == "fps", "Ego from game model failed")
+                let reducedEgo = model.data.catalog.models.contains { $0.tool == info.tool && $0.variant == "fps_game" }
+                try require(model.selected.tool == info.tool && model.selected.variant == (reducedEgo ? "fps_game" : "fps"),
+                            "Ego from game model must open the reduced Ego model when it exists")
+                checks += 1
+            }
+            // Reduced Ego (game export): own variant, LOD0 only, same camera and animation as the authored Ego model.
+            try require(ModelInfo.label("fps_game") == "Ego-Spielmodell", "Ego game label changed")
+            for info in model.data.catalog.models where info.variant == "fps_game" {
+                guard let authored = model.data.catalog.models.first(where: { $0.tool == info.tool && $0.variant == "fps" }) else {
+                    throw ViewerError.invalid("Ego game model without its authored Ego model: \(info.id)")
+                }
+                model.select(info)
+                try require(info.isEgo && model.viewName == "FPS" && model.selected.variantLabel == "Ego-Spielmodell",
+                            "Ego game model selection failed: \(info.id)")
+                try require(info.triangles > 0 && info.triangles < authored.triangles && info.frames == authored.frames,
+                            "Ego game model is not a reduced copy of the authored one: \(info.id)")
+                var lower = false
+                model.scene.root.enumerateHierarchy { node, _ in if node.name?.contains("_LOD1") == true { lower = true } }
+                try require(!lower, "Viewer must show LOD0 only: \(info.id)")
+                try require(model.scene.root.childNode(withName: "Viewmodel_Motion", recursively: true) != nil &&
+                            model.scene.root.childNode(withName: "Socket_Camera", recursively: true) != nil,
+                            "Ego game model lost its rig nodes: \(info.id)")
+                model.setView("Front")
+                try require(model.selected.variant == "fps_game" && model.viewName == "Front", "Inspection left the Ego game model")
+                model.setView("FPS")
+                model.select(authored)
+                model.setView("FPS")
+                try require(model.selected.variant == "fps", "Ego view must keep the authored Ego model selected")
+                if let world = model.data.catalog.models.first(where: { $0.tool == info.tool && $0.variant == "world" }) {
+                    model.select(world); model.setView("FPS")
+                    try require(model.selected.variant == "fps", "Ego from the world model must open the authored Ego model")
+                }
+                model.select(info)
+                model.selectTool(info.tool)
+                try require(model.selected.variant == "fps_game", "Tool switch lost the Ego game variant")
                 checks += 1
             }
             for available in [CGSize(width: 560, height: 700), CGSize(width: 1200, height: 400), CGSize(width: 960, height: 540)] {

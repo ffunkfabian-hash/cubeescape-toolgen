@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.6.0 – Sightline (15.10.2026)
+
+- Viewer: neue Variante „Ego-Spielmodell“ (`fps_game`, Datei `<Asset>_FPS_Game`, nur LOD0) für jedes Werkzeug, optional wie das
+  „Spielmodell“. Sie nutzt dieselbe Ego-Kamera (`viewmodel_camera.json`, Regler „Sichtfeld“, A/B, PNG) und dieselbe Animation wie das
+  gestaltete Ego-Modell. Die Ego-Taste öffnet aus dem „Spielmodell“ das Ego-Spielmodell, sonst das gestaltete Ego-Modell;
+  Werkzeugwechsel und Ansichtswechsel behalten die Variante. Neue Stufen-Variante an `game_fps` (`variants` in `STAGES`).
+- Viewer-Tests: Ego-Spielmodell weniger Dreiecke als das gestaltete, gleiche Frames, nur LOD0, Rig-Knoten (`Viewmodel_Motion`,
+  `Socket_Camera`), Wahl der Ego-Taste, Rückfall ohne die Variante, Bildabweichung gegen das gestaltete Ego-Modell unter 10 %, Seitenleiste bei 360 pt.
+- Prüfung: 108 Unit-Tests, `check_output.sh` mit 117 Prüfungen für 17 Modelle, Viewer-Test mit 64 Prüfungen (`--tier full`).
+- Grenzen: Unity-Abnahme und die Dreiecksbudgets des Spiels stehen aus (Budgets unverändert, Schätzwerte).
+
 ## 0.5.0 – Trimline (15.10.2026)
 
 Behebt die Integrationslücken aus dem Review vom 15.10.2026 (Material- und Knotenzahl, Dreiecksbudget, Ego-Sichtfeld).

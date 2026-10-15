@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.5.0 · Trimline.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.6.0 · Sightline.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -35,7 +35,7 @@ Ego-Modell (eigenes Budget, keine Kollision, Viewmodel-Kameradaten in `unity_con
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich; der Regler „Sichtfeld“ der Ego-Ansicht (35–75°, Zurücksetzen auf den Datenwert) wirkt
-auf Ansicht, A/B und PNG (Kommandozeile `--fov`). Die Variante „Spielmodell“ zeigt den Spiel-Export. Bogen und Magnetgreifer
+auf Ansicht, A/B und PNG (Kommandozeile `--fov`). Die Varianten „Spielmodell“ und „Ego-Spielmodell“ zeigen den Spiel-Export (nur LOD0, Ego mit derselben Kamera und Animation); die Ego-Taste öffnet aus dem Spielmodell das Ego-Spielmodell, sonst das gestaltete Ego-Modell. Bogen und Magnetgreifer
 spielen ihre Aktion auf Wunsch, mit Reset, Tempo und optionaler Prüfschleife. Materialfinish, Verkleidungsfarbe und
 Leuchtstärke können verändert und als B-Vergleich gemerkt werden. Leertaste startet/pausiert; Cmd+O/Cmd+S laden/speichern
 Looks, Cmd+Shift+S exportiert ein PNG.

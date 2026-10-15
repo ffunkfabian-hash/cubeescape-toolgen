@@ -49,7 +49,7 @@ for model in catalog["models"]:
         assert difference(path, drawn) > 30, (model["id"], "motion not visible")
         assert difference(path, reset) < 20, (model["id"], "reset does not restore rest pose")
         check("motion and reset " + model["id"])
-    if model["variant"] in ("world", "fps"):
+    if model["variant"] in ("world", "fps", "fps_game"):
         # The Ego sidebar adds the field-of-view section; both layouts must fit 360 pt.
         run("--sidebar-check", shots / (identifier + "-sidebar.png"), "--model", model["id"])
         check("sidebar fits " + model["id"])
@@ -67,7 +67,7 @@ for model in catalog["models"]:
     check("Ego button renders FPS asset " + model["tool"])
 
 for model in catalog["models"]:
-    if model["variant"] != "fps":
+    if model["variant"] not in ("fps", "fps_game"):
         continue
     camera_path = output / model["tool"] / "viewmodel_camera.json"
     assert camera_path.is_file(), (model["id"], "missing viewmodel camera")
@@ -119,7 +119,8 @@ with tempfile.TemporaryDirectory(prefix="toolgen-viewer-tests-") as temporary:
         game = games[0]
         run("--check-navigation", "--data", game_library)
         run("--sidebar-check", shots / "game-sidebar.png", "--data", game_library, "--model", game["id"])
-        without = dict(game_catalog, models=[model for model in game_catalog["models"] if model["variant"] != "game"])
+        without = dict(game_catalog, models=[model for model in game_catalog["models"]
+                                             if model["variant"] not in ("game", "fps_game")])
         (game_library / "catalog.json").write_text(json.dumps(without))
         run("--check-navigation", "--data", game_library)
         (game_library / "catalog.json").write_text(json.dumps(game_catalog))
@@ -135,6 +136,18 @@ with tempfile.TemporaryDirectory(prefix="toolgen-viewer-tests-") as temporary:
         run("--check-navigation", "--data", game_library)
         run("--sidebar-check", shots / "game-sidebar.png", "--data", game_library, "--model", game["id"])
     check("game model variant shown, navigable and optional")
+    egos = [model for model in game_catalog["models"] if model["variant"] == "fps_game"]
+    assert egos, "catalog has no Ego game model (stage game_fps)"
+    for ego in egos:
+        authored = next(model for model in game_catalog["models"] if model["tool"] == ego["tool"] and model["variant"] == "fps")
+        shot = shots / (ego["id"].replace("/", "-") + "-view.png")
+        result = run("--snapshot", shot, "--data", game_library, "--model", ego["id"], "--size", "600x400", "--no-floor")
+        assert ego["id"] in result.stdout and ego["triangles"] < authored["triangles"], (ego["id"], result.stdout)
+        # The reduced model keeps the framing of the authored one: same camera, silhouette within a few percent.
+        reference = shots / (authored["id"].replace("/", "-") + ".png")
+        pixels = 600 * 400
+        assert difference(shot, reference) < pixels * .10, (ego["id"], "reduced Ego model differs from the authored one")
+    check("reduced Ego model shown as its own variant, optional and framed like the authored one")
     for tool in {model["tool"] for model in game_catalog["models"]}:
         (game_library / tool / "viewmodel_camera.json").unlink(missing_ok=True)
     run("--snapshot", root / "fallback.png", "--data", game_library, "--model", next(

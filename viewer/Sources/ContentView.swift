@@ -66,7 +66,7 @@ final class ViewerModel: ObservableObject {
             stop()
             selected = info; scene = next; look.model = info.id
             scene.apply(look); sockets = false
-            setView(info.variant == "fps" ? "FPS" : "Iso")
+            setView(info.isEgo ? "FPS" : "Iso")
             status = "\(info.label) · \(info.variantLabel) geladen"
         } catch { status = error.localizedDescription }
     }
@@ -77,8 +77,8 @@ final class ViewerModel: ObservableObject {
     }
 
     func setView(_ name: String) {
-        if name == "FPS", selected.variant != "fps" {
-            guard let peer = data.catalog.models.first(where: { $0.tool == selected.tool && $0.variant == "fps" }) else {
+        if name == "FPS", !selected.isEgo {
+            guard let peer = data.egoPeer(of: selected) else {
                 status = "Für dieses Werkzeug ist kein Ego-Modell vorhanden."
                 return
             }
@@ -86,8 +86,8 @@ final class ViewerModel: ObservableObject {
             return
         }
         if name == "FPS", let saved = comparisonLook, comparison != nil,
-           let info = data.catalog.models.first(where: { $0.id == saved.model }), info.variant != "fps",
-           let peer = data.catalog.models.first(where: { $0.tool == info.tool && $0.variant == "fps" }) {
+           let info = data.catalog.models.first(where: { $0.id == saved.model }), !info.isEgo,
+           let peer = data.egoPeer(of: info) {
             do {
                 let next = ToolScene(data: try ModelData(directory: data.directory(peer)))
                 var converted = saved; converted.model = peer.id
@@ -180,7 +180,7 @@ final class ViewerModel: ObservableObject {
             let first = next.catalog.models[0]
             let loaded = ToolScene(data: try ModelData(directory: next.directory(first)))
             stop(); data = next; selected = first; scene = loaded; look = ToolLook(model: first.id)
-            setView(first.variant == "fps" ? "FPS" : "Iso"); status = "Modellkatalog geladen"
+            setView(first.isEgo ? "FPS" : "Iso"); status = "Modellkatalog geladen"
         } catch { status = error.localizedDescription }
     }
 

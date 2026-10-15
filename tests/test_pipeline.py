@@ -22,6 +22,7 @@ from generate_tools import (
     assemble_package,
     output_lock,
     valid_package,
+    variants,
     worker_budget,
 )
 
@@ -222,7 +223,11 @@ class GameFpsStageTest(unittest.TestCase):
         self.assertIn("{asset}_FPS.blend", stage.reads)
         self.assertIn("viewmodel_camera.json", stage.reads)
         self.assertIn("data/game_budget.json", stage.sources)
-        self.assertEqual((), stage.variants)
+        self.assertEqual(["fps_game"], [variant.name for variant in stage.variants])
+        self.assertEqual("{asset}_FPS", stage.variants[0].node)
+        self.assertEqual(("fps_clip", "clip"), stage.variants[0].clip)
+        for tool in catalog():
+            self.assertIn("fps_game", [variant.name for variant in variants(tool)])
         names = [stage.name for stage in STAGES]
         self.assertGreater(names.index("game_fps"), names.index("first_person"))
         for tool in catalog():
