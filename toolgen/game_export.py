@@ -49,6 +49,7 @@ LOD1_TARGET = .30
 LOD1_RANGE = (.25, .40)
 MAX_RENDERERS = 4                 # LOD0 renderers of a world model: one static plus the moving parts
 MAX_RENDERERS_VIEWMODEL = 14      # arms, hands and fingers move separately in the first-person model
+FRAMING_TOLERANCE_SCREEN = .003   # viewmodel: screen extent of a reduced renderer against the authored one (share of the screen)
 BOUNDS_TOLERANCE_M = .001         # LOD0 against the world model, every frame of the clip
 ROUNDTRIP_BOUNDS_TOLERANCE_M = .002
 ANCHOR_TOLERANCE = 1e-6           # native .blend: the empties are not touched at all
@@ -431,15 +432,35 @@ def classify(root, frames, asset):
 
 
 # --------------------------------------------------------------------------------------------- source record
-def record_source(scene, root, groups, frames):
+def camera_extents(points, near):
+    """(u min, u max, v min, v max) of the points in front of the viewmodel camera (tangent space, so independent of the
+    FOV and aspect), or None. Same camera space as first_person.camera_space: camera at the origin, looking along -Y."""
+    depth = -points[:, 1]
+    front = depth >= near
+    if not front.any():
+        return None
+    u, v = -points[front, 0] / depth[front], points[front, 2] / depth[front]
+    return [float(u.min()), float(u.max()), float(v.min()), float(v.max())]
+
+
+def aspect_ratio(name):
+    width, height = (float(value) for value in name.split(":"))
+    return width / height
+
+
+def record_source(scene, root, groups, frames, near=None):
     depsgraph = bpy.context.evaluated_depsgraph_get()
     empties = [obj for obj in tree(root) if obj.type == "EMPTY"]
-    record = {"frames": frames, "matrices": {}, "group_bounds": {}, "bounds": {}}
+    record = {"frames": frames, "matrices": {}, "group_bounds": {}, "bounds": {}, "group_extents": {}}
     for frame in frames:
         set_frame(scene, frame)
         depsgraph = bpy.context.evaluated_depsgraph_get()
         record["matrices"][frame] = {obj.name: matrix_list(obj.matrix_world) for obj in empties}
         record["group_bounds"][frame] = {group.name: bounds_of(group.members, depsgraph) for group in groups}
+        if near is not None:
+            record["group_extents"][frame] = {
+                group.name: camera_extents(np.concatenate([mesh_points(obj, depsgraph) for obj in group.members
+                                                           if len(obj.data.vertices)]), near) for group in groups}
         record["bounds"][frame] = bounds_of([obj for obj in tree(root) if obj.type == "MESH"], depsgraph)
     set_frame(scene, frames[0])
     return record
@@ -922,6 +943,8 @@ def check_blend(checks, path, source, expected, palette):
                    and markers == source["markers"] and keys == source["key_frames"]
                    and {k: str(root[k]) for k in root.keys() if k.startswith("ce_")} == source["root_properties"],
                    frames=scene.frame_end - scene.frame_start + 1, markers=markers, key_frames=len(keys))
+    if expected["camera"]:
+        check_framing(checks, scene, source, expected, renderers)
     lod0_tris = sum(triangles(obj.data) for obj in renderers)
     lod1_tris = sum(triangles(obj.data) for obj in lods)
     ratio = lod1_tris / lod0_tris
@@ -945,6 +968,44 @@ def check_blend(checks, path, source, expected, palette):
                lod0_triangles=lod0_tris, lod1_triangles=lod1_tris, ratio=round(ratio, 4), range=LOD1_RANGE,
                parts=lod_errors)
     return [obj.name for obj in renderers], [obj.name for obj in lods]
+
+
+def check_framing(checks, scene, source, expected, renderers):
+    """Viewmodel framing of the REDUCED LOD0 meshes at the data FOV (16:9 and 16:10), every clip frame: the screen extent
+    of each renderer stays within ``tolerance`` of the authored model's (hand margins and the hidden forearm follow from the
+    extents), and no LOD0 vertex reaches the reticle square. Only this FOV is checked, the authored model's wider
+    FOV range is not transferred to the game model."""
+    camera = expected["camera"]
+    tan_v = math.tan(math.radians(camera["vertical_fov_degrees"]) / 2)
+    worst, blocked = 0.0, []
+    names = {group["renderer"]: group["name"] for group in expected["groups"]}
+    for frame in source["frames"]:
+        set_frame(scene, frame)
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        for obj in renderers:
+            points = mesh_points(obj, depsgraph)
+            found = camera_extents(points, camera["near_clip_m"])
+            reference = source["group_extents"][frame][names[obj.name]]
+            if (found is None) != (reference is None):
+                worst = max(worst, 1.0)
+            elif found is not None:
+                for aspect in camera["aspects"]:
+                    tan_h = tan_v * aspect_ratio(aspect)
+                    scale = (1 / (2 * tan_h), 1 / (2 * tan_h), 1 / (2 * tan_v), 1 / (2 * tan_v))
+                    worst = max(worst, max(abs(a - b) * s for a, b, s in zip(found, reference, scale)))
+            depth = -points[:, 1]
+            front = depth >= camera["near_clip_m"]
+            for aspect in camera["aspects"]:
+                tan_h = tan_v * aspect_ratio(aspect)
+                u = .5 + (-points[front, 0] / depth[front]) / (2 * tan_h)
+                v = .5 + (points[front, 2] / depth[front]) / (2 * tan_v)
+                if ((abs(u - .5) <= camera["reticle_half_extent"]) & (abs(v - .5) <= camera["reticle_half_extent"])).any():
+                    blocked.append([obj.name, frame, aspect])
+    set_frame(scene, source["frames"][0])
+    checks.add("viewmodel_framing", worst <= camera["tolerance"] and not blocked, vertical_fov_degrees=camera["vertical_fov_degrees"],
+               aspects=camera["aspects"], frames=len(source["frames"]), max_extent_error_screen=round(worst, 6),
+               tolerance_screen=camera["tolerance"], reticle_blocked_by=blocked[:5],
+               note="reduced LOD0 against the authored model at the data FOV only; reticle check is vertex based")
 
 
 def game_key_frames(root):
@@ -1193,7 +1254,14 @@ def export(work, tool, palette, budget, viewmodel=False):
     frames = list(range(scene.frame_start, scene.frame_end + 1)) if clip_name else [scene.frame_start]
     groups = classify(root, frames, asset)
     meshes = [obj for obj in tree(root) if obj.type == "MESH"]
-    source = record_source(scene, root, groups, frames)
+    camera_data = None
+    if viewmodel:
+        data = json.loads((ROOT / "data/viewmodels.json").read_text())["camera"]
+        camera_file = json.loads((work / "viewmodel_camera.json").read_text())
+        camera_data = {"vertical_fov_degrees": camera_file["vertical_fov_degrees"], "near_clip_m": camera_file["near_clip_m"],
+                       "aspects": data["qa"]["aspects"], "reticle_half_extent": data["qa"]["reticle_half_extent"],
+                       "tolerance": FRAMING_TOLERANCE_SCREEN}
+    source = record_source(scene, root, groups, frames, camera_data["near_clip_m"] if camera_data else None)
     source.update({
         "frame_start": scene.frame_start, "frame_end": scene.frame_end, "fps": scene.render.fps / scene.render.fps_base,
         "markers": sorted((marker.name, marker.frame) for marker in scene.timeline_markers),
@@ -1255,8 +1323,13 @@ def export(work, tool, palette, budget, viewmodel=False):
         camera = json.loads(camera_path.read_text())
         camera = {key: camera[key] for key in ("vertical_fov_degrees", "horizontal_fov_degrees", "reference_aspect",
                                                "near_clip_m", "override", "unity", "player_fov_dependency",
-                                               "validated_vertical_fov_degrees", "aspect_policy", "camera_offset_m",
-                                               "runtime")}
+                                               "aspect_policy", "camera_offset_m", "runtime")}
+        camera["authored_model_validated_vertical_fov_degrees"] = json.loads(camera_path.read_text())[
+            "validated_vertical_fov_degrees"]
+        camera["game_model_validated_vertical_fov_degrees"] = [camera["vertical_fov_degrees"]]
+        camera["validation_note"] = ("qa_viewmodel.json validates the authored Ego model over the listed FOV range; the game "
+                                     "model is checked against it at vertical_fov_degrees only (qa_game_fps.json "
+                                     "viewmodel_framing). Use another FOV only after re-checking.")
         camera["source"] = camera_path.name
     contract = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
                               camera)
@@ -1265,7 +1338,7 @@ def export(work, tool, palette, budget, viewmodel=False):
                 "groups": [{"name": group.name, "renderer": group.name + "_LOD0"} for group in groups],
                 "materials": {obj.name: [m.name for m in obj.data.materials] for obj in [*renderers, *lods]},
                 "clip": clip_info and dict(clip_info, frames=clip_info["frames"]),
-                "viewmodel": viewmodel,
+                "viewmodel": viewmodel, "camera": camera_data,
                 "max_renderers": MAX_RENDERERS_VIEWMODEL if viewmodel else MAX_RENDERERS,
                 "sample_frames": sample_frames(scene.frame_start, scene.frame_end, [f for _, f in source["markers"]],
                                                source["key_frames"]) if clip_name else frames}

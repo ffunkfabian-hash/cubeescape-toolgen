@@ -1,5 +1,17 @@
 # Änderungen
 
+## 0.6.1 – Sightline (15.10.2026)
+
+Patch nach dem Codex-Review von 0.5.0/0.6.0.
+
+- Ego-Spielmodell: neue Prüfung `viewmodel_framing` in `qa_game_fps.json`: Bildschirmausdehnung jedes reduzierten Renderers gegen das
+  gestaltete Modell in jedem Clipbild bei 16:9 und 16:10 (Toleranz 0,3 % der Bildgröße) und freies Fadenkreuz (vertexbasiert).
+  Die FOV-Freigaben im Vertrag gelten getrennt: `authored_model_validated_vertical_fov_degrees` (aus `qa_viewmodel.json`) und
+  `game_model_validated_vertical_fov_degrees` (nur der Datenwert); vorher wurde die Reihe des Originals für das Spielmodell übernommen.
+- Viewer-Test: das Ego-Spielmodell hat höchstens so viele Dreiecke wie das gestaltete (bei Budget über der Quellzahl entfällt die Reduktion).
+- Prüfung: 109 Unit-Tests, `check_output.sh` 117 Prüfungen (17 Modelle), Viewer-Test 64 Prüfungen (`--tier full`).
+- Test `GameFpsStageTest` stand hinter dem `unittest.main()`-Block und lief bei direktem Aufruf nicht; verschoben.
+
 ## 0.6.0 – Sightline (15.10.2026)
 
 - Viewer: neue Variante „Ego-Spielmodell“ (`fps_game`, Datei `<Asset>_FPS_Game`, nur LOD0) für jedes Werkzeug, optional wie das

@@ -33,7 +33,7 @@ an das Sichtfeld des Spielers gebunden**. Das Spiel zeichnet es mit einer eigene
 4. Seitenverhältnis: Das vertikale FOV bleibt fest, das horizontale folgt dem Bildformat (16:9 → 75,0°, 16:10 → 69,3°).
    Bei breiteren Bildschirmen sieht man dasselbe Bild mit mehr Raum an den Seiten, die Hände bleiben im Bild.
 5. Wertebereich: Der Bildausschnitt (Hände im Bild, freies Fadenkreuz, Unterarme außerhalb) ist nur beim Datenwert und den
-   in `validated_vertical_fov_degrees` genannten Werten geprüft (Bogen nur 46,69°, Taschenlampe 42,69–54,69°). Soll das Spiel
+   in `authored_model_validated_vertical_fov_degrees` genannten Werten für das gestaltete Modell geprüft (Bogen nur 46,69°, Taschenlampe 42,69–54,69°); das reduzierte Spielmodell nur bei `vertical_fov_degrees` (`viewmodel_framing` in `qa_game_fps.json`). Soll das Spiel
    eine Viewmodel-FOV-Einstellung anbieten, nur diese Werte zulassen oder den Bildausschnitt neu prüfen.
 6. Der Datenwert steht in `data/viewmodels.json` › `camera` und nur dort: Änderungen dort erzeugen neue Pakete mit neuer
    QA (`qa_viewmodel.json`) und neuem `viewmodel_camera.json`; es gibt keinen weiteren fest gebackenen 75°-Wert.

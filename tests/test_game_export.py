@@ -565,6 +565,11 @@ class SmallHelperTests(unittest.TestCase):
                                 "the viewmodel adds hands and arms to the same tool")
                 self.assertLessEqual(BUDGET["viewmodel"][tool_id], 16000)
 
+    def test_aspect_ratio_and_framing_tolerance(self):
+        self.assertAlmostEqual(16 / 9, ge.aspect_ratio("16:9"))
+        self.assertAlmostEqual(1.6, ge.aspect_ratio("16:10"))
+        self.assertLessEqual(ge.FRAMING_TOLERANCE_SCREEN, .005)
+
     def test_budget_ratio(self):
         self.assertEqual(1.0, ge.budget_ratio(5000, 8000))
         self.assertEqual(1.0, ge.budget_ratio(0, 8000))

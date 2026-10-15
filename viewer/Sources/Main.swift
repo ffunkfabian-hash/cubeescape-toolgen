@@ -188,7 +188,7 @@ enum Main {
                 model.select(info)
                 try require(info.isEgo && model.viewName == "FPS" && model.selected.variantLabel == "Ego-Spielmodell",
                             "Ego game model selection failed: \(info.id)")
-                try require(info.triangles > 0 && info.triangles < authored.triangles && info.frames == authored.frames,
+                try require(info.triangles > 0 && info.triangles <= authored.triangles && info.frames == authored.frames,
                             "Ego game model is not a reduced copy of the authored one: \(info.id)")
                 var lower = false
                 model.scene.root.enumerateHierarchy { node, _ in if node.name?.contains("_LOD1") == true { lower = true } }

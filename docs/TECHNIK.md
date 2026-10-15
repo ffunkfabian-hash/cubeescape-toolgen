@@ -98,9 +98,9 @@ Wurzel in den Eigenschaften `ce_viewmodel_vertical_fov_degrees`, `ce_viewmodel_h
 
 Das Ego-Modell ist nicht an das Spieler-FOV gebunden: Es liegt im Kameraraum und wird mit einer eigenen Kamera gezeichnet. Den
 Wert nennt `viewmodel_camera.json` zusammen mit `player_fov_dependency: "none"`, `aspect_policy`, `camera_offset_m`,
-`validated_vertical_fov_degrees` (Werte, bei denen der Bildausschnitt für alle geprüften Seitenverhältnisse hält: Portalkanone und
+`validated_vertical_fov_degrees` (für das gestaltete Ego-Modell; Werte, bei denen der Bildausschnitt für alle geprüften Seitenverhältnisse hält: Portalkanone und
 Magnetgreifer 46,69/50,69°, Taschenlampe 42,69–54,69°, Bogen nur 46,69°) und einem `runtime`-Hinweis; derselbe Block steht als
-`viewmodel` in `unity_contract_fps.json`. Eine Viewmodel-FOV-Einstellung des Spiels darf nur diese Werte anbieten. Einbau:
+`viewmodel` in `unity_contract_fps.json` (dort `authored_model_validated_vertical_fov_degrees` und `game_model_validated_vertical_fov_degrees`). Das reduzierte Spielmodell ist nur beim Datenwert geprüft (`qa_game_fps.json` › `viewmodel_framing`: Bildschirmausdehnung je Renderer gegen das gestaltete Modell in jedem Clipbild für 16:9 und 16:10 innerhalb 0,3 % der Bildgröße, Fadenkreuz frei – vertexbasiert); eine Viewmodel-FOV-Einstellung des Spiels braucht für das Spielmodell eine neue Prüfung. Einbau:
 [UNITY_EINBAU](UNITY_EINBAU.md).
 
 Die Ego-Vorschau und die QA projizieren dieselbe Kamera (die Prüfung vergleicht beide an Stichpunkten). Verbindlich ist die

@@ -211,10 +211,6 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("qa_game.json", manifest["required_qa"])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class GameFpsStageTest(unittest.TestCase):
     def test_viewmodel_game_export_is_a_stage_with_its_own_qa_and_inputs(self):
         stage = next(stage for stage in STAGES if stage.name == "game_fps")
@@ -233,3 +229,6 @@ class GameFpsStageTest(unittest.TestCase):
         for tool in catalog():
             runs = [run.name for run in expand(tool, "quick")]
             self.assertIn("game_fps", runs)
+
+if __name__ == "__main__":
+    unittest.main()
