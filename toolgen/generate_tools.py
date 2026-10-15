@@ -45,8 +45,8 @@ def cache_key(tool, tier, blender_version, device="cpu"):
                                        sort_keys=True).encode())
     sources = [*sorted(path for path in (ROOT / "scripts/tool_assets" / tool["folder"]).iterdir()
                        if path.suffix in (".py", ".cs", ".json")),
-               ROOT / "scripts/tool_assets/design_profiles.py",
-               *(ROOT / "toolgen" / name for name in ("export_viewer.py", "run_asset.py", "version.py"))]
+               *sorted((ROOT / "scripts/tool_assets").glob("*.py")), ROOT / "data/viewmodels.json",
+               *(ROOT / "toolgen" / name for name in ("export_viewer.py", "run_asset.py", "first_person.py", "verify_viewmodel.py", "version.py"))]
     if tool["id"] == "flashlight":
         sources += sorted((ROOT / "scripts/tool_assets/Portalkanone").glob("*.py"))
     for path in sources:
@@ -78,6 +78,13 @@ def valid_package(package, key=None):
         entries = manifest["models"]
         if not entries:
             return False
+        if any(model.get("variant") == "fps" for model in entries):
+            required = ["qa_viewmodel.json"]
+            if manifest.get("tier") in ("standard", "full"):
+                required.append("qa_viewmodel_roundtrip.json")
+            for name in required:
+                if name not in files or json.loads((package / name).read_text()).get("passed") is not True:
+                    return False
         for model in entries:
             for name in ("scene.json", "vertices.bin", "indices.bin", "anim.bin", "qa_viewer.json"):
                 if model["path"] + "/" + name not in files:
@@ -142,10 +149,8 @@ def build(tool, output, tier, blender, blender_version, threads, no_cache, devic
             step_start = time.perf_counter()
             command = [blender, "--background", "--factory-startup", "--threads", str(threads),
                        "--python-exit-code", "1", "--python"]
-            if author:
-                command += [str(ROOT / "toolgen/run_asset.py"), "--", "--script", str(work / script), *arguments]
-            else:
-                command += [str(ROOT / "toolgen" / script), "--", *arguments]
+            source = work / script if author else ROOT / "toolgen" / script
+            command += [str(ROOT / "toolgen/run_asset.py"), "--", "--script", str(source), *arguments]
             log_name = f"{tool['id']}-{len(steps):02d}-{Path(script).stem}.log"
             print(f"BUILD {tool['id']}: {script} {' '.join(arguments)}", flush=True)
             with (log_dir / log_name).open("w") as stream:
@@ -158,9 +163,11 @@ def build(tool, output, tier, blender, blender_version, threads, no_cache, devic
             if settings["samples"]:
                 subprocess.run([sys.executable, str(work / "make_animation_preview.py")], check=True,
                                stdout=subprocess.DEVNULL, env=environment)
+        run("first_person.py", ["--directory", str(work), "--tool", tool["id"]], author=False)
         if settings["roundtrip"]:
             for variant in ["world", "fps", *(["arrow"] if tool.get("arrow") else [])]:
                 run(tool["verify"], ["--variant", variant])
+            run("verify_viewmodel.py", ["--directory", str(work), "--asset", tool["asset"] + "_FPS"], author=False)
         viewer = work / "ViewerData"
         models = []
         for variant, asset in [("world", tool["asset"]), ("fps", tool["asset"] + "_FPS"),
@@ -169,13 +176,14 @@ def build(tool, output, tier, blender, blender_version, threads, no_cache, devic
                 if not (work / f"{asset}.{extension}").is_file():
                     raise RuntimeError(f"Missing export: {asset}.{extension}")
             args = ["--source", str(work / (asset + ".blend")), "--output", str(viewer / variant), "--root", asset]
-            if tool["clip"] and variant != "arrow":
-                args += ["--clip", tool["clip"]]
+            clip = tool.get("fps_clip", tool["clip"]) if variant == "fps" else tool["clip"] if variant != "arrow" else None
+            if clip:
+                args += ["--clip", clip]
             run("export_viewer.py", args, author=False)
             scene = json.loads((viewer / variant / "scene.json").read_text())
             models.append({"id": tool["id"] + "/" + variant, "tool": tool["id"], "label": tool["label"],
                            "variant": variant, "path": "ViewerData/" + variant, "asset": asset,
-                           "clip": tool["clip"] if variant != "arrow" else None,
+                           "clip": clip,
                            "triangles": scene["triangles"], "frames": scene["frames"],
                            "qa": "roundtrip" if settings["roundtrip"] else "geometry"})
         for path in work.iterdir():

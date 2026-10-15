@@ -8,10 +8,11 @@ import bpy
 import os
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
+from motion_profiles import draw_value
 
 OUT=Path(__file__).resolve().parent
 FRAMES=(1,16,31,43,44,48,79,85,97)
-DRAW=((1,0),(31,1),(43,1),(46,.1),(48,0),(50,.04),(53,0),(97,0))
+DRAW=tuple((frame,draw_value(frame)) for frame in range(1,98))
 
 
 def curves(action):

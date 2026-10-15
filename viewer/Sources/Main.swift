@@ -1,11 +1,13 @@
 import AppKit
 import SwiftUI
+import simd
 
 @main
 enum Main {
     @MainActor static func main() {
         let args = CommandLine.arguments
         if args.contains("--check-navigation") { exit(navigation(args)) }
+        if let out = value(args, "--sequence") { exit(sequence(out, args: args)) }
         if let out = value(args, "--snapshot") { exit(snapshot(out, args: args)) }
         if let out = value(args, "--sidebar-check") { exit(sidebar(out, args: args)) }
         ToolViewerApp.main()
@@ -48,6 +50,27 @@ enum Main {
             print("SNAPSHOT_OK \(model.selected.id) frame=\(value(args, "--frame") ?? "1") \(output)")
             return 0
         } catch { fputs("snapshot failed: \(error.localizedDescription)\n", stderr); return 1 }
+    }
+
+    @MainActor static func sequence(_ output: String, args: [String]) -> Int32 {
+        do {
+            let model = try load(args)
+            let rate = Double(value(args, "--rate") ?? "60") ?? 0
+            guard rate >= 1 && rate <= 120 else { throw ViewerError.invalid("Bildrate muss zwischen 1 und 120 liegen.") }
+            let directory = URL(fileURLWithPath: output, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let duration = Double(model.scene.data.doc.frames - 1) / model.scene.data.doc.fps
+            let count = max(1, Int(ceil(duration * rate)))
+            for index in 0...count {
+                try autoreleasepool {
+                    model.seek(Double(index) / Double(count))
+                    let path = directory.appendingPathComponent(String(format: "frame-%04d.png", index))
+                    try model.scene.snapshot(size: CGSize(width: 960, height: 540)).writePNG(path)
+                }
+            }
+            print("SEQUENCE_OK \(model.selected.id) \(count + 1) images at \(rate) fps; \(output)")
+            return 0
+        } catch { fputs("sequence failed: \(error.localizedDescription)\n", stderr); return 1 }
     }
 
     @MainActor static func sidebar(_ output: String, args: [String]) -> Int32 {
@@ -102,7 +125,33 @@ enum Main {
                 }
                 checks += 1
             }
-            print("NAVIGATION_OK \(checks) scenarios")
+            model.select(model.data.catalog.models.first { $0.id == "bow/fps" }!)
+            guard let motion = model.scene.root.childNode(withName: "Viewmodel_Motion", recursively: true) else {
+                throw ViewerError.invalid("FPS motion node missing")
+            }
+            model.seek(14.0 / 96); let first = motion.simdPosition
+            model.seek(15.0 / 96); let last = motion.simdPosition
+            model.seek(14.5 / 96); let middle = motion.simdPosition
+            try require(simd_distance(first, last) > 0.00001 && simd_distance(middle, (first + last) / 2) < 0.000001,
+                        "Viewer must interpolate between baked animation frames")
+            guard let arrow = model.scene.root.childNode(withName: "LoadedArrowPresence", recursively: true) else {
+                throw ViewerError.invalid("Arrow visibility node missing")
+            }
+            model.seek(42.5 / 96)
+            try require(abs(arrow.simdScale.x - 1) < 0.0001, "Visibility events must not shrink the arrow between frames")
+            model.seek(43.0 / 96)
+            try require(abs(arrow.simdScale.x - 0.001) < 0.0001, "Arrow was not hidden on the release frame")
+            checks += 1
+            for available in [CGSize(width: 560, height: 700), CGSize(width: 1200, height: 400), CGSize(width: 960, height: 540)] {
+                let viewport = ToolScene.viewportSize(available: available, firstPerson: true)
+                try require(abs(viewport.width / viewport.height - 16.0 / 9) < 0.000001 &&
+                            viewport.width <= available.width && viewport.height <= available.height,
+                            "Ego viewport must retain its authored 16:9 framing")
+                try require(ToolScene.viewportSize(available: available, firstPerson: false) == available,
+                            "Orbit viewport must fill its available area")
+            }
+            checks += 1
+            print("NAVIGATION_OK \(checks) scenarios, including subframe interpolation")
             return 0
         } catch { fputs("navigation failed: \(error.localizedDescription)\n", stderr); return 1 }
     }

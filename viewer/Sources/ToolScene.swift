@@ -98,20 +98,34 @@ final class ToolScene {
     }
 
     func seek(_ fraction: Double) {
-        let frame = min(data.doc.frames - 1, max(0, Int((fraction * Double(data.doc.frames - 1)).rounded())))
+        let cursor = min(Double(data.doc.frames - 1), max(0, fraction * Double(data.doc.frames - 1)))
+        let frame = Int(cursor)
+        let blend = Float(cursor - Double(frame))
         let start = frame * data.doc.floatsPerFrame
+        let next = min(frame + 1, data.doc.frames - 1) * data.doc.floatsPerFrame
+        func vector(_ offset: Int) -> SIMD3<Float> {
+            let a = SIMD3(data.animation[start + offset], data.animation[start + offset + 1], data.animation[start + offset + 2])
+            let b = SIMD3(data.animation[next + offset], data.animation[next + offset + 1], data.animation[next + offset + 2])
+            return a + (b - a) * blend
+        }
+        func rotation(_ offset: Int) -> simd_quatf {
+            simd_quatf(ix: data.animation[offset + 3], iy: data.animation[offset + 4],
+                       iz: data.animation[offset + 5], r: data.animation[offset + 6])
+        }
         SCNTransaction.begin(); SCNTransaction.disableActions = true
         for (index, node) in nodes.enumerated() {
-            let i = start + index * 10
-            node.simdPosition = SIMD3(data.animation[i], data.animation[i + 1], data.animation[i + 2])
-            node.simdOrientation = simd_quatf(ix: data.animation[i + 3], iy: data.animation[i + 4],
-                                            iz: data.animation[i + 5], r: data.animation[i + 6])
-            node.simdScale = SIMD3(data.animation[i + 7], data.animation[i + 8], data.animation[i + 9])
+            let i = index * 10
+            node.simdPosition = vector(i)
+            node.simdOrientation = simd_slerp(rotation(start + i), rotation(next + i), blend)
+            node.simdScale = data.doc.nodes[index].stepScale == true ?
+                SIMD3(data.animation[start + i + 7], data.animation[start + i + 8], data.animation[start + i + 9]) : vector(i + 7)
         }
         let weights = start + nodes.count * 10
         for (morpher, targets) in morphers {
             for (index, target) in targets.enumerated() {
-                morpher.setWeight(CGFloat(data.animation[weights + target.weight]), forTargetAt: index)
+                let a = data.animation[weights + target.weight]
+                let b = data.animation[next + nodes.count * 10 + target.weight]
+                morpher.setWeight(CGFloat(a + (b - a) * blend), forTargetAt: index)
             }
         }
         SCNTransaction.commit()
@@ -161,11 +175,32 @@ final class ToolScene {
     func showSockets(_ show: Bool) { for node in sockets { node.isHidden = !show } }
     func turn(_ radians: Float) { root.eulerAngles.y += CGFloat(radians) }
 
+    static func viewportSize(available: CGSize, firstPerson: Bool) -> CGSize {
+        guard firstPerson else { return available }
+        let unit = max(1, min(available.width / 16, available.height / 9).rounded(.down))
+        return CGSize(width: unit * 16, height: unit * 9)
+    }
+
     func snapshot(size: CGSize) throws -> NSImage {
         guard let device = MTLCreateSystemDefaultDevice() else { throw ViewerError.invalid("Metal ist nicht verfügbar.") }
         let renderer = SCNRenderer(device: device, options: nil)
         renderer.scene = scene; renderer.pointOfView = camera
-        return renderer.snapshot(atTime: 0, with: size, antialiasingMode: .multisampling4X)
+        let viewport = Self.viewportSize(available: size, firstPerson: currentView == "FPS")
+        let rendered = renderer.snapshot(atTime: 0, with: viewport, antialiasingMode: .multisampling4X)
+        if viewport == size { return rendered }
+        guard let source = rendered.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let canvas = CGContext(data: nil, width: Int(size.width), height: Int(size.height),
+                                     bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+                                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            throw ViewerError.invalid("Ego-Bildausschnitt konnte nicht erstellt werden.")
+        }
+        canvas.setFillColor(CGColor(red: 0.075, green: 0.085, blue: 0.11, alpha: 1))
+        canvas.fill(CGRect(origin: .zero, size: size))
+        canvas.draw(source, in: CGRect(x: (size.width - viewport.width) / 2,
+                                      y: (size.height - viewport.height) / 2,
+                                      width: viewport.width, height: viewport.height))
+        guard let result = canvas.makeImage() else { throw ViewerError.invalid("Ego-Bild ist leer.") }
+        return NSImage(cgImage: result, size: size)
     }
 }
 

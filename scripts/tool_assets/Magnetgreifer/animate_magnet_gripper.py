@@ -42,7 +42,8 @@ def track(obj,axis,keys,name):
     action['ce_loop']=False; action['ce_autoplay']=False; action['ce_trigger']='GrabAction'
     for curve in all_curves(action):
         for key in curve.keyframe_points:
-            key.interpolation='LINEAR'
+            key.interpolation='BEZIER'
+            key.handle_left_type='AUTO_CLAMPED'; key.handle_right_type='AUTO_CLAMPED'
 
 
 def owned(scene,name):

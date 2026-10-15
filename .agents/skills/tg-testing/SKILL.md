@@ -20,6 +20,17 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    `<Ausgabe>/QA/Viewer`; alle Varianten, Motion/Reset, Looks, beschädigte Puffer, unbekannte IDs und Seitenleistenbreite.
    Mindestens Welt- und FPS-Modell sowie Bogen gespannt und entspannt ansehen. Bei Interaktionsänderungen native App
    öffnen und Werkzeugwechsel, Leertaste, Schieberegler und Erzeugung praktisch prüfen.
+   Bei Ego-Haltungen zusätzlich `qa_viewmodel.json` (97 Frames: Kontakte, Kameraabstand, freie Mitte, Ruhepose)
+   und ab Standard `qa_viewmodel_roundtrip.json` prüfen. Griff-/Zughand in Ruhe, voll gespannt und beim Nachgreifen
+   ansehen. Verbindliche Gestaltung: `docs/TECHNIK.md` › Hände und Bewegungsgefühl. Genau drei Finger insgesamt pro Hand (zwei Greiffinger plus
+   ein Daumen), Fingersegmente nicht als zusätzliche Finger lesbar, natürliche Händigkeit (linkes/rechtes Handgelenk auf seiner Griffseite,
+   niemals um 180° drehen, nur um Finger zu zeigen), Hände vollständig, höchstens halbe Unterarme; keine Ellenbogen/Oberarme im Bild.
+   Handwurzel mittig hinter der Handfläche (+Y), nicht unterhalb der Fingerreihe (−Z); Bogen und Griffhand
+   bewegen sich beim Spannen/Schuss gemeinsam. Unterarm-Mesh nicht am sichtbaren Ende abschneiden: kontinuierlich über den Bildrand führen. Die proximale
+   Hälfte über alle 97 Frames außerhalb prüfen. Bogen-/Handmaß gemeinsam abstimmen; Gliedlängen niemals aus
+   Werkzeugabstand ableiten. Nach einem fehlgeschlagenen Bau keine alte Vorschau als neue Prüfung ausgeben.
+   Screenshots/Movies mit `--data <frische Ausgabe>` erzeugen, damit kein altes App-Bundle verwendet wird;
+   Movie-Export und FFmpeg-Aufruf stehen im Systemdoc. Handgrößen/Haltungen sind Daten in `data/viewmodels.json`, Bewegungsprofile in `motion_profiles.py`.
 7. Regeln/Profile: `python3 scripts/check_rules.py --shared <ce-agent-tools>`; jeder Hook hat treffende und nicht
    treffende Fälle, Profile erlauben Prüfungen/Doku und sperren Code-Änderungen des Testläufers.
 

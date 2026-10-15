@@ -25,6 +25,7 @@ struct NodeInfo: Decodable {
     let name: String
     let parent: Int?
     let rest: [Float]
+    let stepScale: Bool?
 }
 struct TargetInfo: Decodable { let weight: Int; let vertexOffset: Int }
 struct PartInfo: Decodable {

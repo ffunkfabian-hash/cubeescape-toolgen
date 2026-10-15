@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.2.0 · Slipforge.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge.
+**0.3.0 · Flowstate.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge.
 Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen): große 3D-Ansicht,
 rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -18,7 +18,12 @@ open output/_quick/ToolGenViewer.app
 Die App bündelt den Katalog und zeigt die Portalkanone sofort an. Portalkanone, Magnetgreifer, Taschenlampe und Bogen
 haben Welt- und FPS-Modelle, der Bogen zusätzlich einen separaten Pfeil. Die beiden Gehäuse sind schmaler und kürzer;
 eine offene Zuführung legt Emitter und Greifkopf frei. Der Bogen hat schlankere Verkleidungen und eine offenere Silhouette.
-Seine FPS-Haltung zeigt deutlich mehr Wurfarme und Sehne bei freier Bildmitte.
+Die Ego-Modelle haben Roboterhände und Unterarme im Mitt-Stil von Robogen. Portalkanone und Magnetgreifer werden
+mit zwei Händen gehalten, die Taschenlampe mit einer. Sichtbar sind die Hände und maximal halbe Unterarme;
+Ellenbogen und Oberarme bleiben außerhalb des Bildes. Die Unterarme laufen ohne sichtbare Schnittkante über den Bildrand.
+Der Bogen liegt diagonal in der linken Dreifingerhand;
+die rechte Hand spannt die Sehne, löst und greift beim Nachladen erneut zu. Haltung und Bewegungsphasen orientieren
+sich an den Destiny-2-Referenzen; die Geometrie und Animationen werden hier prozedural erzeugt.
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich. Bogen und Magnetgreifer
@@ -51,7 +56,9 @@ Bericht: `logs/toolgen_report.json` mit Schrittzeiten, Last, Cache und Zeitband.
 
 Blender-QA prüft geschlossene Geometrie, Metermaße, Materialien, UVs, Anker, Hierarchie und Animation. Bogen und
 Magnetgreifer haben je 97 Aktionsframes; der Bogen enthält Morphs und kehrt in die geladene Ruhepose zurück. Viewer-Tests
-kontrollieren alle Varianten, Bewegung/Reset, Looks, beschädigte Daten und die Seitenleistenbreite.
+kontrollieren alle Varianten, Bewegung/Reset, echte Zwischenbild-Interpolation, Looks, beschädigte Daten und die Seitenleistenbreite.
+Die Handbaugruppen prüfen an allen 97 Frames Griffkontakt, freie Bildmitte, Kameraabstand und Rückkehr zur Ruhepose;
+Standard/Voll vergleichen die Gelenkposen nach FBX-/GLB-Reimport.
 Unity-Import, Kameramontage, Clip-Anbindung und Gameplay werden separat im Spiel abgenommen. Der unveränderte
 Magnetgreifer-C#-Player enthält historische Kompilierungsnachweise, keine Unity-Laufzeitabnahme.
 
@@ -59,6 +66,7 @@ Magnetgreifer-C#-Player enthält historische Kompilierungsnachweise, keine Unity
 
 - [AGENTS.md](AGENTS.md): Regeln und Plugins; [Test-Skill](.agents/skills/tg-testing/SKILL.md).
 - `data/tools.json`: Katalog; `scripts/tool_assets/`: Autoren-Generatoren und gemeinsame Designprofile.
+- `data/viewmodels.json`: Ego-Haltungen, Handgrößen und Herkunft des Robogen-Mitt-Vertrags.
 - `toolgen/`: gemeinsame Pipeline und Binärexport; [CLI-Details](toolgen/README.md).
 - `viewer/`: SwiftUI-/SceneKit-App, universeller Build und Bildtests.
 - `output/`: generierte, nicht versionierte `.blend`-/FBX-/GLB-Pakete, Bilder, QA und Manifeste.

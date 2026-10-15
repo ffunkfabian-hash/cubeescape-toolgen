@@ -16,9 +16,93 @@ Materialdaten stammen aus Principled BSDF. Looks verändern Verkleidung, Finish 
 Der Viewer prüft Version, Hierarchie/Zyklen, Puffergrößen, Indexgrenzen und endliche Werte. Im Ruhezustand kein Timer;
 der Playhead aktualisiert nur die Zeitleiste. FPS: Kamera am Ursprung, Blick +Z, 75° horizontal, Near Clip 3 cm.
 Der Knopf „Ego“ lädt vor dem Kamerawechsel die passende FPS-Variante, auch für einen gespeicherten B-Vergleich.
+Die Ego-Ansicht behält in App, A/B-Vergleich und Screenshot immer 16:9; freie Ränder füllen den restlichen Platz.
+So zeigt ein hohes App-Fenster nicht plötzlich mehr Arm als die geprüfte Vorschau.
 Andere Ansichten untersuchen die gewählte Variante; Werkzeugwechsel erhalten die FPS-Auswahl.
-Modellversatz und 150-%-Geometrie sind im Asset gebacken. Der Bogen wird weiter vorne gehalten, um mehr Sehne und
-Wurfarme zu zeigen; sein Pfeil zielt weiter zum gleichen Punkt.
+Modellversatz und Werkzeuggröße sind im Asset gebacken; `tool_scale` passt die ursprünglich 150-%-FPS-Geometrie
+je Werkzeug an. `first_person.py` setzt nach dem Autorenclip die
+Haltung aus `data/viewmodels.json`, löst die tatsächliche Mündungsachse auf das Ziel und ergänzt die Handbaugruppe.
+`Viewmodel_Hold` trägt die statische Haltung, `Viewmodel_Motion` die gebackene Sekundärbewegung. Der Kamerasockel
+und der Exportroot bleiben am Ursprung. Weltmodelle enthalten keine Ego-Arme.
+
+## Hände und Bewegungsgefühl
+
+Robogens Mitt-Stil (`scripts/robogen/body.py`, `rig.py`, Revision/Quellhashes in `data/viewmodels.json`) liefert
+die Formensprache: dunkle Gelenke, Daumen und weiße Verkleidung. Die Ego-Version verwendet auf Nutzerwunsch
+**drei Finger insgesamt: zwei Greiffinger und einen gegenüberliegenden Daumen**; Robogens Mitt hat ursprünglich
+drei Greiffinger plus Daumen. Die Ego-Version wird mit
+zusätzlichen starren Fingersegmenten hier erzeugt. `Hand_L/R`, `Fingers_*`, `Thumb_L/R`, `LowerArm_L/R` sowie
+`GripContact_L/R` sind exportierte Knoten, keine Kopie des vollständigen Robogen-Skeletts oder dessen Clips.
+Robogen muss zur Generierung nicht installiert sein; sein Repository bleibt unverändert.
+Der untere linke Ego-Ausschnitt des Bogenkonzepts bestimmt die Verkleidung: weiße Handrückenplatten, orange
+Einlagen, dunkle Gelenkspalte, Schrauben und konische Unterarmschalen. Einlagen und Schrauben folgen der
+geneigten Schalenfläche und sitzen auf ihr. Die gemeinsamen Kontakt-/Gelenk-IDs bleiben davon unabhängig.
+
+**Verbindlicher Ego-Bildausschnitt:** Hände vollständig zeigen, von den Unterarmen höchstens die griffseitige
+Hälfte. Oberarme, Ellenbogenräder und Schulterpanzer gehören nicht in das Ego-Mesh. Der Bogen bleibt das
+Hauptmotiv; seine Größe, Neigung und Halteposition werden zusammen mit den Händen abgestimmt. Genau zwei
+gegliederte Greiffinger und ein Daumen müssen pro Hand erkennbar sein. Fingerglieder sind keine zusätzlichen Finger. Keine
+kastenförmige Ersatzhand oder durchgehende Stange als Arm.
+
+Jeder Arm hat die starren Rig-Knoten `UpperArm_*` → `LowerArm_*`. Ihre Längen und Schulterpositionen sind feste
+Maße unter `arm` in `data/viewmodels.json`; sie werden niemals aus dem Abstand zum Werkzeug verlängert.
+Der analytische Zwei-Glied-IK in `solve_elbow()` hält diese Maße und den Griffkontakt konstant. Unreichbare Ziele
+brechen den Bau ab. Die Lösung wird pro Frame gebacken; der Viewer braucht keinen IK-Solver. Die QA misst
+Gelenkkontakt und Gliedlänge an allen Frames (`max_arm_link_error_m`), der Reimport prüft beide Rig-Knoten mit.
+Nur der Unterarm wird als zusammenhängendes Mesh bis zum außerhalb des Bildes liegenden Ellenbogen gebaut:
+Schale, dunkler Kern und Servos reichen über den unteren Bildrand hinaus. Das Mesh an der halben Länge abzuschneiden
+verursacht sichtbare Schnittkanten und ist kein Ersatz für korrektes Framing. Die griffseitige Hälfte darf ins
+Bild; die Ellenbogenhälfte samt Abschluss muss über den gesamten Clip außerhalb liegen. Eine konservative Hüllbox
+um die proximale Hälfte prüft dies an jedem Frame (`proximal_forearm_max_screen_y < 0`), einschließlich Flächen,
+die den Bildrand überqueren, obwohl ihre Eckpunkte außerhalb liegen. Geometrie, Handdrehung
+und Bildausschnitt immer gemeinsam in Ruhe, gespannt, nach dem Schuss und beim Nachgreifen ansehen.
+
+Die Handfläche liegt in der lokalen Y/Z-Ebene: Finger zeigen nach −Y, die Reihe der beiden Finger liegt entlang Z.
+Die Handwurzel sitzt daher hinter der Handfläche bei +Y, mittig in X und Z (`arm.wrist_offset_m`), nicht unter dem
+kleinen Finger bei −Z. Kugel-/Drehgelenk, Handwurzel und Unterarm treffen sich in diesem Punkt. Die QA misst dies am tatsächlichen
+Palm-/Gelenk-Mesh (`centered_wrist_max_error_m`).
+
+Der Bogen verwendet ein eigenes `tool_scale`, `hand_rotation_degrees` und `draw_roll_degrees`. Skalierung wird in
+Mesh-, Morph- und Translationsdaten gebacken, die Objekt-Skalierung bleibt 1. Handdrehungen erfolgen um den
+Griffkontakt; sie dürfen weder Griff noch Nocke versetzen. Linke Handfläche/Handgelenk liegen auf der linken
+Seite des Griffs, die rechte Zughand auf der rechten Seite der Nocke. Eine Drehung um 180° nur zum Sichtbarmachen
+der Finger vertauscht diese Seiten und ist falsch. Die Zughand gleicht die Bogenschräglage aus, statt mit einem
+verdrehten Handgelenk die volle Werkzeugrotation zu übernehmen. `min_hand_side_clearance_m` prüft die
+korrekte Handgelenkseite an jedem Frame und verwirft die frühere verdrehte Haltung. Die Zugfinger bilden einen
+flachen, dreigliedrigen Haken an der Sehne; sie übernehmen nicht die tiefe Umschlingung eines Werkzeuggriffs.
+Änderungen am FPS-Bogen ändern das Weltmodell nicht.
+
+Referenz für Ruhehaltung und Aktionsphasen: [Destiny-2-Bogenvideo](https://www.youtube.com/watch?v=wKaneSqfzo4).
+Die linke Bogenhand bleibt am Griff, die rechte an der Nocke bis zum Lösen (Frame 43), bewegt sich zum Nachgreifen
+nach unten und liegt ab Frame 79 wieder an. Bogen und linke Griffhand folgen gemeinsam einer Bewegung um den Griff: beim Spannen richtet sich der Bogen auf,
+beim Schuss federt er zurück. Die Nocke und rechte Hand folgen anschließend demselben bewegten Bezugssystem.
+Die QA verlangt am tatsächlichen Griffanker beim Spannen mindestens 2 cm Ortsänderung und 5° Drehung; der
+Griffkontakt bleibt dabei erhalten. Dadurch wird ein nur an der Sehne bewegter, sonst statischer Bogen verworfen.
+Minimum-Jerk-Kurven (Quintik mit verschwindender Anfangs-/Endgeschwindigkeit)
+und endliches Nachfedern stehen in `motion_profiles.py`. Greifer-Kurven verwenden geklemmte Bézier-Handles.
+Die bestehenden Clipnamen, 97 Frames und Abschuss-/Sichtbarkeitsereignisse bleiben erhalten.
+Portal-/Lampen-Egomodelle bieten eigene Anwendungsvorschauen; daraus entstehen keine Gameplay-Ereignisse.
+
+Der Viewer blendet pro Zeitposition zwischen zwei gebackenen Frames: linear für Position/Skalierung/Morphs, Slerp
+für Quaternionen. Diskrete Skalierung (Pfeilsichtbarkeit) bleibt durch `stepScale` im Knoten ein Ereignis;
+der Pfeil schrumpft beim Zwischenbild-Blenden nicht. Aktive Wiedergabe und Darstellung laufen mit 60 Hz,
+der Ruhemodus benötigt weiterhin keinen Timer. `qa_viewmodel.json` prüft alle Frames auf Kontakt,
+Near Clip, freie Bildmitte, den unsichtbaren proximalen Unterarm und Ende = Anfang; `qa_viewmodel_roundtrip.json`
+vergleicht unabhängige Reimporte an neun Posen.
+Hand- und Haltungsquellen gehören zum Paketcache. Die Bilder und QA der alten Referenzpakete unter `outputs/`
+beschreiben weiterhin deren historischen Stand.
+Der CLI-Einstieg `--sequence <Bildordner> --model bow/fps --rate 60` rendert die tatsächliche Viewer-Wiedergabe
+als 960×540-PNG-Folge für Bewegungsabnahmen. Daraus entsteht mit FFmpeg ein teilbares MP4:
+
+```bash
+output/ToolGenViewer.app/Contents/MacOS/ToolGenViewer --data output --sequence output/QA/Bogen-Frames --model bow/fps --rate 60
+ffmpeg -framerate 60 -i output/QA/Bogen-Frames/frame-%04d.png -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart output/QA/Bogen.mp4
+```
+
+Neue Vorschauen immer mit `--data` auf den frisch geprüften Katalog richten. Eine ältere App kann sonst ihre
+gebündelten alten Modelle rendern. Nach einem fehlgeschlagenen Bau ist das vorherige Paket weiterhin intakt,
+belegt aber keine neue Änderung. Movie mit `ffprobe` auf Bildrate, Auflösung und Framezahl prüfen und mindestens
+Ruhe, Zug, Schuss und Nachgreifen aus der tatsächlichen Sequenz ansehen.
 
 ## Cache und Worker
 

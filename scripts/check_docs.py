@@ -17,7 +17,7 @@ for path in paths:
             errors.append(f"{path.relative_to(ROOT)}: missing {link}")
     if path.name == "SKILL.md":
         assert text.startswith("---\n") and "\nname:" in text and "\ndescription:" in text
-for path in [ROOT / ".claude/settings.json", ROOT / ".claude/agent-guard.json", ROOT / "data/tools.json"]:
+for path in [ROOT / ".claude/settings.json", ROOT / ".claude/agent-guard.json", ROOT / "data/tools.json", ROOT / "data/viewmodels.json"]:
     json.loads(path.read_text())
 for path in [*ROOT.glob("viewer/*.sh"), *ROOT.glob("scripts/*.sh"), *ROOT.glob(".claude/hooks/*.sh")]:
     if subprocess.run(["bash", "-n", str(path)], check=False).returncode: errors.append(f"shell syntax: {path}")

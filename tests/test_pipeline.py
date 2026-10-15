@@ -54,6 +54,22 @@ class PipelineTests(unittest.TestCase):
             (root / "manifest.json").write_text(json.dumps(manifest))
             self.assertFalse(valid_package(root))
 
+    def test_fps_package_requires_successful_hand_qa(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name); manifest = self.package(root)
+            manifest["models"][0]["variant"] = "fps"
+            (root / "manifest.json").write_text(json.dumps(manifest))
+            self.assertFalse(valid_package(root))
+            path = root / "qa_viewmodel.json"
+            for passed in (False, True):
+                path.write_text(json.dumps({"passed": passed}))
+                manifest["files"][path.name] = hash_file(path)
+                (root / "manifest.json").write_text(json.dumps(manifest))
+                self.assertEqual(passed, valid_package(root))
+            manifest["tier"] = "standard"
+            (root / "manifest.json").write_text(json.dumps(manifest))
+            self.assertFalse(valid_package(root))
+
     def test_cache_cannot_escape_package(self):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name); manifest = self.package(root)
@@ -93,6 +109,16 @@ class PipelineTests(unittest.TestCase):
             with patch.object(Path, "rename", fail), self.assertRaises(OSError):
                 install_output(staging, target, force=True)
             self.assertEqual("old", (target / "model").read_text())
+
+    def test_hand_profiles_and_shared_motion_invalidate_cache(self):
+        tool = catalog()[0]; before = cache_key(tool, "quick", "5.2")
+        read_bytes = Path.read_bytes
+        for source in ("viewmodels.json", "first_person.py", "motion_profiles.py", "verify_viewmodel.py"):
+            with self.subTest(source=source):
+                def changed(path, source=source):
+                    return read_bytes(path) + (b"\n# changed" if path.name == source else b"")
+                with patch.object(Path, "read_bytes", changed):
+                    self.assertNotEqual(before, cache_key(tool, "quick", "5.2"))
 
     def test_output_lock_rejects_other_writer_and_releases_on_failure(self):
         with tempfile.TemporaryDirectory() as name:

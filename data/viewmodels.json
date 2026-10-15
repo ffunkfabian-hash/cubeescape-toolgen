@@ -1,0 +1,123 @@
+{
+  "format": 1,
+  "reference": {
+    "robot_repository": "ffunkfabian-hash/cubeescape-robogen",
+    "revision": "6653029",
+    "sources": {
+      "scripts/robogen/body.py": "9a996f962b45b714102740e1d2b6ae55117a97e14607632cf089f9808c527742",
+      "scripts/robogen/rig.py": "86312958b69c03238a623c50b3bef5b78856959e7d83672241c8bfb1eb056416"
+    },
+    "style": "Mitt-inspired armor and dark joints; adapted to two gripping fingers plus one opposing thumb, three digits total",
+    "video": "https://www.youtube.com/watch?v=wKaneSqfzo4",
+    "hand_finish": "White beveled backhand/gauntlet plates, orange insets, exposed dark finger joints and plate bolts; bow concept, lower-left FPS panel."
+  },
+  "tools": {
+    "portal_emitter": {
+      "hand": [
+        -0.18,
+        -0.64,
+        -0.2
+      ],
+      "roll_degrees": -8,
+      "support": true,
+      "grip_radius": [
+        0.042,
+        0.041
+      ],
+      "tool_scale": 0.5,
+      "support_offset": [
+        0,
+        -0.1,
+        0.045
+      ]
+    },
+    "magnet_gripper": {
+      "hand": [
+        -0.2,
+        -0.68,
+        -0.22
+      ],
+      "roll_degrees": -8,
+      "support": true,
+      "grip_radius": [
+        0.042,
+        0.041
+      ],
+      "tool_scale": 0.5,
+      "support_offset": [
+        0,
+        -0.1,
+        0.045
+      ]
+    },
+    "flashlight": {
+      "hand": [
+        -0.18,
+        -0.6,
+        -0.18
+      ],
+      "roll_degrees": -12,
+      "support": false,
+      "grip_radius": [
+        0.044,
+        0.043
+      ],
+      "tool_scale": 0.65
+    },
+    "bow": {
+      "hand": [
+        -0.18,
+        -0.82,
+        -0.22
+      ],
+      "roll_degrees": 38,
+      "support": true,
+      "grip_radius": [
+        0.032,
+        0.037
+      ],
+      "tool_scale": 0.6,
+      "draw_roll_degrees": 8,
+      "hand_rotation_degrees": {
+        "L": [
+          -45,
+          35,
+          -25
+        ],
+        "R": [
+          -35,
+          35,
+          25
+        ]
+      }
+    }
+  },
+  "arm": {
+    "upper_length_m": 0.32,
+    "forearm_length_m": 0.3,
+    "visible_forearm_fraction": 0.5,
+    "shoulders": {
+      "L": [
+        0.06,
+        -0.48,
+        -0.48
+      ],
+      "R": [
+        -0.1,
+        -0.3,
+        -0.4
+      ]
+    },
+    "hand_scale": 0.65,
+    "elbow_pole": [
+      0.2,
+      0,
+      -1
+    ],
+    "wrist_offset_m": [
+      0,
+      0.07,
+      0
+    ]
+  }
+}

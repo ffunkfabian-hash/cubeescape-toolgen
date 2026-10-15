@@ -1,2 +1,2 @@
-VERSION = "0.2.0"
-CODENAME = "Slipforge"
+VERSION = "0.3.0"
+CODENAME = "Flowstate"

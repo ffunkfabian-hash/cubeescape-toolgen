@@ -104,7 +104,7 @@ final class ViewerModel: ObservableObject {
         timer?.invalidate(); timer = nil
         guard playing || turntable else { return }
         lastTick = Date()
-        timer = Timer.scheduledTimer(withTimeInterval: 1 / 30, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
     }
@@ -239,7 +239,7 @@ struct SceneContainer: NSViewRepresentable {
         let view = SCNView()
         view.allowsCameraControl = true; view.antialiasingMode = .multisampling4X
         view.defaultCameraController.interactionMode = .orbitTurntable
-        view.preferredFramesPerSecond = 30
+        view.preferredFramesPerSecond = 60
         return view
     }
     func updateNSView(_ view: SCNView, context: Context) {
@@ -249,6 +249,18 @@ struct SceneContainer: NSViewRepresentable {
             view.pointOfView = tool.camera
             context.coordinator.cameraRevision = tool.cameraRevision
         }
+    }
+}
+
+struct SceneViewport: View {
+    let tool: ToolScene
+    let firstPerson: Bool
+    var body: some View {
+        GeometryReader { geometry in
+            let size = ToolScene.viewportSize(available: geometry.size, firstPerson: firstPerson)
+            SceneContainer(tool: tool).frame(width: size.width, height: size.height)
+                .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+        }.background(Color(red: 0.075, green: 0.085, blue: 0.11))
     }
 }
 
@@ -277,8 +289,8 @@ struct ContentView: View {
         HSplitView {
             VStack(spacing: 0) {
                 HStack(spacing: 2) {
-                    SceneContainer(tool: model.scene)
-                    if let comparison = model.comparison { SceneContainer(tool: comparison).overlay(alignment: .topLeading) { Text("B").font(.title).padding() } }
+                    SceneViewport(tool: model.scene, firstPerson: model.viewName == "FPS")
+                    if let comparison = model.comparison { SceneViewport(tool: comparison, firstPerson: model.viewName == "FPS").overlay(alignment: .topLeading) { Text("B").font(.title).padding() } }
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {

@@ -51,7 +51,7 @@ def export_model(source, destination, root_name, clip):
     for obj in objects:
         local = obj.parent.matrix_world.inverted() @ obj.matrix_world if obj.parent in objects else obj.matrix_world
         nodes.append({"name": obj.name, "parent": names.get(obj.parent.name) if obj.parent else None,
-                      "rest": matrix_values(local)})
+                      "rest": matrix_values(local), "stepScale": bool(obj.get("ce_visibility_animation"))})
         if obj.type != "MESH":
             continue
         mesh = obj.data

@@ -46,6 +46,8 @@ Nach Änderungen: `bash viewer/build.sh [output-dir]` und `bash viewer/test_view
 Sichtbare Änderungen mit Screenshots prüfen; `--sidebar-check` muss bei 360 pt passen. Der Playhead beobachtet nur die
 Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, keine dauernden Dateizugriffe.
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.
+Ego-Gestaltung und verbindlicher Bildausschnitt (Dreifingerhände, maximal halbe Unterarme):
+[docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen.
 
 ## Plugins und Hooks
 

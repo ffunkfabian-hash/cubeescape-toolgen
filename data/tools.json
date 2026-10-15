@@ -1,9 +1,52 @@
 {
   "format": 1,
   "tools": [
-    {"id": "portal_emitter", "label": "Portalkanone", "folder": "Portalkanone", "asset": "CubeEscape_PortalGun", "world": "create_portal_gun.py", "fps": "create_portal_gun_fps.py", "verify": "verify_portal_gun.py", "animation": null, "clip": null},
-    {"id": "magnet_gripper", "label": "Magnetgreifer", "folder": "Magnetgreifer", "asset": "CubeEscape_MagnetGripper", "world": "create_magnet_gripper.py", "fps": "create_magnet_gripper_fps.py", "verify": "verify_magnet_gripper.py", "animation": "animate_magnet_gripper.py", "clip": "MagnetGripper_Use"},
-    {"id": "flashlight", "label": "Taschenlampe", "folder": "Taschenlampe", "asset": "CubeEscape_Flashlight", "world": "create_flashlight.py", "fps": "create_flashlight_fps.py", "verify": "verify_flashlight.py", "animation": null, "clip": null},
-    {"id": "bow", "label": "Bogen", "folder": "Bogen", "asset": "CubeEscape_Bow_Standard", "world": "create_standard_bow.py", "fps": "create_standard_bow_fps.py", "verify": "verify_standard_bow.py", "animation": "animate_standard_bow.py", "clip": "Bow_Use", "arrow": "CubeEscape_Arrow_Standard"}
+    {
+      "id": "portal_emitter",
+      "label": "Portalkanone",
+      "folder": "Portalkanone",
+      "asset": "CubeEscape_PortalGun",
+      "world": "create_portal_gun.py",
+      "fps": "create_portal_gun_fps.py",
+      "verify": "verify_portal_gun.py",
+      "animation": null,
+      "clip": null,
+      "fps_clip": "PortalEmitter_Use"
+    },
+    {
+      "id": "magnet_gripper",
+      "label": "Magnetgreifer",
+      "folder": "Magnetgreifer",
+      "asset": "CubeEscape_MagnetGripper",
+      "world": "create_magnet_gripper.py",
+      "fps": "create_magnet_gripper_fps.py",
+      "verify": "verify_magnet_gripper.py",
+      "animation": "animate_magnet_gripper.py",
+      "clip": "MagnetGripper_Use"
+    },
+    {
+      "id": "flashlight",
+      "label": "Taschenlampe",
+      "folder": "Taschenlampe",
+      "asset": "CubeEscape_Flashlight",
+      "world": "create_flashlight.py",
+      "fps": "create_flashlight_fps.py",
+      "verify": "verify_flashlight.py",
+      "animation": null,
+      "clip": null,
+      "fps_clip": "Flashlight_Use"
+    },
+    {
+      "id": "bow",
+      "label": "Bogen",
+      "folder": "Bogen",
+      "asset": "CubeEscape_Bow_Standard",
+      "world": "create_standard_bow.py",
+      "fps": "create_standard_bow_fps.py",
+      "verify": "verify_standard_bow.py",
+      "animation": "animate_standard_bow.py",
+      "clip": "Bow_Use",
+      "arrow": "CubeEscape_Arrow_Standard"
+    }
   ]
 }
