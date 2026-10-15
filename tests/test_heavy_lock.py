@@ -119,9 +119,14 @@ class HeavyLockTests(unittest.TestCase):
         marker = Path(self.temp.name) / "grandchild-ended"
         grandchild = ("import signal, sys, time\n"
                       f"def done(*a): time.sleep(.5); open({str(marker)!r}, 'w').write('x'); sys.exit(0)\n"
-                      "signal.signal(signal.SIGTERM, done)\ntime.sleep(30)\n")
+                      "signal.signal(signal.SIGTERM, done)\n"
+                      f"open({str(marker) + '.ready'!r}, 'w').close()\ntime.sleep(30)\n")
         wrapper, _ = self.grandchild_run(grandchild, "import time; time.sleep(30)")
-        time.sleep(.3)  # the grandchild has set its handler
+        ready = str(marker) + '.ready'
+        deadline = time.monotonic() + 10
+        while not os.path.exists(ready):  # the grandchild has set its handler
+            self.assertLess(time.monotonic(), deadline, "the grandchild did not start")
+            time.sleep(.02)
         wrapper.terminate()
         wrapper.wait(timeout=10)
         self.assertTrue(marker.exists(), "the grandchild got the TERM and ended before the lock was free")
