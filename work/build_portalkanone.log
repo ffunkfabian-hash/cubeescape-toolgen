@@ -1,0 +1,668 @@
+Info: Saved as "CubeEscape_PortalGun.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:38:05 | INFO: Starting glTF 2.0 export
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmArmor
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmBolt1-0.254
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmBolt1-0.331
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmBolt-1-0.254
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmBolt-1-0.331
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerArmSpine
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerHinge
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerHingeCap1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerHingeCap-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerHingeHub1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerHingeHub-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_LowerTipEmitter
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmArmor
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmBolt1-0.254
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmBolt1-0.331
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmBolt-1-0.254
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmBolt-1-0.331
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperArmSpine
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperHinge
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperHingeCap1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperHingeCap-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperHingeHub1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperHingeHub-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_UpperTipEmitter
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelFrontBand
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelRearBand
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelScreen_1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelScreen_-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelScreenBezel_1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BarrelScreenBezel_-1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_L_0.08_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_L_0.08_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_L_-0.077_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_L_-0.077_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_R_0.08_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_R_0.08_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_R_-0.077_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoltRecess_R_-0.077_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoreBack
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_BoreLiner
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_Chassis
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoolingSlot_0
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoolingSlot_1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoolingSlot_2
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoolingSlot_3
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoolingSlot_4
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoreLens
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoreLight
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_CoreRing
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_L0
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_L1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_L2
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_R0
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_R1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_DisplayBar_R2
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_EmitterNeck
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_EmitterOuterLip
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_FrontCuff
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_FrontWhiteRim
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_Grip
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_GripHeel
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_GripRib_0
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_GripRib_1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_GripRib_2
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_GripSocket
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MainShell
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_0
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_1
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_2
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_3
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_4
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_5
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_6
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_MuzzleFastener_7
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelAmber_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelAmber_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelInset_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelInset_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelSlot_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PanelSlot_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PortalRingInner
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_PortalRingOuter
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_RearBand
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_RearCuff
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_RearDisplay
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_RearDisplayBezel
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_RearEndArmor
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_L_0.08_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_L_0.08_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_L_-0.077_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_L_-0.077_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_R_0.08_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_R_0.08_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_R_-0.077_0.045
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_ShellBolt_R_-0.077_0.136
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_SidePanel_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_SidePanel_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_StatusScreen_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_StatusScreen_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_StatusScreenBezel_L
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_StatusScreenBezel_R
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_TopArmorTab
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Extracting primitive: ME_PG_TopServiceRail
+20:38:05 | INFO: Primitives created: 1
+20:38:05 | INFO: Finished glTF 2.0 export in 0.06894207000732422 s
+00:10.478  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/preview_white.png'
+00:18.304  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/view_side.png'
+00:25.413  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/view_front.png'
+00:30.945  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/view_top.png'
+00:39.147  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/preview_concept_colors.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/CubeEscape_PortalGun.fbx'
+export finished in 0.0425 sec.
+PORTAL_GUN_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 103, "triangles": 31620, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "portal", "handheld", "robot-classic", "white-shell"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.11300000548362732, -0.40628960728645325, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.23000000417232513]], "dimensions_m": [0.226, 0.6058, 0.3505], "sockets": {"Socket_Hand": [0.0, 0.11599999666213989, -0.05700000002980232], "Socket_Muzzle": [0.0, -0.25699999928474426, 0.08399999886751175], "Socket_SupportHand": [0.0, -0.04500000178813934, -0.00800000037997961]}, "pivot": "asset root; use Socket_Hand for hand attachment"}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.259  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/CubeEscape_PortalGun.blend"
+20:38:44 | INFO: Data are loaded, start creating Blender stuff
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmArmor
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmBolt1-0.254
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmBolt1-0.331
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmBolt-1-0.254
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmBolt-1-0.331
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerArmSpine
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerHinge
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerHingeCap1
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerHingeCap-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerHingeHub1
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerHingeHub-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_LowerTipEmitter
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmArmor
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmBolt1-0.254
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmBolt1-0.331
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmBolt-1-0.254
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmBolt-1-0.331
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperArmSpine
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperHinge
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperHingeCap1
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperHingeCap-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperHingeHub1
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperHingeHub-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_UpperTipEmitter
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelFrontBand
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelRearBand
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelScreen_1
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelScreen_-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelScreenBezel_1
+20:38:44 | INFO: Blender create Mesh node ME_PG_BarrelScreenBezel_-1
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_0.08_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_0.08_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_-0.077_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_-0.077_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_0.08_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_0.08_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_-0.077_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_-0.077_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoreBack
+20:38:44 | INFO: Blender create Mesh node ME_PG_BoreLiner
+20:38:44 | INFO: Blender create Mesh node ME_PG_Chassis
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoolingSlot_0
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoolingSlot_1
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoolingSlot_2
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoolingSlot_3
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoolingSlot_4
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoreLens
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoreLight
+20:38:44 | INFO: Blender create Mesh node ME_PG_CoreRing
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_L0
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_L1
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_L2
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_R0
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_R1
+20:38:44 | INFO: Blender create Mesh node ME_PG_DisplayBar_R2
+20:38:44 | INFO: Blender create Mesh node ME_PG_EmitterNeck
+20:38:44 | INFO: Blender create Mesh node ME_PG_EmitterOuterLip
+20:38:44 | INFO: Blender create Mesh node ME_PG_FrontCuff
+20:38:44 | INFO: Blender create Mesh node ME_PG_FrontWhiteRim
+20:38:44 | INFO: Blender create Mesh node ME_PG_Grip
+20:38:44 | INFO: Blender create Mesh node ME_PG_GripHeel
+20:38:44 | INFO: Blender create Mesh node ME_PG_GripRib_0
+20:38:44 | INFO: Blender create Mesh node ME_PG_GripRib_1
+20:38:44 | INFO: Blender create Mesh node ME_PG_GripRib_2
+20:38:44 | INFO: Blender create Mesh node ME_PG_GripSocket
+20:38:44 | INFO: Blender create Mesh node ME_PG_MainShell
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_0
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_1
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_2
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_3
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_4
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_5
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_6
+20:38:44 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_7
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelAmber_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelAmber_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelInset_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelInset_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelSlot_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_PanelSlot_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_PortalRingInner
+20:38:44 | INFO: Blender create Mesh node ME_PG_PortalRingOuter
+20:38:44 | INFO: Blender create Mesh node ME_PG_RearBand
+20:38:44 | INFO: Blender create Mesh node ME_PG_RearCuff
+20:38:44 | INFO: Blender create Mesh node ME_PG_RearDisplay
+20:38:44 | INFO: Blender create Mesh node ME_PG_RearDisplayBezel
+20:38:44 | INFO: Blender create Mesh node ME_PG_RearEndArmor
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_0.08_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_0.08_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_-0.077_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_-0.077_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_0.08_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_0.08_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_-0.077_0.045
+20:38:44 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_-0.077_0.136
+20:38:44 | INFO: Blender create Mesh node ME_PG_SidePanel_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_SidePanel_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_StatusScreen_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_StatusScreen_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_StatusScreenBezel_L
+20:38:44 | INFO: Blender create Mesh node ME_PG_StatusScreenBezel_R
+20:38:44 | INFO: Blender create Mesh node ME_PG_TopArmorTab
+20:38:44 | INFO: Blender create Mesh node ME_PG_TopServiceRail
+20:38:44 | INFO: glTF import finished in 0.06s
+FBX version: 7400
+PORTAL_GUN_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.11300000548362732, -0.40628960728645325, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.23000000417232513]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}, "glb": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.11300000548362732, -0.40628960728645325, -0.12049999833106995], [0.11300000548362732, 0.19949999451637268, 0.23000000417232513]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}, "fbx": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.11300000548362732, -0.40628960728645325, -0.12050002813339233], [0.11300000548362732, 0.19950002431869507, 0.2300000637769699]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.237  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/CubeEscape_PortalGun.blend"
+Info: Saved as "CubeEscape_PortalGun_FPS.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+20:38:45 | INFO: Starting glTF 2.0 export
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmArmor.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmBolt1-0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmBolt1-0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmBolt-1-0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmBolt-1-0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerArmSpine.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerHinge.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerHingeCap1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerHingeCap-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerHingeHub1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerHingeHub-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_LowerTipEmitter.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmArmor.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmBolt1-0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmBolt1-0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmBolt-1-0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmBolt-1-0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperArmSpine.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperHinge.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperHingeCap1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperHingeCap-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperHingeHub1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperHingeHub-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_UpperTipEmitter.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelFrontBand.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelRearBand.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelScreen_1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelScreen_-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelScreenBezel_1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BarrelScreenBezel_-1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_L_0.08_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_L_0.08_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_L_-0.077_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_L_-0.077_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_R_0.08_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_R_0.08_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_R_-0.077_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoltRecess_R_-0.077_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoreBack.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_BoreLiner.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_Chassis.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoolingSlot_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoolingSlot_1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoolingSlot_2.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoolingSlot_3.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoolingSlot_4.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoreLens.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoreLight.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_CoreRing.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_L0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_L1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_L2.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_R0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_R1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_DisplayBar_R2.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_EmitterNeck.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_EmitterOuterLip.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_FrontCuff.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_FrontWhiteRim.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_Grip.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_GripHeel.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_GripRib_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_GripRib_1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_GripRib_2.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_GripSocket.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MainShell.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_1.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_2.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_3.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_4.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_5.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_6.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_MuzzleFastener_7.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelAmber_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelAmber_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelInset_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelInset_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelSlot_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PanelSlot_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PortalRingInner.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_PortalRingOuter.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_RearBand.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_RearCuff.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_RearDisplay.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_RearDisplayBezel.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_RearEndArmor.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_L_0.08_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_L_0.08_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_L_-0.077_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_L_-0.077_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_R_0.08_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_R_0.08_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_R_-0.077_0.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_ShellBolt_R_-0.077_0.002
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_SidePanel_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_SidePanel_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_StatusScreen_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_StatusScreen_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_StatusScreenBezel_L.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_StatusScreenBezel_R.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_TopArmorTab.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Extracting primitive: ME_PG_TopServiceRail.001
+20:38:45 | INFO: Primitives created: 1
+20:38:45 | INFO: Finished glTF 2.0 export in 0.06609702110290527 s
+00:52.281  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/preview_first_person.png'
+01:02.767  render           | Saved: '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/preview_large.png'
+
+
+FBX export starting... '/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/CubeEscape_PortalGun_FPS.fbx'
+export finished in 0.0502 sec.
+PORTAL_GUN_FPS_BUILD_OK {"blender": "5.2.2 LTS", "meshes": 103, "triangles": 31620, "manifold": true, "uv_projection": "per-face box; overlapping islands", "scale": [1, 1, 1], "forward": "-Y", "category": "Interactive", "tags": ["tool", "portal", "handheld", "robot-classic", "white-shell", "first-person-large"], "integration": "visual asset only; no gameplay or Unity prefab", "bounds_m": [[-0.4350006878376007, -1.4353036880493164, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, -0.013704586774110794]], "dimensions_m": [0.3521, 0.9239, 0.5841], "sockets": {"Socket_Hand": [-0.25999999046325684, -0.6600000262260437, -0.5], "Socket_Muzzle": [-0.21814124286174774, -1.197723150253296, -0.24139957129955292], "Socket_SupportHand": [-0.24181412160396576, -0.893618106842041, -0.40610453486442566], "Socket_Camera": [0.0, 0.0, 0.0]}, "pivot": "camera attachment at origin; all export object scales are 1", "variant": "first_person_large", "enlargement": 1.5, "camera": {"horizontal_fov_degrees": 75, "near_m": 0.03, "hand_position_blender_m": [-0.25999999046325684, -0.6600000262260437, -0.5], "hand_position_unity_m": [-0.25999999046325684, -0.5, 0.6600000262260437], "aim_target_blender_m": [0.0, -4.0, 0.0], "note": "Camera offset and enlargement are already baked; attach root with identity transform."}, "framing": {"min_camera_depth_m": 0.511402428150177, "screen_bounds_normalized": [[0.5545775294303894, -0.6053850650787354], [0.9813253879547119, 0.4877018928527832]], "reticle_clear": true, "render_resolution": [1600, 900], "muzzle_ray_error_m": 8.803850967124497e-07}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
+00:00.353  blend            | Read blend: "/Users/ffunk/Claude/cubeescape-toolgen/outputs/Portalkanone/CubeEscape_PortalGun_FPS.blend"
+20:39:48 | INFO: Data are loaded, start creating Blender stuff
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmArmor.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmBolt1-0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmBolt1-0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmBolt-1-0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmBolt-1-0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerArmSpine.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerHinge.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerHingeCap1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerHingeCap-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerHingeHub1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerHingeHub-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_LowerTipEmitter.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmArmor.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmBolt1-0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmBolt1-0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmBolt-1-0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmBolt-1-0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperArmSpine.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperHinge.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperHingeCap1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperHingeCap-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperHingeHub1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperHingeHub-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_UpperTipEmitter.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelFrontBand.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelRearBand.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelScreen_1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelScreen_-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelScreenBezel_1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BarrelScreenBezel_-1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_0.08_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_0.08_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_-0.077_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_L_-0.077_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_0.08_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_0.08_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_-0.077_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoltRecess_R_-0.077_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoreBack.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_BoreLiner.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_Chassis.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoolingSlot_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoolingSlot_1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoolingSlot_2.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoolingSlot_3.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoolingSlot_4.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoreLens.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoreLight.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_CoreRing.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_L0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_L1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_L2.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_R0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_R1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_DisplayBar_R2.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_EmitterNeck.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_EmitterOuterLip.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_FrontCuff.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_FrontWhiteRim.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_Grip.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_GripHeel.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_GripRib_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_GripRib_1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_GripRib_2.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_GripSocket.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MainShell.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_1.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_2.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_3.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_4.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_5.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_6.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_MuzzleFastener_7.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelAmber_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelAmber_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelInset_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelInset_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelSlot_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PanelSlot_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PortalRingInner.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_PortalRingOuter.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_RearBand.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_RearCuff.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_RearDisplay.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_RearDisplayBezel.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_RearEndArmor.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_0.08_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_0.08_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_-0.077_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_L_-0.077_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_0.08_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_0.08_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_-0.077_0.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_ShellBolt_R_-0.077_0.002
+20:39:48 | INFO: Blender create Mesh node ME_PG_SidePanel_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_SidePanel_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_StatusScreen_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_StatusScreen_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_StatusScreenBezel_L.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_StatusScreenBezel_R.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_TopArmorTab.001
+20:39:48 | INFO: Blender create Mesh node ME_PG_TopServiceRail.001
+20:39:48 | INFO: glTF import finished in 0.07s
+FBX version: 7400
+PORTAL_GUN_ROUNDTRIP_OK {"blender": "5.2.2 LTS", "checks": {"blend": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.4350006878376007, -1.4353036880493164, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, -0.013704586774110794]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}, "glb": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.4350006878376007, -1.435303807258606, -0.5977886319160461], [-0.08293507993221283, -0.511402428150177, -0.01370454952120781]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}, "fbx": {"passed": true, "mesh_count": 103, "bounds_m": [[-0.4350006878376007, -1.4353036880493164, -0.5977885127067566], [-0.08293507993221283, -0.5114024877548218, -0.013704411685466766]], "sockets": true, "arm_hierarchy": true, "uvs_and_materials": true}}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
