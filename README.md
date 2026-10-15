@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.4.0 · Fieldstrip.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.5.0 · Trimline.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -28,8 +28,10 @@ Das Ego-Sichtfeld steht als Datenwert in `data/viewmodels.json` (vertikal 46,69�
 zu einem eigenen Viewmodel-FOV; jedes Ego-Paket enthält dazu `viewmodel_camera.json`.
 
 Der Spiel-Export (Stufe `game`) macht aus jedem Weltmodell ein Unity-fertiges Spielmodell: statische Teile in einem
-Renderer, bewegliche Teile getrennt, matte Cube-Escape-Materialien (`data/game_palette.json`), LOD0/LOD1, Kollisionsboxen
-und `unity_contract.json`. Details und Werte: [TECHNIK](docs/TECHNIK.md) › Spiel-Export.
+Renderer, bewegliche Teile getrennt, matte Cube-Escape-Materialien (`data/game_palette.json`), Dreiecksbudget
+(`data/game_budget.json`), LOD0/LOD1, Kollisionsboxen und `unity_contract.json`. Die Stufe `game_fps` macht dasselbe für das
+Ego-Modell (eigenes Budget, keine Kollision, Viewmodel-Kameradaten in `unity_contract_fps.json`). Details und Werte:
+[TECHNIK](docs/TECHNIK.md) › Spiel-Export; Einbau-Vorbereitung: [UNITY_EINBAU](docs/UNITY_EINBAU.md).
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich; der Regler „Sichtfeld“ der Ego-Ansicht (35–75°, Zurücksetzen auf den Datenwert) wirkt
@@ -68,7 +70,7 @@ Bericht: `logs/toolgen_report.json` mit Schrittzeiten, Last, Cache und Zeitband.
 
 Blender-QA prüft geschlossene Geometrie, Metermaße, Materialien, UVs, Anker, Hierarchie und Animation. Der Spiel-Export
 prüft Palette, Renderer- und Materialzahl, Abmessungen gegen das Weltmodell in jedem Clipbild, identische Anker, LOD1, Kollisionsboxen und den
-Blend-/GLB-/FBX-Reimport (`qa_game.json`). Bogen und
+Blend-/GLB-/FBX-Reimport (`qa_game.json`, Ego: `qa_game_fps.json`). Bogen und
 Magnetgreifer haben je 97 Aktionsframes; der Bogen enthält Morphs und kehrt in die geladene Ruhepose zurück. Viewer-Tests
 kontrollieren alle Varianten, Bewegung/Reset, echte Zwischenbild-Interpolation, Looks, beschädigte Daten und die Seitenleistenbreite.
 Die Handbaugruppen prüfen an allen 97 Frames Griffkontakt, freie Bildmitte, Kameraabstand und Rückkehr zur Ruhepose,
@@ -82,7 +84,7 @@ Magnetgreifer-C#-Player enthält historische Kompilierungsnachweise, keine Unity
 - [AGENTS.md](AGENTS.md): Regeln und Plugins; [Test-Skill](.agents/skills/tg-testing/SKILL.md).
 - `data/tools.json`: Katalog; `scripts/tool_assets/`: Autoren-Generatoren und gemeinsame Designprofile.
 - `data/viewmodels.json`: Ego-Haltungen, Handgrößen, Viewmodel-Sichtfeld und Herkunft des Robogen-Mitt-Vertrags.
-- `data/game_palette.json`: matte Spielpalette mit Cube-Escape-Materialnamen.
+- `data/game_palette.json`: matte Spielpalette mit Cube-Escape-Materialnamen; `data/game_budget.json`: LOD0-Dreiecksbudgets.
 - `toolgen/`: gemeinsame Pipeline (`generate_tools.py`, Stufenliste `STAGES`), Stufen-Cache (`toolcache.py`), Spiel-Export
   (`game_export.py`) und Binärexport; [CLI-Details](toolgen/README.md).
 - `scripts/`: `testplan.py` (Prüfweg aus dem Diff), `heavy_lock.py` (gemeinsame Sperre), `check_output.sh`, `check_docs.py`.

@@ -25,7 +25,7 @@ Bei Fehlern bleibt das vorherige Paket erhalten. Der aktuelle Bericht nennt `pas
 ## Ausgabe
 
 Je Werkzeug `<Ausgabe>/<tool_id>/`: `.blend`, FBX, GLB, Geometrie-/Animations-QA und Verträge, `viewmodel_camera.json`,
-`<Asset>_Game.*` mit `unity_contract.json` und `qa_game.json`; bei Standard/Voll Reimport-QA, Bilder/GIFs. `ViewerData/<variant>/`: `scene.json`, `vertices.bin`, `indices.bin`, `anim.bin`, `qa_viewer.json`.
+`<Asset>_Game.*` mit `unity_contract.json` und `qa_game.json`, `<Asset>_FPS_Game.*` mit `unity_contract_fps.json` und `qa_game_fps.json`; bei Standard/Voll Reimport-QA, Bilder/GIFs. `ViewerData/<variant>/`: `scene.json`, `vertices.bin`, `indices.bin`, `anim.bin`, `qa_viewer.json`.
 `manifest.json` sichert Dateien und Inhaltsschlüssel; `<Ausgabe>/catalog.json` führt die sichtbaren Modelle.
 
 `logs/toolgen_report.json` misst Schritte, Worker, Threads, Last, Cache (Treffer, gebaute und gerenderte Stufen, Aufräumen)

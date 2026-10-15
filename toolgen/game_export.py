@@ -14,7 +14,10 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
 * matte palette from ``data/game_palette.json`` (matte variants of Cube Escape materials, glow names, at most six per tool).
 * ``<part>_LOD0`` / ``<part>_LOD1`` (about 30 % of the triangles), the suffix convention Cube Escape's Cubegen import
   understands (Unity builds the LODGroup); box colliders in the Cubegen sidecar format (part-relative, Unity axes).
+* LOD0 is reduced to the triangle budget of ``data/game_budget.json`` (collapse decimation, shape keys follow).
 * ``unity_contract.json`` and ``qa_game.json``; the exit code is 1 when a check fails.
+* ``--viewmodel``: the same for the first-person model ``<asset>_FPS`` (hands, arms and tool): own budget, no collision,
+  ``unity_contract_fps.json`` / ``qa_game_fps.json`` with the viewmodel camera data of ``viewmodel_camera.json``.
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -39,11 +42,13 @@ except ImportError:  # unit tests import the pure helpers with the system Python
 
 ROOT = Path(__file__).resolve().parents[1]
 PALETTE_PATH = ROOT / "data/game_palette.json"
+BUDGET_PATH = ROOT / "data/game_budget.json"
 TOOLS_PATH = ROOT / "data/tools.json"
 CONTRACT_FORMAT = 1
 LOD1_TARGET = .30
 LOD1_RANGE = (.25, .40)
-MAX_RENDERERS = 4                 # LOD0 renderers: one static plus the moving parts
+MAX_RENDERERS = 4                 # LOD0 renderers of a world model: one static plus the moving parts
+MAX_RENDERERS_VIEWMODEL = 14      # arms, hands and fingers move separately in the first-person model
 BOUNDS_TOLERANCE_M = .001         # LOD0 against the world model, every frame of the clip
 ROUNDTRIP_BOUNDS_TOLERANCE_M = .002
 ANCHOR_TOLERANCE = 1e-6           # native .blend: the empties are not touched at all
@@ -129,6 +134,22 @@ def validate_palette(palette):
         if target not in materials:
             errors.append(f"{source}: unknown palette material {target}")
     return errors
+
+
+def budget_errors(budget, tools):
+    """Errors of data/game_budget.json: every tool has a positive LOD0 triangle budget for both variants."""
+    errors = []
+    for variant in ("world", "viewmodel"):
+        for tool in tools:
+            value = budget.get(variant, {}).get(tool)
+            if not isinstance(value, int) or value < 1000:
+                errors.append(f"{variant}/{tool}: triangle budget missing or below 1000")
+    return errors
+
+
+def budget_ratio(total, budget):
+    """Share of the triangles to keep so that ``total`` fits the budget (1.0 when it already does)."""
+    return min(1.0, budget / total) if total > 0 else 1.0
 
 
 def symmetric_eigenvectors(matrix, sweeps=60):
@@ -656,8 +677,9 @@ def transfer_shape_keys(source, target):
         assign_action(target.data.shape_keys, action)
 
 
-def make_lod1(lod0, ratio, collection):
-    copy = lod0.data.copy()
+def decimated(source, ratio, name, collection):
+    """Collapse-decimated copy of ``source`` (same parent, transform, role, materials and shape-key animation)."""
+    copy = source.data.copy()
     temporary = bpy.data.objects.new("_GameExportDecimate", copy)
     collection.objects.link(temporary)
     if copy.shape_keys:
@@ -671,35 +693,67 @@ def make_lod1(lod0, ratio, collection):
                                            depsgraph=depsgraph)
     bpy.data.objects.remove(temporary)
     bpy.data.meshes.remove(copy)
-    name = lod0.name[:-len("_LOD0")] + "_LOD1"
     mesh.name = name
-    lod1 = bpy.data.objects.new(name, mesh)
-    collection.objects.link(lod1)
-    lod1.parent = lod0.parent
-    lod1.matrix_parent_inverse = lod0.matrix_parent_inverse.copy()
-    lod1.matrix_basis = lod0.matrix_basis.copy()
-    lod1["ce_role"] = lod0["ce_role"]
-    lod1["ce_lod"] = 1
-    lod1.hide_render = True          # Cubegen convention: LOD1 hidden in previews, the LODGroup switches in Unity
-    if lod0.data.shape_keys:
-        transfer_shape_keys(lod0, lod1)
-    return lod1
+    result = bpy.data.objects.new(name, mesh)
+    collection.objects.link(result)
+    result.parent = source.parent
+    result.matrix_parent_inverse = source.matrix_parent_inverse.copy()
+    result.matrix_basis = source.matrix_basis.copy()
+    result["ce_role"] = source["ce_role"]
+    if source.data.shape_keys:
+        transfer_shape_keys(source, result)
+    return result
 
 
-def build_lods(renderers, collection):
-    total = sum(triangles(obj.data) for obj in renderers)
-    ratio, lods = LOD1_TARGET, []
+def decimate_set(sources, target, collection, namer, tolerance=.05):
+    """One decimated copy per source so that together they keep ``target`` of the triangles, within the relative
+    ``tolerance`` (iterated: the modifier only approximates its ratio)."""
+    total = sum(triangles(obj.data) for obj in sources)
+    ratio, found = target, []
     for _ in range(3):
-        for obj in lods:
+        for obj in found:
             mesh = obj.data
             bpy.data.objects.remove(obj)
             bpy.data.meshes.remove(mesh)
-        lods = [make_lod1(obj, ratio, collection) for obj in renderers]
-        achieved = sum(triangles(obj.data) for obj in lods) / total
-        if abs(achieved - LOD1_TARGET) <= .02:
+        found = [decimated(obj, ratio, namer(obj), collection) for obj in sources]
+        achieved = sum(triangles(obj.data) for obj in found) / total
+        if abs(achieved - target) <= tolerance * target:
             break
-        ratio = min(1.0, ratio * LOD1_TARGET / max(achieved, 1e-6))
+        ratio = min(1.0, ratio * target / max(achieved, 1e-6))
+    return found
+
+
+def build_lods(renderers, collection):
+    lods = decimate_set(renderers, LOD1_TARGET, collection, lambda obj: obj.name[:-len("_LOD0")] + "_LOD1", .06)
+    for obj in lods:
+        obj["ce_lod"] = 1
+        obj.hide_render = True
     return lods
+
+
+def reduce_to_budget(renderers, budget, collection):
+    """Replace the merged LOD0 meshes by decimated ones (same names) so that together they fit the triangle budget.
+    Returns (renderers, ratio kept)."""
+    total = sum(triangles(obj.data) for obj in renderers)
+    keep = budget_ratio(total, budget)
+    if keep >= 1.0:
+        return renderers, 1.0
+    candidates = decimate_set(renderers, keep, collection, lambda obj: obj.name + "_reduced", .04)
+    result = []
+    for old, new in zip(renderers, candidates):
+        name = old.name
+        for child in list(old.children):
+            world = child.matrix_world.copy()
+            child.parent = new
+            child.matrix_world = world
+        mesh = old.data
+        bpy.data.objects.remove(old)
+        bpy.data.meshes.remove(mesh)
+        new.name = name
+        new.data.name = name
+        new["ce_lod"] = 0
+        result.append(new)
+    return result, keep
 
 
 def export_files(scene, root, work, name, clip):
@@ -739,7 +793,8 @@ def local_transform(obj):
                       "localScale": [round(v, 6) for v in unity_scale(scale)]}}
 
 
-def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files):
+def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
+                   viewmodel=None):
     def renderer_entry(obj):
         mesh = obj.data
         return {"name": obj.name, "parent": obj.parent.name, "role": obj["ce_role"], "lod": obj["ce_lod"],
@@ -758,7 +813,8 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
     parents = sorted({obj.parent.name for obj in renderers})
     return {
         "format": CONTRACT_FORMAT, "generator": "toolgen", "version": source_info["version"],
-        "tool": tool["id"], "asset": tool["asset"], "model": tool["asset"] + "_Game",
+        "tool": tool["id"], "variant": "viewmodel" if viewmodel else "world", "asset": tool["asset"],
+        "model": tool["asset"] + "_Game",
         "units": "meter", "scale": 1.0,
         "axes": {"blender": {"up": "+Z", "forward": "-Y"}, "unity": {"up": "+Y", "forward": "+Z"},
                  "position": "unity = (-x, z, -y) of blender", "scale": "unity = (x, z, y) of blender",
@@ -781,7 +837,10 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
                              "LOD1": [obj.name for obj in lods if obj.parent.name == parent]} for parent in parents],
                  "LOD0": {"triangles": lod0_tris}, "LOD1": {"triangles": lod1_tris,
                                                          "ratio": round(lod1_tris / lod0_tris, 4)}},
+        "budget": budget_info,
         "colliders": colliders,
+        **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
+            "viewmodel": viewmodel} if viewmodel else {}),
         "clips": [clip_info] if clip_info else [],
         "source": source_info,
         "files": {kind: {"path": path.name, "sha256": file_sha256(path)} for kind, path in files.items()},
@@ -813,6 +872,7 @@ def find(name):
 
 
 def check_blend(checks, path, source, expected, palette):
+    renderer_limit = expected["max_renderers"]
     bpy.ops.wm.open_mainfile(filepath=str(path))
     scene = bpy.context.scene
     root = scene.objects[expected["root"]]
@@ -820,15 +880,15 @@ def check_blend(checks, path, source, expected, palette):
     lods = [obj for obj in tree(root) if obj.type == "MESH" and obj.get("ce_lod") == 1]
     stray = [obj.name for obj in tree(root) if obj.type == "MESH" and obj.get("ce_lod") not in (0, 1)]
     static = [obj for obj in renderers if obj["ce_role"] == "static"]
-    checks.add("renderers_in_target", len(static) <= 1 and len(renderers) <= MAX_RENDERERS and not stray
+    checks.add("renderers_in_target", len(static) <= 1 and len(renderers) <= renderer_limit and not stray
                and len(renderers) == len(expected["groups"]) and len(lods) == len(renderers),
-               lod0=len(renderers), lod1=len(lods), static=len(static), limit=MAX_RENDERERS,
+               lod0=len(renderers), lod1=len(lods), static=len(static), limit=renderer_limit,
                source_meshes=source["mesh_count"], source_nodes=source["node_count"],
                game_nodes=len(tree(root)), stray_meshes=stray)
     used = sorted({m.name for obj in [*renderers, *lods] for m in obj.data.materials})
-    checks.add("materials_in_target", 0 < len(used) <= palette["max_materials_per_tool"]
-               and all(name in palette["materials"] for name in used), materials=used,
-               limit=palette["max_materials_per_tool"])
+    material_limit = palette["max_materials_per_viewmodel" if expected["viewmodel"] else "max_materials_per_tool"]
+    checks.add("materials_in_target", 0 < len(used) <= material_limit
+               and all(name in palette["materials"] for name in used), materials=used, limit=material_limit)
     frames = source["frames"]
     worst = {"bounds": 0.0, "groups": 0.0, "anchors": 0.0, "nodes": 0.0}
     missing = [name for name in source["matrices"][frames[0]] if name not in scene.objects]
@@ -896,6 +956,14 @@ def game_key_frames(root):
                 for curve in action_curves(action):
                     frames.update(int(round(point.co.x)) for point in curve.keyframe_points)
     return frames
+
+
+def check_budget(checks, contract):
+    budget = contract["budget"]
+    lod0 = contract["lods"]["LOD0"]["triangles"]
+    checks.add("triangle_budget", lod0 <= budget["triangles_limit"] * 1.05 and lod0 <= budget["merged_triangles"],
+               lod0_triangles=lod0, limit=budget["triangles_limit"], merged_triangles=budget["merged_triangles"],
+               kept_ratio=budget["kept_ratio"])
 
 
 def collider_box(collider):
@@ -996,12 +1064,15 @@ def check_import(checks, kind, path, source, expected):
 
 
 # --------------------------------------------------------------------------------------------- preview
-def render_preview(work, asset, out):
-    """Small Eevee comparison: world model | game LOD0 | game LOD1 | LOD0 with the collision boxes."""
-    contract = json.loads((work / "unity_contract.json").read_text())
+def render_preview(work, asset, out, contract_name="unity_contract.json", viewmodel=False):
+    """Small Eevee comparison: source model | game LOD0 | game LOD1 | LOD0 with the collision boxes (no boxes and
+    no fourth panel for the viewmodel)."""
+    contract = json.loads((work / contract_name).read_text())
     panels = []
-    for index, (source, lod, boxes) in enumerate(((asset + ".blend", None, False), (asset + "_Game.blend", 0, False),
-                                                  (asset + "_Game.blend", 1, False), (asset + "_Game.blend", 0, True))):
+    views = [(asset + ".blend", None, False), (asset + "_Game.blend", 0, False), (asset + "_Game.blend", 1, False)]
+    if not viewmodel:
+        views.append((asset + "_Game.blend", 0, True))
+    for index, (source, lod, boxes) in enumerate(views):
         bpy.ops.wm.open_mainfile(filepath=str(work / source))
         scene = bpy.context.scene
         root = scene.objects[asset]
@@ -1032,7 +1103,7 @@ def render_preview(work, asset, out):
         camera_data.ortho_scale = max(width, height * 16 / 9) * 1.12
         scene.camera = camera
         label = bpy.data.curves.new("PreviewLabel", "FONT")
-        label.body = ("World model", "Game LOD0", "Game LOD1", "Collision (LOD0)")[index]
+        label.body = (("Viewmodel" if viewmodel else "World model"), "Game LOD0", "Game LOD1", "Collision (LOD0)")[index]
         label.size = camera_data.ortho_scale * .045
         text = bpy.data.objects.new("PreviewLabel", label)
         scene.collection.objects.link(text)
@@ -1087,6 +1158,8 @@ def render_preview(work, asset, out):
     images = [bpy.data.images.load(str(path)) for path in panels]
     width, height = images[0].size
     pixels = [np.array(image.pixels[:], dtype=np.float32).reshape(height, width, 4) for image in images]
+    if len(pixels) == 3:
+        pixels.append(np.zeros_like(pixels[0]))
     top = np.concatenate([pixels[2], pixels[3]], axis=1)      # Blender images start at the bottom row
     bottom = np.concatenate([pixels[0], pixels[1]], axis=1)
     combined = np.concatenate([top, bottom], axis=0)
@@ -1101,7 +1174,15 @@ def render_preview(work, asset, out):
 
 
 # --------------------------------------------------------------------------------------------- main
-def export(work, tool, palette):
+def contract_name(viewmodel):
+    return "unity_contract_fps.json" if viewmodel else "unity_contract.json"
+
+
+def export(work, tool, palette, budget, viewmodel=False):
+    """Game export of the world model, or of the first-person model (``viewmodel``: root ``<asset>_FPS``, no collision,
+    its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract)."""
+    if viewmodel:
+        tool = dict(tool, asset=tool["asset"] + "_FPS", clip=tool.get("fps_clip") or tool.get("clip"))
     asset, clip_name = tool["asset"], tool.get("clip")
     source_path = work / (asset + ".blend")
     game = asset + "_Game"
@@ -1121,7 +1202,7 @@ def export(work, tool, palette):
         "mesh_count": len(meshes), "node_count": len(tree(root)),
         "triangles": sum(triangles(obj.data) for obj in meshes)})
     source_clip_name = str(root.get("ce_action_clip", clip_name)) if clip_name else None
-    colliders = collision_boxes(root, groups, scene)
+    colliders = [] if viewmodel else collision_boxes(root, groups, scene)
     # Build: drop the presentation rig, palette, merge, LOD1.
     keep = set(tree(root))
     for other in [other for other in bpy.data.scenes if other != scene]:
@@ -1134,6 +1215,9 @@ def export(work, tool, palette):
     collection = root.users_collection[0]
     set_frame(scene, scene.frame_start)
     renderers = [merge_group(group, collection) for group in groups]
+    merged_triangles = sum(triangles(obj.data) for obj in renderers)
+    limit = budget["viewmodel" if viewmodel else "world"][tool["id"]]
+    renderers, kept = reduce_to_budget(renderers, limit, collection)
     lods = build_lods(renderers, collection)
     if clip_name:
         scene.name = clip_name                 # the FBX take carries the scene name
@@ -1162,12 +1246,27 @@ def export(work, tool, palette):
                    "materials": used_sources, "palette": {"path": "data/game_palette.json",
                                                           "sha256": file_sha256(PALETTE_PATH)},
                    "version": f"{VERSION} {CODENAME}"}
-    contract = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files)
-    (work / "unity_contract.json").write_text(json.dumps(contract, indent=2, ensure_ascii=False) + "\n")
+    budget_info = {"source": str(BUDGET_PATH.relative_to(ROOT)), "sha256": file_sha256(BUDGET_PATH),
+                   "triangles_limit": limit, "merged_triangles": merged_triangles, "kept_ratio": round(kept, 4),
+                   "triangles_lod0": sum(triangles(obj.data) for obj in renderers)}
+    camera = None
+    if viewmodel:
+        camera_path = work / "viewmodel_camera.json"
+        camera = json.loads(camera_path.read_text())
+        camera = {key: camera[key] for key in ("vertical_fov_degrees", "horizontal_fov_degrees", "reference_aspect",
+                                               "near_clip_m", "override", "unity", "player_fov_dependency",
+                                               "validated_vertical_fov_degrees", "aspect_policy", "camera_offset_m",
+                                               "runtime")}
+        camera["source"] = camera_path.name
+    contract = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
+                              camera)
+    (work / contract_name(viewmodel)).write_text(json.dumps(contract, indent=2, ensure_ascii=False) + "\n")
     expected = {"root": asset, "renderers": [obj.name for obj in renderers], "lods": [obj.name for obj in lods],
                 "groups": [{"name": group.name, "renderer": group.name + "_LOD0"} for group in groups],
                 "materials": {obj.name: [m.name for m in obj.data.materials] for obj in [*renderers, *lods]},
                 "clip": clip_info and dict(clip_info, frames=clip_info["frames"]),
+                "viewmodel": viewmodel,
+                "max_renderers": MAX_RENDERERS_VIEWMODEL if viewmodel else MAX_RENDERERS,
                 "sample_frames": sample_frames(scene.frame_start, scene.frame_end, [f for _, f in source["markers"]],
                                                source["key_frames"]) if clip_name else frames}
     return source, contract, expected, files
@@ -1178,27 +1277,32 @@ def main():
     parser = argparse.ArgumentParser(description="Merged, matte game export of a toolgen world model")
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--tool", required=True)
+    parser.add_argument("--viewmodel", action="store_true",
+                        help="export the first-person model <asset>_FPS (no collision, own budget, camera data)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     work = args.directory.resolve()
     checks = Checks()
     timings = {}
-    report = {"tool": args.tool, "passed": False}
+    report = {"tool": args.tool, "variant": "viewmodel" if args.viewmodel else "world", "passed": False}
     try:
         tools = {tool["id"]: tool for tool in json.loads(TOOLS_PATH.read_text())["tools"]}
         tool = tools[args.tool]
-        report["asset"] = tool["asset"]
+        report["asset"] = tool["asset"] + ("_FPS" if args.viewmodel else "")
         palette = json.loads(PALETTE_PATH.read_text())
-        errors = validate_palette(palette)
+        budget = json.loads(BUDGET_PATH.read_text())
+        errors = validate_palette(palette) + budget_errors(budget, list(tools))
         checks.add("palette", not errors, errors=errors)
         if errors:
             raise RuntimeError("; ".join(errors))
         phase = time.perf_counter()
-        source, contract, expected, files = export(work, tool, palette)
+        source, contract, expected, files = export(work, tool, palette, budget, args.viewmodel)
         timings["export"] = time.perf_counter() - phase
         phase = time.perf_counter()
         check_blend(checks, files["blend"], source, expected, palette)
-        check_colliders(checks, contract, source, args.tool)
+        check_budget(checks, contract)
+        if not args.viewmodel:
+            check_colliders(checks, contract, source, args.tool)
         for kind in ("glb", "fbx"):
             try:
                 check_import(checks, kind, files[kind], source, expected)
@@ -1212,7 +1316,9 @@ def main():
                        "materials": sorted(contract["materials"]), "colliders": len(contract["colliders"])})
         if args.preview:
             phase = time.perf_counter()
-            report["preview"] = render_preview(work, tool["asset"], work / "preview_game.png").name
+            report["preview"] = render_preview(
+                work, report["asset"], work / ("preview_game_fps.png" if args.viewmodel else "preview_game.png"),
+                contract_name(args.viewmodel), args.viewmodel).name
             timings["preview"] = time.perf_counter() - phase
     except Exception as error:  # noqa: BLE001 - reported as a failed QA with exit code 1
         traceback.print_exc()
@@ -1221,7 +1327,7 @@ def main():
                    "seconds": round(time.perf_counter() - started, 3),
                    "timings_seconds": {key: round(value, 3) for key, value in timings.items()}})
     work.mkdir(parents=True, exist_ok=True)
-    (work / "qa_game.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    (work / ("qa_game_fps.json" if args.viewmodel else "qa_game.json")).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     failed = [name for name, result in checks.results.items() if not result["passed"]]
     if failed:
         print(f"GAME_EXPORT_FAILED {args.tool}: {', '.join(failed)}", flush=True)

@@ -54,6 +54,14 @@ for tool in catalog():
             checks += 4
         assert any(entry["id"] == tool["id"] + "/" + variant for entry in index["models"])
         checks += 3
+    ego = json.loads((package / "unity_contract_fps.json").read_text())
+    assert ego["variant"] == "viewmodel" and not ego["colliders"] and ego["viewmodel"]["player_fov_dependency"] == "none"
+    assert ego["viewmodel"]["vertical_fov_degrees"] == json.loads((package / "viewmodel_camera.json").read_text())["vertical_fov_degrees"]
+    assert ego["lods"]["LOD0"]["triangles"] <= ego["budget"]["triangles_limit"] * 1.05, (tool["id"], "ego triangle budget")
+    assert len(ego["materials"]) <= 7 and len(ego["nodes"]) + len(ego["renderers"]) <= 60, (tool["id"], "ego nodes")
+    assert json.loads((package / "qa_game_fps.json").read_text())["passed"]
+    assert tool["asset"] + "_FPS_Game.glb" in manifest["files"]
+    checks += 5
     if manifest["tier"] != "quick":
         for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else [])]:
             roundtrip = json.loads((package / ("qa_roundtrip" + suffix + ".json")).read_text())

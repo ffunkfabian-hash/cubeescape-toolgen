@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "note": "LOD0 triangle budgets of the game export (toolgen/game_export.py). The merged LOD0 meshes are collapse-decimated to fit; LOD1 is about 30 % of the result. 'world' = the model in the world, 'viewmodel' = first-person model with hands and arms. 0.4.0 shipped 10-32k (world) and 17-45k (viewmodel) triangles.",
+  "world": {
+    "portal_emitter": 8000,
+    "magnet_gripper": 8000,
+    "flashlight": 5000,
+    "bow": 6000
+  },
+  "viewmodel": {
+    "portal_emitter": 16000,
+    "magnet_gripper": 16000,
+    "flashlight": 12000,
+    "bow": 14000
+  }
+}

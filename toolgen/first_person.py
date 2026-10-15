@@ -552,12 +552,32 @@ def configure_camera(scene, settings):
         assert abs(expected.x - x) < 1e-5 and abs(expected.y - y) < 1e-5, ("camera differs from QA projection", expected, x, y)
 
 
+def validated_fovs(fov_range):
+    """Vertical FOVs (degrees) of the measured range at which the framing holds for every checked aspect."""
+    found = {}
+    for entry in fov_range:
+        found.setdefault(entry["vertical_fov_degrees"], []).append(entry["ok"])
+    return [value for value, results in sorted(found.items()) if all(results)]
+
+
 def camera_document(tool, settings, report):
     """Small, game-facing summary of the viewmodel camera next to the exports."""
     return {"format": 1, "tool": tool, "vertical_fov_degrees": settings["vertical_fov_degrees"],
             "horizontal_fov_degrees": settings["horizontal_fov_degrees"],
             "reference_aspect": settings["reference_aspect"], "near_clip_m": settings["near_clip_m"],
             "override": settings["override"], "unity": settings["unity"],
+            "player_fov_dependency": "none",
+            "validated_vertical_fov_degrees": validated_fovs(report["fov_range"]),
+            "aspect_policy": "Vertical FOV is the fixed value; the horizontal FOV follows the aspect ratio. Framing is "
+                             "binding for " + ", ".join(settings["qa_aspects"]) + "; wider screens show the same "
+                             "image with more room at the sides, the hands stay in frame.",
+            "camera_offset_m": [0.0, 0.0, 0.0],
+            "runtime": "The model sits in camera space (Socket_Camera = identity). Render it with a separate camera "
+                       "(or URP camera stack overlay) whose Camera.fieldOfView is vertical_fov_degrees and whose "
+                       "nearClipPlane is near_clip_m. The framing (hands in frame, free reticle, forearms out of "
+                       "view) is verified at vertical_fov_degrees only; a game setting may use another value only "
+                       "from validated_vertical_fov_degrees (measured, see checked_range). The player's world FOV "
+                       "never scales the viewmodel and is not baked into it.",
             "checked_range": report["framing_range"]["summary"],
             "root_properties": ["ce_viewmodel_vertical_fov_degrees", "ce_viewmodel_horizontal_fov_degrees",
                                 "ce_viewmodel_reference_aspect", "ce_viewmodel_near_clip_m"]}

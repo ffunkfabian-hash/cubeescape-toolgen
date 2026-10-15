@@ -42,7 +42,8 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
 7. Spiel-Export (Stufe `game`): `<Werkzeug>/qa_game.json` muss `passed: true` sein, jede Prüfung (Palette, Renderer,
    Materialien, Maße, Anker, Clip bei animierten Werkzeugen, LOD1, Kollision, GLB-/FBX-Reimport) einzeln lesen; `preview_game.png` (ab Standard) ansehen:
    Weltmodell, LOD0, LOD1, Kollisionsboxen. Kollision gegen das tatsächliche Modell, Öffnungen frei. Viewer-Variante
-   „Spielmodell“ mit ansehen.
+   „Spielmodell“ mit ansehen. Dasselbe für das Ego-Modell (Stufe `game_fps`): `qa_game_fps.json` (zusätzlich `triangle_budget`),
+   `preview_game_fps.png`; keine Kollision, Hände/Arme im Bild unverändert.
 8. Regeln/Profile: `python3 scripts/check_rules.py --shared <ce-agent-tools>`; jeder Hook hat treffende und nicht
    treffende Fälle, Profile erlauben Prüfungen/Doku und sperren Code-Änderungen des Testläufers.
 

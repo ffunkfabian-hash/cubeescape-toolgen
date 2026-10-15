@@ -92,6 +92,13 @@ Viewmodel-Ebene); das Sichtfeld der Spielwelt bleibt eine Spielereinstellung. Je
 Wurzel in den Eigenschaften `ce_viewmodel_vertical_fov_degrees`, `ce_viewmodel_horizontal_fov_degrees`,
 `ce_viewmodel_reference_aspect` und `ce_viewmodel_near_clip_m`; der Reimport vergleicht den vertikalen Wert mit der QA.
 
+Das Ego-Modell ist nicht an das Spieler-FOV gebunden: Es liegt im Kameraraum und wird mit einer eigenen Kamera gezeichnet. Den
+Wert nennt `viewmodel_camera.json` zusammen mit `player_fov_dependency: "none"`, `aspect_policy`, `camera_offset_m`,
+`validated_vertical_fov_degrees` (Werte, bei denen der Bildausschnitt für alle geprüften Seitenverhältnisse hält: Portalkanone und
+Magnetgreifer 46,69/50,69°, Taschenlampe 42,69–54,69°, Bogen nur 46,69°) und einem `runtime`-Hinweis; derselbe Block steht als
+`viewmodel` in `unity_contract_fps.json`. Eine Viewmodel-FOV-Einstellung des Spiels darf nur diese Werte anbieten. Einbau:
+[UNITY_EINBAU](UNITY_EINBAU.md).
+
 Die Ego-Vorschau und die QA projizieren dieselbe Kamera (die Prüfung vergleicht beide an Stichpunkten). Verbindlich ist die
 QA beim eingestellten Sichtfeld für 16:9 und 16:10: Hände im Bild (Rand `hand_margin`), Zielpunkt frei, proximaler Unterarm
 außerhalb. Der Bereich um den Wert herum (±8° in fünf Stufen) wird gemessen und in `fov_range` berichtet, ohne den Lauf zu
@@ -139,7 +146,8 @@ Ruhe, Zug, Schuss und Nachgreifen aus der tatsächlichen Sequenz ansehen.
 
 ## Spiel-Export
 
-Die Stufe `game` (`toolgen/game_export.py`, Eintrag in `STAGES`) macht aus dem Weltmodell ein Modell für Unity 6 (URP).
+Die Stufe `game` (`toolgen/game_export.py`, Eintrag in `STAGES`) macht aus dem Weltmodell ein Modell für Unity 6 (URP); die
+Stufe `game_fps` (`--viewmodel`) tut dasselbe für das Ego-Modell. Einbau-Vorbereitung: [UNITY_EINBAU](UNITY_EINBAU.md).
 Sie liest `<Asset>.blend` und `data/game_palette.json` und schreibt `<Asset>_Game.blend/.fbx/.glb`, `unity_contract.json`
 und `qa_game.json` (in Render-Stufen zusätzlich `preview_game.png`: Weltmodell, LOD0, LOD1 und Kollisionsboxen nebeneinander).
 Der Viewer zeigt das Ergebnis als Variante „Spielmodell“ (Datei `<Asset>_Game`, Wurzelobjekt `<Asset>`, Clip des Weltmodells; nur LOD0 – `export_viewer.py` lässt `_LOD1…`-Teile aus). Das Weltmodell
@@ -170,6 +178,22 @@ und stehen in `unity_contract.json` › `colliders` im Feldformat des Cubegen-Si
 relativ zum Teil). Leuchtteile, Kleinteile unter 12 mm und der geladene Pfeil (sichtbarkeitsanimiert) bekommen keine Box. Die Öffnungen (Mündung,
 Greifraum, beim Bogen der Raum zwischen Griff und Nocke) werden mit Testpunkten auf Freiheit geprüft; eine Gesamtbox, die sie blockiert, fällt durch.
 
+**Dreiecksbudget.** `data/game_budget.json` nennt je Werkzeug ein LOD0-Budget (Welt: Portalkanone und Magnetgreifer 8 000,
+Bogen 6 000, Taschenlampe 5 000; Ego: 16 000 / 16 000 / 14 000 / 12 000). Nach dem Zusammenführen wird LOD0 mit dem
+Collapse-Decimate-Modifier gleichmäßig auf das Budget verkleinert (Shape Keys des Bogens folgen wie bei LOD1 über das nächste
+Dreieck; Iteration bis auf 4 % genau); LOD1 entsteht danach aus dem reduzierten LOD0. Die Maßprüfung `bounds_lod0` (1 mm gegen das
+Quellmodell in jedem Clipbild) gilt unverändert, `triangle_budget` prüft das Budget. Das Budget ist ein Datenwert: Ändern baut
+neu, ohne Änderung am Generator. Das Weltmodell vor dem Export bleibt unverändert, Viewer-Varianten „Welt“ und „Ego“ zeigen
+weiter das volle Modell.
+
+**Ego-Modell (`game_fps`).** Dieselbe Pipeline für `<Asset>_FPS` (Hände, Arme, Werkzeug): `<Asset>_FPS_Game.blend/.fbx/.glb`,
+`unity_contract_fps.json`, `qa_game_fps.json`, `preview_game_fps.png` (ab Standard: Quelle, LOD0, LOD1). Unterschiede: eigenes
+Budget, **keine Kollision** (der Vertrag nennt `collision: none` und `colliders: []`), höchstens 14 Renderer (Arme, Hände und
+Finger sind bewegte Teile, je animiertem Besitzer ein Renderer; Taschenlampe 2, Portalkanone 3, Magnetgreifer 5, Bogen 9),
+höchstens 7 Materialien (die Hand bringt `M_HazardOrange_Matte` hinzu) und der Block `viewmodel` mit der Kameradaten aus
+`viewmodel_camera.json`. Die Ego-Hierarchie (`Viewmodel_Motion`, `UpperArm_*`, `LowerArm_*`, `Hand_*`, `Fingers_*`,
+`Socket_*`) und der Clip (97 Frames) bleiben erhalten; QA wie beim Weltmodell (Bounds in jedem Clipbild, Anker, Reimport).
+
 **Achsen.** Blender (Z oben, vorn −Y) wird zu Unity (Y oben, vorn +Z) mit Position `(−x, z, −y)`. FBX: `axis_forward −Z`,
 `axis_up Y`, ohne `bake_space_transform` (das bricht Objektanimation). In Unity den FBX-Import mit `bakeAxisConversion`
 einstellen; der Vertrag (`axes.fbx.unity_import`) nennt das. GLB (+Y oben) ergibt über Unitys X-Spiegelung dieselbe Abbildung.
@@ -182,12 +206,21 @@ Clip mit Ereignissen, Quellhashes (Weltmodell, Palette) und Hashes der drei Date
 `bounds_lod0` (LOD0 gegen das Weltmodell in jedem Clipbild, 1 mm), `anchors_identical`, `clip_blend`, `lod1`, `collision` sowie
 `roundtrip_glb` und `roundtrip_fbx` (frischer Import: Namen, Materialslots, Clip, Anker- und Teilgrenzen an neun Bildern, 2 mm).
 
-| Werkzeug | Renderer | Dreiecke LOD0 / LOD1 | Boxen |
-|---|---|---|---|
-| Portalkanone | 1 | 32 468 / 9 740 | 4 |
-| Magnetgreifer | 3 | 25 928 / 7 774 | 7 |
-| Taschenlampe | 1 | 10 628 / 3 188 | 2 |
-| Bogen | 3 | 12 036 / 3 610 | 6 |
+Werte (0.5.0, `unity_contract*.json`; „Quelle“ = Dreiecke und Knoten vor dem Export):
+
+| Werkzeug | Variante | Quelle: Dreiecke / Knoten | Spielmodell: Renderer | Dreiecke LOD0 / LOD1 | Materialien | Boxen |
+|---|---|---|---|---|---|---|
+| Portalkanone | Welt | 32 468 / 113 | 1 | 8 000 / 2 383 | 5 | 4 |
+| Portalkanone | Ego | 45 932 / 232 | 3 | 15 996 / 4 771 | 6 | – |
+| Magnetgreifer | Welt | 25 928 / 122 | 3 | 7 998 / 2 383 | 5 | 7 |
+| Magnetgreifer | Ego | 39 392 / 241 | 5 | 15 992 / 4 770 | 6 | – |
+| Taschenlampe | Welt | 10 628 / 37 | 1 | 5 000 / 1 500 | 6 | 2 |
+| Taschenlampe | Ego | 17 360 / 98 | 2 | 11 998 / 3 594 | 7 | – |
+| Bogen | Welt | 12 036 / 71 | 3 | 5 996 / 1 793 | 5 | 6 |
+| Bogen | Ego | 25 500 / 190 | 9 | 13 992 / 4 181 | 6 | – |
+
+Die Spielmodelle haben je Modell nur noch 3–39 Knoten (Leerknoten, Anker, Renderer samt LOD1) statt 37–241, und ausschließlich
+matte Palettenmaterialien statt der 8–14 glänzenden Generatormaterialien (Metallic 0,6–0,7, Roughness 0,35).
 
 Offen bleibt der Einbau in Unity (siehe Grenzen).
 

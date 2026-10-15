@@ -7,6 +7,7 @@
     "min_roughness": 0.55
   },
   "max_materials_per_tool": 6,
+  "max_materials_per_viewmodel": 7,
   "materials": {
     "M_RobotBody_Matte": {
       "color_srgb": [

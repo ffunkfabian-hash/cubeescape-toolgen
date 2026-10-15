@@ -1,5 +1,28 @@
 # Änderungen
 
+## 0.5.0 – Trimline (15.10.2026)
+
+Behebt die Integrationslücken aus dem Review vom 15.10.2026 (Material- und Knotenzahl, Dreiecksbudget, Ego-Sichtfeld).
+
+- Ego-Spielmodell (neue Stufe `game_fps`, `game_export.py --viewmodel`): Hände, Arme und Werkzeug als `<Asset>_FPS_Game.blend/.fbx/.glb`
+  mit `unity_contract_fps.json`, `qa_game_fps.json`, `preview_game_fps.png`. Matte Palette statt 12–14 glänzender Materialien
+  (6–7 Palettenmaterialien), 15–39 Knoten statt 98–241 (je Renderer ein Mesh je animiertem Besitzer, Anker und Clip unverändert),
+  LOD0/LOD1, keine Kollision. Weltmodelle hatten das seit 0.4.0, das Ego-Modell nicht.
+- Dreiecksbudgets (`data/game_budget.json`): LOD0 wird nach dem Zusammenführen auf das Budget reduziert (Collapse-Decimate, Shape Keys
+  des Bogens folgen). Welt: 32 468 → 8 000 (Portalkanone), 25 928 → 7 998 (Magnetgreifer), 10 628 → 5 000 (Taschenlampe),
+  12 036 → 5 996 (Bogen); Ego: 45 932 → 15 996, 39 392 → 15 992, 17 360 → 11 998, 25 500 → 13 992; LOD1 etwa 30 % davon.
+  Maße gegen das Quellmodell weiter 1 mm in jedem Clipbild; neue Prüfung `triangle_budget`.
+- Viewmodel-Kamera als Vertrag: `viewmodel_camera.json` und der Block `viewmodel` im Ego-Vertrag nennen jetzt `player_fov_dependency`
+  (`none`), `aspect_policy`, `camera_offset_m`, `runtime` und `validated_vertical_fov_degrees` (aus der gemessenen FOV-Reihe: Portalkanone
+  und Magnetgreifer 46,69/50,69°, Taschenlampe 42,69–54,69°, Bogen nur 46,69°). Das Ego-Modell liegt im Kameraraum und ist nicht an das
+  Spieler-FOV gebunden; das Spiel zeichnet es mit eigener Kamera. Kein fester 75°-Wert mehr im Asset.
+- Doku: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md) (Dateien, Materialien, Viewmodel-Kamera mit URP-Overlay und Skizze, offene
+  Unity-Punkte).
+- Palette: `max_materials_per_viewmodel` 7 (die Hand bringt `M_HazardOrange_Matte` hinzu, die Taschenlampe braucht 7).
+- Prüfung: 108 Unit-Tests (4 neue für Budget, Limits und Stufe `game_fps`), `check_output.sh` 117 Prüfungen, Viewer-Test 47 Prüfungen; `verify_output.py` prüft den Ego-Vertrag (Budget, Knoten, Materialien,
+  keine Kollision, FOV-Wert).
+- Grenzen: Unity-Abnahme steht aus; Viewer zeigt das Ego-Spielmodell nicht als eigene Variante (nur das Bild `preview_game_fps.png`).
+
 ## 0.4.0 – Fieldstrip (15.10.2026)
 
 - Spiel-Export der Weltmodelle (Stufe `game`, `toolgen/game_export.py`): Statische Teile werden in einen Renderer

@@ -117,8 +117,15 @@ STAGES = (
     # Game export of the world model: merged renderers, matte palette, LOD1, collision, unity_contract.json; adds the
     # viewer model "game" (root <asset>_Game, world clip).
     Stage("game", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}"),
-          reads=("{asset}.blend",), sources=("data/game_palette.json", "toolgen/version.py"), renders=True, render_args=("--preview",),
-          qa=("qa_game.json",), variants=(Variant("game", "{asset}_Game", clip=("clip",), node="{asset}"),)),
+          reads=("{asset}.blend",), sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
+          render_args=("--preview",), qa=("qa_game.json",),
+          variants=(Variant("game", "{asset}_Game", clip=("clip",), node="{asset}"),)),
+    # The same for the first-person model (hands, arms, tool): own triangle budget, no collision, camera data in
+    # unity_contract_fps.json. No viewer variant (the viewer's Ego view keeps showing the unreduced model).
+    Stage("game_fps", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--viewmodel"),
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json"),
+          sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
+          render_args=("--preview",), qa=("qa_game_fps.json",)),
 )
 
 

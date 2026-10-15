@@ -212,3 +212,19 @@ class PipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GameFpsStageTest(unittest.TestCase):
+    def test_viewmodel_game_export_is_a_stage_with_its_own_qa_and_inputs(self):
+        stage = next(stage for stage in STAGES if stage.name == "game_fps")
+        self.assertIn("--viewmodel", stage.args)
+        self.assertEqual(("qa_game_fps.json",), stage.qa)
+        self.assertIn("{asset}_FPS.blend", stage.reads)
+        self.assertIn("viewmodel_camera.json", stage.reads)
+        self.assertIn("data/game_budget.json", stage.sources)
+        self.assertEqual((), stage.variants)
+        names = [stage.name for stage in STAGES]
+        self.assertGreater(names.index("game_fps"), names.index("first_person"))
+        for tool in catalog():
+            runs = [run.name for run in expand(tool, "quick")]
+            self.assertIn("game_fps", runs)

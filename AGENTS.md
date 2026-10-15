@@ -15,7 +15,8 @@ Codex liest sie über `~/.codex/AGENTS.md`.
   QA oder Manifest von Hand ändern. `outputs/` enthält die historischen Referenzpakete und Shell-Einstiege;
   neue Lieferpakete entstehen in `output/`. Generatorcode gehört nicht mehr in diese Referenzpakete.
 - `data/game_palette.json` bildet die Generator-Materialien auf Cube-Escape-Materialnamen ab (Spiel-Export); die Abbildung bleibt
-  vollständig, Namen und Ergebnisdateien (`*_Game.*`, `unity_contract.json`) sind Vertrag mit dem Spiel.
+  vollständig, Namen und Ergebnisdateien (`*_Game.*`, `unity_contract*.json`) sind Vertrag mit dem Spiel;
+  Dreiecksbudgets stehen in `data/game_budget.json` (nicht im Generator verstecken).
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips kehren in die Ruhepose zurück; Loop ist eine Viewer-Prüfoption.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
@@ -57,7 +58,7 @@ Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, 
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.
 Ego-Gestaltung, Viewmodel-Sichtfeld und verbindlicher Bildausschnitt (drei Greiffinger plus Daumen, maximal halbe Unterarme):
 [docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen. Spiel-Export für Unity
-(`toolgen/game_export.py`, `data/game_palette.json`): › Spiel-Export; matte Palette, ein Renderer für statische Teile, Kollision
+(`toolgen/game_export.py`, `data/game_palette.json`, `data/game_budget.json`; Ego: Stufe `game_fps`): › Spiel-Export, Einbau: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md); matte Palette, ein Renderer für statische Teile, Kollision
 am tatsächlichen Modell, Öffnungen frei.
 
 ## Plugins und Hooks

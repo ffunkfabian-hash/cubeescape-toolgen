@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 import game_export as ge  # noqa: E402
 
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
+BUDGET = json.loads((ROOT / "data/game_budget.json").read_text())
 TOOLS = {tool["id"]: tool for tool in json.loads((ROOT / "data/tools.json").read_text())["tools"]}
 ASSETS = ROOT / "scripts/tool_assets"
 FIRST_PERSON = ROOT / "toolgen/first_person.py"
@@ -553,6 +554,28 @@ class SmallHelperTests(unittest.TestCase):
         self.assertEqual(set(TOOLS), set(ge.OPENING_PROBES) | {"flashlight"})
         self.assertEqual(PALETTE["max_materials_per_tool"], 6)
         self.assertTrue(ge.MIN_COLLIDER_SIZE_M < ge.MIN_PART_SIZE_M)
+
+    def test_triangle_budgets_cover_every_tool(self):
+        self.assertEqual([], ge.budget_errors(BUDGET, list(TOOLS)))
+        self.assertTrue(ge.budget_errors({"world": {}, "viewmodel": {}}, ["bow"]))
+        self.assertTrue(ge.budget_errors({"world": {"bow": 500}, "viewmodel": {"bow": 9000}}, ["bow"]))
+        for tool_id in TOOLS:
+            with self.subTest(tool=tool_id):
+                self.assertLess(BUDGET["world"][tool_id], BUDGET["viewmodel"][tool_id],
+                                "the viewmodel adds hands and arms to the same tool")
+                self.assertLessEqual(BUDGET["viewmodel"][tool_id], 16000)
+
+    def test_budget_ratio(self):
+        self.assertEqual(1.0, ge.budget_ratio(5000, 8000))
+        self.assertEqual(1.0, ge.budget_ratio(0, 8000))
+        self.assertAlmostEqual(.25, ge.budget_ratio(32000, 8000))
+
+    def test_viewmodel_limits(self):
+        self.assertGreaterEqual(PALETTE["max_materials_per_viewmodel"], PALETTE["max_materials_per_tool"])
+        self.assertLessEqual(PALETTE["max_materials_per_viewmodel"], 8)
+        self.assertGreater(ge.MAX_RENDERERS_VIEWMODEL, ge.MAX_RENDERERS)
+        self.assertEqual("unity_contract_fps.json", ge.contract_name(True))
+        self.assertEqual("unity_contract.json", ge.contract_name(False))
 
     def test_game_export_imports_without_blender(self):
         self.assertIsNone(ge.bpy)

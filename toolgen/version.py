@@ -1,2 +1,2 @@
-VERSION = "0.4.0"
-CODENAME = "Fieldstrip"
+VERSION = "0.5.0"
+CODENAME = "Trimline"
