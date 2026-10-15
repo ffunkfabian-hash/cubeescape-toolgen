@@ -9,7 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
-RULES = [("outputs/*", "docs"), ("work/*", "docs"),
+RULES = [(".ce-repo.json", "docs"), ("check", "tests"), ("release", "tests"), ("scripts/ce_tools/*", "tests"),
+         ("outputs/*", "docs"), ("work/*", "docs"),
          (".claude/agent-guard.json", "docs"), (".claude/settings.json", "docs"),
          (".claude/skills", "docs"), (".claude/hooks/*", "tests"), (".gitignore", "docs"),
          ("*.md", "docs"), ("docs/*", "docs"), (".agents/*", "docs"),

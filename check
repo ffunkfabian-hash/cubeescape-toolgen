@@ -1,0 +1,6 @@
+#!/bin/sh
+# ./check [--full] [--verbose]: runs .ce-repo.json > check (embedded shared tool, scripts/ce_tools).
+cd "$(dirname "$0")" || exit 2
+mode=quick
+case "$1" in --full) mode=full; shift;; esac
+exec python3 scripts/ce_tools/ce_check.py "$mode" --repo . "$@"

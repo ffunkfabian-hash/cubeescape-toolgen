@@ -1,0 +1,12 @@
+{
+  "name": "toolgen",
+  "version": {"file": "toolgen/version.py", "pattern": "VERSION\\s*=\\s*\"([^\"]+)\""},
+  "check": {
+    "quick": [["python3", "scripts/check_docs.py"], ["python3", "-m", "unittest", "discover", "-s", "tests"]],
+    "full": [["python3", "scripts/check_docs.py"], ["bash", "scripts/check_output.sh"]]
+  },
+  "docs": {"versions": "docs/versions", "archive": "docs/archive/versions", "changelog": "CHANGELOG.md"},
+  "limits": {"AGENTS.md": 150, "CLAUDE.md": 20},
+  "release": {"branch_prefix": "release/", "tag_prefix": "v"},
+  "heavy_lock": true
+}

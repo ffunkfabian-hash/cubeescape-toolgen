@@ -1,12 +1,10 @@
 # Toolgen – Regeln für KI-Agenten
 
+## Projekt
+
 Gemeinsamer Werkzeug-Generator für Cube Escape. Code ist die Wahrheit, dann [README.md](README.md),
 [docs/TECHNIK.md](docs/TECHNIK.md), [CHANGELOG.md](CHANGELOG.md). Antworten, Doku, UI und Commit-Messages auf Deutsch;
 Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
-Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen, Codex als Unteragent): `~/.claude/CLAUDE.md` –
-Codex liest sie über `~/.codex/AGENTS.md`.
-
-## Quellen und Verträge
 
 - `data/tools.json` führt Werkzeug-IDs, Varianten und Bau-Schritte. IDs und exportierte Anker sind dauerhaft.
 - Generatoren in `scripts/tool_assets/`, Pipeline in `toolgen/`, native Oberfläche in `viewer/Sources/`.
@@ -21,7 +19,22 @@ Codex liest sie über `~/.codex/AGENTS.md`.
 - Keine Animation läuft automatisch. Aktionsclips kehren in die Ruhepose zurück; Loop ist eine Viewer-Prüfoption.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
 
-## Teststufen und Leistung
+## Wahrheit und Aktualität
+
+Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version und Stand: `toolgen/version.py`,
+`git describe --tags`, `CHANGELOG.md` (App und Berichte übernehmen die Version daraus). Vor Systemarbeit `git worktree list`,
+lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern. Dauerhafte Entscheidungen mit Grund:
+[docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
+Codex als Unteragent, Versionsberichte): `~/.claude/CLAUDE.md`, Codex liest sie über `~/.codex/AGENTS.md`.
+Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
+
+## Befehle
+
+`./check` (schnell: Doku-/Konfigurationsprüfung und Python-Tests, kein Blender), `./check --full` (Doku plus
+`scripts/check_output.sh`, schwer), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
+Nutzerwunsch). Konfiguration: `.ce-repo.json`. Die gemeinsamen Werkzeuge liegen als eingebettete Kopie in `scripts/ce_tools/`
+(erzeugt mit `python3 $CE_TOOLS/ce_sync.py --repo .` aus dem Plugin `ce-agent-tools`, nie von Hand ändern, Prüfung
+`python3 scripts/ce_tools/ce_lint.py`). Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
 
 Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing/SKILL.md).
 
@@ -47,6 +60,22 @@ die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Proz
 dieselbe Stufe, Maschine und Worker-Zahl; schwere Last wird nicht bewertet. Keine Geschwindigkeit ohne diese Angaben behaupten.
 Braucht eine Messung den Rechner für sich: Cube Escapes `pause_sessions.py run -- <Befehl>` verwenden und die Pause im
 Bericht nennen. Den Editor oder Blender des Nutzers nicht beenden.
+
+## Regeln
+
+Jeder neue Auftrag bekommt Minor +1 und einen englischen Namen; Fortsetzungen behalten die Version.
+Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus.
+Vor Systemarbeit `git worktree list`, lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern.
+Committen, taggen, mergen und pushen nur auf Nutzerwunsch. Haupt-Checkouts nicht ungefragt verändern. Nie Force-Push oder
+nacktes `git stash`. Workflows: Push nur `main`, PR + auf Wunsch `workflow_dispatch`, Doku ignorieren, Concurrency,
+Timeouts, wenige Linux-Jobs; keine Schedules ohne Auftrag. Keine Änderung an gemeinsamen Regeln ohne deren Tests.
+
+Metal-Rendering und Cache-Regeln stehen unten unter „Pipeline-Details“; Viewer-, Plugin- und Hook-Regeln danach.
+
+## Definition of Done
+
+Fertig: passende Teststufe grün, neue Verhaltenstests, sichtbare Modelle und Animationen geprüft, Cache-Wiederholung,
+Doku und Skills auf Endstand, Grenzen benannt. Unity-Gameplay nie aus Blender-/Viewer-Tests als geprüft ableiten.
 
 ## Viewer
 
@@ -84,17 +113,7 @@ Diese Definitionen erteilen keinen Auftrag, andere laufende Chats anzuschreiben 
 Cloud-SessionStart übernimmt Robogens Blender-Python-/ImageMagick-Kompatibilität. Swift und native Viewer-Abnahme brauchen
 macOS; Cloud-Zeiten sind nicht mit dem Mac vergleichbar.
 
-## Versionen, Git und Abschluss
-
-Jeder neue Auftrag bekommt Minor +1 und einen englischen Namen; Fortsetzungen behalten die Version.
-Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus.
-Vor Systemarbeit `git worktree list`, lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern.
-Committen, taggen, mergen und pushen nur auf Nutzerwunsch. Haupt-Checkouts nicht ungefragt verändern. Nie Force-Push oder
-nacktes `git stash`. Workflows: Push nur `main`, PR + auf Wunsch `workflow_dispatch`, Doku ignorieren, Concurrency,
-Timeouts, wenige Linux-Jobs; keine Schedules ohne Auftrag. Keine Änderung an gemeinsamen Regeln ohne deren Tests.
-
-Fertig: passende Teststufe grün, neue Verhaltenstests, sichtbare Modelle und Animationen geprüft, Cache-Wiederholung,
-Doku und Skills auf Endstand, Grenzen benannt. Unity-Gameplay nie aus Blender-/Viewer-Tests als geprüft ableiten.
+## Pipeline-Details
 
 Metal-Rendering: `--device auto` nutzt auf kompatiblen Macs die ermittelte Metal-GPU; `--device cpu` erzwingt CPU.
 Das Rendergerät steckt im Cache- und Zeitbandschlüssel. Unter Fremdlast keine Beschleunigung aus Laufzeiten ableiten.

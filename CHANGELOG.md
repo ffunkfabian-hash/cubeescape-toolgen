@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.6.2 – Sightline (15.10.2026)
+
+Werkzeug-/Doku-Patch: gemeinsamer Standard der vier Repos.
+
+- `.ce-repo.json` (Version aus `toolgen/version.py`, Prüfbefehle, Grenzen) und eingebettete Kopie der gemeinsamen Werkzeuge
+  in `scripts/ce_tools/` (`ce_sync.py` aus `ce-agent-tools`); `scripts/heavy_lock.py` leitet an die geteilte Sperre weiter.
+- Wrapper `./check` (`--full`) und `./release` (Trockenlauf); `AGENTS.md` in der Standard-Gliederung, `report.md` ungetrackt.
+- Neu: `docs/ENTSCHEIDUNGEN.md` (Entscheidungen vom 15.10.2026). Keine Versionsberichte als eigene Dateien: `CHANGELOG.md` bleibt die Übersicht.
+- Keine Änderung an Pipeline, Modellen oder Viewer; kein Blender-Lauf.
+
 ## 0.6.1 – Sightline (15.10.2026)
 
 Patch nach dem Codex-Review von 0.5.0/0.6.0.

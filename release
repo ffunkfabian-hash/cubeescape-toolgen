@@ -1,0 +1,4 @@
+#!/bin/sh
+# ./release [--execute]: dry run by default; checks version, CHANGELOG, tag, branch (embedded shared tool).
+cd "$(dirname "$0")" || exit 2
+exec python3 scripts/ce_tools/ce_release.py --repo . "$@"
