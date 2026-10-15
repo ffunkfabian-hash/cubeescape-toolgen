@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -73,6 +74,58 @@ class HeavyLockTests(unittest.TestCase):
         finally:
             child.wait(timeout=5)
 
+
+    def free(self):
+        """True when nobody holds the lock (takes and drops it at once)."""
+        import fcntl
+        fd = os.open(self.lockfile, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC, 0o644)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except BlockingIOError:
+            return False
+        finally:
+            os.close(fd)
+
+    def grandchild_run(self, grandchild, then):
+        """heavy_lock.py run with a command that starts a grandchild (same process group), says 'go <pid>', then `then`."""
+        command = ("import os, subprocess, sys\n"
+                   f"subprocess.Popen([sys.executable, '-c', {grandchild!r}], stdout=subprocess.DEVNULL)\n"
+                   "print('go', os.getpid(), flush=True)\n" + then)
+        wrapper = subprocess.Popen([sys.executable, str(ROOT / "scripts/heavy_lock.py"), "run", "--what",
+                                    "toolgen check_output", "--", sys.executable, "-c", command], env=self.env,
+                                   stdout=subprocess.PIPE, text=True)
+        self.addCleanup(lambda: wrapper.poll() is None and wrapper.kill())
+        self.addCleanup(wrapper.stdout.close)
+        word, pid = wrapper.stdout.readline().split()
+        self.assertEqual(word, "go")
+        return wrapper, int(pid)
+
+    def test_a_grandchild_keeps_the_lock_after_its_parent_died(self):
+        # Codex review of 0.4: check_output.sh died, Blender below it still ran - the lock was free
+        marker = Path(self.temp.name) / "grandchild-ended"
+        grandchild = f"import time; time.sleep(1.5); open({str(marker)!r}, 'w').write('x')"
+        wrapper, command_pid = self.grandchild_run(grandchild, "import time; time.sleep(30)")
+        os.kill(command_pid, signal.SIGKILL)  # the command dies, the grandchild goes on
+        time.sleep(.4)
+        self.assertIsNone(wrapper.poll(), "the wrapper still waits for the grandchild")
+        self.assertFalse(marker.exists())
+        self.assertFalse(self.free(), "the lock is held while the grandchild runs")
+        self.assertNotEqual(wrapper.wait(timeout=10), 0, "the killed command stays a failure")
+        self.assertTrue(marker.exists(), "the lock was held until the grandchild ended")
+        self.assertTrue(self.free())
+
+    def test_a_term_reaches_the_grandchildren_before_the_lock_is_free(self):
+        marker = Path(self.temp.name) / "grandchild-ended"
+        grandchild = ("import signal, sys, time\n"
+                      f"def done(*a): time.sleep(.5); open({str(marker)!r}, 'w').write('x'); sys.exit(0)\n"
+                      "signal.signal(signal.SIGTERM, done)\ntime.sleep(30)\n")
+        wrapper, _ = self.grandchild_run(grandchild, "import time; time.sleep(30)")
+        time.sleep(.3)  # the grandchild has set its handler
+        wrapper.terminate()
+        wrapper.wait(timeout=10)
+        self.assertTrue(marker.exists(), "the grandchild got the TERM and ended before the lock was free")
+        self.assertTrue(self.free())
 
 if __name__ == "__main__":
     unittest.main()

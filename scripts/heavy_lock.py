@@ -17,6 +17,9 @@ change it only together with them):
   five minutes); Cube Escape's pause_sessions.py spares that pid and its children;
 - the lock's file descriptor is never inherited (O_CLOEXEC): a background child (a Blender worker) would otherwise keep
   the lock after the run;
+- run_forwarding starts the command in a process group of its own (start_new_session), passes TERM/HUP/INT on to the
+  whole group and returns only when the group is empty: a grandchild (Blender under check_output.sh) keeps the lock even
+  when its parent died first. Children that leave the group on purpose (start_new_session) do not;
 - CE_HEAVY_LOCK=0 skips the queue; CE_HEAVY_HELD=1 marks the children of a holder, so a heavy step inside another one
   (check_output.sh inside a holder, a full run inside Cube Escape's queue) does not wait for its own parent.
 CE_HEAVY_LOCK_FILE moves the lock (tests only).
@@ -36,6 +39,8 @@ import time
 DEFAULT = os.path.join(os.path.expanduser("~"), "Library", "Caches", "CubeEscape", "heavy-run.lock")
 POLL_SECONDS = 2.0
 REPORT_SECONDS = 300.0      # a waiting run says every five minutes that it still waits
+GROUP_POLL = 0.1            # how often run_forwarding looks whether a finished command's group is empty
+STRAGGLER_SECONDS = 5.0     # after this long it says which group still keeps the lock
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -177,14 +182,27 @@ def held(what: str, checkout: str | None = None, out=None, poll: float = POLL_SE
         lock.release()
 
 
-def run_forwarding(argv: list, env=None) -> int:
-    """Runs argv and waits for it; TERM/HUP/INT for this process go on to it (a tool's time limit), so the lock this
-    process holds is never free while the heavy step still runs."""
-    child = subprocess.Popen(argv, env=env)
+def group_alive(pgid: int) -> bool:
+    """True while any process of the group still exists (EPERM: one runs that this user may not signal)."""
+    try:
+        os.killpg(pgid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def run_forwarding(argv: list, env=None, out=None) -> int:
+    """Runs argv in a process group of its own and returns its exit code once the whole group has ended; TERM/HUP/INT
+    for this process (a tool's time limit) go on to the whole group, so the lock this process holds is never free while
+    any part of the heavy step still runs - also not when the command died before its children."""
+    out = out or (lambda line: print(line, flush=True))
+    child = subprocess.Popen(argv, env=env, start_new_session=True)     # its pid is the group id
 
     def forward(signum, _frame):
-        if child.poll() is None:
-            child.send_signal(signum)
+        with contextlib.suppress(ProcessLookupError, PermissionError):
+            os.killpg(child.pid, signum)
 
     previous = {}
     for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
@@ -195,9 +213,21 @@ def run_forwarding(argv: list, env=None) -> int:
     try:
         while True:
             try:
-                return child.wait()
+                code = child.wait()
+                break
             except KeyboardInterrupt:   # forwarded already; keep waiting for the child
                 continue
+        start, told = time.monotonic(), False
+        while group_alive(child.pid):
+            if not told and time.monotonic() - start >= STRAGGLER_SECONDS:
+                out("heavy lock: command ended (exit %s), the lock stays until the rest of its process group %d ends"
+                    % (code, child.pid))
+                told = True
+            try:
+                time.sleep(GROUP_POLL)
+            except KeyboardInterrupt:   # as above
+                continue
+        return code
     finally:
         for sig, handler in previous.items():
             if handler is not None:     # None: a handler set outside Python (Blender) - it cannot be put back

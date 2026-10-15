@@ -31,6 +31,9 @@
   Gemessen am 15.10.2026: frischer Ausgabeordner `standard` 0,48 s (46 Stufen aus dem Cache) gegenüber 157 s kalt in 0.3.0;
   zweiter `quick` 0,21 s; eine Änderung nur an `first_person.py` baut nur `first_person` und `viewer_fps` neu.
 - `scripts/heavy_lock.py`: gemeinsame Sperre mit Robogen, Cube Escape und Cubegen; `full` und `check_output.sh` warten darauf.
+  Der Befehl läuft in einer eigenen Prozessgruppe; TERM/HUP/INT gehen an die ganze Gruppe, und die Sperre wird erst frei,
+  wenn die Gruppe leer ist – ein Enkelprozess (Blender unter `check_output.sh`) hält sie auch, wenn sein Elternprozess
+  vorher starb (Befund des Codex-Reviews, gemeinsam mit Robogen 1.20.5, Cube Escape 0.61.2 und Cubegen 0.26.2).
   `scripts/testplan.py` nennt aus dem Diff den kleinsten Prüfweg.
 - Prüfung: 100 Unit-Tests, `check_output.sh` mit 97 Prüfungen für 13 Modelle, Viewer-Test mit 47 Prüfungen.
 - Grenzen: Die Unity-Abnahme steht aus. Die Taschenlampen-Linse ist im Spielexport `M_GlowOrange` und damit kräftiger
