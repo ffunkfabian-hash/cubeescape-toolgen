@@ -11,7 +11,7 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   stay separate: meshes below an object with an animation (merged per animated owner, the owner and its hierarchy
   are kept) and shape-key meshes (merged per parent and identical key animation). Every empty, including all
   ``Socket_*`` anchors, keeps its world matrix and parent; the clip keeps its name, length and event frames.
-* matte palette from ``data/game_palette.json`` (names of Cube Escape materials, at most six per tool).
+* matte palette from ``data/game_palette.json`` (matte variants of Cube Escape materials, glow names, at most six per tool).
 * ``<part>_LOD0`` / ``<part>_LOD1`` (about 30 % of the triangles), the suffix convention Cube Escape's Cubegen import
   understands (Unity builds the LODGroup); box colliders in the Cubegen sidecar format (part-relative, Unity axes).
 * ``unity_contract.json`` and ``qa_game.json``; the exit code is 1 when a check fails.

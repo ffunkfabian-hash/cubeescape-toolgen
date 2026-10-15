@@ -7,9 +7,10 @@
   Clip (Name, Länge, Ereignisse) bleiben unverändert. Der Greifer-Clip `MG_Apply` wird als `MagnetGripper_Use` exportiert.
   Werte: Portalkanone 1 Renderer, 32 468 / 9 740 Dreiecke (LOD0 / LOD1), 4 Kollisionsboxen; Magnetgreifer 3 Renderer,
   25 928 / 7 774, 7 Boxen; Taschenlampe 1 Renderer, 10 628 / 3 188, 2 Boxen; Bogen 3 Renderer, 12 036 / 3 610, 6 Boxen.
-- Matte Palette `data/game_palette.json` auf Cube-Escape-Materialnamen (`M_RobotBody`, `M_RobotDark`, `M_Metal`,
-  `M_HazardOrange`, `M_GlowCyan`, `M_GlowOrange`); Metallic höchstens 0,35, Roughness mindestens 0,55 bei den
-  matten Materialien, je Werkzeug 5 Materialien.
+- Matte Palette `data/game_palette.json`: matte Varianten der Cube-Escape-Materialien wie beim matten Spielerroboter
+  (`M_RobotBody_Matte`, `M_RobotDark_Matte`, `M_Metal_Matte`, `M_HazardOrange_Matte`, je mit `ce_base`), die
+  Leuchtmaterialien `M_GlowCyan`, `M_GlowOrange` und neu `M_GlowWarm` (warmweiße Linse der Taschenlampe); Metallic
+  höchstens 0,35, Roughness mindestens 0,55 bei den matten Materialien, je Werkzeug höchstens 6 Materialien.
 - LOD0/LOD1 nach der Cubegen-Namenskonvention (`<Teil>_LOD0`/`_LOD1`, LOD1 etwa 30 % der Dreiecke); Kollisionsboxen im
   Cubegen-Sidecar-Format, Öffnungen (Mündung, Greifraum, Bogenfenster) bleiben frei. Ergebnisdateien: `<Asset>_Game.blend/.fbx/.glb`,
   `unity_contract.json`, `qa_game.json` (Prüfung nach Blend-, GLB- und FBX-Reimport). Für Unity den FBX-Import mit
@@ -35,9 +36,9 @@
   wenn die Gruppe leer ist – ein Enkelprozess (Blender unter `check_output.sh`) hält sie auch, wenn sein Elternprozess
   vorher starb (Befund des Codex-Reviews, gemeinsam mit Robogen 1.20.5, Cube Escape 0.61.3 und Cubegen 0.27.0).
   `scripts/testplan.py` nennt aus dem Diff den kleinsten Prüfweg.
-- Prüfung: 100 Unit-Tests, `check_output.sh` mit 97 Prüfungen für 13 Modelle, Viewer-Test mit 47 Prüfungen.
-- Grenzen: Die Unity-Abnahme steht aus. Die Taschenlampen-Linse ist im Spielexport `M_GlowOrange` und damit kräftiger
-  als das warme Weiß im Weltmodell; die Cube-Escape-Materialien gleichen Namens sind glänzender als die Palette. Beides wird beim Import entschieden.
+- Prüfung: 104 Unit-Tests, `check_output.sh` mit 97 Prüfungen für 13 Modelle, Viewer-Test mit 47 Prüfungen.
+- Grenzen: Die Unity-Abnahme steht aus. Die Spielmodelle kommen noch nicht in Cube Escape; beim Einbau legt Cube Escape
+  die `_Matte`-Varianten und `M_GlowWarm` an, statt die glänzenderen gleichnamigen Materialien zu verwenden.
 
 ## 0.3.0 – Flowstate (15.10.2026)
 

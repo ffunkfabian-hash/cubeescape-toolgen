@@ -230,16 +230,16 @@ class PaletteRulesTests(unittest.TestCase):
 
     def test_validate_rejects_a_foreign_material_name(self):
         palette = self.valid()
-        palette["materials"]["Steel"] = palette["materials"]["M_Metal"]
+        palette["materials"]["Steel"] = palette["materials"]["M_Metal_Matte"]
         self.assertTrue(any("Steel" in error and "M_" in error for error in ge.validate_palette(palette)))
 
     def test_validate_rejects_shiny_or_rough_violations(self):
         palette = self.valid()
-        palette["materials"]["M_Metal"]["metallic"] = .36
-        self.assertTrue(any("M_Metal" in error and "not matte" in error for error in ge.validate_palette(palette)))
+        palette["materials"]["M_Metal_Matte"]["metallic"] = .36
+        self.assertTrue(any("M_Metal_Matte" in error and "not matte" in error for error in ge.validate_palette(palette)))
         palette = self.valid()
-        palette["materials"]["M_RobotBody"]["roughness"] = .3
-        self.assertTrue(any("M_RobotBody" in error and "not matte" in error for error in ge.validate_palette(palette)))
+        palette["materials"]["M_RobotBody_Matte"]["roughness"] = .3
+        self.assertTrue(any("M_RobotBody_Matte" in error and "not matte" in error for error in ge.validate_palette(palette)))
 
     def test_validate_lets_glow_materials_be_shiny(self):
         palette = self.valid()
@@ -249,8 +249,8 @@ class PaletteRulesTests(unittest.TestCase):
 
     def test_validate_binds_emission_to_glow_names(self):
         palette = self.valid()
-        palette["materials"]["M_Metal"]["emission"] = 1.0
-        self.assertTrue(any("M_Metal" in error and "emit" in error for error in ge.validate_palette(palette)))
+        palette["materials"]["M_Metal_Matte"]["emission"] = 1.0
+        self.assertTrue(any("M_Metal_Matte" in error and "emit" in error for error in ge.validate_palette(palette)))
         palette = self.valid()
         palette["materials"]["M_GlowOrange"]["emission"] = 0.0
         self.assertTrue(any("M_GlowOrange" in error and "emit" in error for error in ge.validate_palette(palette)))
@@ -258,7 +258,7 @@ class PaletteRulesTests(unittest.TestCase):
     def test_validate_rejects_bad_colors(self):
         for color in ([1, 1], [1.2, 0, 0], [0, 0, -.1]):
             palette = self.valid()
-            palette["materials"]["M_Metal"]["color_srgb"] = color
+            palette["materials"]["M_Metal_Matte"]["color_srgb"] = color
             with self.subTest(color=color):
                 self.assertTrue(any("color_srgb" in error for error in ge.validate_palette(palette)))
 

@@ -153,11 +153,14 @@ Der Greifer-Clip `MG_Apply` heißt im Export `MagnetGripper_Use` (der Vertrag ne
 ist nicht zulässig (der Export bricht ab: Empty animieren).
 
 **Materialien.** `data/game_palette.json` bildet jedes Quellmaterial (`PG_`/`MG_`/`BW_`-Präfix des Generators, `FPS_Robot_*`)
-auf ein Material mit dem Namen eines Cube-Escape-Materials ab: `M_RobotBody`, `M_RobotDark`, `M_Metal`, `M_HazardOrange`,
-`M_GlowCyan`, `M_GlowOrange` (Farbwerte in sRGB aus Cube Escapes `generate_assets.py`). Die Abbildung muss vollständig sein; ein
+auf ein Palettenmaterial ab. Nicht-Leuchtmaterialien sind **matte Varianten** der Cube-Escape-Materialien
+(`M_RobotBody_Matte`, `M_RobotDark_Matte`, `M_Metal_Matte`, `M_HazardOrange_Matte`; `ce_base` nennt das Original, Farbwerte in
+sRGB aus Cube Escapes `generate_assets.py`): Die gleichnamigen Materialien des Spiels glänzen stärker, deshalb legt der Import
+wie beim matten Spielerroboter eigene matte Varianten an. Leuchtmaterialien behalten ihre Namen (`M_GlowCyan`, `M_GlowOrange`);
+neu ist `M_GlowWarm` für die warmweiße Linse der Taschenlampe. Die Abbildung muss vollständig sein; ein
 unbekanntes Quellmaterial bricht den Export ab. Matt wie Station und Spielerroboter: Nicht-Leuchtmaterialien Metallic höchstens 0,35 und
 Roughness mindestens 0,55 (Prüfgrenze `finish` in der Palettendatei), nur `M_Glow*` leuchtet.
-Höchstens sechs Materialien je Werkzeug; tatsächlich sind es fünf.
+Höchstens sechs Materialien je Werkzeug (Taschenlampe sechs, die anderen fünf).
 
 **LOD und Kollision.** Jeder Renderer hat ein Geschwister `<Teil>_LOD1` mit etwa 30 % der Dreiecke (Prüfbereich 25–40 %, Silhouette
 innerhalb 2 % der Teildiagonale, gleiche Materialien und Shape Keys); die Namen folgen der Cubegen-Konvention, aus der
@@ -254,9 +257,8 @@ Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.
 Der Spiel-Export (Renderer, LODGroup, Kollision, Clip, Materialien) und die Ego-Kamera sind in Blender, GLB und FBX geprüft,
-aber noch nicht in Unity abgenommen. Die Taschenlampen-Linse ist im Spielexport `M_GlowOrange` und damit kräftiger als das warme
-Weiß des Weltmodells. Die Cube-Escape-Materialien gleichen Namens sind glänzender als die Palette; was gilt, wird beim Import
-entschieden (Palettenwerte oder Materialien des Spiels).
+aber noch nicht in Unity abgenommen. Die Spielmodelle kommen erst später in Cube Escape; dann entstehen dort die `_Matte`-Varianten
+und `M_GlowWarm` aus den Palettenwerten (`ce_status` im Vertrag).
 
 Metal-Rendering: `--device auto` nutzt auf kompatiblen Macs die ermittelte Metal-GPU; `--device cpu` erzwingt CPU.
 Das Rendergerät steckt im Cache- und Zeitbandschlüssel. Unter Fremdlast keine Beschleunigung aus Laufzeiten ableiten.
