@@ -1,3 +1,9 @@
+## Autorenquellen und aktuelle Ausgabe
+
+Die Generatorquellen liegen in `scripts/tool_assets/Portalkanone/`.
+Der gemeinsame Einstieg ist `python3 toolgen/generate_tools.py --tier full`; neue Pakete liegen in `output/`.
+Die hier liegenden Dateien sind historische Referenzen.
+
 # Portalkanone für Cube Escape
 
 Es gibt zwei getrennte Varianten: das kompakte Weltmodell für den Roboter und eine **große Egoperspektiv-Version** mit 1,5-facher Geometriegröße. Beide verwenden dieselbe Designsprache und getrennte Bügel, Anzeigen und Leuchtteile.

@@ -1,3 +1,9 @@
+## Autorenquellen und aktuelle Ausgabe
+
+Die Generatorquellen liegen in `scripts/tool_assets/Magnetgreifer/`.
+Der gemeinsame Einstieg ist `python3 toolgen/generate_tools.py --tier full`; neue Pakete liegen in `output/`.
+Die hier liegenden Dateien sind historische Referenzen.
+
 # Magnetgreifer – kleines und großes Modell
 
 Aus Feld 3 der bereitgestellten Cube-Escape-Werkzeugtafel entwickelt. Das längliche Gehäuse übernimmt die Formensprache der Portalkanone und des weißen Classic-Roboters. Zwei kräftige gebogene Backen mit dunkler Mechanik, weißen Verkleidungen, silbernen inneren Kontaktleisten und dunklen Greifpolstern umschließen einen kurzen Magnetkopf. Sein eingelassener blauer Kern und die kleinen Coil-Leuchten unterscheiden ihn vom großen Portalring. Keine schwebenden Gegenstände oder dauerhaften Strahlen gehören zur Exportgeometrie.

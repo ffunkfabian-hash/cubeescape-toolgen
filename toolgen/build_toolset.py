@@ -10,15 +10,11 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
-from tool_contract import build_tool_contract, validate_contract
-
-
 TOOLGEN_ROOT = Path(__file__).resolve().parent
-DEFAULT_OUTPUT = TOOLGEN_ROOT / "output"
-IMPLEMENTED_TOOLS = ("portal_emitter",)
+DEFAULT_OUTPUT = TOOLGEN_ROOT.parent / "output/_quick"
+IMPLEMENTED_TOOLS = ("portal_emitter", "magnet_gripper", "flashlight", "bow")
 REQUIRED_OUTPUTS = (
     "PortalEmitter.blend",
     "PortalEmitter.fbx",
@@ -46,6 +42,7 @@ def find_blender(explicit: str | None = None) -> str:
     candidates = [
         explicit,
         os.environ.get("TOOLGEN_BLENDER"),
+        os.environ.get("BLENDER_BIN"),
         shutil.which("blender"),
         "/Applications/Blender.app/Contents/MacOS/Blender",
     ]
@@ -67,7 +64,7 @@ def verify_generated_output(output_dir: Path, tool_id: str) -> None:
         raise RuntimeError(f"QA report tool_id mismatch: {qa.get('tool_id')!r}")
     checks = qa.get("checks")
     if not isinstance(checks, dict):
-        raise RuntimeError("QA report has no checks object")
+        raise RuntimeError("QA report has no checks object")  # noqa: TRY004 - legacy validation API uses RuntimeError.
     failed = [name for name in REQUIRED_QA_CHECKS if checks.get(name) is not True]
     if failed:
         raise RuntimeError(f"Geometry QA failed: {', '.join(failed)}")
@@ -84,7 +81,7 @@ def verify_generated_output(output_dir: Path, tool_id: str) -> None:
         raise RuntimeError(f"Manifest tool_id mismatch: {manifest.get('tool_id')!r}")
     files = manifest.get("files")
     if not isinstance(files, dict):
-        raise RuntimeError("Manifest has no files object")
+        raise RuntimeError("Manifest has no files object")  # noqa: TRY004 - legacy validation API uses RuntimeError.
     if manifest.get("geometry", {}).get("sha256") != geometry_hash:
         raise RuntimeError("Manifest geometry checksum does not match the QA report")
     missing_manifest_entries = [name for name in REQUIRED_OUTPUTS if name != "manifest.json" and name not in files]
@@ -127,47 +124,18 @@ def build_tool_package(
     blender: str | None = None,
     force: bool = False,
 ) -> Path:
+    # Compatibility entry point; the authored pipeline is the only active generator.
     if tool_id not in IMPLEMENTED_TOOLS:
-        raise ValueError(f"{tool_id!r} has no Blender generator yet; implemented tools: {', '.join(IMPLEMENTED_TOOLS)}")
-
-    contract = build_tool_contract(tool_id)
-    issues = validate_contract(contract)
-    if issues:
-        raise ValueError(f"invalid contract for {tool_id}: {'; '.join(issues)}")
-
+        raise ValueError(f"unknown tool: {tool_id}")
     output_root = output_root.resolve()
-    output_root.mkdir(parents=True, exist_ok=True)
     target_dir = output_root / tool_id
     if target_dir.exists() and not force:
         raise FileExistsError(f"{target_dir} already exists; use --force to replace it.")
-    blender_executable = find_blender(blender)
-    worker = TOOLGEN_ROOT / "blender_worker.py"
-
-    with tempfile.TemporaryDirectory(prefix=f".{tool_id}-", dir=output_root) as temporary:
-        staged_dir = Path(temporary) / tool_id
-        staged_dir.mkdir()
-        contract_path = staged_dir / "tool_contract.json"
-        contract_path.write_text(json.dumps(contract, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-        command = [
-            blender_executable,
-            "--background",
-            "--factory-startup",
-            "--python",
-            str(worker),
-            "--",
-            "--contract",
-            str(contract_path),
-            "--output",
-            str(staged_dir),
-        ]
-        completed = subprocess.run(command, check=False, text=True)
-        if completed.returncode != 0:
-            raise subprocess.CalledProcessError(completed.returncode, command)
-
-        verify_generated_output(staged_dir, tool_id)
-        install_output(staged_dir, target_dir, force)
-
+    command = [sys.executable, str(TOOLGEN_ROOT / "generate_tools.py"),
+               "--tool", tool_id, "--tier", "quick", "--output", str(output_root)]
+    if blender:
+        command += ["--blender", blender]
+    subprocess.run(command, check=True)
     return target_dir
 
 

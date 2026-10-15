@@ -1,0 +1,9 @@
+{
+  "extraKnownMarketplaces": {
+    "ce-agent-tools": {"source": {"source": "github", "repo": "ffunkfabian-hash/ce-agent-tools"}}
+  },
+  "enabledPlugins": {"ce-shared@ce-agent-tools": true},
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh", "timeout": 600}]}]
+  }
+}

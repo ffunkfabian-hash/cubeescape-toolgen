@@ -1,3 +1,9 @@
+## Autorenquellen und aktuelle Ausgabe
+
+Die Generatorquellen liegen in `scripts/tool_assets/Taschenlampe/`.
+Der gemeinsame Einstieg ist `python3 toolgen/generate_tools.py --tier full`; neue Pakete liegen in `output/`.
+Die hier liegenden Dateien sind historische Referenzen.
+
 # Cube Escape – Taschenlampe
 
 Eigenständiges, deterministisch generiertes Blender-Asset nach Feld 06 der Konzepttafel. Die Konzeptform (kurzer zylindrischer Lampenkopf, nach unten geneigter Griff, gerichteter warmer Lichtstrahl) ist in die weiße/silbergraue Classic-Materialfamilie mit dunkler Mechanik, cyanblauen Statusanzeigen und sparsamen orangefarbenen Akzenten übertragen.

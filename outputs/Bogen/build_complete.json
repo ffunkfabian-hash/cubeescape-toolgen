@@ -1,0 +1,65 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "CubeEscape_Bow_Standard.blend",
+      "bytes": 221970,
+      "sha256": "22bfd4b12ecaa4df81f380a98af14544b0e5749f6eac449fb1202bc43b0dc904"
+    },
+    {
+      "path": "CubeEscape_Bow_Standard.glb",
+      "bytes": 599372,
+      "sha256": "54ff5a97dd7191b5ab1383109320f9cf1811816572a1843836db2fab4287648e"
+    },
+    {
+      "path": "CubeEscape_Bow_Standard.fbx",
+      "bytes": 1333532,
+      "sha256": "8e2bf15760d46c89ea82e16f8fa9bad87104141de094b41ba77ae5d6bb23d40f"
+    },
+    {
+      "path": "qa_geometry.json",
+      "bytes": 1275,
+      "sha256": "b8f715b829cfd96de9dbaa11039be68436fc80df5b374eb1e71961540ce5624c"
+    },
+    {
+      "path": "qa_roundtrip.json",
+      "bytes": 2006,
+      "sha256": "fdbbee756f7ebd2c2f2518373143dae278bca3c420301be48f560da0fb5db221"
+    },
+    {
+      "path": "preview_white.png",
+      "bytes": 1484277,
+      "sha256": "8f45a911d4e19f7d66bdd091cdba9da892a7d31436b0ddac955be17668fd3ea0"
+    },
+    {
+      "path": "view_side.png",
+      "bytes": 1461895,
+      "sha256": "9681769726ae86a80b9054b30ee35d97e0ad1f4b287d0d25dffa49a49ce45184"
+    },
+    {
+      "path": "view_front.png",
+      "bytes": 1425170,
+      "sha256": "96ff87020ffd1ba6cd6161c0acceb387489c2377238a4b8e51a8735acc4a624c"
+    },
+    {
+      "path": "view_top.png",
+      "bytes": 1401793,
+      "sha256": "4a1d5a557dec1b4c0c36b58f18c8b5f9de8cbea4ed4e961b75e993ad7950dd5f"
+    },
+    {
+      "path": "qa_animation.json",
+      "bytes": 121789,
+      "sha256": "11b78df7d73b0662c19d19b5a83ce9f47ff1294827f4355d93beab38cc483aa3"
+    },
+    {
+      "path": "action_contract.json",
+      "bytes": 716,
+      "sha256": "55bc3ac979bc16f1fcdb01493c8b09ed13b8112d599622e1cd0b4ed3e97ad4e7"
+    },
+    {
+      "path": "preview_draw_once.gif",
+      "bytes": 880972,
+      "sha256": "efe047662ad0990bb7ffec2182f7db294fbe47efa52dc316fd43deab8492f12d"
+    }
+  ]
+}

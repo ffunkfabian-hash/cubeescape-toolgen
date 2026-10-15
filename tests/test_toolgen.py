@@ -5,7 +5,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 TOOLGEN_ROOT = REPOSITORY_ROOT / "toolgen"
 sys.path.insert(0, str(TOOLGEN_ROOT))

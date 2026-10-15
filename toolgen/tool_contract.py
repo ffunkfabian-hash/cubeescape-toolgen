@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any
 
-
-DEFAULT_SCHEMA: Dict[str, Any] = {
+DEFAULT_SCHEMA: dict[str, Any] = {
     "contract_version": 1,
     "tool_id": "tool_id",
     "name": "Tool",
@@ -33,7 +32,7 @@ DEFAULT_SCHEMA: Dict[str, Any] = {
 }
 
 
-PRESETS: Dict[str, Dict[str, Any]] = {
+PRESETS: dict[str, dict[str, Any]] = {
     "portal_emitter": {
         "tool_id": "portal_emitter",
         "name": "Portal Emitter",
@@ -133,7 +132,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def build_tool_contract(tool_id: str, overrides: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def build_tool_contract(tool_id: str, overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     if tool_id not in PRESETS:
         raise KeyError(f"unknown tool preset: {tool_id}")
     template = deepcopy(DEFAULT_SCHEMA)
@@ -143,8 +142,8 @@ def build_tool_contract(tool_id: str, overrides: Dict[str, Any] | None = None) -
     return template
 
 
-def validate_contract(contract: Dict[str, Any]) -> List[str]:
-    issues: List[str] = []
+def validate_contract(contract: dict[str, Any]) -> list[str]:
+    issues: list[str] = []
     required = [
         "contract_version",
         "tool_id",

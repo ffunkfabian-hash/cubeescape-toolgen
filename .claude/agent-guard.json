@@ -1,0 +1,15 @@
+{
+  "about": "Repo-Profile für ce-shared aus ce-agent-tools. Testläufer führt nur Prüfungen aus; Doku-Agent bearbeitet nur Markdown.",
+  "agents": {
+    "tg-test-runner": {
+      "readonly_shell": true,
+      "bash": ["python3\\s+toolgen/generate_tools\\.py\\b", "python3\\s+-m\\s+unittest\\b", "python3\\s+scripts/check_(rules|docs)\\.py\\b", "(bash\\s+)?viewer/(build|test_viewer)\\.sh\\b", "(bash\\s+)?scripts/check_output\\.sh\\b"],
+      "edit": []
+    },
+    "tg-doc-keeper": {
+      "readonly_shell": true,
+      "bash": ["python3\\s+scripts/check_docs\\.py\\b"],
+      "edit": ["README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md", "docs/*.md", ".agents/skills/*/SKILL.md"]
+    }
+  }
+}

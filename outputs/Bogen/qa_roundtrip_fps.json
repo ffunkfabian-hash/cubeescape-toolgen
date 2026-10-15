@@ -1,0 +1,87 @@
+{
+  "blender": "5.2.2 LTS",
+  "variant": "fps",
+  "checks": {
+    "blend": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.3420850336551666,
+          -1.4841725826263428,
+          -1.2939527034759521
+        ],
+        [
+          -0.05999557673931122,
+          -0.31075721979141235,
+          0.24036505818367004
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 0,
+        "max_morph_bounds_error_m": 0,
+        "duration_seconds": 4
+      }
+    },
+    "glb": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.3420850336551666,
+          -1.4841724634170532,
+          -1.2939527034759521
+        ],
+        [
+          -0.05999557673931122,
+          -0.31075721979141235,
+          0.24036505818367004
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 5.960464477539063e-08,
+        "max_morph_bounds_error_m": 1.1920928955078125e-07,
+        "duration_seconds": 4
+      }
+    },
+    "fbx": {
+      "passed": true,
+      "mesh_count": 62,
+      "bounds_m": [
+        [
+          -0.3420850336551666,
+          -1.4841723442077637,
+          -1.2939525842666626
+        ],
+        [
+          -0.05999557673931122,
+          -0.31075718998908997,
+          0.24036511778831482
+        ]
+      ],
+      "sockets": true,
+      "uvs_and_materials": true,
+      "loaded_arrow_meshes": 9,
+      "animation": {
+        "passed": true,
+        "sampled_poses": 9,
+        "morph_meshes": 28,
+        "max_matrix_error": 2.384185791015625e-07,
+        "max_morph_bounds_error_m": 2.682209014892578e-07,
+        "duration_seconds": 4
+      }
+    }
+  }
+}

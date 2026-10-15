@@ -17,3 +17,9 @@ work/idempotence/
 
 # Veraltete Sammel-Zips (Inhalt liegt unter outputs/<Werkzeug>/)
 outputs/*.zip
+
+# Generated packages and native build caches
+/output/
+/viewer/.build/
+.ruff_cache/
+.claude/worktrees/
