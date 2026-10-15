@@ -33,7 +33,7 @@
 - `scripts/heavy_lock.py`: gemeinsame Sperre mit Robogen, Cube Escape und Cubegen; `full` und `check_output.sh` warten darauf.
   Der Befehl läuft in einer eigenen Prozessgruppe; TERM/HUP/INT gehen an die ganze Gruppe, und die Sperre wird erst frei,
   wenn die Gruppe leer ist – ein Enkelprozess (Blender unter `check_output.sh`) hält sie auch, wenn sein Elternprozess
-  vorher starb (Befund des Codex-Reviews, gemeinsam mit Robogen 1.20.5, Cube Escape 0.61.2 und Cubegen 0.26.2).
+  vorher starb (Befund des Codex-Reviews, gemeinsam mit Robogen 1.20.5, Cube Escape 0.61.3 und Cubegen 0.27.1).
   `scripts/testplan.py` nennt aus dem Diff den kleinsten Prüfweg.
 - Prüfung: 100 Unit-Tests, `check_output.sh` mit 97 Prüfungen für 13 Modelle, Viewer-Test mit 47 Prüfungen.
 - Grenzen: Die Unity-Abnahme steht aus. Die Taschenlampen-Linse ist im Spielexport `M_GlowOrange` und damit kräftiger
