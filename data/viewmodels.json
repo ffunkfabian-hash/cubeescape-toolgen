@@ -7,16 +7,36 @@
       "scripts/robogen/body.py": "9a996f962b45b714102740e1d2b6ae55117a97e14607632cf089f9808c527742",
       "scripts/robogen/rig.py": "86312958b69c03238a623c50b3bef5b78856959e7d83672241c8bfb1eb056416"
     },
-    "style": "Mitt-inspired armor and dark joints; adapted to two gripping fingers plus one opposing thumb, three digits total",
+    "style": "Mitt-inspired armor and dark joints; three gripping fingers plus one opposing thumb, like Robogen's Mitt",
     "video": "https://www.youtube.com/watch?v=wKaneSqfzo4",
     "hand_finish": "White beveled backhand/gauntlet plates, orange insets, exposed dark finger joints and plate bolts; bow concept, lower-left FPS panel."
+  },
+  "camera": {
+    "vertical_fov_degrees": 46.69,
+    "horizontal_fov_degrees": 75.0,
+    "reference_aspect": "16:9",
+    "near_clip_m": 0.03,
+    "unity": "Viewmodel camera FOV: Camera.fieldOfView (vertical degrees), e.g. a URP Render Objects camera override on the viewmodel layer; independent of the player's world FOV setting.",
+    "qa": {
+      "fov_tolerance_degrees": 8,
+      "fov_samples": 5,
+      "aspects": [
+        "16:9",
+        "16:10"
+      ],
+      "hand_margin": 0.005,
+      "reticle_half_extent": 0.03,
+      "head_anchor_margin": 0.05,
+      "head_min_unoccluded_fraction": 0.5,
+      "head_min_screen_fraction": 0.004
+    }
   },
   "tools": {
     "portal_emitter": {
       "hand": [
-        -0.18,
-        -0.64,
-        -0.2
+        -0.26,
+        -0.6,
+        -0.17
       ],
       "roll_degrees": -8,
       "support": true,
@@ -27,15 +47,40 @@
       "tool_scale": 0.5,
       "support_offset": [
         0,
-        -0.1,
-        0.045
-      ]
+        -0.09,
+        0.02
+      ],
+      "head": {
+        "anchor": "Socket_Muzzle",
+        "parts": [
+          "SM_PG_PortalRing",
+          "SM_PG_EmitterOuterLip",
+          "SM_PG_EmitterNeck",
+          "SM_PG_FrontWhiteRim",
+          "SM_PG_Core",
+          "SM_PG_MuzzleFastener_",
+          "SM_PG_UpperArm",
+          "SM_PG_LowerArm",
+          "SM_PG_UpperTipEmitter",
+          "SM_PG_LowerTipEmitter",
+          "SM_PG_UpperHinge",
+          "SM_PG_LowerHinge",
+          "SM_PG_BoreLiner",
+          "SM_PG_BoreBack"
+        ]
+      },
+      "aim_target_m": [
+        0.45,
+        -2.0,
+        -0.12
+      ],
+      "support_roll_degrees": -60
     },
     "magnet_gripper": {
       "hand": [
-        -0.2,
-        -0.68,
-        -0.22
+        -0.26,
+        -0.62,
+        -0.17
       ],
       "roll_degrees": -8,
       "support": true,
@@ -46,23 +91,60 @@
       "tool_scale": 0.5,
       "support_offset": [
         0,
-        -0.1,
-        0.045
-      ]
+        -0.09,
+        0.02
+      ],
+      "head": {
+        "anchor": "Socket_Grab",
+        "parts": [
+          "SM_MG_UpperJaw",
+          "SM_MG_LowerJaw",
+          "SM_MG_UpperContact",
+          "SM_MG_LowerContact",
+          "SM_MG_UpperInnerContactRail",
+          "SM_MG_LowerInnerContactRail",
+          "SM_MG_UpperHinge",
+          "SM_MG_LowerHinge",
+          "SM_MG_Magnet"
+        ]
+      },
+      "aim_target_m": [
+        0.3,
+        -2.0,
+        -0.2
+      ],
+      "support_roll_degrees": -60
     },
     "flashlight": {
       "hand": [
-        -0.18,
+        -0.24,
         -0.6,
         -0.18
       ],
-      "roll_degrees": -12,
+      "roll_degrees": 15,
       "support": false,
       "grip_radius": [
         0.044,
         0.043
       ],
-      "tool_scale": 0.65
+      "tool_scale": 0.65,
+      "head": {
+        "anchor": "Socket_Muzzle",
+        "parts": [
+          "SM_PG_HeadHousing",
+          "SM_PG_HeadFrontCollar",
+          "SM_PG_HeadBackCollar",
+          "SM_PG_Lens",
+          "SM_PG_ReflectorCup",
+          "SM_PG_ReflectorRim",
+          "SM_PG_EmitterCore"
+        ]
+      },
+      "aim_target_m": [
+        0.6,
+        -2.0,
+        -0.3
+      ]
     },
     "bow": {
       "hand": [

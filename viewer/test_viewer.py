@@ -49,7 +49,8 @@ for model in catalog["models"]:
         assert difference(path, drawn) > 30, (model["id"], "motion not visible")
         assert difference(path, reset) < 20, (model["id"], "reset does not restore rest pose")
         check("motion and reset " + model["id"])
-    if model["variant"] == "world":
+    if model["variant"] in ("world", "fps"):
+        # The Ego sidebar adds the field-of-view section; both layouts must fit 360 pt.
         run("--sidebar-check", shots / (identifier + "-sidebar.png"), "--model", model["id"])
         check("sidebar fits " + model["id"])
 
@@ -64,6 +65,25 @@ for model in catalog["models"]:
     # Metal antialiasing can vary by a fraction of a pixel between processes.
     assert difference(path, shots / (model["tool"] + "-fps.png")) < 1
     check("Ego button renders FPS asset " + model["tool"])
+
+for model in catalog["models"]:
+    if model["variant"] != "fps":
+        continue
+    camera_path = output / model["tool"] / "viewmodel_camera.json"
+    assert camera_path.is_file(), (model["id"], "missing viewmodel camera")
+    default = json.loads(camera_path.read_text())["vertical_fov_degrees"]
+    identifier = model["id"].replace("/", "-")
+    base = shots / (identifier + ".png")
+    explicit = shots / (identifier + "-fov-default.png")
+    run("--snapshot", explicit, "--model", model["id"], "--fov", default, "--size", "600x400", "--no-floor")
+    assert difference(base, explicit) < 1, (model["id"], "data FOV is not the Ego default")
+    for degrees in (35, 75):
+        path = shots / f"{identifier}-fov-{degrees}.png"
+        run("--snapshot", path, "--model", model["id"], "--fov", degrees, "--size", "600x400", "--no-floor")
+        assert difference(base, path) > 200, (model["id"], degrees, "FOV has no visible effect")
+    check("field of view default and slider range " + model["id"])
+run("--snapshot", shots / "rejected-fov.png", "--model", catalog["models"][0]["id"], "--fov", 120, success=False)
+check("rejected out-of-range field of view")
 
 with tempfile.TemporaryDirectory(prefix="toolgen-viewer-tests-") as temporary:
     root = Path(temporary)
@@ -86,6 +106,40 @@ with tempfile.TemporaryDirectory(prefix="toolgen-viewer-tests-") as temporary:
         check("rejected " + name)
     run("--snapshot", root / "unknown.png", "--model", "unknown", success=False)
     check("rejected unknown selection")
+    # Game models come from the game export; the viewer shows them when present and works without them.
+    game_library = root / "game"
+    shutil.copytree(binary.parents[1] / "Resources/ViewerData", game_library)
+    game_catalog = json.loads((game_library / "catalog.json").read_text())
+    games = [model for model in game_catalog["models"] if model["variant"] == "game"]
+    if games:
+        for game in games:
+            shot = shots / (game["id"].replace("/", "-") + ".png")
+            run("--snapshot", shot, "--data", game_library, "--model", game["id"], "--size", "600x400", "--no-floor")
+            assert shot.stat().st_size > 1000, f"empty game snapshot: {shot}"
+        game = games[0]
+        run("--check-navigation", "--data", game_library)
+        run("--sidebar-check", shots / "game-sidebar.png", "--data", game_library, "--model", game["id"])
+        without = dict(game_catalog, models=[model for model in game_catalog["models"] if model["variant"] != "game"])
+        (game_library / "catalog.json").write_text(json.dumps(without))
+        run("--check-navigation", "--data", game_library)
+        (game_library / "catalog.json").write_text(json.dumps(game_catalog))
+    else:
+        world = next(model for model in game_catalog["models"] if model["variant"] == "world")
+        shutil.copytree(game_library / world["path"], game_library / world["tool"] / "ViewerData/game")
+        game = dict(world, id=world["tool"] + "/game", variant="game", path=world["tool"] + "/ViewerData/game")
+        game.pop("qa")
+        game_catalog["models"].append(game)
+        (game_library / "catalog.json").write_text(json.dumps(game_catalog))
+        run("--snapshot", shots / "game-model.png", "--data", game_library, "--model", game["id"], "--size", "600x400", "--no-floor")
+        assert difference(shots / "game-model.png", shots / (world["id"].replace("/", "-") + ".png")) < 1
+        run("--check-navigation", "--data", game_library)
+        run("--sidebar-check", shots / "game-sidebar.png", "--data", game_library, "--model", game["id"])
+    check("game model variant shown, navigable and optional")
+    for tool in {model["tool"] for model in game_catalog["models"]}:
+        (game_library / tool / "viewmodel_camera.json").unlink(missing_ok=True)
+    run("--snapshot", root / "fallback.png", "--data", game_library, "--model", next(
+        model["id"] for model in game_catalog["models"] if model["variant"] == "fps"), "--size", "600x400")
+    check("missing viewmodel camera falls back to the default FOV")
     library = root / "data"
     shutil.copytree(binary.parents[1] / "Resources/ViewerData", library)
     first = catalog["models"][0]

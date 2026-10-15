@@ -14,12 +14,82 @@ from pathlib import Path
 
 import bmesh
 import bpy
+import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Euler, Matrix, Quaternion, Vector
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 from motion_profiles import draw_hand_offset, envelope, settle, solve_elbow
+
+
+def aspect_ratio(name):
+    width, height = (float(value) for value in name.split(":"))
+    return width / height
+
+
+def horizontal_fov(vertical_degrees, aspect):
+    return math.degrees(2 * math.atan(math.tan(math.radians(vertical_degrees) / 2) * aspect))
+
+
+def viewmodel_camera(config, profile):
+    """Fixed viewmodel field of view (vertical, like Unity's Camera.fieldOfView) and its QA range.
+
+    The game draws hands and tool with their own camera FOV, independent of the player's
+    world FOV. A tool may override the global value; the QA covers value +/- tolerance."""
+    camera = config["camera"]
+    reference = camera["reference_aspect"]
+    assert abs(horizontal_fov(camera["vertical_fov_degrees"], aspect_ratio(reference))
+               - camera["horizontal_fov_degrees"]) < .05, "viewmodels.json: horizontal FOV does not match vertical FOV"
+    vertical = profile.get("vertical_fov_degrees", camera["vertical_fov_degrees"])
+    qa = camera["qa"]
+    tolerance = qa["fov_tolerance_degrees"]
+    samples = qa["fov_samples"]
+    assert samples >= 3 and 0 < vertical - tolerance and vertical + tolerance < 120
+    return {"vertical_fov_degrees": vertical,
+            "horizontal_fov_degrees": {name: horizontal_fov(vertical, aspect_ratio(name))
+                                       for name in dict.fromkeys([reference, *qa["aspects"]])},
+            "reference_aspect": reference, "near_clip_m": camera["near_clip_m"],
+            "override": "vertical_fov_degrees" in profile,
+            "unity": camera["unity"],
+            "qa_vertical_fov_degrees": [vertical - tolerance + 2 * tolerance * i / (samples - 1) for i in range(samples)],
+            "qa_aspects": qa["aspects"], "qa": qa}
+
+
+def frustum_configurations(settings):
+    """Tangent half extents (horizontal, vertical) for every checked FOV/aspect pair."""
+    result = []
+    for vertical in settings["qa_vertical_fov_degrees"]:
+        for name in settings["qa_aspects"]:
+            tan_v = math.tan(math.radians(vertical) / 2)
+            # Only the configured FOV is binding (Unity draws the viewmodel with a fixed FOV);
+            # the surrounding range is measured and reported for later tuning.
+            result.append({"vertical_fov_degrees": vertical, "aspect": name,
+                           "tan_h": tan_v * aspect_ratio(name), "tan_v": tan_v,
+                           "binding": abs(vertical - settings["vertical_fov_degrees"]) < 1e-6})
+    return result
+
+
+def camera_space(points):
+    """Camera at the origin looking along -Y, Z up, screen right = -X: (u, v, depth)."""
+    depth = -points[:, 1]
+    safe = np.where(np.abs(depth) < 1e-9, 1e-9, depth)
+    return -points[:, 0] / safe, points[:, 2] / safe, depth
+
+
+def screen(u, v, frustum):
+    return .5 + u / (2 * frustum["tan_h"]), .5 + v / (2 * frustum["tan_v"])
+
+
+def world_vertices(obj, graph):
+    evaluated = obj.evaluated_get(graph)
+    mesh = evaluated.data
+    local = np.empty(len(mesh.vertices) * 3)
+    mesh.vertices.foreach_get("co", local)
+    local = local.reshape(-1, 3)
+    matrix = np.array(evaluated.matrix_world)
+    return local @ matrix[:3, :3].T + matrix[:3, 3]
 
 
 def empty(name, parent, matrix=None):
@@ -87,6 +157,16 @@ def box(name, parent, center, size, mat, rotation=None, bevel=.006, taper=0):
 def ball(name, parent, center, radius, mat):
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=radius)
+    # Blender's UV-sphere operator emits the same faces in a varying order between
+    # identical runs; a canonical order keeps exports and triangulation reproducible.
+    bm.verts.index_update()
+    order = sorted(bm.verts, key=lambda vertex: (tuple(round(value, 6) for value in vertex.co), vertex.index))
+    rank = {vertex.index: position for position, vertex in enumerate(order)}
+    bm.verts.sort(key=lambda vertex: rank[vertex.index])
+    bm.verts.index_update(); bm.faces.index_update()
+    order = sorted(bm.faces, key=lambda face: (tuple(sorted(vertex.index for vertex in face.verts)), face.index))
+    rank = {face.index: position for position, face in enumerate(order)}
+    bm.faces.sort(key=lambda face: rank[face.index])
     return shape(name, parent, bm, center, mat, smooth=True)
 
 
@@ -185,8 +265,17 @@ def link(name, parent, first, last, width, depth, mat):
     return box(name, parent, (first + last) / 2, (width, depth, delta.length), mat, rotation)
 
 
+GRIPPING_FINGERS = 3
+# Finger rows along the palm's Z axis (Robogen Mitt: three fingers at a 31 mm pitch).
+# Thinner links than the Mitt keep visible gaps, so each finger reads at FPS distance.
+GRIP_ROWS = (.029, 0, -.029)
+# Archery hook: one finger above the arrow, two below (Mediterranean draw).
+PINCH_ROWS = (.027, -.013, -.042)
+FINGER_WIDTH, FINGER_DEPTH = .020, .021
+
+
 def hand(side, parent, pose, shoulder, radius, mats, proportions, pinch=False):
-    """Two gripping fingers and one opposing thumb: three digits total, centered wrist."""
+    """Three gripping fingers and one opposing thumb, like Robogen's Mitt; centered wrist."""
     sign = 1 if side == "L" else -1
     joint = empty("Hand_" + side, parent, pose)
     joint["robogen_joint"] = "Hand_" + side
@@ -211,7 +300,7 @@ def hand(side, parent, pose, shoulder, radius, mats, proportions, pinch=False):
             box(f"BackhandBoltSlot_{side}_{x}_{z}", joint, bolt + Vector((0, .0023, 0)),
                 (.004, .001, .0015), mats["grey"], bevel=.0003)
     fingers = []
-    for index, height in enumerate((.023, -.023)):
+    for index, height in enumerate(PINCH_ROWS if pinch else GRIP_ROWS):
         finger = empty(f"Fingers_{side}_{index}", joint)
         finger.location = (0, 0, height)
         points = [(sign * (rx + .032), -.027, 0), (sign * (rx + .011), -(ry + .021), 0),
@@ -225,9 +314,9 @@ def hand(side, parent, pose, shoulder, radius, mats, proportions, pinch=False):
         finger.location = hinge + Vector((0, 0, height))
         points = [Vector(point) - hinge for point in points]
         for segment, (a, b) in enumerate(pairwise(points)):
-            link(f"Finger_{side}_{index}_{segment}", finger, a, b, .023, .024, mats["dark"])
+            link(f"Finger_{side}_{index}_{segment}", finger, a, b, FINGER_WIDTH, FINGER_DEPTH, mats["dark"])
         box(f"KnuckleArmor_{side}_{index}", finger, Vector(points[0]) + Vector((sign * .009, .002, 0)),
-            (.013, .025, .025), mats["white"], bevel=.004)
+            (.013, .025, FINGER_WIDTH + .001), mats["white"], bevel=.004)
         fingers.append(finger)
     thumb = empty("Thumb_" + side, joint)
     link("ThumbBase_" + side, thumb, (sign * (rx + .033), .034, .043),
@@ -310,9 +399,13 @@ def build(directory, spec, profile):
                                         key.co.y *= tool_scale
                                         key.handle_left.y *= tool_scale; key.handle_right.y *= tool_scale
         scene.frame_set(1); bpy.context.view_layer.update()
+    config = json.loads((ROOT / "data/viewmodels.json").read_text())
+    settings = viewmodel_camera(config, profile)
+    configure_camera(scene, settings)
     original = socket.matrix_world.copy()
     local_muzzle = original.inverted() @ scene.objects["Socket_Muzzle"].matrix_world.translation
-    position = Vector(profile["hand"]); target = Vector((0, -4, 0))
+    # The muzzle aims at the reticle unless a tool turns its head into view (aim_target_m).
+    position = Vector(profile["hand"]); target = Vector(profile.get("aim_target_m", (0, -4, 0)))
     rotation = (target - position).to_track_quat("-Y", "Z") @ Quaternion((0, -1, 0), math.radians(profile["roll_degrees"]))
     # Solve the actual muzzle ray including the rolled bore offset.
     for _ in range(12):
@@ -336,8 +429,9 @@ def build(directory, spec, profile):
             "orange": material("Orange", (.95, .24, .035), .18, .34)}
     hands = []; arms = []; contact_targets = {}
     grip_side = "L" if tool == "bow" else "R"
-    proportions = json.loads((ROOT / "data/viewmodels.json").read_text())["arm"]
-    shoulders = proportions["shoulders"]
+    proportions = config["arm"]
+    # Fixed shoulder anchors; a tool held at a different reach may override them as data.
+    shoulders = profile.get("shoulders", proportions["shoulders"])
     twists = {side: Euler(tuple(math.radians(value) for value in profile.get("hand_rotation_degrees", {}).get(side, (0, 0, 0))), "XYZ").to_matrix().to_4x4() for side in ("L", "R")}
     main, _, contact, rig = hand(grip_side, motion, socket.matrix_world @ twists[grip_side], shoulders[grip_side], [r * tool_scale / proportions["hand_scale"] for r in profile["grip_radius"]], mats, proportions)
     hands.append(main); arms.append(rig); contact_targets[contact.name] = "Socket_Hand"
@@ -348,6 +442,8 @@ def build(directory, spec, profile):
         hands.append(draw); arms.append(rig); contact_targets[draw_contact.name] = "Socket_Nock"
     elif profile["support"]:
         support_pose = pose @ Matrix.Translation(profile["support_offset"])
+        # Turning the support hand about the barrel keeps its fingers off the tool head.
+        support_pose = support_pose @ Matrix.Rotation(math.radians(profile.get("support_roll_degrees", 0)), 4, "Y")
         support_pose = support_pose @ Matrix(((0, -1, 0, 0), (0, 0, 1, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
         support, _, _, rig = hand("L", motion, support_pose, shoulders["L"], (.086, .085), mats, proportions)
         hands.append(support); arms.append(rig)
@@ -355,7 +451,12 @@ def build(directory, spec, profile):
     scene.render.fps = 24; scene.frame_start = 1; scene.frame_end = 97
     clip = spec.get("fps_clip") or spec["clip"]
     root["ce_action_clip"] = clip; root["ce_autoplay"] = False; root["ce_loop"] = False
-    root["ce_hand_style"] = "Robogen Mitt / articulated FPS"
+    root["ce_hand_style"] = "Robogen Mitt / articulated FPS, three fingers and thumb"
+    # Exported as glTF extras / FBX user properties so the game can adopt the viewmodel camera.
+    root["ce_viewmodel_vertical_fov_degrees"] = settings["vertical_fov_degrees"]
+    root["ce_viewmodel_horizontal_fov_degrees"] = settings["horizontal_fov_degrees"][settings["reference_aspect"]]
+    root["ce_viewmodel_reference_aspect"] = settings["reference_aspect"]
+    root["ce_viewmodel_near_clip_m"] = settings["near_clip_m"]
     for frame in range(1, 98):
         scene.frame_set(frame)
         motion.location = (0, 0, 0); motion.rotation_euler = (0, 0, 0)
@@ -397,13 +498,15 @@ def build(directory, spec, profile):
     scene.frame_set(1); bpy.context.view_layer.update()
     # Grip hand remains rigidly attached to the tool throughout the clip.
     assert (main.matrix_world.translation - socket.matrix_world.translation).length < 1e-5
-    report = validate(scene, root, contact_targets, tool, arms)
-    report["robogen_reference"] = json.loads((ROOT / "data/viewmodels.json").read_text())["reference"]
+    report = validate(scene, root, contact_targets, tool, arms, settings, profile.get("head"))
+    report["robogen_reference"] = config["reference"]
     report["clip"] = clip; report["hand_sides"] = [obj.name for obj in hands]
     for obj, matrix in rest.items():
         assert max(abs(obj.matrix_world[i][j] - matrix[i][j]) for i in range(4) for j in range(4)) < 1e-5, obj.name
     (directory / "qa_viewmodel.json").write_text(json.dumps(report, indent=2) + "\n")
-    refresh_geometry(directory, root, profile, report)
+    assert report["passed"], (tool, "viewmodel framing", report["failures"])
+    (directory / "viewmodel_camera.json").write_text(json.dumps(camera_document(tool, settings, report), indent=2) + "\n")
+    refresh_geometry(directory, root, profile, report, settings)
     refresh_motion(directory, scene)
     bpy.ops.wm.save_as_mainfile(filepath=str(source))
     exports(directory, root, clip)
@@ -424,23 +527,145 @@ def build(directory, spec, profile):
         scene.render.resolution_x = 1400; scene.render.resolution_y = 1000
         scene.render.filepath = str(directory / "preview_large.png")
         bpy.ops.render.render(write_still=True)
-    print(f"VIEWMODEL_OK {tool}: {len(hands)} hands, 97 frames, contact={report['max_contact_error_m']:.8f} m")
+    summary = report["framing_range"]["summary"]
+    print(f"VIEWMODEL_OK {tool}: {len(hands)} hands, 97 frames, contact={report['max_contact_error_m']:.8f} m, "
+          f"FOV {settings['vertical_fov_degrees']:.2f} deg vertical, {summary['binding_configurations']} binding framings, "
+          f"range {summary['range_ok']}/{summary['range_checked']} ok, hand margin {summary['min_hand_margin']:.4f}, head {json.dumps(report['head'])}")
 
 
-def validate(scene, root, targets, tool, arms):
+def configure_camera(scene, settings):
+    """Set the preview camera to the data FOV and confirm the analytic QA projection matches it."""
+    camera = scene.camera
+    assert camera is not None and camera.data.type == "PERSP"
+    assert scene.render.resolution_x * 9 == scene.render.resolution_y * 16, "Ego preview must stay 16:9"
+    camera.data.sensor_fit = "VERTICAL"
+    camera.data.sensor_height = 24
+    camera.data.lens = 12 / math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
+    camera.data.clip_start = settings["near_clip_m"]
+    bpy.context.view_layer.update()
+    tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
+    frustum = {"tan_h": tan_v * 16 / 9, "tan_v": tan_v}
+    for probe in (Vector((-.21, -.8, .13)), Vector((.35, -.5, -.2))):
+        expected = world_to_camera_view(scene, camera, probe)
+        u, v, _ = camera_space(np.array([probe]))
+        x, y = screen(u[0], v[0], frustum)
+        assert abs(expected.x - x) < 1e-5 and abs(expected.y - y) < 1e-5, ("camera differs from QA projection", expected, x, y)
+
+
+def camera_document(tool, settings, report):
+    """Small, game-facing summary of the viewmodel camera next to the exports."""
+    return {"format": 1, "tool": tool, "vertical_fov_degrees": settings["vertical_fov_degrees"],
+            "horizontal_fov_degrees": settings["horizontal_fov_degrees"],
+            "reference_aspect": settings["reference_aspect"], "near_clip_m": settings["near_clip_m"],
+            "override": settings["override"], "unity": settings["unity"],
+            "checked_range": report["framing_range"]["summary"],
+            "root_properties": ["ce_viewmodel_vertical_fov_degrees", "ce_viewmodel_horizontal_fov_degrees",
+                                "ce_viewmodel_reference_aspect", "ce_viewmodel_near_clip_m"]}
+
+
+def mesh_data(objects, graph):
+    """World-space polygons of the evaluated meshes for occlusion rays."""
+    vertices, polygons, owners = [], [], []
+    for obj in objects:
+        evaluated = obj.evaluated_get(graph)
+        matrix = evaluated.matrix_world
+        offset = len(vertices)
+        vertices.extend(matrix @ vertex.co for vertex in evaluated.data.vertices)
+        for polygon in evaluated.data.polygons:
+            polygons.append([offset + index for index in polygon.vertices])
+            owners.append(obj.name)
+    return vertices, polygons, owners
+
+
+def head_visibility(scene, root, head, frusta, settings):
+    """Rest-pose head check: anchor inside the frame and enough unoccluded head on screen.
+
+    Rays sample the head's screen footprint; a sample counts when the first surface hit
+    belongs to the head (housing, hands and arms in front of it occlude it)."""
+    scene.frame_set(1); bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    limits = settings["qa"]
+    meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    parts = [obj for obj in meshes if obj.name.startswith(tuple(head["parts"]))]
+    assert parts, (head, "no head geometry")
+    all_vertices, all_polygons, owners = mesh_data(meshes, graph)
+    head_vertices, head_polygons, _ = mesh_data(parts, graph)
+    every = BVHTree.FromPolygons(all_vertices, all_polygons)
+    only = BVHTree.FromPolygons(head_vertices, head_polygons)
+    names = {obj.name for obj in parts}
+    u, v, depth = camera_space(np.array(head_vertices))
+    assert (depth > 0).all()
+    tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
+    step = 2 * tan_v / 360
+    origin = Vector((0, 0, 0))
+    total = 0
+    occluders = {}
+    visible = [0] * len(frusta)
+    for a in np.arange(u.min(), u.max() + step, step):
+        for b in np.arange(v.min(), v.max() + step, step):
+            direction = Vector((-a, -1, b)).normalized()
+            hit = only.ray_cast(origin, direction)
+            if hit[0] is None:
+                continue
+            total += 1
+            first = every.ray_cast(origin, direction)
+            if first[0] is None or owners[first[2]] not in names and first[3] < hit[3] - 1e-6:
+                if first[0] is not None:
+                    occluders[owners[first[2]]] = occluders.get(owners[first[2]], 0) + 1
+                continue
+            for index, frustum in enumerate(frusta):
+                if abs(a) <= frustum["tan_h"] and abs(b) <= frustum["tan_v"]:
+                    visible[index] += 1
+    anchor = scene.objects[head["anchor"]].matrix_world.translation
+    au, av, ad = camera_space(np.array([anchor]))
+    assert ad[0] > settings["near_clip_m"], (head["anchor"], "behind the near clip")
+    occluders = dict(sorted(occluders.items(), key=lambda item: -item[1])[:5])
+    results = []
+    for index, frustum in enumerate(frusta):
+        x, y = screen(au[0], av[0], frustum)
+        results.append({"anchor_margin": float(min(x, 1 - x, y, 1 - y)), "parts": len(parts), "samples": total,
+                        "unoccluded_on_screen_fraction": visible[index] / max(total, 1),
+                        "screen_fraction": visible[index] * step * step / (4 * frustum["tan_h"] * frustum["tan_v"]),
+                        "main_occluders": occluders})
+    return results
+
+
+def validate(scene, root, targets, tool, arms, settings, head):
+    limits = settings["qa"]
+    frusta = frustum_configurations(settings)
+    tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
+    base = {"tan_h": tan_v * aspect_ratio(settings["reference_aspect"]), "tan_v": tan_v}
+    reticle = limits["reticle_half_extent"]
+    near = settings["near_clip_m"]
+    failures = []
     max_contact = 0; minimum_depth = float("inf")
     maximum_arm_error = 0
     minimum_hand_side_clearance = float("inf")
     visible_forearms = {rig["hand"].name: 0 for rig in arms}
-    proximal_screen_y = {rig["hand"].name: -float("inf") for rig in arms}
+    proximal = [{rig["hand"].name: -float("inf") for rig in arms} for _ in frusta]
+    proximal_base = {rig["hand"].name: -float("inf") for rig in arms}
+    hand_margin = [{rig["hand"].name: float("inf") for rig in arms} for _ in frusta]
+    hand_worst_frame = [{rig["hand"].name: None for rig in arms} for _ in frusta]
+    hand_edges = [{rig["hand"].name: [float("inf")] * 4 for rig in arms} for _ in frusta]
+    rest_hand_margin = [{rig["hand"].name: float("inf") for rig in arms} for _ in frusta]
+    reticle_hits = [set() for _ in frusta]
+    hand_meshes = {rig["hand"].name: {obj.name for obj in rig["hand"].children_recursive if obj.type == "MESH"} for rig in arms}
     tracking = [obj for obj in root.children_recursive if obj.type == "EMPTY" and
                 (obj.name.startswith(("Hand_", "GripContact_", "UpperArm_", "LowerArm_", "Thumb_", "Fingers_")) or obj.name == "Viewmodel_Motion")]
+    meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    forearm_local = {}
+    for rig in arms:
+        for obj in rig["lower"].children:
+            if obj.type == "MESH":
+                local = np.empty(len(obj.data.vertices) * 3)
+                obj.data.vertices.foreach_get("co", local)
+                matrix = np.array(obj.matrix_local)
+                forearm_local.setdefault(rig["hand"].name, []).append(local.reshape(-1, 3) @ matrix[:3, :3].T + matrix[:3, 3])
     poses = {}
     rest = None
     grip_rest = None
     grip_draw = None
     centered_wrist_error = 0
-    camera = scene.camera
     for frame in range(1, 98):
         scene.frame_set(frame); bpy.context.view_layer.update()
         graph = bpy.context.evaluated_depsgraph_get()
@@ -459,37 +684,50 @@ def validate(scene, root, targets, tool, arms):
             assert error < .0001, (tool, frame, rig["hand"].name, "arm joint detached or stretched", error)
             maximum_arm_error = max(maximum_arm_error, error)
         for rig in arms:
+            name = rig["hand"].name
             length = rig["lengths"][1]
+            matrix = np.array(rig["lower"].matrix_world)
             # A conservative box encloses the entire proximal half, including faces
             # which cross the viewport even when their vertices lie outside it.
-            for z in (0, length * (1 - rig["visible_fraction"])):
-                for x in (-.047, .047):
-                    for y in (-.047, .047):
-                        point = world_to_camera_view(scene, camera, rig["lower"].matrix_world @ Vector((x, y, z)))
-                        proximal_screen_y[rig["hand"].name] = max(proximal_screen_y[rig["hand"].name], point.y)
-            for obj in rig["lower"].children:
-                if obj.type != "MESH":
-                    continue
-                for vertex in obj.data.vertices:
-                    local = obj.matrix_local @ vertex.co
-                    point = world_to_camera_view(scene, camera, rig["lower"].matrix_world @ local)
-                    if 0 <= point.x <= 1 and 0 <= point.y <= 1 and point.z > .03:
-                        visible_forearms[rig["hand"].name] = max(visible_forearms[rig["hand"].name], 1 - local.z / length)
+            corners = np.array([(x, y, z) for z in (0, length * (1 - rig["visible_fraction"]))
+                                for x in (-.047, .047) for y in (-.047, .047)])
+            u, v, _ = camera_space(corners @ matrix[:3, :3].T + matrix[:3, 3])
+            for index, frustum in enumerate(frusta):
+                proximal[index][name] = max(proximal[index][name], float(screen(u, v, frustum)[1].max()))
+            proximal_base[name] = max(proximal_base[name], float(screen(u, v, base)[1].max()))
+            for local in forearm_local.get(name, ()):
+                u, v, depth = camera_space(local @ matrix[:3, :3].T + matrix[:3, 3])
+                x, y = screen(u, v, base)
+                inside = (x >= 0) & (x <= 1) & (y >= 0) & (y <= 1) & (depth > near)
+                if inside.any():
+                    visible_forearms[name] = max(visible_forearms[name], float((1 - local[inside, 2] / length).max()))
         for contact_name, target in targets.items():
             if tool == "bow" and target == "Socket_Nock" and 43 < frame < 79:
                 continue
             error = (scene.objects[contact_name].matrix_world.translation - scene.objects[target].matrix_world.translation).length
             assert error < .0001, (tool, frame, contact_name, "hand detached", error)
             max_contact = max(max_contact, error)
-        for obj in root.children_recursive:
-            if obj.type != "MESH":
-                continue
-            evaluated = obj.evaluated_get(graph)
-            for vertex in evaluated.data.vertices:
-                point = world_to_camera_view(scene, camera, evaluated.matrix_world @ vertex.co)
-                assert point.z > .03, (tool, frame, obj.name, "near clip", point.z)
-                assert not (.47 < point.x < .53 and .47 < point.y < .53), (tool, frame, obj.name, "reticle blocked")
-                minimum_depth = min(minimum_depth, point.z)
+        for obj in meshes:
+            u, v, depth = camera_space(world_vertices(obj, graph))
+            assert depth.min() > near, (tool, frame, obj.name, "near clip", float(depth.min()))
+            minimum_depth = min(minimum_depth, float(depth.min()))
+            owner = next((hand for hand, names in hand_meshes.items() if obj.name in names), None)
+            # The bow's draw hand travels to the cheek and down for the next arrow; it is
+            # framed in its rest pose only. Grip and support hands stay framed all clip long.
+            if owner == "Hand_R" and tool == "bow" and frame not in (1, 97):
+                owner = None
+            for index, frustum in enumerate(frusta):
+                x, y = screen(u, v, frustum)
+                if ((np.abs(x - .5) < reticle) & (np.abs(y - .5) < reticle)).any():
+                    reticle_hits[index].add(obj.name)
+                if owner:
+                    edges = (float(x.min()), float((1 - x).min()), float(y.min()), float((1 - y).min()))
+                    hand_edges[index][owner] = [min(a, b) for a, b in zip(hand_edges[index][owner], edges)]
+                    margin = min(edges)
+                    if margin < hand_margin[index][owner]:
+                        hand_margin[index][owner] = margin; hand_worst_frame[index][owner] = frame
+                    if frame == 1:
+                        rest_hand_margin[index][owner] = min(rest_hand_margin[index][owner], margin)
         if tool == "bow" and frame in (1, 31):
             matrix = scene.objects["Socket_Hand"].matrix_world.copy()
             if frame == 1:
@@ -503,12 +741,11 @@ def validate(scene, root, targets, tool, arms):
             poses[str(frame)] = current
     maximum_reset = max(abs(current[name][i][j] - matrix[i][j]) for name, matrix in rest.items() for i in range(4) for j in range(4))
     assert maximum_reset < .0001, (tool, "rig does not return to rest", maximum_reset)
-    assert all(value < 0 for value in proximal_screen_y.values()), (tool, "proximal forearm enters viewport", proximal_screen_y)
     assert not any(obj.type == "MESH" and obj.get("ce_role") == "first_person_robot" and obj.name.startswith(("SM_FPS_UpperArm", "SM_FPS_Elbow")) for obj in root.children_recursive)
     for rig in arms:
         side = rig["hand"].name[-1]
-        assert all(scene.objects.get(f"Fingers_{side}_{index}") is not None for index in range(2))
-        assert scene.objects.get(f"Fingers_{side}_2") is None
+        assert all(scene.objects.get(f"Fingers_{side}_{index}") is not None for index in range(GRIPPING_FINGERS))
+        assert scene.objects.get(f"Fingers_{side}_{GRIPPING_FINGERS}") is None
         assert scene.objects.get(f"Thumb_{side}") is not None
         palm = scene.objects["SM_FPS_Palm_" + side].location
         wrist = scene.objects["SM_FPS_WristBall_" + side].location
@@ -519,20 +756,83 @@ def validate(scene, root, targets, tool, arms):
     bow_rotation = math.degrees(grip_rest.to_quaternion().rotation_difference(grip_draw.to_quaternion()).angle) if tool == "bow" else None
     if tool == "bow":
         assert bow_shift > .02 and bow_rotation > 5, ("bow stays static during draw", bow_shift, bow_rotation)
+    head_results = head_visibility(scene, root, head, frusta, settings) if head else [None] * len(frusta)
+    configurations = []
+    fov_range = []
+    for index, frustum in enumerate(frusta):
+        label = f"{frustum['vertical_fov_degrees']:.2f} deg vertical, {frustum['aspect']}"
+        reasons = []
+        if reticle_hits[index]:
+            reasons.append(f"reticle blocked by {sorted(reticle_hits[index])[:4]}")
+        for name, margin in hand_margin[index].items():
+            if margin < limits["hand_margin"]:
+                reasons.append(f"{name} leaves the frame (margin {margin:.4f}, frame {hand_worst_frame[index][name]}, "
+                               f"rest {rest_hand_margin[index][name]:.4f})")
+        for name, value in proximal[index].items():
+            if value >= 0:
+                reasons.append(f"proximal forearm of {name} enters the viewport (y {value:.4f})")
+        result = head_results[index]
+        if head:
+            if result["anchor_margin"] < limits["head_anchor_margin"]:
+                reasons.append(f"{head['anchor']} too close to the frame edge ({result['anchor_margin']:.4f})")
+            if result["unoccluded_on_screen_fraction"] < limits["head_min_unoccluded_fraction"]:
+                reasons.append(f"tool head occluded ({result['unoccluded_on_screen_fraction']:.3f})")
+            if result["screen_fraction"] < limits["head_min_screen_fraction"]:
+                reasons.append(f"tool head too small on screen ({result['screen_fraction']:.4f})")
+        entry = {"vertical_fov_degrees": frustum["vertical_fov_degrees"], "aspect": frustum["aspect"],
+                 "horizontal_fov_degrees": math.degrees(2 * math.atan(frustum["tan_h"])), "binding": frustum["binding"],
+                 "ok": not reasons, "reasons": reasons,
+                 "min_hand_margin": hand_margin[index], "worst_hand_frame": hand_worst_frame[index],
+                 "rest_hand_margin": rest_hand_margin[index],
+                 "hand_edge_margins": {name: dict(zip(("left", "right", "bottom", "top"), values)) for name, values in hand_edges[index].items()},
+                 "proximal_forearm_max_screen_y": proximal[index],
+                 "reticle_blocked_by": sorted(reticle_hits[index]), "head": result}
+        configurations.append(entry)
+        fov_range.append({"vertical_fov_degrees": round(frustum["vertical_fov_degrees"], 3), "aspect": frustum["aspect"],
+                          "binding": frustum["binding"], "ok": not reasons, "reasons": reasons})
+        if frustum["binding"]:
+            failures.extend(f"{label}: {reason}" for reason in reasons)
+    binding = [index for index, frustum in enumerate(frusta) if frustum["binding"]]
+    summary = {"vertical_fov_degrees": settings["vertical_fov_degrees"], "aspects": settings["qa_aspects"],
+               "binding_configurations": len(binding),
+               "min_hand_margin": min(value for index in binding for value in hand_margin[index].values()),
+               "proximal_forearm_max_screen_y": max(value for index in binding for value in proximal[index].values()),
+               "reticle_clear": not any(reticle_hits[index] for index in binding), "passed": not failures,
+               "range_vertical_fov_degrees": [frusta[0]["vertical_fov_degrees"], frusta[-1]["vertical_fov_degrees"]],
+               "range_ok": sum(item["ok"] for item in fov_range), "range_checked": len(fov_range)}
+    head_summary = None
+    if head:
+        values = [head_results[index] for index in binding]
+        head_summary = {"anchor": head["anchor"], "parts": values[0]["parts"], "samples": values[0]["samples"],
+                        "min_anchor_margin": min(item["anchor_margin"] for item in values),
+                        "min_unoccluded_on_screen_fraction": min(item["unoccluded_on_screen_fraction"] for item in values),
+                        "min_screen_fraction": min(item["screen_fraction"] for item in values),
+                        "main_occluders": values[0]["main_occluders"],
+                        "limits": {"anchor_margin": limits["head_anchor_margin"],
+                                   "unoccluded_fraction": limits["head_min_unoccluded_fraction"],
+                                   "screen_fraction": limits["head_min_screen_fraction"]}}
     scene.frame_set(1); bpy.context.view_layer.update()
-    return {"passed": True, "frames_checked": 97, "max_contact_error_m": max_contact,
-            "centered_wrist_max_error_m": centered_wrist_error, "bow_grip_draw_shift_m": bow_shift,
-            "bow_draw_rotation_degrees": bow_rotation,
-            "max_arm_link_error_m": maximum_arm_error, "rigid_arm_links": len(arms) * 2,
-            "visible_forearm_vertex_extents": visible_forearms, "proximal_forearm_max_screen_y": proximal_screen_y,
-            "proximal_forearm_offscreen": True, "visible_forearm_fraction_limit": max(rig["visible_fraction"] for rig in arms),
-            "finger_count_per_hand": 3, "gripping_fingers_per_hand": 2, "thumb_count_per_hand": 1, "handedness_checked": tool == "bow",
-            "min_hand_side_clearance_m": minimum_hand_side_clearance if tool == "bow" else None,
-            "min_camera_depth_m": minimum_depth, "reticle_clear": True, "max_reset_matrix_error": maximum_reset,
-            "poses": poses, "fps": 24, "autoplay": False, "loop": False}
+    report = {"passed": not failures, "failures": failures, "frames_checked": 97, "max_contact_error_m": max_contact,
+              "viewmodel_camera": {key: value for key, value in settings.items() if key != "qa"},
+              "framing_range": {"summary": summary, "limits": limits, "configurations": configurations},
+              "fov_range": fov_range,
+              "hands_in_frame": summary["min_hand_margin"] >= limits["hand_margin"],
+              "head": head_summary,
+              "centered_wrist_max_error_m": centered_wrist_error, "bow_grip_draw_shift_m": bow_shift,
+              "bow_draw_rotation_degrees": bow_rotation,
+              "max_arm_link_error_m": maximum_arm_error, "rigid_arm_links": len(arms) * 2,
+              "visible_forearm_vertex_extents": visible_forearms, "proximal_forearm_max_screen_y": proximal_base,
+              "proximal_forearm_offscreen": summary["proximal_forearm_max_screen_y"] < 0,
+              "visible_forearm_fraction_limit": max(rig["visible_fraction"] for rig in arms),
+              "finger_count_per_hand": GRIPPING_FINGERS + 1, "gripping_fingers_per_hand": GRIPPING_FINGERS,
+              "thumb_count_per_hand": 1, "handedness_checked": tool == "bow",
+              "min_hand_side_clearance_m": minimum_hand_side_clearance if tool == "bow" else None,
+              "min_camera_depth_m": minimum_depth, "reticle_clear": summary["reticle_clear"], "max_reset_matrix_error": maximum_reset,
+              "poses": poses, "fps": 24, "autoplay": False, "loop": False}
+    return report
 
 
-def refresh_geometry(directory, root, profile, report):
+def refresh_geometry(directory, root, profile, report, settings):
     path = directory / "qa_geometry_fps.json"
     qa = json.loads(path.read_text())
     meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
@@ -547,7 +847,14 @@ def refresh_geometry(directory, root, profile, report):
     qa["camera"]["hand_position_blender_m"] = profile["hand"]
     qa["camera"]["hand_position_unity_m"] = [profile["hand"][0], profile["hand"][2], -profile["hand"][1]]
     qa["camera"]["roll_degrees"] = profile["roll_degrees"]
+    qa["camera"]["aim_target_blender_m"] = list(profile.get("aim_target_m", (0, -4, 0)))
+    qa["camera"].pop("horizontal_fov_degrees", None)
+    qa["camera"].update(vertical_fov_degrees=settings["vertical_fov_degrees"],
+                        horizontal_fov_degrees=settings["horizontal_fov_degrees"],
+                        reference_aspect=settings["reference_aspect"], near_m=settings["near_clip_m"])
     qa["framing"] = {"min_camera_depth_m": report["min_camera_depth_m"], "reticle_clear": True,
+                     "hands_in_frame": report["hands_in_frame"], "head_visible": report["head"] is not None,
+                     "checked_range": report["framing_range"]["summary"],
                      "render_resolution": [1600, 900], "robot_hands": report["hand_sides"]}
     path.write_text(json.dumps(qa, indent=2) + "\n")
 

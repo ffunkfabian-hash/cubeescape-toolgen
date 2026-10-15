@@ -3,6 +3,7 @@
 Like Robogen, use indexed binary geometry, Y-up coordinates and a separate animation
 buffer. Shape keys remain morph targets; the SceneKit app never rebuilds a model.
 """
+import re
 import argparse
 import hashlib
 import json
@@ -34,13 +35,25 @@ def material_data(material):
             "strength": float(value("Emission Strength", 0))}
 
 
+# Lower LODs of the game export (Cubegen naming): the viewer shows LOD0 only.
+LOWER_LOD = re.compile(r"_LOD[1-9][0-9]*$")
+
+
+def lower_lod(obj):
+    while obj is not None:
+        if LOWER_LOD.search(obj.name):
+            return True
+        obj = obj.parent
+    return False
+
+
 def export_model(source, destination, root_name, clip):
     bpy.ops.wm.open_mainfile(filepath=str(source))
     scene = bpy.context.scene
     scene.frame_set(1)
     bpy.context.view_layer.update()
     root = scene.objects[root_name]
-    objects = [root, *sorted(root.children_recursive, key=lambda obj: obj.name)]
+    objects = [root, *sorted((obj for obj in root.children_recursive if not lower_lod(obj)), key=lambda obj: obj.name)]
     names = {obj.name: index for index, obj in enumerate(objects)}
     frames = scene.frame_end - scene.frame_start + 1 if clip else 1
     fps = scene.render.fps / scene.render.fps_base

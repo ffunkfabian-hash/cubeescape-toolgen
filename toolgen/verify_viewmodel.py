@@ -6,6 +6,28 @@ import sys
 from pathlib import Path
 
 import bpy
+import numpy as np
+
+
+def rest_hand_margin(scene, hands, frustum, frame):
+    """Smallest distance of any hand vertex to the frame edge (camera at origin, -Y forward, Z up)."""
+    scene.frame_set(math.floor(frame), subframe=frame % 1); bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    margin = float("inf")
+    for hand in hands:
+        for obj in hand.children_recursive:
+            if obj.type != "MESH":
+                continue
+            evaluated = obj.evaluated_get(graph)
+            local = np.empty(len(evaluated.data.vertices) * 3)
+            evaluated.data.vertices.foreach_get("co", local)
+            matrix = np.array(evaluated.matrix_world)
+            points = local.reshape(-1, 3) @ matrix[:3, :3].T + matrix[:3, 3]
+            depth = -points[:, 1]
+            x = .5 - points[:, 0] / depth / (2 * frustum["tan_h"])
+            y = .5 + points[:, 2] / depth / (2 * frustum["tan_v"])
+            margin = min(margin, float(np.minimum(np.minimum(x, 1 - x), np.minimum(y, 1 - y)).min()))
+    return margin
 
 
 def verify(directory, asset):
@@ -43,7 +65,19 @@ def verify(directory, asset):
         for side in expected["hand_sides"]:
             joint = find(side)
             assert len([obj for obj in joint.children_recursive if obj.type == "MESH"]) >= 12
-        results[kind] = {"passed": True, "poses": len(expected["poses"]), "max_matrix_error": maximum}
+        # The viewmodel FOV travels with the exports (glTF extras / FBX user properties).
+        root = find(asset)
+        vertical = expected["viewmodel_camera"]["vertical_fov_degrees"]
+        assert abs(float(root.get("ce_viewmodel_vertical_fov_degrees", -1)) - vertical) < 1e-4, (kind, "viewmodel FOV lost")
+        margins = {}
+        for aspect in expected["viewmodel_camera"]["qa_aspects"]:
+            width, height = (float(value) for value in aspect.split(":"))
+            tan_v = math.tan(math.radians(vertical) / 2)
+            margins[aspect] = rest_hand_margin(scene, [find(side) for side in expected["hand_sides"]],
+                                               {"tan_h": tan_v * width / height, "tan_v": tan_v}, first)
+            assert margins[aspect] >= expected["framing_range"]["limits"]["hand_margin"], (kind, aspect, "rest hands leave the frame")
+        results[kind] = {"passed": True, "poses": len(expected["poses"]), "max_matrix_error": maximum,
+                         "vertical_fov_degrees": vertical, "rest_hand_margin": margins}
     (directory / "qa_viewmodel_roundtrip.json").write_text(json.dumps({"passed": True, "checks": results}, indent=2) + "\n")
     print("VIEWMODEL_ROUNDTRIP_OK", asset)
 

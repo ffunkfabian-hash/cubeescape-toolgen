@@ -17,8 +17,24 @@ struct ModelInfo: Decodable, Identifiable, Hashable {
     let clip: String?
     let triangles: Int
     let frames: Int
-    let qa: String
-    var variantLabel: String { variant == "fps" ? "Egoperspektive" : variant == "arrow" ? "Pfeil" : "Weltmodell" }
+    let qa: String?
+    var variantLabel: String { Self.label(variant) }
+
+    /// Display names of every known variant; `game` comes from the game export and may be absent.
+    static func label(_ variant: String) -> String {
+        switch variant {
+        case "world": return "Weltmodell"
+        case "fps": return "Egoperspektive"
+        case "arrow": return "Pfeil"
+        case "game": return "Spielmodell"
+        default: return variant
+        }
+    }
+}
+
+/// Viewmodel camera written next to each FPS export (`<tool>/viewmodel_camera.json`).
+struct ViewmodelCamera: Decodable {
+    let vertical_fov_degrees: Double
 }
 
 struct NodeInfo: Decodable {
@@ -106,6 +122,35 @@ final class ToolData {
         let base = root.standardizedFileURL.resolvingSymlinksInPath().path + "/"
         guard path.path.hasPrefix(base) else { throw ViewerError.invalid("Modellpfad liegt außerhalb des Katalogs.") }
         return path
+    }
+
+    /// Fixed viewmodel FOV of the game (vertical degrees, like Unity's Camera.fieldOfView).
+    static let defaultFieldOfView = 46.69
+    static let fieldOfViewRange = 35.0...75.0
+
+    private var cameras: [String: Double] = [:]
+
+    /// One entry per tool in catalog order, whichever variants it has.
+    var tools: [ModelInfo] {
+        var seen = Set<String>()
+        return catalog.models.filter { seen.insert($0.tool).inserted }
+    }
+
+    func fieldOfView(tool: String) -> Double {
+        if let cached = cameras[tool] { return cached }
+        let value = readFieldOfView(tool: tool)
+        cameras[tool] = value
+        return value
+    }
+
+    private func readFieldOfView(tool: String) -> Double {
+        let url = root.appendingPathComponent(tool).appendingPathComponent("viewmodel_camera.json")
+        guard let data = try? Data(contentsOf: url),
+              let camera = try? JSONDecoder().decode(ViewmodelCamera.self, from: data),
+              camera.vertical_fov_degrees.isFinite, Self.fieldOfViewRange.contains(camera.vertical_fov_degrees) else {
+            return Self.defaultFieldOfView
+        }
+        return camera.vertical_fov_degrees
     }
 
     static func locate() -> URL? {

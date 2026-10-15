@@ -3,6 +3,8 @@
 Gemeinsamer Werkzeug-Generator für Cube Escape. Code ist die Wahrheit, dann [README.md](README.md),
 [docs/TECHNIK.md](docs/TECHNIK.md), [CHANGELOG.md](CHANGELOG.md). Antworten, Doku, UI und Commit-Messages auf Deutsch;
 Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
+Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen, Codex als Unteragent): `~/.claude/CLAUDE.md` –
+Codex liest sie über `~/.codex/AGENTS.md`.
 
 ## Quellen und Verträge
 
@@ -12,6 +14,8 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
 - `output/` ist nicht versioniert und entsteht ausschließlich durch die Pipeline. Nie Modelle, Binärpuffer,
   QA oder Manifest von Hand ändern. `outputs/` enthält die historischen Referenzpakete und Shell-Einstiege;
   neue Lieferpakete entstehen in `output/`. Generatorcode gehört nicht mehr in diese Referenzpakete.
+- `data/game_palette.json` bildet die Generator-Materialien auf Cube-Escape-Materialnamen ab (Spiel-Export); die Abbildung bleibt
+  vollständig, Namen und Ergebnisdateien (`*_Game.*`, `unity_contract.json`) sind Vertrag mit dem Spiel.
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips kehren in die Ruhepose zurück; Loop ist eine Viewer-Prüfoption.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
@@ -22,14 +26,19 @@ Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing
 
 | Stufe | Anlass | Ausgabe |
 |---|---|---|
-| `quick` | nach Code-Änderungen | `output/_quick`: Modelle, Animation, Geometrie-QA, Viewer-Daten; keine Bilder |
+| `quick` | nach Code-Änderungen | `output/_quick`: Modelle, Animation, Geometrie-QA, Spiel-Export mit QA, Viewer-Daten; keine Bilder |
 | `standard` | vor Commit | `output/_standard`: zusätzlich unabhängiger Reimport, kleine Renderings, Aktions-GIFs |
 | `full` | Lieferstand / Release | `output`: dieselben Prüfungen, volle Renderauflösung und Samples |
 
+Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` führt ihn aus). Dann
 `python3 toolgen/generate_tools.py --tier quick`; danach unverändert wiederholen: Cache-Treffer, unveränderte Dateien.
-`--no-cache` umgeht Treffer und erzeugt alles neu. Cache-Schlüssel hängen an Quellinhalt, Werkzeugdaten, Blender-Version,
-Stufe und Cache-Schema, nicht an Dateizeiten. Änderungen an nicht erfassten Umgebungsbedingungen erfordern eine
-Schema-Erhöhung oder einen zusätzlichen Schlüssel. Jeder Treffer prüft die Datei-Hashes erneut.
+`--no-cache` umgeht Treffer und erzeugt alles neu. Der Cache ist geteilt (`~/Library/Caches/CubeEscapeToolgen/cache`,
+`TOOLGEN_CACHE`, `TOOLGEN_CACHE_LIMIT_GB`) und arbeitet je Stufe: Schlüssel aus Quellen-Closure, Vorstufen-Hashes, Blender-Version
+und bei Bildern Samples/Gerät, nicht aus Dateizeiten oder Pfaden; jeder Treffer prüft die Datei-Hashes erneut. Eine neue Stufe ist
+ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Umgebungsbedingungen erfordern `STAGE_SCHEMA`/
+`CACHE_SCHEMA` zu erhöhen oder einen zusätzlichen Schlüssel. Aufbau und Regeln: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
+Schwere Läufe (`--tier full`, `scripts/check_output.sh`) warten auf `scripts/heavy_lock.py`, die gemeinsame Sperre mit Robogen,
+Cube Escape und Cubegen (`CE_HEAVY_LOCK=0` überspringt sie); sie wird nur gemeinsam mit den anderen Repos geändert.
 
 Maximal zwei Worker standardmäßig; Threads werden unter ihnen aufgeteilt. `--workers` und `--threads` dürfen zusammen
 die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Prozesse, Zusammenführung in Katalogreihenfolge.
@@ -46,8 +55,10 @@ Nach Änderungen: `bash viewer/build.sh [output-dir]` und `bash viewer/test_view
 Sichtbare Änderungen mit Screenshots prüfen; `--sidebar-check` muss bei 360 pt passen. Der Playhead beobachtet nur die
 Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, keine dauernden Dateizugriffe.
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.
-Ego-Gestaltung und verbindlicher Bildausschnitt (Dreifingerhände, maximal halbe Unterarme):
-[docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen.
+Ego-Gestaltung, Viewmodel-Sichtfeld und verbindlicher Bildausschnitt (drei Greiffinger plus Daumen, maximal halbe Unterarme):
+[docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen. Spiel-Export für Unity
+(`toolgen/game_export.py`, `data/game_palette.json`): › Spiel-Export; matte Palette, ein Renderer für statische Teile, Kollision
+am tatsächlichen Modell, Öffnungen frei.
 
 ## Plugins und Hooks
 
@@ -87,5 +98,5 @@ Doku und Skills auf Endstand, Grenzen benannt. Unity-Gameplay nie aus Blender-/V
 Metal-Rendering: `--device auto` nutzt auf kompatiblen Macs die ermittelte Metal-GPU; `--device cpu` erzwingt CPU.
 Das Rendergerät steckt im Cache- und Zeitbandschlüssel. Unter Fremdlast keine Beschleunigung aus Laufzeiten ableiten.
 
-Ausgabeschreibende Pipeline-Funktionen stehen in `PIPELINE_CACHE_FUNCTIONS`; neue Helfer, die Modellpakete schreiben,
-werden dort ergänzt. Orchestrierung und Zeitberichte sind kein Anlass, identische Modelle neu zu bauen.
+Ausgabeschreibende Pipeline-Funktionen stehen in `STAGE_CACHE_FUNCTIONS` und `PIPELINE_CACHE_FUNCTIONS`; neue Helfer, die
+Stufenergebnisse oder Modellpakete schreiben, werden dort ergänzt. Orchestrierung und Zeitberichte sind kein Anlass, identische Modelle neu zu bauen.

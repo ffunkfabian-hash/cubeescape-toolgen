@@ -19,6 +19,8 @@ final class ToolScene {
     private var span: Float = 1
     private(set) var currentView = "Iso"
     private(set) var cameraRevision = 0
+    /// Vertical viewmodel FOV used by the Ego view (orbit views are orthographic).
+    private(set) var egoFieldOfView = ToolData.defaultFieldOfView
 
     init(data: ModelData) {
         self.data = data
@@ -151,7 +153,7 @@ final class ToolScene {
         let cam = camera.camera!
         cam.usesOrthographicProjection = name != "FPS"
         cam.orthographicScale = Double(max(span * 0.90, 0.2))
-        cam.projectionDirection = .horizontal; cam.fieldOfView = 75
+        cam.projectionDirection = .vertical; cam.fieldOfView = CGFloat(egoFieldOfView)
         if name == "FPS" {
             camera.position = SCNVector3Zero
             camera.eulerAngles = SCNVector3(0, CGFloat.pi, 0)
@@ -169,6 +171,12 @@ final class ToolScene {
             camera.look(at: center)
         }
         floor.isHidden = name == "FPS"
+    }
+
+    func setFieldOfView(_ degrees: Double) {
+        guard degrees.isFinite else { return }
+        egoFieldOfView = min(ToolData.fieldOfViewRange.upperBound, max(ToolData.fieldOfViewRange.lowerBound, degrees))
+        camera.camera?.fieldOfView = CGFloat(egoFieldOfView)
     }
 
     func showFloor(_ show: Bool) { floor.isHidden = !show || currentView == "FPS" }

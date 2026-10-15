@@ -9,10 +9,17 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "toolgen"))
 from build_toolset import install_output
 from generate_tools import (
-    cache_key,
+    SourceIndex,
     catalog,
+    expand,
+    function_fingerprint,
     hash_file,
     main,
+    stage_key,
+    Stage,
+    Variant,
+    STAGES,
+    assemble_package,
     output_lock,
     valid_package,
     worker_budget,
@@ -82,21 +89,29 @@ class PipelineTests(unittest.TestCase):
             root = Path(name); self.package(root)
             self.assertFalse(valid_package(root, "new-key"))
 
-    def test_tier_and_blender_version_invalidate_cache(self):
+    def keys(self, tool, tier="quick", blender="Blender 5.2.2", state=None, render=None):
+        index = SourceIndex()
+        return {run.name: stage_key(run, tool, state or {}, blender, index, render) for run in expand(tool, tier)}
+
+    def test_blender_version_and_render_settings_invalidate_cache(self):
         tool = catalog()[0]
-        key = cache_key(tool, "quick", "Blender 5.2.2")
-        self.assertNotEqual(key, cache_key(tool, "standard", "Blender 5.2.2"))
-        self.assertNotEqual(key, cache_key(tool, "quick", "Blender 5.3"))
-        self.assertEqual(key, cache_key(tool, "quick", "Blender 5.2.2"))
+        key = self.keys(tool)
+        self.assertNotEqual(key, self.keys(tool, blender="Blender 5.3"))
+        self.assertEqual(key, self.keys(tool))
+        render = {"samples": 12, "percent": 50, "device": "cpu"}
+        self.assertNotEqual(key["world"], self.keys(tool, render=render)["world"])
+        # quick and standard share the geometry keys of every stage both tiers run
+        standard = self.keys(tool, "standard")
+        self.assertEqual({name: key[name] for name in key}, {name: standard[name] for name in key})
 
     def test_source_content_invalidates_cache(self):
         tool = catalog()[0]
-        before = cache_key(tool, "quick", "5.2")
+        before = self.keys(tool)
         read_bytes = Path.read_bytes
         def changed(path):
             return read_bytes(path) + (b"\n# changed" if path.name == tool["world"] else b"")
         with patch.object(Path, "read_bytes", changed):
-            self.assertNotEqual(before, cache_key(tool, "quick", "5.2"))
+            self.assertNotEqual(before["world"], self.keys(tool)["world"])
 
     def test_failed_install_restores_previous_output(self):
         with tempfile.TemporaryDirectory() as name:
@@ -110,15 +125,18 @@ class PipelineTests(unittest.TestCase):
                 install_output(staging, target, force=True)
             self.assertEqual("old", (target / "model").read_text())
 
-    def test_hand_profiles_and_shared_motion_invalidate_cache(self):
-        tool = catalog()[0]; before = cache_key(tool, "quick", "5.2")
+    def test_hand_profiles_and_shared_motion_invalidate_only_first_person(self):
+        tool = catalog()[3]; before = self.keys(tool)
         read_bytes = Path.read_bytes
-        for source in ("viewmodels.json", "first_person.py", "motion_profiles.py", "verify_viewmodel.py"):
+        for source in ("viewmodels.json", "first_person.py", "motion_profiles.py"):
             with self.subTest(source=source):
                 def changed(path, source=source):
                     return read_bytes(path) + (b"\n# changed" if path.name == source else b"")
                 with patch.object(Path, "read_bytes", changed):
-                    self.assertNotEqual(before, cache_key(tool, "quick", "5.2"))
+                    after = self.keys(tool)
+                self.assertNotEqual(before["first_person"], after["first_person"])
+                self.assertEqual(before["world"], after["world"])
+                self.assertEqual(before["fps"], after["fps"])
 
     def test_output_lock_rejects_other_writer_and_releases_on_failure(self):
         with tempfile.TemporaryDirectory() as name:
@@ -134,38 +152,62 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(ValueError): worker_budget(3, 4)
             with self.assertRaises(ValueError): worker_budget(-1)
 
-    def test_seeded_library_cache_hit_writes_report_without_existing_logs(self):
-        tool = catalog()[0]
-        with tempfile.TemporaryDirectory() as name:
-            root = Path(name); package = root / tool["id"]
-            package.mkdir(); self.package(package)
-            with patch("sys.argv", ["generate_tools.py", "--tier", "quick", "--output", name]), \
-                 patch("generate_tools.catalog", return_value=[tool]), \
-                 patch("generate_tools.find_blender", return_value="/blender"), \
-                 patch("generate_tools.subprocess.check_output", return_value="Blender 5.2.2\n"), \
-                 patch("generate_tools.cache_key", return_value="key"):
-                self.assertEqual(0, main())
-            report = json.loads((root / "logs/toolgen_report.json").read_text())
-            self.assertTrue(report["passed"])
-            self.assertTrue(report["tools"][0]["cache_hit"])
-
     def test_report_changes_do_not_invalidate_model_cache(self):
-        tool = catalog()[0]; before = cache_key(tool, "quick", "5.2")
+        tool = catalog()[0]; function_fingerprint.cache_clear(); before = self.keys(tool)
         read_text = Path.read_text
         def changed(path):
             text = read_text(path)
             return text.replace('report = {"version": VERSION', 'report = {"label": "new", "version": VERSION') if path.name == "generate_tools.py" else text
         with patch.object(Path, "read_text", changed):
-            self.assertEqual(before, cache_key(tool, "quick", "5.2"))
+            function_fingerprint.cache_clear()
+            self.assertEqual(before, self.keys(tool))
+        function_fingerprint.cache_clear()
 
     def test_output_producer_changes_invalidate_cache(self):
-        tool = catalog()[0]; before = cache_key(tool, "quick", "5.2")
+        tool = catalog()[0]; function_fingerprint.cache_clear(); before = self.keys(tool)
         read_text = Path.read_text
         def changed(path):
             text = read_text(path)
-            return text.replace('(work / "manifest.json").write_text', '(work / "manifest-next.json").write_text') if path.name == "generate_tools.py" else text
+            return text.replace('environment["TOOLGEN_NO_RENDER"] = "1"', 'environment["TOOLGEN_NO_RENDER"] = "yes"') if path.name == "generate_tools.py" else text
         with patch.object(Path, "read_text", changed):
-            self.assertNotEqual(before, cache_key(tool, "quick", "5.2"))
+            function_fingerprint.cache_clear()
+            self.assertNotEqual(before, self.keys(tool))
+        function_fingerprint.cache_clear()
+
+    def test_package_hit_uses_new_stage_records_without_blender(self):
+        import toolcache
+        tool = catalog()[0]
+        with tempfile.TemporaryDirectory() as name:
+            output = Path(name); (output / tool["id"]).mkdir()
+            builder = __import__("generate_tools").ToolBuild(
+                tool, output, "quick", "blender-must-not-run", "5.2", 1, False, "cpu",
+                toolcache.Store(Path(name) / "cache"))
+            with patch.object(builder, "resolve", return_value=[]), \
+                 patch.object(builder, "package_key", return_value="cached-key"), \
+                 patch("generate_tools.valid_package", return_value=True), \
+                 patch("generate_tools.run_stage", side_effect=AssertionError("Blender stage ran")):
+                result = builder.build()
+            self.assertTrue(result["cache_hit"])
+
+    def test_one_added_stage_supplies_manifest_and_viewer_variant(self):
+        tool = dict(catalog()[0], game="game_export.py", asset="Tool", clip="Idle")
+        stage = Stage("game", "toolgen/game_export.py", reads=("Tool.blend",), qa=("qa_game.json",),
+                      variants=(Variant("game", "{asset}_Game", clip=("clip",), exports=("blend",)),))
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            runs = [run for run in expand(tool, "quick", stages=(*STAGES, stage))
+                    if run.name in ("game", "viewer_game")]
+            game_run = next(run for run in runs if run.name == "game")
+            viewer_run = next(run for run in runs if run.name == "viewer_game")
+            self.assertEqual((game_run.name, viewer_run.variant["name"]), ("game", "game"))
+            work = root / "work"; (work / "ViewerData/game").mkdir(parents=True)
+            (work / "Tool_Game.blend").write_bytes(b"model")
+            (work / "ViewerData/game/scene.json").write_text(json.dumps({"triangles": 1, "frames": 1}))
+            with patch("generate_tools.valid_package", return_value=True):
+                assemble_package(work, tool, "quick", "cpu", runs, [], "key")
+            manifest = json.loads((work / "manifest.json").read_text())
+            self.assertIn("game", [model["variant"] for model in manifest["models"]])
+            self.assertIn("qa_game.json", manifest["required_qa"])
 
 
 if __name__ == "__main__":

@@ -31,7 +31,17 @@ for tool in catalog():
             assert rig["proximal_forearm_offscreen"] and rig["visible_forearm_fraction_limit"] <= .5
             assert all(y < 0 for y in rig["proximal_forearm_max_screen_y"].values())
             assert rig["centered_wrist_max_error_m"] < .00001
-            assert rig["finger_count_per_hand"] == 3 and rig["gripping_fingers_per_hand"] == 2 and rig["thumb_count_per_hand"] == 1
+            assert rig["finger_count_per_hand"] == 4 and rig["gripping_fingers_per_hand"] == 3 and rig["thumb_count_per_hand"] == 1
+            camera = json.loads((package / "viewmodel_camera.json").read_text())
+            assert camera["vertical_fov_degrees"] == rig["viewmodel_camera"]["vertical_fov_degrees"]
+            assert set(camera["horizontal_fov_degrees"]) >= {"16:9", "16:10"}
+            assert rig["hands_in_frame"] and rig["framing_range"]["summary"]["passed"]
+            assert all(item["ok"] for item in rig["fov_range"] if item["binding"]) and len(rig["fov_range"]) >= 2
+            assert (rig["head"] is None) == (tool["id"] == "bow")
+            if rig["head"]:
+                limits = rig["head"]["limits"]
+                assert rig["head"]["min_unoccluded_on_screen_fraction"] >= limits["unoccluded_fraction"]
+                assert rig["head"]["min_anchor_margin"] >= limits["anchor_margin"]
             if tool["id"] == "bow":
                 assert rig["handedness_checked"] and rig["min_hand_side_clearance_m"] > .01
                 assert rig["bow_grip_draw_shift_m"] > .02 and rig["bow_draw_rotation_degrees"] > 5

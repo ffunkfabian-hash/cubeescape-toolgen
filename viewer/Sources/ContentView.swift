@@ -24,6 +24,8 @@ final class ViewerModel: ObservableObject {
     @Published var tier = "quick"
     @Published var console = ""
     @Published var comparison: ToolScene?
+    /// User override of the Ego field of view; nil follows the tool's data value.
+    @Published var fieldOfViewOverride: Double? { didSet { applyFieldOfView() } }
     let playhead = Playhead()
     private var timer: Timer?
     private var lastTick = Date()
@@ -43,6 +45,19 @@ final class ViewerModel: ObservableObject {
         outputRoot = Main.value(CommandLine.arguments, "--output").map { URL(fileURLWithPath: $0) } ??
             URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Documents/CubeEscapeToolgen")
         status = "\(selected.label) · \(selected.variantLabel) geladen"
+        applyFieldOfView()
+    }
+
+    var dataFieldOfView: Double { data.fieldOfView(tool: selected.tool) }
+    var fieldOfView: Double {
+        min(ToolData.fieldOfViewRange.upperBound, max(ToolData.fieldOfViewRange.lowerBound, fieldOfViewOverride ?? dataFieldOfView))
+    }
+    var timerActive: Bool { timer != nil }
+
+    func resetFieldOfView() { fieldOfViewOverride = nil }
+
+    private func applyFieldOfView() {
+        scene.setFieldOfView(fieldOfView); comparison?.setFieldOfView(fieldOfView)
     }
 
     func select(_ info: ModelInfo) {
@@ -83,6 +98,7 @@ final class ViewerModel: ObservableObject {
                 status = error.localizedDescription
             }
         }
+        applyFieldOfView()
         viewName = name; scene.setView(name); scene.showFloor(floor)
         comparison?.setView(name); comparison?.showFloor(floor)
     }
@@ -122,7 +138,7 @@ final class ViewerModel: ObservableObject {
 
     func rememberB() {
         do {
-            let next = ToolScene(data: scene.data); next.apply(look); next.setView(viewName)
+            let next = ToolScene(data: scene.data); next.apply(look); next.setFieldOfView(fieldOfView); next.setView(viewName)
             next.seek(fraction); next.showFloor(floor); comparison = next; comparisonLook = look
             status = "B gespeichert – rechts der gemerkte Look"
         }
@@ -297,7 +313,7 @@ struct ContentView: View {
                         ForEach(ToolScene.views, id: \.self) { name in
                             Button(name == "FPS" ? "Ego" : name) { model.setView(name) }
                                 .tint(model.viewName == name ? .cyan : nil)
-                                .help(name == "FPS" ? "Passendes Ego-Modell laden und aus Spielerperspektive anzeigen (75°)." : name)
+                                .help(name == "FPS" ? "Passendes Ego-Modell laden und aus Spielerperspektive anzeigen (Sichtfeld \(String(format: "%.1f", model.fieldOfView))° vertikal)." : name)
                         }
                         Toggle("Drehteller", isOn: $model.turntable).toggleStyle(.button)
                             .onChange(of: model.turntable) { model.updateTimer() }
@@ -327,7 +343,7 @@ struct Sidebar: View {
         VStack(alignment: .leading, spacing: 18) {
             section("Werkzeug") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 130))], spacing: 6) {
-                    ForEach(Array(model.data.catalog.models.filter { $0.variant == "world" }), id: \.tool) { info in
+                    ForEach(model.data.tools, id: \.tool) { info in
                         Button(info.label) { model.selectTool(info.tool) }.frame(maxWidth: .infinity)
                             .tint(model.selected.tool == info.tool ? .cyan : nil)
                     }
@@ -341,6 +357,20 @@ struct Sidebar: View {
                         Text(info.variantLabel).tag(info.id)
                     }
                 }.labelsHidden()
+            }
+            if model.viewName == "FPS" {
+                section("Ego-Sichtfeld") {
+                    HStack {
+                        Text("Sichtfeld")
+                        Slider(value: Binding(get: { model.fieldOfView }, set: { model.fieldOfViewOverride = $0 }),
+                               in: ToolData.fieldOfViewRange)
+                        Text(String(format: "%.1f°", model.fieldOfView)).monospacedDigit().frame(width: 48, alignment: .trailing)
+                    }
+                    Button("Standard \(String(format: "%.1f", model.dataFieldOfView))°") { model.resetFieldOfView() }
+                        .disabled(model.fieldOfViewOverride == nil)
+                    Text("Vertikal wie Unitys Camera.fieldOfView. Im Spiel fest für Hände und Werkzeug, unabhängig vom Spieler-Sichtfeld; A/B und Screenshot übernehmen den Wert.")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
             }
             section("Oberfläche") {
                 Picker("Finish", selection: $model.look.finish) {

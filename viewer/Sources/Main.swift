@@ -31,6 +31,12 @@ enum Main {
             model.select(data.catalog.models.first { $0.id == look.model }!); model.look = look
         }
         model.setView(value(args, "--view") ?? (model.selected.variant == "fps" ? "FPS" : "Iso"))
+        if let text = value(args, "--fov") {
+            guard let degrees = Double(text), ToolData.fieldOfViewRange.contains(degrees) else {
+                throw ViewerError.invalid("Sichtfeld muss zwischen 35 und 75 Grad liegen.")
+            }
+            model.fieldOfViewOverride = degrees
+        }
         let frame = Double(value(args, "--frame") ?? "1") ?? 1
         model.seek((frame - 1) / Double(max(1, model.selected.frames - 1)))
         model.floor = !args.contains("--no-floor"); model.sockets = args.contains("--sockets")
@@ -142,6 +148,35 @@ enum Main {
             model.seek(43.0 / 96)
             try require(abs(arrow.simdScale.x - 0.001) < 0.0001, "Arrow was not hidden on the release frame")
             checks += 1
+            // Ego field of view: data default per tool, override, A/B, reset, clamping, no idle timer.
+            for info in model.data.catalog.models where info.variant == "fps" {
+                model.select(info)
+                let expected = model.data.fieldOfView(tool: info.tool)
+                guard let camera = model.scene.camera.camera else { throw ViewerError.invalid("Camera missing") }
+                try require(model.fieldOfViewOverride == nil && abs(model.fieldOfView - expected) < 1e-9 &&
+                            camera.projectionDirection == .vertical && abs(Double(camera.fieldOfView) - expected) < 1e-3,
+                            "Ego view does not use the data FOV: \(info.id)")
+                model.fieldOfViewOverride = 60
+                model.rememberB()
+                try require(abs(Double(camera.fieldOfView) - 60) < 1e-3 &&
+                            abs(Double(model.comparison?.camera.camera?.fieldOfView ?? 0) - 60) < 1e-3,
+                            "FOV override did not reach A and B: \(info.id)")
+                try require(!model.timerActive, "FOV slider must not start a timer")
+                model.fieldOfViewOverride = 200
+                try require(abs(Double(camera.fieldOfView) - ToolData.fieldOfViewRange.upperBound) < 1e-3, "FOV is not clamped")
+                model.resetFieldOfView(); model.comparison = nil
+                try require(abs(Double(camera.fieldOfView) - expected) < 1e-3, "FOV reset did not restore the data value")
+                checks += 1
+            }
+            try require(ModelInfo.label("game") == "Spielmodell" && ModelInfo.label("fps") == "Egoperspektive",
+                        "Variant labels changed")
+            for info in model.data.catalog.models where info.variant == "game" {
+                model.select(info)
+                try require(model.viewName == "Iso" && model.selected.variantLabel == "Spielmodell", "Game model selection failed")
+                model.setView("FPS")
+                try require(model.selected.tool == info.tool && model.selected.variant == "fps", "Ego from game model failed")
+                checks += 1
+            }
             for available in [CGSize(width: 560, height: 700), CGSize(width: 1200, height: 400), CGSize(width: 960, height: 540)] {
                 let viewport = ToolScene.viewportSize(available: available, firstPerson: true)
                 try require(abs(viewport.width / viewport.height - 16.0 / 9) < 0.000001 &&
