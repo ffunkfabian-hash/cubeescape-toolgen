@@ -74,6 +74,17 @@ OPENING_PROBES = {
 # Blender (Z up, front -Y) -> Unity (Y up, front +Z): FBX axis_forward -Z / axis_up Y imported with Unity's
 # bakeAxisConversion, glTF Y up with the X mirror of Unity's importers. Same mapping as Cubegen (asset.to_unity).
 TO_UNITY = ((-1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, -1.0, 0.0))
+# Measured in Cube Escape 0.62: the FBX imported with bakeAxisConversion still ends up half a turn about Unity's Y axis
+# against the contract (anchors at (-x, y, -z) of the contract values). The game's import turns the root back by this
+# yaw; the contract only documents it (generator output is unchanged, so models already built in stay correct).
+FBX_IMPORT_YAW_DEGREES = 180
+
+
+def import_yaw_correction(position, degrees=FBX_IMPORT_YAW_DEGREES):
+    """Unity-space point after the game's root correction (world-space rotation about Y, left-handed: +90 turns +Z to +X)."""
+    angle = math.radians(degrees)
+    c, s = round(math.cos(angle), 12), round(math.sin(angle), 12)
+    return [position[0] * c + position[2] * s + 0.0, position[1] + 0.0, -position[0] * s + position[2] * c + 0.0]
 
 
 # --------------------------------------------------------------------------------------------- pure helpers
@@ -841,6 +852,11 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
                  "position": "unity = (-x, z, -y) of blender", "scale": "unity = (x, z, y) of blender",
                  "rotation": "unity quaternion (x, y, z, w) of M R M^T, M = [[-1,0,0],[0,0,1],[0,-1,0]]",
                  "fbx": {"axis_forward": "-Z", "axis_up": "Y", "bake_space_transform": False,
+                         "export_yaw_degrees": FBX_IMPORT_YAW_DEGREES,
+                         "export_yaw_note": "Measured in Cube Escape: after import the model is turned by this yaw about "
+                                            "Unity's Y axis against the anchor values of this contract (anchors at (-x, y, -z)). "
+                                            "The game rotates the prefab root by this yaw (world space, before anchors are read); "
+                                            "the contract values stay as written and are not pre-rotated. Apply once, never twice.",
                          "unity_import": "ModelImporter.bakeAxisConversion = true: the root keeps no -90 degree X "
                                          "rotation, the conversion is baked into meshes, nodes and the clip. Blender's "
                                          "baked space transform is not used, it breaks object animation."},

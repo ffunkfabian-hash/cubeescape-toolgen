@@ -1,6 +1,6 @@
 # Einbau in Cube Escape (Unity 6, URP) – Vorbereitung
 
-Stand 0.6.0 Sightline. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
+Stand 0.6.3 Sightline. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
 liest, damit der spätere Einbau keine Annahmen über Toolgen treffen muss. Das Spielprojekt wird aus diesem Repo nicht
 verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-Export.
 
@@ -18,6 +18,22 @@ Cube Escape legt beim Einbau die matten Varianten (`M_RobotBody_Matte`, `M_Robot
 Die FBX-/GLB-Materialien tragen nur Namen und Palettenwerte; im Spiel werden sie auf die Spielmaterialien gelegt.
 
 FBX-Import: `bakeAxisConversion` einschalten (siehe `axes.fbx.unity_import` im Vertrag), LODGroup entsteht aus `_LOD0`/`_LOD1`.
+
+### Achsen und die 180°-Drehung (Achsenfund Cube Escape 0.62)
+
+Der Vertrag rechnet Blender → Unity mit `Position = (−x, z, −y)` (Blender: oben +Z, vorn −Y; Unity: oben +Y, vorn +Z) und
+exportiert FBX mit `axis_forward −Z`, `axis_up Y`, `bake_space_transform` aus. Im Spiel gemessen: Mit `bakeAxisConversion`
+liegt das importierte Modell trotzdem **um 180° um die Unity-Y-Achse gedreht** gegenüber den Vertragswerten – alle Anker
+(`Socket_Muzzle`, `Socket_Grab`, `Socket_Nock`, `Socket_Hand`, `Socket_SupportHand`, `Socket_Camera`) lagen bei (−x, y, −z)
+der Vertragswerte, das Werkzeug zeigte nach hinten. Die Ursache liegt in der Achsen-/Vorwärts-Umrechnung zwischen Blender-FBX-Export
+und Unitys Importer, nicht an einzelnen Modellen; sie wurde nicht weiter im Importer zerlegt, nur gemessen (Anker-Test
+`ToolgenModelTests` im Spiel).
+
+**Korrektur macht der Einbau, nicht der Generator:** Cube Escape dreht die Wurzel des Prefabs um 180° um Y im Weltraum
+(`Quaternion.Euler(0, 180, 0) * localRotation`, Welt- wie Ego-Prefab) und liest danach die Anker; die Vertragswerte bleiben unverändert und werden
+nicht vorgedreht. Der Vertrag nennt den Wert als `axes.fbx.export_yaw_degrees` (180) mit Hinweis `export_yaw_note`.
+Wer den FBX anders einbaut: genau einmal anwenden, nie doppelt. GLB (X-Spiegelung des Unity-glTF-Importers) wurde nicht gemessen; der
+Wert gilt für FBX. Der Generator bleibt bewusst unverändert, damit bereits eingebaute Modelle nicht doppelt korrigiert werden.
 
 ## Ego-Modell und Viewmodel-Kamera
 

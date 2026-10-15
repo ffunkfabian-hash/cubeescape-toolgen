@@ -588,3 +588,25 @@ class SmallHelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ImportYawTests(unittest.TestCase):
+    def test_documented_yaw_is_a_half_turn(self):
+        self.assertEqual(ge.FBX_IMPORT_YAW_DEGREES, 180)
+
+    def test_half_turn_maps_the_imported_anchor_back_to_the_contract(self):
+        muzzle = ge.unity_position([0.0, -.4, .05])             # Blender front -Y -> Unity +Z
+        self.assertGreater(muzzle[2], 0)
+        imported = [-muzzle[0] + 0.0, muzzle[1], -muzzle[2] + 0.0]   # measured: anchors arrive at (-x, y, -z)
+        fixed = ge.import_yaw_correction(imported)
+        for got, want in zip(fixed, muzzle):
+            self.assertAlmostEqual(got, want, places=9)
+
+    def test_correction_is_its_own_inverse_at_180(self):
+        p = [.1, .2, .3]
+        back = ge.import_yaw_correction(ge.import_yaw_correction(p))
+        for got, want in zip(back, p):
+            self.assertAlmostEqual(got, want, places=9)
+
+    def test_contract_source_names_the_yaw(self):
+        self.assertIn('"export_yaw_degrees": FBX_IMPORT_YAW_DEGREES', Path(ge.__file__).read_text())

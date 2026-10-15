@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.6.3 – Sightline (15.10.2026)
+
+Doku-/Vertragspatch: die 180°-Drehung beim Unity-Import (Achsenfund aus dem Cube-Escape-Einbau).
+
+- `docs/UNITY_EINBAU.md`: Abschnitt „Achsen und die 180°-Drehung“ (Befund, betroffene Anker, Korrektur durch den Einbau, nie doppelt).
+- Vertrag: `axes.fbx.export_yaw_degrees` (180) und `export_yaw_note`; reine Dokumentation, Anker- und Modellwerte unverändert.
+- Test: `ImportYawTests` (Anker (−x, y, −z) wird durch die Halbdrehung auf den Vertragswert zurückgeführt).
+- Generator, Modelle und Pipeline unverändert; kein Blender-Volllauf.
+
 ## 0.6.2 – Sightline (15.10.2026)
 
 Werkzeug-/Doku-Patch: gemeinsamer Standard der vier Repos.
