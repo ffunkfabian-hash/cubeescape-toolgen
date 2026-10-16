@@ -41,9 +41,12 @@
     {"suffix": "Inspect_B", "motion": "inspect_b", "length": 96, "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon"],
      "reticle_free": false, "interruptible": true, "events": []},
     {"suffix": "Reload", "motion": "reload", "length": "reload_frames", "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon"],
-     "reticle_free": false, "interruptible": true, "events": [{"name": "MagOut", "at": "reload.out_at"}, {"name": "MagIn", "at": "reload.in_at"}, {"name": "Ready", "at": 1.0}]}
+     "reticle_free": false, "interruptible": true, "events": [{"name": "MagOut", "at": "reload.out_at"}, {"name": "MagIn", "at": "reload.in_at"}, {"name": "Ready", "at": 1.0}]},
+    {"suffix": "Charge", "motion": "charge", "length": "charge.frames", "loop": true, "from": "rest", "to": "rest", "kinds": ["weapon"],
+     "tools": ["fusion_rifle"], "reticle_free": true, "interruptible": true, "events": [{"name": "ChargeCycle", "at": 0.0}]}
   ],
   "defaults": {
+    "fingers": {"trigger_deg": 10, "trigger_lift_frames": 2, "trigger_return_frames": 4, "regrip_deg": 24, "regrip_ramp": 0.06},
     "weight": 1.0,
     "sprint_in_frames": 8,
     "sprint_out_frames": 8,
@@ -139,6 +142,7 @@
       "lowered": {"twist_deg": 8.333333, "pitch_deg": 1, "right_m": -0.02}
     },
     "fusion_rifle": {
+      "charge": {"frames": 18, "tremor_deg": 0.18, "tremor_cycles": 6, "back_m": 0.002, "spin": {"node": "Anim_Coil", "axis": 1, "degrees": 360}},
       "fire_cooldown_s": 1.5,
       "fire_end_frame": 97,
       "weight": 1.2,

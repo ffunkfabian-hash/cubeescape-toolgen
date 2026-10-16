@@ -90,7 +90,9 @@ def render_markdown(data, result):
     by_suffix = {}
     for tool_id, item in result.items():
         by_suffix[tool_id] = {c["suffix"]: c for c in item["clips"]}
-    suffixes = [c["suffix"] for c in result[WEAPON_ORDER[0]]["clips"]]
+    suffixes = []
+    for tool_id in (*WEAPON_ORDER, *TOOL_ORDER):          # every suffix once (Charge: fusion rifle only)
+        suffixes += [c["suffix"] for c in result[tool_id]["clips"] if c["suffix"] not in suffixes]
     suffixes = ["Use", *suffixes]
     for suffix in suffixes:
         exemplar = next((by_suffix[x][suffix] for x in (*WEAPON_ORDER, *TOOL_ORDER) if suffix in by_suffix[x]), None)

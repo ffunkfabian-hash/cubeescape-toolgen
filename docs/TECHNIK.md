@@ -444,6 +444,18 @@ Zulieferung T1, T2 und T6 für Cube Escape 0.66 „Deadeye“ (`Docs/FIRST_PERSO
   Augenabstände (0,10–0,80 m, 5 mm Schritt), in dem der Bildausschnitt hält (`eye_distance_range_m`). Verbindlich ist: Visier auf
   der Linie, Anker im Vertrag, ein solcher Bereich existiert. Ob der Profilabstand selbst hält (`ads.passed`), ist ein Befund für
   Cube Escape (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen), kein Abbruch.
+- **Finger (T5).** Pose-Werte `trigger` und `regrip` (`ego_clips.py`, Daten `defaults.fingers` in `data/ego_clips.json`): in Fire und
+  AimFire hebt der Zeigefinger der Griffhand (`Fingers_R_0`, oberste Reihe am Abzug) nach dem Schuss um `trigger_deg` (10°) ab und legt sich
+  wieder an (2 Bilder hoch, 4 zurück); in Reload öffnen sich die drei Finger der Stützhand um `regrip_deg` (24°), während sie den
+  Handschutz loslässt, und schließen sich beim Nachfassen (`regrip_ramp` um das `detached`-Fenster; Pistole: Stützhand bleibt am Griff,
+  daher nur der Abzugfinger). Drehung um das Fingergelenk (lokal Z, Öffnen wie die Zugfinger des Bogens); jedes Clipende in Ruhe.
+  Animierte Fingerknoten werden eigene Renderer im Spielmodell (Fusionsgewehr 12, Grenze 14).
+- **Charge (T3).** Das Fusionsgewehr hat den Zustands-Loop `FusionRifle_Charge` (18 Bilder, `classes.fusion_rifle.charge`): feines Zittern
+  ganzer Perioden, die Spule `Anim_Coil` dreht je Schleife einmal (eine volle Drehung ist die Ruhematrix), Ruhepose an beiden Enden, Ereignis
+  `ChargeCycle` bei Bild 0 (je Schleife). Er steht als letzter Clip auf der Zeitleiste, die Framebereiche der übrigen Clips bleiben gleich
+  (Test). Clips nur einzelner Waffen nennt `data/ego_clips.json` mit `tools`.
+- **Clip-Liste.** Wurzeleigenschaft `ce_action_clips` (JSON-Liste: Use, dann die Ego-Clips in Zeitleistenreihenfolge) neben dem
+  bisherigen `ce_action_clip`.
 
 ## Cache und Worker
 

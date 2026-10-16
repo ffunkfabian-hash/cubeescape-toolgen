@@ -187,7 +187,12 @@ alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
 - **`hold`:** neu `sight_socket` (`Socket_Sight`), `sight_kind` (`iron`, `reflex`, `holo`, `scope`, `energy`), `eye_socket` (`Socket_Eye` oder
   null), `ads_eye_distance_m` (der Augenabstand, mit dem Toolgen die Zielpose prüft) und `sight_note`.
 - **Ereignisse:** `clips[0].events` des Use-Clips enthält `Fire` am Schussbild (= `fire_frame` in `data/viewmodels.json`; Bild 14,
-  Fusionsgewehr 46; `seconds` ab Clipstart). Fire/AimFire der Ego-Clips nennen neben `Shot` das gleichbedeutende `Fire` (Bild 0).
+  Fusionsgewehr 46; `seconds` ab Clipstart). Fire/AimFire der Ego-Clips nennen neben `Shot` das gleichbedeutende `Fire` (Bild 0). Achtung Versatz: die Ego-Clips Fire/AimFire beginnen ein Bild vor dem Schussbild des Use-Clips (`fire_frame` − 1, Rückstoßbeginn), ihr `Fire` bei Bild 0 entspricht also Use-Bild 13 (Fusion 45), nicht 14 – wie `Shot` seit 0.9.0.
+- **Finger:** `Fingers_R_0` (Abzugfinger; Fire/AimFire) und bei den Gewehren `Fingers_L_0…2` (Nachfassen in Reload) sind animierte Knoten
+  (`animated_nodes`, eigene Renderer); im Use-Clip stehen sie in Ruhe.
+- **Charge:** `FusionRifle_Charge` (Loop, `state` `Charge`, rest → rest, Ereignis `ChargeCycle` je Schleife) liegt als letzter Clip in der
+  Clips-Datei; Ablauf im Spiel: Charge schleifen, solange geladen wird, dann `FusionRifle_Fire` (Schnitt ohne Überblendung, beide in `rest`).
+- **Clip-Liste:** Wurzeleigenschaft `ce_action_clips` (JSON-Liste aller Clipnamen); `ce_action_clip` bleibt `<Name>_Use`.
 - **Zielpose:** `qa_game_fps.json` › `ads`: Ruhepose starr so verschoben, dass `Socket_Sight` bei `ads_eye_distance_m` auf der
   Kameraachse liegt (`frame_matrix_blender`), Bildausschnitt je 16:9/16:10, `eye_distance_range_m` = Abstände, bei denen drei Greiffinger
   und Daumen beider Hände im Bild und die Griffarm-Unterarmhälfte draußen bleiben.

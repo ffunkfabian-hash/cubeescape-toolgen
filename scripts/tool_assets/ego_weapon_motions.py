@@ -97,6 +97,10 @@ def reload(u, n, p):
         # Return the hand before reattaching; there is no offset outside this explicit time window.
         result["detached"] = release < t < attach
         result["support"] = _offset(block["reach_m"], reach)
+        # Re-grip (T5): the support fingers open as the hand lets go and close again as it grips (0 at both ends).
+        open_for = p["fingers"]["regrip_ramp"]
+        result["regrip"] = envelope(t, ((0, 0), (max(release - open_for, 0), 0), (release + open_for, 1),
+                                        (attach - open_for, 1), (min(attach + open_for, 1), 0), (1, 0)))
         if style == "shells":
             for axis, value in _offset(block["stroke_m"], travel).items():
                 result["support"][axis] += value

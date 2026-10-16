@@ -10,7 +10,10 @@ top tilts left by turning about the grip forearm's axis (pronation: the wrist do
 ``right``, ``up``, ``back`` (towards the player) in metres; ``aim`` 0..1 blends towards the aim-down-sights transform
 first_person.py derives from the geometry (sight on the screen centre); ``follow`` 0..1 moves the shoulders with the
 weapon (body sway, keeps wrists relaxed); ``support`` offsets the support hand (camera axes, metres) while
-``detached`` releases it from Socket_SupportHand; ``part`` moves the reload part (tool axes, metres/degrees).
+``detached`` releases it from Socket_SupportHand; ``part`` moves the reload part (tool axes, metres/degrees);
+``trigger`` 0..1 lifts the grip hand's index finger off the trigger after the shot (``fingers.trigger_deg``) and
+``regrip`` 0..1 opens the support fingers while the support hand lets go and grips again (``fingers.regrip_deg``);
+``spin`` 0..1 turns the charge part once (``charge.spin``, the fusion rifle's coil in Charge).
 """
 import json
 import math
@@ -82,6 +85,8 @@ def clip_list(data, tool, motion=None):
     for entry in data["clips"]:
         if kind not in entry["kinds"] or (entry["motion"] in ("fire", "aim_fire") and not motion):
             continue
+        if "tools" in entry and tool["id"] not in entry["tools"]:
+            continue                           # clip of a few weapons only (Charge: fusion rifle)
         length = entry["length"] if isinstance(entry["length"], int) else lookup(params, entry["length"])
         assert length >= 2, (tool["id"], entry["suffix"], length)
         events = []
@@ -109,7 +114,7 @@ def clip_at(clips, frame):
 # ------------------------------------------------------------------------------------------------- poses
 def pose(**values):
     result = {axis: 0.0 for axis in AXES}
-    result.update(aim=0.0, follow=0.0, support=None, detached=False, part=None)
+    result.update(aim=0.0, follow=0.0, support=None, detached=False, part=None, trigger=0.0, regrip=0.0, spin=0.0)
     result.update(values)
     return result
 
@@ -129,7 +134,8 @@ def added(*poses):
     for item in poses:
         for axis in AXES:
             result[axis] += item[axis]
-        result["aim"] = max(result["aim"], item["aim"])
+        for key in ("aim", "trigger", "regrip", "spin"):
+            result[key] = max(result[key], item[key])
         result["follow"] = max(result["follow"], item["follow"])
         for key in ("support", "part"):
             if item[key] is not None:
@@ -190,8 +196,15 @@ def recoil(u, p, scale=1.0):
                 back=motion["kick_m"] * impulse, up=.004 * impulse)
 
 
+def trigger(u, n, p):
+    """Index finger of the grip hand: rests on the trigger at the shot (clip start), lifts to reset and settles again."""
+    block = p["fingers"]
+    lifted = min(block["trigger_lift_frames"], n / 3)
+    return envelope(u, ((0, 0), (lifted, 1), (min(lifted + block["trigger_return_frames"], n * .8), 0), (n, 0)))
+
+
 def fire(u, n, p):
-    return recoil(u, p)
+    return dict(recoil(u, p), trigger=trigger(u, n, p))
 
 
 def aim_follow(p, amount):
@@ -210,7 +223,17 @@ def aim_idle(u, n, p):
 
 
 def aim_fire(u, n, p):
-    return dict(recoil(u, p, p["ads"]["recoil_scale"]), aim=1.0, follow=aim_follow(p, 1))
+    return dict(recoil(u, p, p["ads"]["recoil_scale"]), aim=1.0, follow=aim_follow(p, 1), trigger=trigger(u, n, p))
+
+
+def charge(u, n, p):
+    """Charging state of a charge weapon (fusion rifle, loop): a fine tremor of whole cycles and one turn of the charge
+    part per loop; rest pose at both ends, so Charge loops seamlessly and cuts into Fire."""
+    t = u / n
+    block = p["charge"]
+    cycles = block["tremor_cycles"]
+    return pose(pitch=block["tremor_deg"] * wave(t, cycles), yaw=block["tremor_deg"] * .6 * wave(t, cycles + 1),
+                back=block["back_m"] * bump(t, cycles), spin=t)
 
 
 def aim_out(u, n, p):
@@ -236,7 +259,7 @@ def holster(u, n, p):
 
 MOTIONS = {"idle": idle, "walk": walk, "sprint_in": sprint_in, "sprint": sprint, "sprint_out": sprint_out,
            "fire": fire, "aim_in": aim_in, "aim_idle": aim_idle, "aim_fire": aim_fire, "aim_out": aim_out,
-           "draw": draw, "holster": holster, "inspect_a": ego_weapon_motions.inspect_a,
+           "draw": draw, "holster": holster, "charge": charge, "inspect_a": ego_weapon_motions.inspect_a,
            "inspect_b": ego_weapon_motions.inspect_b, "reload": ego_weapon_motions.reload}
 
 
@@ -257,7 +280,7 @@ def pose_error(a, b):
     """Largest difference of two poses (degrees and millimetres on one scale, plus aim/follow)."""
     values = [abs(a[axis] - b[axis]) for axis in ("pitch", "yaw", "roll", "twist")]
     values += [abs(a[axis] - b[axis]) * 1000 for axis in ("right", "up", "back")]
-    values += [abs(a["aim"] - b["aim"]), abs(a["follow"] - b["follow"])]
+    values += [abs(a[key] - b[key]) for key in ("aim", "follow", "trigger", "regrip")]
     return max(values)
 
 

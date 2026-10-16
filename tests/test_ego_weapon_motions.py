@@ -29,7 +29,7 @@ class WeaponMotionTests(unittest.TestCase):
     def test_all_clip_boundaries_and_loop_seams(self):
         for tool in TOOLS:
             clips, params = clips_for(tool)
-            self.assertEqual(15, len(clips))
+            self.assertEqual(16 if tool == "fusion_rifle" else 15, len(clips))
             for clip in clips:
                 with self.subTest(tool=tool, clip=clip["suffix"]):
                     first = ego.pose_at(clip, clip["frame_start"], params)

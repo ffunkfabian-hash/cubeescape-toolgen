@@ -25,7 +25,8 @@ class EgoClipTableTests(unittest.TestCase):
 
     def test_clip_counts_by_kind(self):
         for tool_id in ego_clip_table.WEAPON_ORDER:
-            self.assertEqual(len(self.tools[tool_id]["clips"]), 15, tool_id)
+            # 0.11.0: the fusion rifle adds its Charge loop (T3)
+            self.assertEqual(len(self.tools[tool_id]["clips"]), 16 if tool_id == "fusion_rifle" else 15, tool_id)
         for tool_id in ego_clip_table.TOOL_ORDER:
             self.assertEqual(len(self.tools[tool_id]["clips"]), 8, tool_id)
 
@@ -33,7 +34,8 @@ class EgoClipTableTests(unittest.TestCase):
         expected = {"Idle", "Walk", "Sprint", "AimIdle"}
         for tool_id, item in self.tools.items():
             loops = {clip["suffix"] for clip in item["clips"] if clip["loop"]}
-            self.assertEqual(loops, expected if tool_id in ego_clip_table.WEAPON_ORDER else expected - {"AimIdle"}, tool_id)
+            wanted = expected if tool_id in ego_clip_table.WEAPON_ORDER else expected - {"AimIdle"}
+            self.assertEqual(loops, wanted | ({"Charge"} if tool_id == "fusion_rifle" else set()), tool_id)
 
 
 if __name__ == "__main__":

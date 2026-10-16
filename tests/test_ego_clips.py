@@ -27,7 +27,7 @@ class ClipListTests(unittest.TestCase):
         for tool_id in TOOLS:
             clips, _ = clips_of(tool_id)
             suffixes = [clip["suffix"] for clip in clips]
-            self.assertEqual(15 if tool_id in WEAPONS else 8, len(clips), tool_id)
+            self.assertEqual((16 if tool_id == "fusion_rifle" else 15) if tool_id in WEAPONS else 8, len(clips), tool_id)
             self.assertEqual(len(set(suffixes)), len(suffixes), tool_id)
             for wanted in ("Idle", "Walk", "Sprint", "Draw", "Holster", "Inspect_A"):
                 self.assertIn(wanted, suffixes, tool_id)
@@ -57,7 +57,46 @@ class ClipListTests(unittest.TestCase):
     def test_only_idle_walk_sprint_and_aim_idle_loop(self):
         for tool_id in TOOLS:
             loops = {clip["suffix"] for clip in clips_of(tool_id)[0] if clip["loop"]}
-            self.assertEqual({"Idle", "Walk", "Sprint"} | ({"AimIdle"} if tool_id in WEAPONS else set()), loops)
+            # Charge (fusion rifle, 0.11.0): a state like Idle, started and stopped by Cube Escape (task of 16.10.2026)
+            self.assertEqual({"Idle", "Walk", "Sprint"} | ({"AimIdle"} if tool_id in WEAPONS else set())
+                             | ({"Charge"} if tool_id == "fusion_rifle" else set()), loops)
+
+    def test_charge_is_last_so_earlier_frame_ranges_stay(self):
+        data = ego_clips.load()
+        for tool_id in WEAPONS:
+            clips, _ = clips_of(tool_id)
+            if tool_id != "fusion_rifle":
+                self.assertNotIn("Charge", [clip["suffix"] for clip in clips])
+                continue
+            self.assertEqual("Charge", clips[-1]["suffix"])
+            without = dict(data, clips=[entry for entry in data["clips"] if entry["suffix"] != "Charge"])
+            before, _ = ego_clips.clip_list(without, TOOLS[tool_id], PROFILES[tool_id]["motion"])
+            self.assertEqual([(c["name"], c["frame_start"], c["frame_end"]) for c in before],
+                             [(c["name"], c["frame_start"], c["frame_end"]) for c in clips[:-1]])
+            charge = clips[-1]
+            self.assertEqual(["ChargeCycle"], [event["name"] for event in charge["events"]])
+            params = ego_clips.class_params(data, tool_id, PROFILES[tool_id]["motion"])
+            self.assertEqual(1.0, ego_clips.pose_at(charge, charge["frame_end"], params)["spin"], "one coil turn per loop")
+
+    def test_fingers_move_and_rest_at_clip_ends(self):
+        """T5: the trigger finger lifts in Fire/AimFire, the support fingers open in Reload (support hand released)."""
+        for tool_id in WEAPONS:
+            clips, params = clips_of(tool_id)
+            for clip in clips:
+                values = [ego_clips.pose_at(clip, frame, params) for frame in range(clip["frame_start"], clip["frame_end"] + 1)]
+                with self.subTest(tool=tool_id, clip=clip["suffix"]):
+                    for key in ("trigger", "regrip"):
+                        self.assertEqual(0.0, values[0][key])
+                        self.assertEqual(0.0, values[-1][key])
+                        self.assertTrue(all(0 <= value[key] <= 1 for value in values))
+                    trigger = max(value["trigger"] for value in values)
+                    regrip = max(value["regrip"] for value in values)
+                    self.assertEqual(clip["motion"] in ("fire", "aim_fire"), trigger > .99)
+                    self.assertEqual(clip["motion"] == "reload" and params["reload"]["support"], regrip > .99)
+                    if regrip:          # open only around the release window, closed while gripping the handguard
+                        for value in values:
+                            if value["regrip"] > 0:
+                                self.assertTrue(value["detached"] or value["support"] is not None)
 
     def test_fire_follows_the_recoil_profile(self):
         for tool_id in WEAPONS:

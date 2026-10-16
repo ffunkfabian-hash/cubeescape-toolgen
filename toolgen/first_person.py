@@ -631,6 +631,20 @@ def build(directory, spec, profile):
     previous_euler = Euler((0, 0, 0), "XYZ")
     clip = spec.get("fps_clip") or spec["clip"]
     root["ce_action_clip"] = clip; root["ce_autoplay"] = False; root["ce_loop"] = False
+    # Every clip of the model (T3): the Use clip, then the ego clips in timeline order (JSON list; ce_action_clip stays).
+    root["ce_action_clips"] = json.dumps([clip, *(entry["name"] for entry in clips)])
+    # Finger nodes (T5): the grip hand's index finger lifts off the trigger after the shot (Fire, AimFire), the support
+    # fingers open and close while the support hand lets go in Reload. Opening turns about the finger's hinge (local Z),
+    # the same direction as the bow's draw fingers open; the rest pose stays unchanged (zero at every clip end).
+    finger_params = clip_params.get("fingers", {})
+    finger_nodes = []
+    if profile.get("motion") and tool != "bow" and clips:
+        finger_nodes.append((scene.objects[f"Fingers_{grip_side}_0"], "trigger", -1 if grip_side == "R" else 1))
+        if support_hand is not None and clip_params.get("reload", {}).get("support"):
+            finger_nodes += [(scene.objects[f"Fingers_L_{index}"], "regrip", 1) for index in range(GRIPPING_FINGERS)]
+    finger_rest = {obj.name: obj.rotation_euler.z for obj, _, _ in finger_nodes}
+    spin = clip_params.get("charge", {}).get("spin") if any(entry["motion"] == "charge" for entry in clips) else None
+    spin_node = scene.objects[spin["node"]] if spin else None
     root["ce_hand_style"] = "Robogen Mitt / articulated FPS, three fingers and thumb"
     # Exported as glTF extras / FBX user properties so the game can adopt the viewmodel camera.
     root["ce_viewmodel_vertical_fov_degrees"] = settings["vertical_fov_degrees"]
@@ -686,6 +700,14 @@ def build(directory, spec, profile):
             if not ego:
                 part.location = part_rest
             part.keyframe_insert(data_path="location", frame=frame)
+        for finger, kind, sign in finger_nodes:
+            amount = values[kind] if ego else 0.0
+            finger.rotation_euler.z = finger_rest[finger.name] - sign * math.radians(finger_params[kind + "_deg"] * amount)
+            finger.keyframe_insert(data_path="rotation_euler", index=2, frame=frame)
+        if spin_node is not None and ego and ego["motion"] == "charge":
+            # one turn of the coil per Charge loop (rest 0 of the Use clip; a full turn is the rest matrix again)
+            spin_node.rotation_euler[spin["axis"]] = math.radians(spin["degrees"] * values["spin"])
+            spin_node.keyframe_insert(data_path="rotation_euler", index=spin["axis"], frame=frame)
         if ego:
             natural = natural_arms(ego, values)
             for rig in arms:
@@ -729,6 +751,11 @@ def build(directory, spec, profile):
                         clip_records[ego["name"]]["elbow_off_palm_side"] = True
     for rig, shoulder, pole in zip(arms, base_shoulders, base_poles):
         rig["shoulder"], rig["pole"] = shoulder, pole
+    if spin_node is not None:                  # the Charge keys interpolate linearly; the Use clip's keys stay as they are
+        for curve in curves_of(spin_node):
+            for key in curve.keyframe_points:
+                if key.co.x > 97:
+                    key.interpolation = "LINEAR"
     if clips:
         owners = [root, *root.children_recursive, *(obj.data.shape_keys for obj in root.children_recursive
                                                     if obj.type == "MESH" and obj.data.shape_keys)]

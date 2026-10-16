@@ -41,6 +41,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
 | Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | — / — / — / — | Nein | rest → rest | Nein | Ja | — |
 | Reload | 42 | 48 | 56 | 56 | 56 | 64 | 60 | 64 | 78 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
+| Charge | — | — | — | — | — | — | 18 | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
 
 ## Clips je Werkzeug und Waffe
 
@@ -190,6 +191,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `FusionRifle_Inspect_A` | 475–571 | 4.00 | — |
 | `FusionRifle_Inspect_B` | 575–671 | 4.00 | — |
 | `FusionRifle_Reload` | 675–735 | 2.50 | MagOut 20, MagIn 42, Ready 60 |
+| `FusionRifle_Charge` | 739–757 | 0.75 | ChargeCycle 0 |
 
 ### Scharfschützengewehr (`sniper_rifle`)
 

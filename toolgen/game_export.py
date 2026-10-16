@@ -1306,13 +1306,13 @@ def check_ads(checks, work, contract, tool):
     # profile's distance (hold.eye_distance_m) keeps it is reported (ads.passed) for Cube Escape to tune, not binding.
     centred = bool(ads) and all(max(abs(value - .5) for value in entry["sight_screen"]) <= .002
                                 for entry in ads["configurations"])
-    on_line = bool(qa.get("ego_clips", {}).get("sight_socket", {}).get("ok"))
+    on_line = bool((qa.get("ego_clips", {}).get("sight_socket") or {}).get("ok"))
     checks.add("ads_target_pose", centred and on_line and bool(ads["eye_distance_range_m"]),
                eye_distance_m=hold["eye_distance_m"], profile_distance_passed=bool(ads) and ads["passed"],
                eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
                failures_at_profile_distance=(ads or {}).get("failures", ["qa_viewmodel.json has no ads_target"]),
                sight_socket_on_aim_line=on_line)
-    return ads and dict(ads, sight_kind=hold["sight_kind"], sight_socket_on_aim_line=qa["ego_clips"].get("sight_socket"),
+    return ads and dict(ads, sight_kind=hold["sight_kind"], sight_socket_on_aim_line=qa.get("ego_clips", {}).get("sight_socket"),
                         source="qa_viewmodel.json ads_target (authored model; the game model keeps the same anchors and "
                                "meshes within viewmodel_framing's tolerance)")
 

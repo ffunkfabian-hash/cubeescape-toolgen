@@ -17,7 +17,7 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
   Dreiecksbudgets stehen in `data/game_budget.json` (nicht im Generator verstecken).
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips (Use, Fire, Draw …) laufen einmal und kehren in die Ruhepose zurück; Loop ist
-  eine Viewer-Prüfoption. Ausnahme (Nutzer, 16.10.2026): Ego-Zustandsclips Idle, Walk, Sprint, AimIdle (0.9.0, und was später
+  eine Viewer-Prüfoption. Ausnahme (Nutzer, 16.10.2026): Ego-Zustandsclips Idle, Walk, Sprint, AimIdle (0.9.0), FusionRifle_Charge (0.11.0, und was später
   ausdrücklich als Zustand gilt) dürfen Schleifen sein, weil Cube Escape sie per Zustandslogik startet und stoppt; Autoplay bleibt aus.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
 
