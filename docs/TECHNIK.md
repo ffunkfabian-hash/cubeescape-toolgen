@@ -412,11 +412,44 @@ Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
   vorübergehend auf die Ego-Zeitleiste). Teile, die die Clips nicht selbst stellen (Mechanik, Leuchten), bekommen in Fire/AimFire die Werte des Use-Clips ab dem Schuss (Schlitten, Verschluss, Pumpe; `fire_end_frame` verlängert Fire bis zur Ruhe), sonst Ruhekeys an jedem Clipende (`clip_keys`); ohne Keys im Clipbereich ließe glTF sie
   fallen. Reimport beider Clips-Dateien an Clipenden, -mitten und Events; Bildausschnitt des reduzierten Modells an denselben Frames.
 
+## Oberflächenkarten (0.11.0 Primer, Vertrag 4)
+
+UV1 und Maskenkarten für den Masken-Modus von Cube Escape 0.71; Einbau und Belegung: [UNITY_EINBAU](UNITY_EINBAU.md) › Maskenkarten.
+Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (Stufe), Tabelle Slot → Kanal in `data/game_palette.json` › `channel_map`.
+
+- UV1 (`game_export.py`, ab Vertrag 4, vor dem Zusammenführen): je Modell alle Teile im Mehrobjekt-Editmodus, `smart_project` (66°),
+  `average_islands_scale`, `pack_islands` ohne Drehung (FRACTION 0,008, konkav), danach in [16/1024, 1] geschoben; Teile mit
+  `FPS_*`-Materialien (Hände, Arme) bleiben auf (0, 0). Gemessen wird die größte Drehung je Fläche beim Packen (Pistole 0,013°, Gleitkomma der
+  Skalierung; Grenze 0,1°). Das Ego-Modell öffnet zuerst das Weltmodell, macht dort dieselbe UV1 und überträgt sie je Teil (Name, Schleifenzahl,
+  Flächenaufbau); fehlt ein Zwilling, bekommt es ein eigenes Atlas (`shared_with_world` false, `parts_without_world_twin`). `game_fps` liest
+  deshalb `<Asset>.blend` mit.
+- Dezimierung: Kollaps auf das Budget und LOD1 behält UV1, faltet aber Dreiecke (Portalwerfer 250 auf LOD0) und legt Inselränder über die
+  Insel selbst. `untangle` schiebt danach die betroffenen UV-Ecken (Ecke = Vertex + UV in der Insel) auf den Mittelpunkt ihrer Nachbarn, einen
+  Nachbarn oder die halbe Strecke, wenn das Falten bzw. die Überlappungsfläche (Polygon-Clipping) um die Ecke sinkt; feste Reihenfolge.
+  Ein Zug auf einen Nachbarn hinterlässt ein Dreieck ohne Fläche (keine Texel, keine Überlappung).
+- QA im Spiel-Export (`qa_game*.json`): `uv1_layers` (UVMap Index 0 und Render-Map, UV1 Index 1), `uv1_lod0` (Bereich, Überlappung 0 bei 2048,
+  Abstand ≥ 4 px bei 1024, Ecke frei), `uv1_lod1` (wie LOD0, Überlappung nur berichtet), `uv1_source` (Drehung, Hash, Übertragung,
+  `decimation_folds`); Reimport: UV1 auf allen Renderern, im GLB `TEXCOORD_1` und `TANGENT` je Primitive.
+- Stufe `surface_bake` (standard/full, nach `game_fps`, `heavy`, `min_contract` 4): je Modell LOD0 bei Frame 1, Hände entfernt; Gewichte als
+  eigenes Raster (Texelmitte, erstes Dreieck gewinnt, 8 Schritte Dilatation in fester Nachbarreihenfolge); Cycles auf der CPU mit Seed 0:
+  AO-Bake (Welt 16, Ego 32 Samples, 0,08 m), EMIT-Bake für Kante/oben/Höhe und NORMAL-Bake (Tangentenraum UV1) mit je 4 Samples. Kante =
+  12 × (1 − Bevel-Normale · Schattierungsnormale), Bevel 4 mm, mal Konvexität aus lokalem AO (16 mm; unter 0,35 Falte = 0, über 0,7 voll).
+  `render_init`-Handler von `run_asset.py` werden geleert, damit Samples und Gerät der Teststufe nicht greifen (standard = full).
+  PNG-Schreiber eigen (`png_encode`: Filter None/Sub/Up, zlib 9, nur IHDR/IDAT/IEND). Laufzeit Pistole: Welt 5 s, Ego 42 s (AO 31 s), 4 Threads.
+- QA `qa_surface.json`: `channel_map`, `uv1_shared` (Hash der Welt-UV1 in beiden Exporten gleich), je Modell `uv1_<variant>` (Layout wie oben)
+  und `maps_<variant>`: Gewichte one-hot 255 in den Inseln, nichts jenseits der Dilatation, jeder vorkommende Kanal hat Texel, AO-Mittel
+  0,3–0,95, Kantenanteil (G > 0,5) 2–25 %, Satz ≤ 2,5 MB. Unabhängige Abnahme aus GLB und PNG: `scripts/verify_surface.py` (Blender).
+- Cache: `surface_bake` liest die beiden Spielmodelle, Verträge und QA-Dateien; der Bake-Schlüssel im Vertrag (`surface.bake.key`) hasht
+  Positionen, Topologie, UV0/UV1, Eckennormalen, Slots, `channel_map`, Einstellungen und Blender-Version (Tangenten folgen daraus).
+  Neue Stufenfelder (`heavy`, `min_contract`) stehen nur gesetzt in der Deklaration, damit bestehende Stufen ihren Schlüssel behalten.
+- Ältere Abnehmer: `--contract 3` (und 2, 1) erzeugt weder UV1 noch GLB-Tangenten noch die Stufe `surface_bake`.
+
 ## Cache und Worker
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer
 Blender oder Python, Argumente, gelesene Dateien, zusätzliche Quellen, Bilder ja/nein, Stufen, QA-Dateien, Viewer-Varianten):
-Welt, FPS, Animation, Animations-GIF, Ego-Hände, Ego-Reimport, Spiel-Export; dazu je Viewer-Variante ein Export (`fps_game` und `game` hängen an ihren Spiel-Stufen) und in
+Welt, FPS, Animation, Animations-GIF, Ego-Hände, Ego-Reimport, Spiel-Export (Welt, Ego), Oberflächenkarten (`surface_bake`, standard/full, ab
+Vertrag 4; ein Bau wartet auf die gemeinsame Sperre `heavy_lock`); dazu je Viewer-Variante ein Export (`fps_game` und `game` hängen an ihren Spiel-Stufen) und in
 Standard/Voll die Reimport-Prüfungen. Eine neue Stufe ist ein Eintrag; Manifest, Cache und Viewer-Variante folgen daraus.
 
 **Schlüssel.** Jede Stufe hat einen Inhaltsschlüssel aus: Stufendeklaration, Werkzeugeintrag, Blender-Version, Fingerabdruck der

@@ -6,6 +6,8 @@ cd "$TASK_ROOT"
 run_checks() {
     python3 -m unittest discover -s tests
     python3 scripts/verify_output.py "$TASK_OUT"
+    BLENDER_BIN="$(python3 -c 'import sys; sys.path.insert(0, "toolgen"); from build_toolset import find_blender; print(find_blender(None))')"
+    "$BLENDER_BIN" --background --factory-startup --python-exit-code 1 --python scripts/verify_surface.py -- "$TASK_OUT"
     bash viewer/build.sh "$TASK_OUT"
     bash viewer/test_viewer.sh "$TASK_OUT"
     python3 scripts/check_docs.py

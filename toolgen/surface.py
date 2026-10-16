@@ -582,7 +582,7 @@ def _ccw(triangle):
 def untangle(triangles, vertices, iterations=60):
     """Folds a collapse decimation leaves in UV1: triangles whose UV winding is against their island's. Each round tries,
     for every UV corner of a folded triangle (shared by vertex and UV inside the island), the mean of its UV neighbours,
-    each neighbour and the midpoints towards them, and keeps the first position with the fewest folds around it (fewer
+    each neighbour, the midpoints towards them and its foot point and mirror image on each opposite edge, and keeps the first position with the fewest folds around it (fewer
     than now). Moving onto a neighbour leaves a zero-area triangle (no texels), never an overlap. Fixed order, so the
     result is deterministic. Returns (new triangles, folds before, folds after)."""
     triangles = triangles.copy()
@@ -607,6 +607,18 @@ def untangle(triangles, vertices, iterations=60):
         member = (islands == island) & painted
         sign[member] = 1.0 if (areas[member] > 0).sum() >= (areas[member] < 0).sum() else -1.0
 
+    def reflections(k):
+        """k projected onto and mirrored over the opposite edge of each triangle around it (flattens or unfolds it)."""
+        found = []
+        for t in incident[k]:
+            a, b = [positions[i] for i in corner_ids[t] if i != k][:2]
+            edge = b - a
+            length = float(edge @ edge)
+            if length > 1e-20:
+                foot = a + edge * float((positions[k] - a) @ edge) / length
+                found += [foot, 2 * foot - positions[k]]
+        return found
+
     def folds(ids):
         return int(np.count_nonzero(signed_areas(positions[corner_ids[ids]]) * sign[ids] < -1e-14))
 
@@ -626,7 +638,7 @@ def untangle(triangles, vertices, iterations=60):
                 continue
             old = positions[k].copy()
             ring = positions[neighbours[k]]
-            candidates = [ring.mean(axis=0), *ring, *((ring + old) / 2)]
+            candidates = [ring.mean(axis=0), *ring, *((ring + old) / 2), *reflections(k)]
             best, best_folds = None, current
             for candidate in candidates:
                 positions[k] = candidate
@@ -637,8 +649,8 @@ def untangle(triangles, vertices, iterations=60):
             changed = changed or best is not None
         if not changed:
             break
-    # Second pass: overlaps without a fold (a decimated island border lying over the island itself). Same moves, scored by
-    # (folds, overlap area with the triangles nearby), until the overlap raster is clean.
+    # Second pass: overlaps the first left (a decimated island border lying over the island itself, folds that no single
+    # move undoes). Same moves, scored by the overlap area with the triangles nearby alone, until the raster is clean.
     def overlapping():
         tris = positions[corner_ids]
         counts = np.zeros((OVERLAP_RESOLUTION, OVERLAP_RESOLUTION), dtype=np.int16)
@@ -686,10 +698,10 @@ def untangle(triangles, vertices, iterations=60):
             old = positions[k].copy()
             ring = positions[neighbours[k]]
             best, best_score = None, current
-            for candidate in [ring.mean(axis=0), *ring, *((ring + old) / 2)]:
+            for candidate in [ring.mean(axis=0), *ring, *((ring + old) / 2), *reflections(k)]:
                 positions[k] = candidate
                 score = (folds(around), overlap_area(around))
-                if score[0] <= current[0] and score[1] < best_score[1] - 1e-15:
+                if score[1] < best_score[1] - 1e-15:
                     best, best_score = candidate.copy(), score
             positions[k] = old if best is None else best
             changed = changed or best is not None
