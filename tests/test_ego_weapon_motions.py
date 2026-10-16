@@ -77,7 +77,8 @@ class WeaponMotionTests(unittest.TestCase):
                 for u in range(clip["length"] + 1):
                     pose = ego.pose_at(clip, clip["frame_start"] + u, params)
                     with self.subTest(tool=tool, clip=clip["suffix"], frame=u):
-                        if clip["motion"] != "reload":
+                        # the pistol's cup hand stays on the grip while reloading (0.10.0: reload.support false)
+                        if clip["motion"] != "reload" or not params["reload"]["support"]:
                             self.assertFalse(pose["detached"])
                             self.assertEqual(0, offset_size(pose["support"]))
                         else:
@@ -89,7 +90,7 @@ class WeaponMotionTests(unittest.TestCase):
                             saw_release |= pose["detached"] and offset_size(pose["support"]) > .005
                         if clip["motion"] != "reload":
                             self.assertEqual(0, offset_size(pose["part"]))
-                if clip["motion"] == "reload":
+                if clip["motion"] == "reload" and params["reload"]["support"]:
                     self.assertTrue(saw_release)
 
     def test_reload_timing_windows_are_ordered(self):

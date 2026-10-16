@@ -184,8 +184,8 @@
       "support_socket": "Socket_SupportHand",
       "support_grip": "cup",
       "support_radius": [
-        0.015,
-        0.032
+        0.017,
+        0.036
       ],
       "grip_radius": [
         0.022,

@@ -406,7 +406,7 @@ Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
   `fire_cooldown_s` zeitgerafft (`fire_scale`, Abstimmung mit CE 0.66); Teile, die beim Schuss nicht ruhen (Aufladen des
   Fusionsgewehrs), bleiben in Fire in Ruhe.
 - Pistole beidhändig (0.10.0): `support_grip` `cup` in `data/viewmodels.json` – die linke Hand nimmt die Drehung des Griffankers
-  (plus `hand_rotation_degrees.L`) und `support_radius` [0,015, 0,032] legt ihre Finger vor die der rechten Hand; `arm_pose.L` relativ
+  (plus `hand_rotation_degrees.L`) und `support_radius` [0,017, 0,036] legt ihre Finger ohne Überschneidung vor die der rechten Hand; `arm_pose.L` relativ
   (Anstieg 18°, seitlich 10°). Die Pistolen-Clips nutzen kleinere Drehungen um den Unterarm (die linke Hand liegt nah am unteren Bildrand).
 - Spiel-Export (`game_export.py`, Vertrag 3): Clips-Datei `<Asset>_FPS_Game_Clips.fbx/.glb` (Szenenbereich und manuelle Aktionsbereiche
   vorübergehend auf die Ego-Zeitleiste). Teile, die die Clips nicht selbst stellen (Mechanik, Leuchten), bekommen in Fire/AimFire die Werte des Use-Clips ab dem Schuss (Schlitten, Verschluss, Pumpe; `fire_end_frame` verlängert Fire bis zur Ruhe), sonst Ruhekeys an jedem Clipende (`clip_keys`); ohne Keys im Clipbereich ließe glTF sie

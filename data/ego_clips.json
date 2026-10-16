@@ -71,7 +71,7 @@
       "reload_frames": 42,
       "sprint": {"twist_deg": 10, "pitch_deg": 2, "right_m": -0.035, "up_m": 0.004, "bob_up_m": 0.0025},
       "lowered": {"twist_deg": 9, "pitch_deg": 1, "right_m": -0.03, "up_m": 0.004},
-      "reload": {"support": true, "reach_m": [-0.01, 0.02, 0.04], "out_at": 0.28, "in_at": 0.64, "drop_m": [0, -0.085, 0.018], "pose": {"twist_deg": 8, "pitch_deg": 3, "right_m": -0.02}},
+      "reload": {"support": false, "out_at": 0.28, "in_at": 0.64, "drop_m": [0, -0.025, 0.0], "pose": {"twist_deg": 8, "pitch_deg": 3, "right_m": -0.02}},
       "inspect": {"a": {"twist_deg": 16, "up_m": 0.008}, "b": {"twist_deg": -19}}
     },
     "smg": {

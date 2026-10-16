@@ -10,9 +10,11 @@ rechte von links unten, linker Unterarm von links unten ([UNITY_EINBAU](docs/UNI
   Geometrie und Clips gleich). Mindestversion des Abnehmers: Cube Escape mit beidhändiger Pistolen-Haltung (CE nach 0.66); ältere Fassung:
   `git checkout 384f9e2 -- data/tools.json data/viewmodels.json scripts/tool_assets/weapon_designs.py` und neu erzeugen (384f9e2 = 0.9.0).
 - Ego: linkes Handgelenk in Ruhe 36,5°, in allen Clips höchstens 48,9° (rechts 52,1° aus 0.8.0), `Wrist_L` wie bei den Gewehren, Bildausschnitt
-  auch bei 1,7×; Nachladen mit der linken Hand; Pistolen-Clips (Sprint, Senken, Inspect, Zielen 8 Frames) dafür angepasst.
+  auch bei 1,7×, linke Finger ohne Überschneidung mit den rechten; beim Nachladen bleibt die linke Hand am Griff (das Magazin löst sich
+  nur 2,5 cm, sonst schwebte es neben der Hand); Pistolen-Clips (Sprint, Senken, Inspect, Zielen 8 Frames) dafür angepasst.
 - Prüfung: `./check` (183 Tests), `--tier standard` alle 13 grün, Wiederholung 13 Cache-Treffer, `verify_output.py` 430 Prüfungen, `--contract 1`
-  quick (Pistole). Codex nur Prüfung (`luna`): 5-h-Kontingent bei 25 % Rest, Umsetzung durch Claude.
+  quick (Pistole). Codex nur Prüfung (5-h-Kontingent bei 25 % Rest, Umsetzung durch Claude): `luna` 1 Befund (unzutreffend), `sol` nach
+  dem Reset 2 Befunde (Finger durchdrangen sich 2,9 mm, Magazin schwebte beim Nachladen), behoben.
 
 ## 0.9.0 – Cadence (16.10.2026)
 
