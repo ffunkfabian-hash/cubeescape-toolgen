@@ -119,7 +119,7 @@ als Wurzeleigenschaft `ce_weapon_element`.
 
 Jede Ego-Hand hat einen leeren Knoten `Wrist_R`/`Wrist_L` (Kind von `Hand_R`/`Hand_L`, `ce_role` `wrist`, in `nodes` des Vertrags,
 additiv, Format unverändert). Handgelenkwinkel wie Toolgens `wrist_bend` (`qa_viewmodel.json`): Winkel zwischen Ellbogen
-(Ursprung `LowerArm_<Seite>`) → `Wrist_<Seite>` und der Knöchelrichtung = lokal −Y von `Hand_<Seite>` in Blender, lokal +Z in Unity.
+(Ursprung `LowerArm_<Seite>`) → `Wrist_<Seite>` und der Knöchelrichtung = lokal −Y von `Hand_<Seite>`, in Blender wie im importierten Unity-Modell (gemessen in Cube Escape 0.65 mit `bakeAxisConversion`: rechts 43,5–50,3°, links 29,5–30,1°; +Z ergäbe 132–139°).
 Grenze 55°, Ziel 45° (Entscheidung des Nutzers, 16.10.2026).
 
 ## Ausrüstungs-Slots der Waffen (0.8.0, Vertrag 2)
