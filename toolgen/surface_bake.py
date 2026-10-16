@@ -265,8 +265,8 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
         "maps": {"resolution": settings["resolution"], **surface.map_names(model), "format": "PNG RGBA, 8 bit",
                  "color_space": "linear (import with sRGB off)", "rows": "PNG top row = v 1 (Unity texture orientation)",
                  "dilation_px": surface.DILATION_PX, "set_bytes": set_bytes,
-                 "import": "sRGB off, alphaIsTransparency off, no premultiply (W0.a carries Emission); Normal: OpenGL (Y+), "
-                           "flat 128,128,255",
+                 "import": "sRGB off, alphaIsTransparency off, no premultiply (W0.a carries Emission), wrapMode Clamp (the "
+                           "unpainted point (0, 0) must not filter across to the opposite edge); Normal: OpenGL (Y+), flat 128,128,255",
                  "applies_to": [model + ".fbx", model + ".glb", *clips],
                  "files": files},
         "fields": {"r": f"ambient occlusion, 1 = open (Cycles, {settings['ao_samples']} samples, {surface.AO_DISTANCE_M} m)",

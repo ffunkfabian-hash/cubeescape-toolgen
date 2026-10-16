@@ -204,7 +204,8 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
   | `Normal` (`_BumpMap`) | Tangentenraum UV1, OpenGL (Y+), flach 128,128,255 | | | |
 
   Gewichte one-hot 255 je Dreieck nach dem Kanal seines Slots, auf Nähten hart, jede Insel 8 px nach außen fortgesetzt (nächster Texel,
-  feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission).
+  feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission), `wrapMode` Clamp (der Punkt (0, 0) der Hände soll
+  nicht über den Rand filtern).
   Satz je Modell ≤ 2,5 MB (gemessen Pistole: Welt 0,7 MB, Ego 1,9 MB). Rauschen/Detail kommt nicht von Toolgen.
 - **`channel_map`** (Block `surface`): Slot → Kanal für jeden Slot des Modells. `MT_<Kanal>` folgt aus dem Namen; die Palettennamen aus
   `data/game_palette.json` › `channel_map`: `M_RobotBody_Matte` Primary, `M_RobotDark_Matte` Secondary, `M_HazardOrange_Matte` Accent,

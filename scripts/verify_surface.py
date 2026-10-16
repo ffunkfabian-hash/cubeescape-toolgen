@@ -156,6 +156,10 @@ def tangent_check(document, binary, name):
 
 def glb_layout_map(document, binary, block, model):
     rows = list(primitive_rows(document, binary, lod0_only=True))
+    # glTF splits vertices at UV0 seams, hard normals and material borders: join corners by position over the whole model
+    positions = np.concatenate([row["arrays"]["POSITION"] for row in rows]).astype(np.float64)
+    _, welded = np.unique(np.round(positions, 6), axis=0, return_inverse=True)
+    welded = welded.reshape(-1)
     faces, uvs, tri_values, labels = [], [], [], []
     vertex_base = 0
     channel_map = block["channel_map"]
@@ -166,9 +170,7 @@ def glb_layout_map(document, binary, block, model):
             continue
         uv = a["TEXCOORD_1"].astype(np.float64).copy()
         uv[:, 1] = 1.0 - uv[:, 1]
-        # glTF splits vertices at UV0 seams and hard normals too: join corners by position, not by glTF index
-        _, welded = np.unique(np.round(a["POSITION"].astype(np.float64), 6), axis=0, return_inverse=True)
-        faces.extend((welded.reshape(-1)[tri] + vertex_base).tolist())
+        faces.extend(welded[tri + vertex_base].tolist())
         uvs.extend(uv[tri].tolist())
         tri_values.extend(uv[tri])
         labels.extend([channel_index.get(channel_map.get(row["material"]), -1)] * len(tri))

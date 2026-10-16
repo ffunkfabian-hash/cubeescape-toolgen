@@ -159,6 +159,20 @@ class RasterTests(unittest.TestCase):
         self.assertTrue(np.array_equal(pixels, surface.png_array(surface.png_encode(pixels))))
 
 
+class ClipAreaTests(unittest.TestCase):
+    def test_overlap_area_of_triangles(self):
+        a = ((0, 0), (1, 0), (0, 1))
+        self.assertAlmostEqual(.5, surface.clip_area(a, a))
+        self.assertAlmostEqual(.125, surface.clip_area(a, ((0, 0), (.5, 0), (0, .5))))
+        self.assertEqual(0.0, surface.clip_area(a, ((2, 2), (3, 2), (2, 3))))
+
+    def test_degenerate_triangles_overlap_nothing(self):
+        a = ((0, 0), (1, 0), (0, 1))
+        self.assertEqual(0.0, surface.clip_area(a, ((0, 0), (0, 0), (0, 0))))
+        self.assertEqual(0.0, surface.clip_area(a, ((.1, .1), (.2, .2), (.3, .3))))
+        self.assertEqual(0.0, surface.clip_area(((.1, .1), (.1, .1), (.1, .1)), a))
+
+
 class StageTests(unittest.TestCase):
     def stage(self):
         return next(stage for stage in STAGES if stage.name == "surface_bake")

@@ -426,7 +426,8 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
 - Dezimierung: Kollaps auf das Budget und LOD1 behält UV1, faltet aber Dreiecke (Portalwerfer 250 auf LOD0) und legt Inselränder über die
   Insel selbst. `untangle` schiebt danach die betroffenen UV-Ecken (Ecke = Vertex + UV in der Insel) auf den Mittelpunkt ihrer Nachbarn, einen
   Nachbarn oder die halbe Strecke, wenn das Falten bzw. die Überlappungsfläche (Polygon-Clipping) um die Ecke sinkt; feste Reihenfolge.
-  Ein Zug auf einen Nachbarn hinterlässt ein Dreieck ohne Fläche (keine Texel, keine Überlappung).
+  Ein Zug auf einen Nachbarn hinterlässt ein Dreieck ohne Fläche (keine Texel, keine Überlappung; seine Normalkarte und Tangente kommen
+  vom Nachbarn); `zero_area_triangles` in `uv1_lod0` zählt sie.
 - QA im Spiel-Export (`qa_game*.json`): `uv1_layers` (UVMap Index 0 und Render-Map, UV1 Index 1), `uv1_lod0` (Bereich, Überlappung 0 bei 2048,
   Abstand ≥ 4 px bei 1024, Ecke frei), `uv1_lod1` (wie LOD0, Überlappung nur berichtet), `uv1_source` (Drehung, Hash, Übertragung,
   `decimation_folds`); Reimport: UV1 auf allen Renderern, im GLB `TEXCOORD_1` und `TANGENT` je Primitive.

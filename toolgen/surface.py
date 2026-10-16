@@ -382,6 +382,7 @@ def layout_report(triangles, islands, unpainted):
     reserved = int(RESERVED_LOW * CHECK_RESOLUTION)
     corner_clear = bool(np.all(dilate(raster, DILATION_PX)[:reserved, :reserved] < 0))
     return {"triangles": int(len(triangles)), "unpainted_triangles": int(unpainted.sum()),
+            "zero_area_triangles": int(np.count_nonzero(np.abs(signed_areas(tris)) < 1e-14)),
             "unpainted_at_origin": bool(np.all(triangles[unpainted] == 0)),
             "islands": int(len(set(np.asarray(islands)[painted].tolist()))), "in_range": in_range,
             "overlap_texels": int(np.count_nonzero(counts > 1)), "overlap_resolution": OVERLAP_RESOLUTION,
@@ -552,8 +553,15 @@ def signed_areas(triangles):
             - (triangles[:, 1, 1] - triangles[:, 0, 1]) * (triangles[:, 2, 0] - triangles[:, 0, 0]))
 
 
+def _area(triangle):
+    (ax, ay), (bx, by), (cx, cy) = triangle
+    return abs((bx - ax) * (cy - ay) - (by - ay) * (cx - ax)) / 2
+
+
 def clip_area(subject, clip):
-    """Area of the intersection of two counter-clockwise triangles (Sutherland-Hodgman)."""
+    """Area of the intersection of two counter-clockwise triangles (Sutherland-Hodgman); 0 when either has no area."""
+    if _area(subject) < 1e-18 or _area(clip) < 1e-18:
+        return 0.0
     polygon = [tuple(point) for point in subject]
     for i in range(3):
         if not polygon:
