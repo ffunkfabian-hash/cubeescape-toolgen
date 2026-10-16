@@ -77,7 +77,7 @@ class WeaponMotionTests(unittest.TestCase):
                 for u in range(clip["length"] + 1):
                     pose = ego.pose_at(clip, clip["frame_start"] + u, params)
                     with self.subTest(tool=tool, clip=clip["suffix"], frame=u):
-                        if tool == "pistol" or clip["motion"] != "reload":
+                        if clip["motion"] != "reload":
                             self.assertFalse(pose["detached"])
                             self.assertEqual(0, offset_size(pose["support"]))
                         else:
@@ -89,7 +89,7 @@ class WeaponMotionTests(unittest.TestCase):
                             saw_release |= pose["detached"] and offset_size(pose["support"]) > .005
                         if clip["motion"] != "reload":
                             self.assertEqual(0, offset_size(pose["part"]))
-                if tool != "pistol" and clip["motion"] == "reload":
+                if clip["motion"] == "reload":
                     self.assertTrue(saw_release)
 
     def test_reload_timing_windows_are_ordered(self):
@@ -188,7 +188,7 @@ class RecordingKit:
 
 # Primitive arguments and all sockets of the pre-reload designs (07df813); parentage is deliberately excluded.
 REST_GEOMETRY = {
-    'pistol': '46a8ba16188be6f5cb688f5c9305100e0027e19ca91ca2cc4ace4fa76f96f626',
+    'pistol': '3d6700ab484a77df860db78604abacc3837edc67c8d76a7264e138af8271e66a',   # 0.10.0: Socket_SupportHand at the grip
     'assault_rifle': '089c206226a86b2a7c9aa05e44d7609ad8c915ba7909c7e149b6a48e804df3e5',
     'pulse_rifle': 'bbddbf7b6ff9c3646ff3bfdcdb08bca5ba8c6866ce03f68f57a67c81b60be079',
     'shotgun': '2491986a481529dd79eb91c86b8486f841fb596d27d6d6685b5cf59aeb92b1ef',

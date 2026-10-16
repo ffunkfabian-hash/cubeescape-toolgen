@@ -32,10 +32,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | Sprint | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 / 20 / 20 / 20 | Ja | sprint → sprint | Ja | Ja | FootL, FootR |
 | SprintOut | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | sprint → rest | Ja | Ja | Ready |
 | Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot |
-| AimIn | 6 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
+| AimIn | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
 | AimIdle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | — / — / — / — | Ja | aim → aim | Nein | Ja | — |
 | AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot |
-| AimOut | 6 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
+| AimOut | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
 | Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
 | Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
 | Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
@@ -55,15 +55,15 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `Pistol_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `Pistol_SprintOut` | 249–257 | 0.33 | Ready 8 |
 | `Pistol_Fire` | 261–275 | 0.58 | Shot 0 |
-| `Pistol_AimIn` | 279–285 | 0.25 | Aimed 6 |
-| `Pistol_AimIdle` | 289–361 | 3.00 | — |
-| `Pistol_AimFire` | 365–379 | 0.58 | Shot 0 |
-| `Pistol_AimOut` | 383–389 | 0.25 | — |
-| `Pistol_Draw` | 393–402 | 0.38 | Ready 9 |
-| `Pistol_Holster` | 406–413 | 0.29 | Holstered 7 |
-| `Pistol_Inspect_A` | 417–513 | 4.00 | — |
-| `Pistol_Inspect_B` | 517–613 | 4.00 | — |
-| `Pistol_Reload` | 617–659 | 1.75 | MagOut 12, MagIn 27, Ready 42 |
+| `Pistol_AimIn` | 279–287 | 0.33 | Aimed 8 |
+| `Pistol_AimIdle` | 291–363 | 3.00 | — |
+| `Pistol_AimFire` | 367–381 | 0.58 | Shot 0 |
+| `Pistol_AimOut` | 385–393 | 0.33 | — |
+| `Pistol_Draw` | 397–406 | 0.38 | Ready 9 |
+| `Pistol_Holster` | 410–417 | 0.29 | Holstered 7 |
+| `Pistol_Inspect_A` | 421–517 | 4.00 | — |
+| `Pistol_Inspect_B` | 521–617 | 4.00 | — |
+| `Pistol_Reload` | 621–663 | 1.75 | MagOut 12, MagIn 27, Ready 42 |
 
 ### Maschinenpistole (`smg`)
 

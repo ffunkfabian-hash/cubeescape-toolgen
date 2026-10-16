@@ -64,7 +64,7 @@ class CatalogTests(unittest.TestCase):
                 self.assertEqual(spec["clip"], tool["fps_clip"])
                 self.assertEqual(spec["element"], tool["element"])
                 self.assertEqual(spec["grip_tilt_degrees"], tool["hold"]["grip_tilt_degrees"])
-                self.assertEqual(key != "pistol", tool["hold"]["two_handed"])
+                self.assertTrue(tool["hold"]["two_handed"])          # 0.10.0: the pistol too (cup grip)
                 self.assertEqual(("create_weapon.py", "create_weapon_fps.py", "verify_weapon.py", "animate_weapon.py"),
                                  (tool["world"], tool["fps"], tool["verify"], tool["animation"]))
 
@@ -116,7 +116,9 @@ class DesignTests(unittest.TestCase):
             with self.subTest(weapon=key):
                 self.assertTrue(any(name.startswith(spec["grip_part"]) for name in names)
                                 or "grip(k" in (ASSETS / "weapon_designs.py").read_text())
-                self.assertTrue(any(name.startswith(spec["support_part"]) for name in names), spec["support_part"])
+                # the pistol's cup grip (0.10.0) puts Socket_SupportHand on the grip itself, built by grip()
+                self.assertTrue(any(name.startswith(spec["support_part"]) for name in names)
+                                or spec["support_part"] == spec["grip_part"], spec["support_part"])
 
     def test_the_use_clip_moves_child_nodes_only(self):
         for key, spec in designs.DESIGNS.items():
@@ -180,11 +182,14 @@ class ViewmodelProfileTests(unittest.TestCase):
                 self.assertTrue(all(.015 <= value <= .04 for value in profile["support_radius"]))
 
     def test_support_hand_grips_from_below(self):
-        """0.8.0: relaxed underhand support (palm under the handguard, thumb on the camera side) on every two-handed weapon."""
+        """0.8.0: relaxed underhand support (palm under the handguard, thumb on the camera side) on every rifle; 0.10.0: the
+        pistol's left hand cups the right one from below left (Destiny)."""
         for key, tool in WEAPONS.items():
             with self.subTest(weapon=key):
-                self.assertEqual("underhand" if tool["hold"]["two_handed"] else None, PROFILES[key].get("support_grip"))
-        self.assertIn('profile.get("support_grip") == "underhand"', (ROOT / "toolgen/first_person.py").read_text())
+                self.assertEqual("cup" if key == "pistol" else "underhand", PROFILES[key].get("support_grip"))
+        source = (ROOT / "toolgen/first_person.py").read_text()
+        self.assertIn('profile.get("support_grip") == "underhand"', source)
+        self.assertIn('profile.get("support_grip") == "cup"', source)
 
     def test_arms_come_in_diagonally_from_below(self):
         """0.8.0 (Cube Escape 0.65 finding, user decision 16.10.2026: target 45 deg, hard limit 55 deg per wrist): forearms
@@ -207,9 +212,9 @@ class ViewmodelProfileTests(unittest.TestCase):
                         cosine = sum(a * b for a, b in zip(forearm, upper)) / math.dist((0, 0, 0), forearm) / math.dist((0, 0, 0), upper)
                         self.assertGreater(cosine, -.87, "the elbow is bent (less than 150 deg between the links)")
                     else:
-                        self.assertTrue(20 <= spec["forearm_rise_degrees"] <= 45)
+                        self.assertTrue(15 <= spec["forearm_rise_degrees"] <= 45)
                         self.assertTrue(0 < spec["forearm_yaw_degrees"] <= 20, "elbow out to the palm side")
-                if tool["hold"]["two_handed"]:
+                if profile.get("support_grip") == "underhand":
                     self.assertEqual(35, profile["support_roll_degrees"], "support palm turned to the camera side")
                 # the barrel lies almost level in the authored Ego pose (the knuckles point less downward)
                 aim, hand = profile["aim_target_m"], profile["hand"]

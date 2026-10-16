@@ -985,14 +985,16 @@ def hold_block(tool):
     tilt = math.radians(hold["grip_tilt_degrees"])
     grip, muzzle = [0.0, -math.sin(tilt), math.cos(tilt)], [0.0, -1.0, 0.0]
     return {"hand_socket": "Socket_Hand", "support_socket": "Socket_SupportHand", "muzzle_socket": "Socket_Muzzle",
-            "two_handed": hold["two_handed"], "grip_tilt_degrees": hold["grip_tilt_degrees"],
+            "two_handed": hold["two_handed"], "support_grip": hold.get("support_grip"), "grip_tilt_degrees": hold["grip_tilt_degrees"],
             "grip_axis": {"blender": [round(v, 6) + 0.0 for v in grip], "unity": [round(v, 6) + 0.0 for v in unity_position(grip)]},
             "muzzle_axis": {"blender": muzzle, "unity": [round(v, 6) + 0.0 for v in unity_position(muzzle)]},
             "grip_to_muzzle_degrees": round(math.degrees(math.acos(round(sum(a * b for a, b in zip(grip, muzzle)), 9))), 4),
             "element": tool.get("element"),
             "note": "Align the hand's grip axis (palm to fingertips along the grip) with grip_axis and let the model's "
                     "muzzle_axis point along the character's aim direction; Socket_Hand sits in the middle of the pistol "
-                    "grip and Socket_SupportHand in the middle of the handguard, so the second hand needs no offset. "
+                    "grip and Socket_SupportHand in the middle of the handguard (support_grip underhand), or on the left of "
+                    "the grip below the right hand (cup: the left hand wraps the right one from below left, pistol), so the "
+                    "second hand needs no offset. "
                     "The model is not mirrored: the grip hand is the right hand, the support hand the left."}
 
 

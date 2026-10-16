@@ -89,14 +89,19 @@ Raketenwerfer; Technik: [TECHNIK](TECHNIK.md) › Waffen 1–9) sind Werkzeuge w
 `<Name>_Use`, die Verträge `unity_contract.json`/`unity_contract_fps.json`. Munition, Schaden und Regeln gehören dem Spiel.
 
 **Block `hold`** (nur bei Werkzeugen, die in der Hand liegen): `hand_socket` (`Socket_Hand`, Mitte des Pistolengriffs), `support_socket`
-(`Socket_SupportHand`, Mitte des Handschutzes oder Vorderschafts), `muzzle_socket`, `two_handed`, `grip_tilt_degrees`,
+(`Socket_SupportHand`, Mitte des Handschutzes oder Vorderschafts; Pistole: linke Griffseite), `muzzle_socket`, `two_handed`,
+`support_grip` (0.10.0: `underhand` Gewehre, `cup` Pistole), `grip_tilt_degrees`,
 `grip_axis` (Richtung von der Griffunterkante zur Oberkante, Blender und Unity), `muzzle_axis` (−Y bzw. +Z) und
 `grip_to_muzzle_degrees`. So richtet man die Roboterhand aus: die Griffachse der Hand (Handfläche → Fingerspitzen) auf `grip_axis`
 legen, die rechte Hand an `Socket_Hand`, die linke an `Socket_SupportHand`, und die Zielrichtung der Figur auf `muzzle_axis`. Das Modell
 liegt unrotiert im Wurzelraum: Lauf = −Y (Unity +Z), oben = +Z (Unity +Y), der Lauf steht waagerecht; der Griff lehnt oben nach vorn.
 Wer das Werkzeug „verkehrt herum“ oder zu steil sieht, hat die Wurzeldrehung (siehe unten) doppelt oder gar nicht angewendet, nicht den
-Haltewinkel geändert. Das Modell ist nicht gespiegelt: Griffhand rechts, Stützhand links. Einhändig (Pistole, `two_handed` false)
-trägt `Socket_SupportHand` den Rahmen für einen optionalen zweiten Griff.
+Haltewinkel geändert. Das Modell ist nicht gespiegelt: Griffhand rechts, Stützhand links. Seit 0.10.0 ist auch die Pistole beidhändig
+(`two_handed` true, `support_grip` `cup`, Becher-Griff wie in Destiny): `Socket_SupportHand` liegt an der linken Griffseite unter der rechten
+Hand (0,017 | 0,0039 | −0,0155 m, Blender, vorher 0 | −0,05 | 0,034 am Rahmen); die linke Hand ist wie die rechte ausgerichtet (Finger nach
+vorn, Handfläche links am Griff) und umfasst deren Finger von links unten, der linke Unterarm kommt von links unten. Mindestversion des
+Abnehmers: der CE-Stand mit beidhändiger Pistole; ältere Fassung: `git checkout 384f9e2 -- data/tools.json data/viewmodels.json
+scripts/tool_assets/weapon_designs.py` und neu erzeugen (384f9e2 = Toolgen 0.9.0).
 
 **Anker liegen am Werkzeug.** Für die Waffen sind beide Handanker geprüft: `Socket_Hand` und `Socket_SupportHand` liegen im Griff- bzw.
 Handschutzteil (`anchors[].surface_distance_m` im Vertrag: negativ = im Teil, QA `grip_sockets_on_tool`, Grenze +4 mm). Der Vertrag meldet

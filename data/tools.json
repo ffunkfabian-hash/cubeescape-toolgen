@@ -63,7 +63,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
-        "two_handed": false
+        "two_handed": true,
+        "support_grip": "cup"
       }
     },
     {
@@ -81,7 +82,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 16,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -99,7 +101,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -117,7 +120,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 15,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -135,7 +139,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 12,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -153,7 +158,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 18,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -171,7 +177,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -189,7 +196,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 12,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     },
     {
@@ -207,7 +215,8 @@
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
-        "two_handed": true
+        "two_handed": true,
+        "support_grip": "underhand"
       }
     }
   ]

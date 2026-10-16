@@ -202,7 +202,9 @@ def pistol(k):
     pistol_modules(k, slide, mag)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.176, .062))
-    k.socket('Socket_SupportHand', (0, -.05, .034))
+    # 0.10.0: two-handed cup grip (Destiny): the left hand wraps the right one from below left, its centre at the grip's
+    # left side, below the right hand (was the frame in front of the trigger guard, (0, -.05, .034), in 0.7-0.9).
+    k.socket('Socket_SupportHand', (.017, *along(k, 0, -.016)))
     k.socket('Socket_CenterOfMass', (0, -.02, .03))
 
 
@@ -647,7 +649,7 @@ def slide_keys(*pairs):
 DESIGNS = {
     'pistol': {
         'asset': 'CubeEscape_Pistol', 'clip': 'Pistol_Use', 'class': 'sidearm', 'element': 'kinetic', 'grip_tilt_degrees': 14,
-        'grip_part': 'Grip', 'support_part': 'Frame', 'view_center': (0, -.04, .02), 'view_scale': .50,
+        'grip_part': 'Grip', 'support_part': 'Grip', 'view_center': (0, -.04, .02), 'view_scale': .50,
         'trigger': 'FireAction', 'build': pistol,
         'use_clip': [{'node': 'Anim_Slide', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (16, .034), (24, .004), (30, 0))}],

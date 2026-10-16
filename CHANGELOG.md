@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.10.0 – Steadyhand (16.10.2026)
+
+Pistole beidhändig im Becher-Griff wie in Destiny (Wunsch des Nutzers über die CE-Sitzung Ego-Waffenhaltung): die linke Hand umfasst die
+rechte von links unten, linker Unterarm von links unten ([UNITY_EINBAU](docs/UNITY_EINBAU.md) › Waffen in der Hand).
+
+- Vertragsänderung: Pistole `hold.two_handed` true, neues Feld `hold.support_grip` (`cup` Pistole, `underhand` Gewehre), `Socket_SupportHand`
+  der Pistole von (0, −0,05, 0,034) am Rahmen nach (0,017, 0,0039, −0,0155) an die linke Griffseite (Welt- und Ego-Modell; übrige Anker,
+  Geometrie und Clips gleich). Mindestversion des Abnehmers: Cube Escape mit beidhändiger Pistolen-Haltung (CE nach 0.66); ältere Fassung:
+  `git checkout 384f9e2 -- data/tools.json data/viewmodels.json scripts/tool_assets/weapon_designs.py` und neu erzeugen (384f9e2 = 0.9.0).
+- Ego: linkes Handgelenk in Ruhe 36,5°, in allen Clips höchstens 48,9° (rechts 52,1° aus 0.8.0), `Wrist_L` wie bei den Gewehren, Bildausschnitt
+  auch bei 1,7×; Nachladen mit der linken Hand; Pistolen-Clips (Sprint, Senken, Inspect, Zielen 8 Frames) dafür angepasst.
+- Prüfung: `./check` (183 Tests), `--tier standard` alle 13 grün, Wiederholung 13 Cache-Treffer, `verify_output.py` 430 Prüfungen, `--contract 1`
+  quick (Pistole). Codex nur Prüfung (`luna`): 5-h-Kontingent bei 25 % Rest, Umsetzung durch Claude.
+
 ## 0.9.0 – Cadence (16.10.2026)
 
 Ego-Zustandsclips für alle Ego-Modelle: Waffen 15 (Idle, Walk, SprintIn/Sprint/SprintOut, Fire, AimIn/AimIdle/AimFire/AimOut, Draw,

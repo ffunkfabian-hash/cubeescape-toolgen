@@ -536,7 +536,11 @@ def build(directory, spec, profile):
             support_pose = pose @ Matrix.Translation(profile["support_offset"])
         # Turning the support hand about the barrel keeps its fingers off the tool head.
         support_pose = support_pose @ Matrix.Rotation(math.radians(profile.get("support_roll_degrees", 0)), 4, "Y")
-        if profile.get("support_grip") == "underhand":
+        if profile.get("support_grip") == "cup":
+            # Two-handed pistol (cup grip, 0.10.0): the left hand is oriented like the grip hand (fingers forward, palm on
+            # the left of the grip) and wraps the right hand's fingers from below left (support_radius beyond them).
+            support_pose = support_pose @ twists["L"]
+        elif profile.get("support_grip") == "underhand":
             # Relaxed underhand support (weapons): palm under the handguard, index finger forward (-Y), thumb on the
             # camera side (+X), fingers curling up the far side; the wrist lies on the camera side, so the forearm
             # comes in from the left shoulder without crossing under the tool.

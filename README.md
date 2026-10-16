@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.9.0 · Cadence.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.10.0 · Steadyhand.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
