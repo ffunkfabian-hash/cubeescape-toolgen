@@ -27,7 +27,8 @@ Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version u
 `git describe --tags`, `CHANGELOG.md` (App und Berichte übernehmen die Version daraus). Vor Systemarbeit `git worktree list`,
 lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern. Dauerhafte Entscheidungen mit Grund:
 [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
-Codex als Unteragent, Versionsberichte): `~/.claude/CLAUDE.md`, Codex liest sie über `~/.codex/AGENTS.md`.
+Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-rules` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
+Links darauf).
 Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
 
 ## Befehle
