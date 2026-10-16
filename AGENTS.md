@@ -27,7 +27,8 @@ Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version u
 `git describe --tags`, `CHANGELOG.md` (App und Berichte übernehmen die Version daraus). Vor Systemarbeit `git worktree list`,
 lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern. Dauerhafte Entscheidungen mit Grund:
 [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
-Codex als Unteragent, Versionsberichte): `~/.claude/CLAUDE.md`, Codex liest sie über `~/.codex/AGENTS.md`.
+Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-rules` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
+Links darauf).
 Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
 
 ## Befehle
@@ -55,6 +56,12 @@ ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Um
 `CACHE_SCHEMA` zu erhöhen oder einen zusätzlichen Schlüssel. Aufbau und Regeln: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
 Schwere Läufe (`--tier full`, `scripts/check_output.sh`) warten auf `scripts/heavy_lock.py`, die gemeinsame Sperre mit Robogen,
 Cube Escape und Cubegen (`CE_HEAVY_LOCK=0` überspringt sie); sie wird nur gemeinsam mit den anderen Repos geändert.
+
+Grafik- und schwere Läufe nur in Mac-Sitzungen (Regel des Nutzers, 16.10.2026, globale Regeln 1.2.0): Cloud-Sitzungen prüfen nur
+schnell (`./check`, `python3 toolgen/generate_tools.py --tier quick` ohne Bilder, Syntax, Doku). `--tier standard`/`full`, `surface_bake`,
+Previews, Kontaktbögen, MP4, Viewer-Builds und Unity-Läufe laufen in einer Mac-Sitzung (Remote Control oder lokal) mit `heavy_lock`
+und Zeitband; Cloud-Zeiten werden nicht bewertet. Die Cloud-Sitzung schließt solche Arbeit als „ungeprüft“ ab und übergibt den
+Prüfweg (Stufen, Befehle, erwartete Unterschiede und Cache-Treffer).
 
 Maximal zwei Worker standardmäßig; Threads werden unter ihnen aufgeteilt. `--workers` und `--threads` dürfen zusammen
 die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Prozesse, Zusammenführung in Katalogreihenfolge.
@@ -89,7 +96,8 @@ Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, 
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.
 Ego-Gestaltung, Viewmodel-Sichtfeld und verbindlicher Bildausschnitt (drei Greiffinger plus Daumen, maximal halbe Unterarme):
 [docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen. Spiel-Export für Unity
-(`toolgen/game_export.py`, `data/game_palette.json`, `data/game_budget.json`; Ego: Stufe `game_fps`): › Spiel-Export, Einbau: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md); matte Palette, ein Renderer für statische Teile, Kollision
+(`toolgen/game_export.py`, `data/game_palette.json`, `data/game_budget.json`; Ego: Stufe `game_fps`; UV1 und Maskenkarten ab Vertrag 4:
+`toolgen/surface.py`, Stufe `surface_bake`): › Spiel-Export, › Oberflächenkarten, Einbau: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md); matte Palette, ein Renderer für statische Teile, Kollision
 am tatsächlichen Modell, Öffnungen frei.
 
 ## Plugins und Hooks

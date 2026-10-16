@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips  # noqa: E402
+import surface  # noqa: E402
 from generate_tools import catalog, valid_package  # noqa: E402
 
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
@@ -106,6 +107,41 @@ for tool in catalog():
         assert game_qa["ads"]["eye_distance_range_m"], (tool["id"], "no eye distance keeps the ADS framing")
         checks += 5
     checks += 5
+    # contract 4: surface block and maps in standard/full (manifest "surface"), never in quick or older contracts
+    world = json.loads((package / "unity_contract.json").read_text())
+    included = manifest["surface"]["included"]
+    assert included == (manifest["tier"] != "quick" and world["format"] >= 4), (tool["id"], "surface in the package")
+    for contract, variant in ((world, "world"), (ego, "viewmodel")):
+        assert ("surface" in contract) == included, (tool["id"], variant, "surface block")
+        if not included:
+            continue
+        block = contract["surface"]
+        assert block["version"] == 1 and block["uv1"]["attribute"] == "TEXCOORD_1" and block["uv1"]["margin_px"] >= 4
+        assert block["regions"] == surface.REGIONS and block["tangents"]["for"] == "uv1"
+        assert not block["uv1"]["islands_rotated"] and block["uv1"]["layout"]["overlap_texels"] == 0
+        assert block["uv1"]["shared_with_world"] == ego["surface"]["uv1"]["shared_with_world"]
+        assert set(block["channel_map"].values()) <= set(surface.CHANNELS) and block["channel_map"]
+        assert all(slot in contract["materials"] for slot in block["channel_map"]), (tool["id"], variant, "channel_map slots")
+        maps = block["maps"]
+        assert maps["resolution"] == surface.MAP_RESOLUTION[variant], (tool["id"], variant, "map resolution")
+        total = 0
+        for kind in ("w0", "w1", "fields", "normal"):
+            name = maps[kind]
+            assert name in manifest["files"] and maps["files"][name] == manifest["files"][name], (tool["id"], name)
+            data = (package / name).read_bytes()
+            info = surface.png_info(data)
+            assert (info["width"], info["height"], info["bit_depth"], info["color_type"]) == \
+                (maps["resolution"], maps["resolution"], 8, 6), (tool["id"], name, "8-bit RGBA")
+            assert info["chunks"] == ["IHDR", "IDAT", "IEND"], (tool["id"], name, "no colour chunks")
+            total += len(data)
+        assert total == maps["set_bytes"] <= surface.MAX_SET_BYTES, (tool["id"], variant, "set size")
+        assert block["bake"]["stage"] == "surface_bake" and len(block["bake"]["key"]) == 64
+        checks += 12
+    if included:
+        qa = json.loads((package / "qa_surface.json").read_text())
+        assert qa["passed"] and all(check["passed"] for check in qa["checks"].values()), (tool["id"], "qa_surface")
+        assert ego["surface"]["maps"]["applies_to"][-1].endswith("_Clips.glb"), (tool["id"], "clips file shares the set")
+        checks += 2
     if manifest["tier"] != "quick":
         for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else [])]:
             roundtrip = json.loads((package / ("qa_roundtrip" + suffix + ".json")).read_text())

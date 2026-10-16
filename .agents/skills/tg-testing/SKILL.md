@@ -43,7 +43,11 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    Materialien, Maße, Anker, Clip bei animierten Werkzeugen, LOD1, Kollision, GLB-/FBX-Reimport) einzeln lesen; `preview_game.png` (ab Standard) ansehen:
    Weltmodell, LOD0, LOD1, Kollisionsboxen. Kollision gegen das tatsächliche Modell, Öffnungen frei. Viewer-Varianten
    „Spielmodell“ und „Ego-Spielmodell“ mit ansehen (Ego-Spielmodell neben dem gestalteten Ego-Modell: gleicher Bildausschnitt, matter). Dasselbe für das Ego-Modell (Stufe `game_fps`): `qa_game_fps.json` (zusätzlich `triangle_budget`),
-   `preview_game_fps.png`; keine Kollision, Hände/Arme im Bild unverändert.
+   `preview_game_fps.png`; keine Kollision, Hände/Arme im Bild unverändert. Ab Vertrag 4 zusätzlich `uv1_*` in beiden QA-Dateien.
+   Maskenkarten (Stufe `surface_bake`, standard/full): `qa_surface.json` lesen, die PNGs verkleinert ansehen (`magick montage`, Kanäle von
+   Fields einzeln) und die unabhängige Abnahme laufen lassen: `blender -b --factory-startup --python scripts/verify_surface.py -- <Ausgabe>`
+   (`--determinism --tool <id>` backt mit 1 und 8 Threads neu und vergleicht bitgleich; schwer, wartet auf `heavy_lock`). Reine numpy-Tests:
+   `/Applications/Blender.app/Contents/Resources/5.2/python/bin/python3.13 -m unittest tests.test_surface tests.test_verify_surface`.
 8. Regeln/Profile: `python3 scripts/check_rules.py --shared <ce-agent-tools>`; jeder Hook hat treffende und nicht
    treffende Fälle, Profile erlauben Prüfungen/Doku und sperren Code-Änderungen des Testläufers.
 

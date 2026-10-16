@@ -1,6 +1,6 @@
 # Einbau in Cube Escape (Unity 6, URP) – Vorbereitung
 
-Stand 0.8.0 Gunmetal. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
+Stand 0.11.0 Primer. Der Einbau ist **noch nicht abgenommen**; dieses Dokument legt fest, was das Spiel aus den Paketen
 liest, damit der spätere Einbau keine Annahmen über Toolgen treffen muss. Das Spielprojekt wird aus diesem Repo nicht
 verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-Export.
 
@@ -11,6 +11,7 @@ verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-
 | Weltmodell (liegt, wird geworfen, Anzeige) | `<Asset>_Game.fbx/.glb/.blend` | `unity_contract.json` (Renderer, LOD, Kollision, Clip) |
 | Ego-Modell (Hände, Arme, Werkzeug) | `<Asset>_FPS_Game.fbx/.glb/.blend` | `unity_contract_fps.json` (Renderer, LOD, Clip, `viewmodel`) |
 | Viewmodel-Kamera | `viewmodel_camera.json` | vertikales FOV, Near Clip, geprüfte Werte |
+| Maskenkarten (Vertrag 4, standard/full) | `<Asset>_Game_{W0,W1,Fields,Normal}.png`, `<Asset>_FPS_Game_*.png` | Block `surface` in beiden Verträgen |
 
 Materialien: nur die Palettenmaterialien aus `data/game_palette.json` (je Weltmodell höchstens 6, je Ego-Modell höchstens 7);
 die neun Waffen tragen ab Vertrag 2 stattdessen die Ausrüstungs-Slots `MT_<Kanal>` (siehe „Ausrüstungs-Slots“ unten).
@@ -175,7 +176,50 @@ dieselben Daten maschinenlesbar).
   Einträge. Die Ego-Clips nutzt erst der Cube-Escape-Stand mit Ego-Zustandslogik (Sitzung „Ego-Waffenhaltung“). Ältere Fassung ohne
   Clips-Datei: `python3 toolgen/generate_tools.py --tier standard --contract 2` (Layout 0.8).
 
-## Visier und Zielen (0.11.0, Vertrag 3 additiv)
+## Maskenkarten und UV1 (0.11.0, Vertrag 4)
+
+Für das Bemalen im Spiel (Cube Escape 0.71 „Maskwork“, Masken-Modus des PAINT-Rezepts, `_EquipParams.x = 1`). Vertrag `format` 4, additiv:
+UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
+
+- **UV1** (`TEXCOORD_1`, FBX-UV-Satz 1, Blender-Name `UV1`) auf allen Renderern, LOD0 und LOD1, auch in der Clips-Datei: je Werkzeugteil vor dem
+  Zusammenführen erzeugt (Smart-Projektion 66°, gleiche Texeldichte, gepackt ohne Drehung), ein Atlas je Modell, alle Werte in 0..1,
+  LOD0 überlappungsfrei (Raster 2048), Abstand zwischen Inseln ≥ 4 px bei 1024 (gepackt mit 8 px), deterministisch. Die Kollaps-Dezimierung
+  (Budget, LOD1) faltet einzelne Dreiecke; Toolgen entfaltet sie danach (`decimation_folds` in `qa_game*.json`).
+  Hände und Arme des Ego-Modells (Quellmaterialien `FPS_*`) haben keine Insel: ihre UV1 ist der Punkt (0, 0) in einem freien Rand
+  (16 px bei 1024 links und unten), dort sind alle Gewichte 0. Wo die Gewichtssumme 0 ist, behält der Slot seine eigene Farbe
+  (bei Portalwerfer, Magnetgreifer, Taschenlampe und Bogen liegen Hand und Werkzeug im selben Mesh und Slot).
+- **Gemeinsame UV1:** Hat jedes Werkzeugteil des Ego-Modells im Weltmodell einen Zwilling (Name und Flächenaufbau), übernimmt das Ego-Modell
+  dessen UV1 bitgleich (`surface.uv1.shared_with_world` true; die neun Waffen und der Bogen). Portalwerfer, Magnetgreifer und Taschenlampe bauen
+  ihr Ego-Werkzeug mit anderen Schrauben, sie haben je ein eigenes Atlas (false). Karten gibt es immer je Modell (eigene Auflösung, eigene Dezimierung).
+- **Tangenten:** GLB trägt `TANGENT` auf UV1 (MikkTSpace, w = Händigkeit). FBX trägt keine Tangenten: Unitys FBX-Import liest nur
+  UV0-Tangenten (Messung Cube Escape 0.71, alle drei Tangenten-Modi); Cube Escape rechnet sie beim Import aus UV1 (`OnPostprocessModel`).
+- **Karten** je Modell (`<Asset>_Game_*.png` Welt 512², `<Asset>_FPS_Game_*.png` Ego 1024², gilt auch für die Clips-Datei), PNG 8 Bit RGBA, linear,
+  ohne Farbprofil-/Gamma-Chunks, oberste PNG-Zeile = v 1:
+
+  | Karte | R | G | B | A |
+  |---|---|---|---|---|
+  | `W0` (`_RegionMask0`) | Primary | Secondary | Accent | Emission |
+  | `W1` (`_RegionMask1`) | Metal | Detail | Energy | 0 |
+  | `Fields` (`_FieldMap`) | AO (1 = offen) | Kante (1 = konvex) | oben = max(0, Normale·oben) | Höhe 0..1 über das LOD0-Modell |
+  | `Normal` (`_BumpMap`) | Tangentenraum UV1, OpenGL (Y+), flach 128,128,255 | | | |
+
+  Gewichte one-hot 255 je Dreieck nach dem Kanal seines Slots, auf Nähten hart, jede Insel 8 px nach außen fortgesetzt (nächster Texel,
+  feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission), `wrapMode` Clamp (der Punkt (0, 0) der Hände soll
+  nicht über den Rand filtern).
+  Satz je Modell ≤ 2,5 MB (gemessen Pistole: Welt 0,7 MB, Ego 1,9 MB). Rauschen/Detail kommt nicht von Toolgen.
+- **`channel_map`** (Block `surface`): Slot → Kanal für jeden Slot des Modells. `MT_<Kanal>` folgt aus dem Namen; die Palettennamen aus
+  `data/game_palette.json` › `channel_map`: `M_RobotBody_Matte` Primary, `M_RobotDark_Matte` Secondary, `M_HazardOrange_Matte` Accent,
+  `M_Metal_Matte` Metal, `M_GlowOrange` Emission, alle übrigen Glühmaterialien Energy (wie die Definitionen in CE `Docs/EQUIPMENT.md`).
+- **Block `surface`** in `unity_contract.json` und `unity_contract_fps.json` (`version` 1): `uv1` (Attribut, Auflösung 1024, `margin_px` 4,
+  `islands_rotated` false, `shared_with_world`, Layout-Werte, `unpainted`), `tangents`, `regions`, `channel_map`, `unmapped_slots`, `maps`
+  (Dateinamen, Auflösung, `files` mit sha256, `set_bytes`, `applies_to`), `fields` (Bedeutung je Kanal), `bake` (Stufe, Blender, Schlüssel,
+  Einstellungen), `minimum_consumer`, `older_consumers`.
+- **Stufen:** Karten und Block entstehen in `standard` und `full` (Stufe `surface_bake`, gleiche Dateien in beiden); `quick` lässt sie weg und sagt
+  das im `manifest.json` (`"surface": {"included": false, ...}`). UV1 und die GLB-Tangenten gibt es in jeder Stufe.
+- **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. Ältere Fassung ohne UV1 und Karten
+  (Layout 0.10): `python3 toolgen/generate_tools.py --tier standard --contract 3 --output output/_contract3`.
+
+## Visier und Zielen (0.12.0, Vertrag 4 additiv)
 
 Zulieferung für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (T1, T2, T6; Technik: [TECHNIK](TECHNIK.md) › Visier und Zielen). Nur Ergänzungen:
 alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
@@ -199,7 +243,7 @@ alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
   Kameraachse liegt (`frame_matrix_blender`), Bildausschnitt je 16:9/16:10, `eye_distance_range_m` = Abstände, bei denen drei Greiffinger
   und Daumen beider Hände im Bild und die Griffarm-Unterarmhälfte draußen bleiben.
 
-Gemessen mit Toolgen 0.11.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Verbindlich und bei allen erfüllt: Bildmitte frei (Scopes: Okularlinse), Modell höchstens 25 % der Bildhöhe über der Mitte (negativ = ganz darunter). Nicht verbindlich, Befund für Cube Escape: die Finger beim Profilabstand. Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
+Gemessen mit Toolgen 0.12.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Verbindlich und bei allen erfüllt: Bildmitte frei (Scopes: Okularlinse), Modell höchstens 25 % der Bildhöhe über der Mitte (negativ = ganz darunter). Nicht verbindlich, Befund für Cube Escape: die Finger beim Profilabstand. Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
 
 | Waffe | `sight_kind` | Profilabstand (m) | Bildmitte | Modell über der Mitte | Finger im Bild beim Profil | Bereich, der hält (m) |
 |---|---|---:|---|---:|---|---|
@@ -213,9 +257,10 @@ Gemessen mit Toolgen 0.11.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:
 | Spurgewehr | `scope` | 0.20 | Okularlinse | 8.5 % | nein | 0.215–0.405 |
 | Raketenwerfer | `iron` | 0.30 | frei | 4.7 % | nein | 0.390–0.575 |
 
-- **Mindestversion des Abnehmers:** keine – Cube Escape 0.72 liest `Socket_Sight` live aus dem animierten Modell; ohne den Anker nutzt es das Ersatz-Visier
-  (`ads.sight_back_m`, `sight_up_m`, `sight_offset_m`); die neuen Felder und Anker sind zusätzlich. `--contract 1` und `--contract 2`
-  enthalten die Anker und Felder ebenfalls (Zusatzdaten, die ältere Stände nicht lesen).
+- **Mindestversion des Abnehmers:** keine über Vertrag 4 hinaus (Cube Escape 0.71) – Cube Escape 0.72 liest `Socket_Sight` live aus dem
+  animierten Modell; ohne den Anker nutzt es das Ersatz-Visier (`ads.sight_back_m`, `sight_up_m`, `sight_offset_m`); die neuen Felder und
+  Anker sind zusätzlich. `--contract 3` (ohne UV1/Karten), `2` und `1` enthalten die Anker und Felder ebenfalls (Zusatzdaten, die ältere
+  Stände nicht lesen).
 
 ## Prüfen
 

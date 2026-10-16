@@ -22,6 +22,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
@@ -46,12 +47,13 @@ ROUNDTRIP_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["ro
 CACHE_SCHEMA = 3
 # Stage results: raise when stages would write something else although none of their key parts changed.
 STAGE_SCHEMA = 1
-GAME_CONTRACT = 3               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
+GAME_CONTRACT = 4               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
+CONTRACTS = (1, 2, 3, 4)
 # Source fingerprints (ASTs) of the functions that decide what a stage writes and how a package is assembled.
 # Timing, reporting and orchestration edits stay outside, so they rebuild nothing (Robogen's producer fingerprint).
 # New helpers that write stage outputs or packages belong in these lists.
 STAGE_CACHE_FUNCTIONS = ("run_stage", "blender_command", "stage_environment", "snapshot", "is_generated", "hash_file")
-PIPELINE_CACHE_FUNCTIONS = ("assemble_package", "cleanup_work", "hash_file")
+PIPELINE_CACHE_FUNCTIONS = ("assemble_package", "cleanup_work", "hash_file", "surface_note", "game_contract")
 
 # Generated files are everything a stage writes into the tool's work folder except Blender backups and Python caches.
 IMAGE_PATTERNS = ("*.png", "*.gif", "animation_frames/*")
@@ -95,6 +97,17 @@ class Stage:
     programs: tuple = ()            # external programs whose version line belongs to the key
     qa: tuple = ()                  # QA files that must say "passed": true in the package
     variants: tuple = ()            # viewer models it adds (after BASE_VARIANTS)
+    heavy: bool = False             # a build (not a cache hit) waits for the shared heavy-run lock
+    min_contract: int = 0           # runs only when the game contract is at least this
+
+
+# Stage fields added after the first cache schema: in the declaration (and so in the key) only when set, so adding them
+# rebuilds no existing stage.
+OPTIONAL_FIELDS = ("heavy", "min_contract")
+
+
+def declaration(stage):
+    return {key: value for key, value in asdict(stage).items() if key not in OPTIONAL_FIELDS or value}
 
 
 BASE_VARIANTS = (
@@ -125,11 +138,25 @@ STAGES = (
     # unity_contract_fps.json. Viewer model "fps_game" (root <asset>_FPS_Game, LOD0 only): the Ego view of the reduced model.
     Stage("game_fps", "toolgen/game_export.py",
           args=("--directory", "{work}", "--tool", "{id}", "--viewmodel", "--contract", "{game_contract}"),
-          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json"),
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend"),   # world model: its UV1 (contract 4)
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game_fps.json",),
           variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),
+    # Contract 4: mask maps W0/W1/Fields/Normal of both game models and the "surface" block in both contracts. Fixed bake
+    # settings (not the tier's samples), so standard and full share the result; quick leaves it out (manifest "surface").
+    Stage("surface_bake", "toolgen/surface_bake.py", args=("--directory", "{work}", "--tool", "{id}"),
+          reads=("{asset}_Game.blend", "{asset}_FPS_Game.blend", "{asset}_FPS_Game_Clips.fbx", "unity_contract.json",
+                 "unity_contract_fps.json", "qa_game.json", "qa_game_fps.json"),
+          sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface.json",), heavy=True,
+          min_contract=4),
 )
+# Serialises the heavy stage builds of this process' workers (the shared lock marks its holder in os.environ).
+HEAVY_STAGES = threading.Lock()
+
+
+def game_contract(tool):
+    return int(tool.get("game_contract", GAME_CONTRACT))
+
 
 
 @dataclass
@@ -148,6 +175,7 @@ class Run:
     qa: tuple = ()
     variant: dict | None = None     # viewer export: {"name", "root", "clip", "exports"}
     render_args: tuple = ()
+    heavy: bool = False
 
 
 def catalog():
@@ -165,7 +193,7 @@ def hash_file(path):
 def template(text, tool):
     values = {key: value for key, value in tool.items() if isinstance(value, str)}
     values["work"] = "{work}"
-    values.setdefault("game_contract", str(GAME_CONTRACT))   # set in the tool entry (and so in the key) only for --contract 1 or 2
+    values.setdefault("game_contract", str(GAME_CONTRACT))   # set in the tool entry (and so in the key) only for --contract 1-3
     return text.format(**values)
 
 
@@ -190,13 +218,13 @@ def expand(tool, tier, stages=None):
     settings = TIERS[tier]
     runs = []
     for stage in stages:
-        if tier not in stage.tiers or stage.when and not tool.get(stage.when):
+        if tier not in stage.tiers or stage.when and not tool.get(stage.when) or game_contract(tool) < stage.min_contract:
             continue
-        runs.append(Run(stage.name, asdict(stage), stage.runner, template(stage.script, tool),
+        runs.append(Run(stage.name, declaration(stage), stage.runner, template(stage.script, tool),
                         tuple(template(argument, tool) for argument in stage.args), stage.quiet_args,
                         tuple(template(pattern, tool) for pattern in stage.reads), stage.sources,
                         stage.renders and bool(settings["samples"]), stage.programs, stage.qa,
-                        render_args=stage.render_args))
+                        render_args=stage.render_args, heavy=stage.heavy))
     for variant in variants(tool, stages):
         root, clip = template(variant.root, tool), variant_clip(variant, tool)
         node = template(variant.node, tool) if variant.node else root
@@ -480,7 +508,8 @@ class ToolBuild:
         print(f"BUILD {tool_id}: {run.name}", flush=True)
         log = self.log(run)
         before = snapshot(work, sources)
-        run_stage(run, work, self.blender, self.threads, self.settings, self.device, bool(images_key), log)
+        with heavy_stage(run, tool_id):
+            run_stage(run, work, self.blender, self.threads, self.settings, self.device, bool(images_key), log)
         after = snapshot(work, sources)
         changed, removed = changes(before, after)
         info = {"tool": tool_id, "stage": run.name, "toolgen": VERSION}
@@ -544,6 +573,25 @@ class ToolBuild:
                 "stages": counts, "steps": self.steps}
 
 
+@contextmanager
+def heavy_stage(run, tool_id):
+    """A heavy stage build waits for the shared heavy-run lock (a full tier holds it already: CE_HEAVY_HELD skips)."""
+    if not run.heavy:
+        yield
+        return
+    with HEAVY_STAGES, heavy_lock.held(f"toolgen {run.name} {tool_id}", str(ROOT)):
+        yield
+
+
+def surface_note(tier, runs, tool):
+    """Manifest entry: are the contract 4 surface maps in this package?"""
+    if any(run.name == "surface_bake" for run in runs):
+        return {"included": True, "qa": "qa_surface.json"}
+    reason = (f"contract {game_contract(tool)} (no UV1, no maps)" if game_contract(tool) < 4
+              else f"tier {tier}: the maps are baked in standard and full only")
+    return {"included": False, "reason": reason}
+
+
 def installed_records(target):
     try:
         return list(json.loads((target / "manifest.json").read_text()).get("stages", []))
@@ -576,7 +624,7 @@ def assemble_package(work, tool, tier, device, runs, records, key):
     (work / "manifest.json").write_text(json.dumps({"version": VERSION, "codename": CODENAME,
         "cache_schema": CACHE_SCHEMA, "cache_key": key, "tier": tier, "device": device, "tool": tool["id"],
         "models": models, "files": files, "required_qa": sorted({name for run in runs for name in run.qa}),
-        "stages": records}, ensure_ascii=False, indent=2) + "\n")
+        "surface": surface_note(tier, runs, tool), "stages": records}, ensure_ascii=False, indent=2) + "\n")
     if not valid_package(work, key):
         raise RuntimeError(f"Staged package failed integrity validation: {tool['id']}")
 
@@ -722,9 +770,10 @@ def main():
     parser.add_argument("--threads", type=int)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--device", choices=("auto", "cpu", "metal"), default="auto")
-    parser.add_argument("--contract", type=int, choices=(1, 2, GAME_CONTRACT), default=GAME_CONTRACT,
-                        help="game export contract: 3 (default, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 "
-                             "(Toolgen 0.7 layout for Cube Escape before 0.64)")
+    parser.add_argument("--contract", type=int, choices=CONTRACTS, default=GAME_CONTRACT,
+                        help="game export contract: 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 "
+                             "layout, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout for Cube "
+                             "Escape before 0.64)")
     args = parser.parse_args()
     lock = None
     try:

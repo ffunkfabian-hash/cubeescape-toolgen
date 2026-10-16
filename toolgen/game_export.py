@@ -24,6 +24,11 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   Contract 3 adds the ego clips (data/ego_clips.json): ``<asset>_FPS_Game_Clips.fbx/.glb``, the same model with all ego
   clips on one take ``<Name>_EgoClips`` after the Use clip's frames, listed in ``clips`` (frame ranges in the take) and
   ``ego_clips`` (names, poses, transitions). The main files keep the Use clip alone, so older consumers read clips[0].
+* Contract 4 (Cube Escape 0.71) adds UV1 (toolgen/surface.py ``add_uv1``) to every source mesh before the merge, so LOD0,
+  LOD1, the clips file and both models carry it; the first-person model takes the world model's UV1 when every tool part
+  has a twin there (``shared_with_world``). The glTF files carry TANGENT computed on UV1 (MikkTSpace); the FBX files carry
+  no tangents (Unity's FBX import reads only UV0 tangents, measured in Cube Escape 0.71: the game computes them from UV1).
+  The maps and the ``surface`` block come from the stage ``surface_bake`` (toolgen/surface_bake.py).
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -49,12 +54,15 @@ except ImportError:  # unit tests import the pure helpers with the system Python
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips  # noqa: E402 - pure Python, needs the tool_assets path
+import surface as surface_maps  # noqa: E402 - same folder (toolgen/), pure helpers plus the UV1 step
 PALETTE_PATH = ROOT / "data/game_palette.json"
 BUDGET_PATH = ROOT / "data/game_budget.json"
 TOOLS_PATH = ROOT / "data/tools.json"
-CONTRACT_FORMAT = 3              # 3: first-person ego clips (<asset>_FPS_Game_Clips.*, "ego_clips"); --contract 2 = 0.8 layout
-CONTRACT_FORMATS = (1, 2, 3)     # 2: "material_convention" and MT_<Channel> slots for equipment tools; 1 = 0.7 layout
+CONTRACT_FORMAT = 4              # 4: UV1, glTF tangents on UV1, surface maps (stage surface_bake); --contract 3 = 0.10 layout
+CONTRACT_FORMATS = (1, 2, 3, 4)  # 3: ego clips (<asset>_FPS_Game_Clips.*); 2: MT_<Channel> slots for equipment tools; 1 = 0.7
 EGO_CLIPS_CONTRACT = 3
+SURFACE_CONTRACT = surface_maps.SURFACE_CONTRACT
+UV1_ROTATION_LIMIT_DEGREES = .1   # packing may not turn islands (float noise of the scale step stays far below)
 CHANNELS = ("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail")   # Cube Escape ColorChannels.cs
 EMITTING_CHANNELS = ("Energy", "Emission")
 LOD1_TARGET = .30
@@ -887,9 +895,14 @@ def export_files(scene, root, work, name, clip):
         obj.select_set(obj in objects)
     bpy.context.view_layer.objects.active = root
     animated = clip is not None
+    # Contract 4: the glTF exporter computes TANGENT on the active UV map (UV1 stays active, UVMap the render map).
+    uv1 = any(obj.type == "MESH" and surface_maps.UV1_NAME in obj.data.uv_layers for obj in objects)
+    for obj in objects:
+        if uv1 and obj.type == "MESH":
+            obj.data.uv_layers.active = obj.data.uv_layers[surface_maps.UV1_NAME]
     gltf = {"filepath": str(work / (name + ".glb")), "export_format": "GLB", "use_selection": True,
             "export_yup": True, "export_extras": True, "export_animations": animated, "export_morph": True,
-            "export_cameras": False, "export_lights": False, "use_active_scene": True}
+            "export_cameras": False, "export_lights": False, "use_active_scene": True, "export_tangents": uv1}
     if animated:
         gltf.update({"export_animation_mode": "ACTIVE_ACTIONS", "export_merge_animation": "ACTION",
                      "export_nla_strips_merged_animation_name": clip, "export_frame_range": True,
@@ -1360,6 +1373,34 @@ def check_colliders(checks, contract, source, tool_id):
                opening_probes=probes)
 
 
+def check_uv1(checks, expected):
+    """Contract 4, on the saved game model (open after check_blend): UVMap stays map 0 and the render map, UV1 is map 1;
+    LOD0 lays out without overlap and with the margin, LOD1 keeps UV1 in range (its collapse may fold a few texels)."""
+    root = bpy.context.scene.objects[expected["root"]]
+    meshes = [obj for obj in tree(root) if obj.type == "MESH"]
+    layers = {obj.name: [layer.name for layer in obj.data.uv_layers] for obj in meshes}
+    render = all(obj.data.uv_layers[0].active_render for obj in meshes)
+    layers_ok = render and all(names == [surface_maps.UV0_NAME, surface_maps.UV1_NAME] for names in layers.values())
+    lod0 = surface_maps.uv1_report([obj for obj in meshes if obj.get("ce_lod") == 0])
+    lod1 = surface_maps.uv1_report([obj for obj in meshes if obj.get("ce_lod") == 1])
+    errors0, errors1 = surface_maps.layout_errors(lod0), surface_maps.layout_errors(lod1, overlap_allowed=True)
+    info = expected["uv1"]
+    rotation = info.get("islands_rotated_max_degrees")
+    checks.add("uv1_layers", layers_ok, layers=sorted({tuple(names) for names in layers.values()}), render_map_uv0=render)
+    checks.add("uv1_lod0", not errors0, errors=errors0, **lod0)
+    checks.add("uv1_lod1", not errors1, errors=errors1, **lod1)
+    checks.add("uv1_source", rotation is not None and rotation <= UV1_ROTATION_LIMIT_DEGREES,
+               limit_degrees=UV1_ROTATION_LIMIT_DEGREES, **info)
+
+
+def glb_surface_attributes(path):
+    """Primitives of a GLB without TEXCOORD_1 or TANGENT (contract 4)."""
+    document = glb_document(path)
+    return [f"{mesh.get('name')}[{index}]" for mesh in document.get("meshes", [])
+            for index, primitive in enumerate(mesh["primitives"])
+            if not {"TEXCOORD_0", "TEXCOORD_1", "TANGENT"} <= set(primitive["attributes"])]
+
+
 def check_import(checks, kind, path, source, expected, prefix=""):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     if kind == "glb":
@@ -1421,8 +1462,16 @@ def check_import(checks, kind, path, source, expected, prefix=""):
                 current = bounds_of([obj], depsgraph)
                 worst_bounds = max(worst_bounds, bounds_error(current, source["group_bounds"][frame][group["name"]]))
     details.update({"sampled_frames": frames, "max_matrix_error": worst_matrix, "max_bounds_error_m": worst_bounds})
-    checks.add(f"roundtrip_{prefix}{kind}", not missing and slots_ok and clip_ok and worst_matrix <= ROUNDTRIP_MATRIX_TOLERANCE
-               and worst_bounds <= ROUNDTRIP_BOUNDS_TOLERANCE_M, **details)
+    uv1_ok = True
+    if expected["uv1"]:
+        # UV1 survives the reimport on every renderer (FBX: second UV layer; glTF: TEXCOORD_1 and TANGENT in the file).
+        found = [find(name) for name in [*expected["renderers"], *expected["lods"]]]
+        details["uv1_missing"] = sorted(obj.name for obj in found if obj is not None and len(obj.data.uv_layers) < 2)
+        if kind == "glb":
+            details["primitives_without_uv1_or_tangent"] = glb_surface_attributes(path)
+        uv1_ok = not details["uv1_missing"] and not details.get("primitives_without_uv1_or_tangent")
+    checks.add(f"roundtrip_{prefix}{kind}", not missing and slots_ok and clip_ok and uv1_ok
+               and worst_matrix <= ROUNDTRIP_MATRIX_TOLERANCE and worst_bounds <= ROUNDTRIP_BOUNDS_TOLERANCE_M, **details)
 
 
 # --------------------------------------------------------------------------------------------- preview
@@ -1540,6 +1589,42 @@ def contract_name(viewmodel):
     return "unity_contract_fps.json" if viewmodel else "unity_contract.json"
 
 
+def keep_only(scene, root):
+    """Drop other scenes and every object outside the model (presentation rig, preview props)."""
+    keep = set(tree(root))
+    for other in [other for other in bpy.data.scenes if other != scene]:
+        bpy.data.scenes.remove(other)
+    for obj in list(bpy.data.objects):
+        if obj not in keep:
+            bpy.data.objects.remove(obj)
+
+
+def world_uv1(work, asset):
+    """UV1 of the world model's parts exactly as its own game export makes it (same file, same step)."""
+    bpy.ops.wm.open_mainfile(filepath=str(work / (asset + ".blend")))
+    scene = bpy.context.scene
+    root = scene.objects[asset]
+    keep_only(scene, root)
+    meshes = [obj for obj in tree(root) if obj.type == "MESH"]
+    info = surface_maps.add_uv1(meshes)
+    return surface_maps.capture_uv1(meshes), info
+
+
+def make_uv1(root, captured=None):
+    """Contract 4: UV1 on every mesh of the model before the merge. With ``captured`` (first-person model) the world
+    model's UV1 is reused when every tool part has a twin; otherwise the model gets its own atlas."""
+    meshes = [obj for obj in tree(root) if obj.type == "MESH"]
+    missing = surface_maps.transfer_uv1(meshes, captured) if captured is not None else None
+    if missing == []:
+        info = {"source": "world model", "shared_with_world": True, "sha256": surface_maps.uv1_digest(meshes),
+                "islands_rotated_max_degrees": None}
+    else:
+        info = dict(surface_maps.add_uv1(meshes), source="own atlas", shared_with_world=None if captured is None else False,
+                    parts_without_world_twin=missing[:20] if missing else [])
+    info["parts"] = len(meshes)
+    return info
+
+
 def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMAT):
     """Game export of the world model, or of the first-person model (``viewmodel``: root ``<asset>_FPS``, no collision,
     its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract)."""
@@ -1548,6 +1633,9 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     asset, clip_name = tool["asset"], tool.get("clip")
     source_path = work / (asset + ".blend")
     game = asset + "_Game"
+    captured = world_info = None
+    if viewmodel and contract >= SURFACE_CONTRACT:
+        captured, world_info = world_uv1(work, asset[:-len("_FPS")])
     bpy.ops.wm.open_mainfile(filepath=str(source_path))
     scene = bpy.context.scene
     root = scene.objects[asset]
@@ -1582,13 +1670,15 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
         "triangles": sum(triangles(obj.data) for obj in meshes)})
     source_clip_name = str(root.get("ce_action_clip", clip_name)) if clip_name else None
     colliders = [] if viewmodel else collision_boxes(root, groups, scene)
-    # Build: drop the presentation rig, palette, merge, LOD1.
-    keep = set(tree(root))
-    for other in [other for other in bpy.data.scenes if other != scene]:
-        bpy.data.scenes.remove(other)
-    for obj in list(bpy.data.objects):
-        if obj not in keep:
-            bpy.data.objects.remove(obj)
+    # Build: drop the presentation rig, UV1 (contract 4), palette, merge, LOD1.
+    keep_only(scene, root)
+    uv1_info = None
+    if contract >= SURFACE_CONTRACT:
+        uv1_info = make_uv1(root, captured)
+        if world_info:
+            uv1_info["world_sha256"] = world_info["sha256"]
+            if uv1_info["shared_with_world"]:
+                uv1_info["islands_rotated_max_degrees"] = world_info["islands_rotated_max_degrees"]
     materials = palette_materials(palette)
     used_sources = remap_materials(root, palette, materials)
     collection = root.users_collection[0]
@@ -1598,6 +1688,10 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     limit = budget["viewmodel" if viewmodel else "world"][tool["id"]]
     renderers, kept = reduce_to_budget(renderers, limit, collection)
     lods = build_lods(renderers, collection)
+    if uv1_info:
+        # The collapse keeps UV1 but may fold single triangles; unfold them (deterministic) before the checks.
+        folds = {obj.name: surface_maps.untangle_uv1(obj.data) for obj in [*renderers, *lods]}
+        uv1_info["decimation_folds"] = {name: {"before": a, "after": b} for name, (a, b) in folds.items() if a or b}
     if clip_name:
         scene.name = clip_name                 # the FBX take carries the scene name
     set_frame(scene, scene.frame_start)
@@ -1656,6 +1750,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
                 "materials": {obj.name: [m.name for m in obj.data.materials] for obj in [*renderers, *lods]},
                 "clip": clip_info and dict(clip_info, frames=clip_info["frames"]),
                 "viewmodel": viewmodel, "camera": camera_data, "root_free_required": bool(tool.get("hold")),
+                "uv1": uv1_info,
                 "socket_surface": surface, "sockets_on_tool_required": bool(tool.get("hold")),
                 "max_renderers": MAX_RENDERERS_VIEWMODEL if viewmodel else MAX_RENDERERS,
                 "sample_frames": sample_frames(scene.frame_start, scene.frame_end, [f for _, f in source["markers"]],
@@ -1677,8 +1772,9 @@ def main():
                         help="export the first-person model <asset>_FPS (no collision, own budget, camera data)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
     parser.add_argument("--contract", type=int, choices=CONTRACT_FORMATS, default=CONTRACT_FORMAT,
-                        help="contract format: 3 (default, ego clips file for the first-person model), 2 (Toolgen 0.8 "
-                             "layout, Use clip only) or 1 (Toolgen 0.7 layout, palette names only, for Cube Escape before 0.64)")
+                        help="contract format: 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 layout, "
+                             "ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout, palette names only, "
+                             "for Cube Escape before 0.64)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     work = args.directory.resolve()
     checks = Checks()
@@ -1702,6 +1798,8 @@ def main():
         timings["export"] = time.perf_counter() - phase
         phase = time.perf_counter()
         check_blend(checks, files["blend"], source, expected, palette)
+        if expected["uv1"]:
+            check_uv1(checks, expected)
         check_budget(checks, contract)
         if args.viewmodel and tool.get("hold", {}).get("sight_kind"):
             report["ads"] = check_ads(checks, work, contract, tool)
