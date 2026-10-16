@@ -158,8 +158,8 @@ class ContractTests(unittest.TestCase):
         for clip in clips:
             self.assertTrue({clip["frame_start"], clip["frame_end"], *(e["frame"] for e in clip["events"])} <= frames)
 
-    def test_contract_three_is_the_default(self):
-        self.assertEqual(3, ge.CONTRACT_FORMAT)
+    def test_ego_clips_start_at_contract_three(self):
+        self.assertEqual(4, ge.CONTRACT_FORMAT)          # 0.11: contract 4 (surface maps) keeps the ego clips
         self.assertEqual(3, ge.EGO_CLIPS_CONTRACT)
 
 

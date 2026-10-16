@@ -1,5 +1,22 @@
 # Änderungen
 
+## 0.11.0 – Primer (16.10.2026)
+
+Vertrag 4 für das Bemalen im Spiel (Cube Escape 0.71 „Maskwork“, Entwurf und Spike in der Notiz `ce071-vertrag4-an-toolgen.md`, Freigabe des
+Nutzers über die Equipment-Sitzung): UV1, GLB-Tangenten auf UV1, Maskenkarten W0/W1/Fields/Normal und Block `surface`
+([UNITY_EINBAU](docs/UNITY_EINBAU.md) › Maskenkarten und UV1, [TECHNIK](docs/TECHNIK.md) › Oberflächenkarten).
+
+- Vertragsänderung (`format` 4, additiv): UV1 (`TEXCOORD_1`) auf allen Spielmodellen samt LOD1 und Clips-Datei, je Werkzeugteil vor dem
+  Zusammenführen, Ego übernimmt die Welt-UV1 (Waffen und Bogen; Portalwerfer, Magnetgreifer, Taschenlampe eigenes Atlas); Hände ohne Insel.
+  Neue Stufe `surface_bake` (standard/full, `heavy_lock`): Karten Welt 512², Ego 1024², Satz 0,61–1,98 MB. FBX ohne Tangenten (CE rechnet sie).
+  **Mindestversion des Abnehmers: Cube Escape 0.71**; ältere Fassung: `python3 toolgen/generate_tools.py --tier standard --contract 3 --output output/_contract3`.
+- Kollaps-Dezimierung faltet UV1 (Portalwerfer 250 Dreiecke): Entfaltung nach der Dezimierung, LOD0 und LOD1 aller 26 Modelle überlappungsfrei.
+- Prüfung: `./check` (206 Tests; die 7 numpy-Tests laufen unter Blenders Python, grün), `--tier standard` alle 13 grün (1025 s, partiell), Wiederholung 13 Cache-Treffer,
+  `verify_output.py` 768 Prüfungen, `scripts/verify_surface.py` (neu, unabhängig aus GLB/PNG) 26 Modelle grün, Bake bitgleich bei 1 und 8 Threads
+  (Taschenlampe, Pistole), `--contract 3` ohne UV1/Karten, `check_output.sh` grün (Viewer 190). Codex: Abnahmeskript (`luna`, im Sandkasten
+  ohne Blender; Lauf und Korrekturen Claude); Prüfung `sol` 4 Befunde, behoben: Überlappungsfläche bei Punkt-Dreiecken, Inselverschweißung
+  im Abnahmeskript, Hinweis `wrapMode` Clamp; Nullflächen-Dreiecke der Entfaltung bleiben (QA zählt sie: 635 in 26 LOD0, höchstens 165).
+
 ## 0.10.0 – Steadyhand (16.10.2026)
 
 Pistole beidhändig im Becher-Griff wie in Destiny (Wunsch des Nutzers über die CE-Sitzung Ego-Waffenhaltung): die linke Hand umfasst die

@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.10.0 · Steadyhand.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.11.0 · Primer.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -34,8 +34,10 @@ zu einem eigenen Viewmodel-FOV; jedes Ego-Paket enthält dazu `viewmodel_camera.
 Der Spiel-Export (Stufe `game`) macht aus jedem Weltmodell ein Unity-fertiges Spielmodell: statische Teile in einem
 Renderer, bewegliche Teile getrennt, matte Cube-Escape-Materialien (`data/game_palette.json`), Dreiecksbudget
 (`data/game_budget.json`), LOD0/LOD1, Kollisionsboxen und `unity_contract.json`. Die Stufe `game_fps` macht dasselbe für das
-Ego-Modell (eigenes Budget, keine Kollision, Viewmodel-Kameradaten in `unity_contract_fps.json`). Details und Werte:
-[TECHNIK](docs/TECHNIK.md) › Spiel-Export; Einbau-Vorbereitung: [UNITY_EINBAU](docs/UNITY_EINBAU.md).
+Ego-Modell (eigenes Budget, keine Kollision, Viewmodel-Kameradaten in `unity_contract_fps.json`). Ab Vertrag 4 (Standard, Cube Escape 0.71)
+tragen beide Spielmodelle eine zweite UV-Map (UV1); die Stufe `surface_bake` backt in standard und full die Maskenkarten W0, W1, Fields
+und Normal und schreibt den Block `surface` (`--contract 3` = Layout 0.10 ohne beides). Details und Werte:
+[TECHNIK](docs/TECHNIK.md) › Spiel-Export, › Oberflächenkarten; Einbau-Vorbereitung: [UNITY_EINBAU](docs/UNITY_EINBAU.md).
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich; der Regler „Sichtfeld“ der Ego-Ansicht (35–75°, Zurücksetzen auf den Datenwert) wirkt
@@ -61,7 +63,7 @@ bash scripts/check_output.sh output
 | Stufe | Ausgabe | Umfang |
 |---|---|---|
 | quick | `output/_quick` | Modelle, Animation, Geometrie-QA, Spiel-Export mit QA, Viewer-Daten; keine Bilder |
-| standard | `output/_standard` | zusätzlich FBX-/GLB-Reimport der Weltmodelle und Bilder (12 Samples, 50 %) |
+| standard | `output/_standard` | zusätzlich FBX-/GLB-Reimport der Weltmodelle, Maskenkarten (Vertrag 4) und Bilder (12 Samples, 50 %) |
 | full | `output` | dieselben Prüfungen, volle Bilder (40 Samples, 100 %) |
 
 `--tool bow` grenzt einen Lauf ein. Jede Stufe hat einen eigenen Inhaltsschlüssel; ihr Ergebnis liegt im geteilten Cache
