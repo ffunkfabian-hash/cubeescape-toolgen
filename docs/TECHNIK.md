@@ -420,7 +420,7 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
 - UV1 (`game_export.py`, ab Vertrag 4, vor dem Zusammenführen): je Modell alle Teile im Mehrobjekt-Editmodus, `smart_project` (66°),
   `average_islands_scale`, `pack_islands` ohne Drehung (FRACTION 0,008, konkav), danach in [16/1024, 1] geschoben; Teile mit
   `FPS_*`-Materialien (Hände, Arme) bleiben auf (0, 0). Gemessen wird die größte Drehung je Fläche beim Packen (Pistole 0,013°, Gleitkomma der
-  Skalierung; Grenze 0,1°). Das Ego-Modell öffnet zuerst das Weltmodell, macht dort dieselbe UV1 und überträgt sie je Teil (Name, Schleifenzahl,
+  Skalierung; Grenze 0,5° – seit 0.12.0 statt 0,1°, weil das Gleitkomma-Rauschen des Packers je Plattform schwankt: Magnetgreifer Mac 0,097°, Linux 0,1015°, Entscheidung des Nutzers 16.10.2026; echte Drehungen des Packers fängt die Grenze weiter). Das Ego-Modell öffnet zuerst das Weltmodell, macht dort dieselbe UV1 und überträgt sie je Teil (Name, Schleifenzahl,
   Flächenaufbau); fehlt ein Zwilling, bekommt es ein eigenes Atlas (`shared_with_world` false, `parts_without_world_twin`). `game_fps` liest
   deshalb `<Asset>.blend` mit.
 - Dezimierung: Kollaps auf das Budget und LOD1 behält UV1, faltet aber Dreiecke (Portalwerfer 250 auf LOD0) und legt Inselränder über die

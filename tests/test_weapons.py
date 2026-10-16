@@ -491,6 +491,16 @@ class AdsCheckTests(unittest.TestCase):
                          "model over 25 % of the screen height above the centre")
 
 
+class Uv1RotationTests(unittest.TestCase):
+    def test_packer_noise_passes_and_real_turns_fail(self):
+        """0.12.0: limit 0.5 degrees (packer noise Mac 0.097, Linux 0.1015; user decision 16.10.2026)."""
+        self.assertEqual(.5, ge.UV1_ROTATION_LIMIT_DEGREES)
+        for value in (0.0, .0918, .1015, .45):
+            self.assertTrue(ge.uv1_rotation_ok(value), value)
+        for value in (.6, 90, None):
+            self.assertFalse(ge.uv1_rotation_ok(value), value)
+
+
 class FramesTests(unittest.TestCase):
     def test_kit_frame_constants_match_the_pipeline(self):
         constants = {}

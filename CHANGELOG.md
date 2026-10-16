@@ -7,6 +7,7 @@ Zulieferung T1/T2/T3/T5/T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 �
 - `Socket_Sight` je Waffe, Visierlinie über dem Gehäuse (Bildmitte frei); Scopes mit offenem Okular, `Socket_Eye` an der Linse (Ziel-Clips von Sturm-, Impulsgewehr und Raketenwerfer zielen dafür neu über das Gehäuse); `hold.sight_socket`/`sight_kind`/`eye_socket`/`eye_radius_m`/`ads_eye_distance_m`.
 - Marker `Fire` im Use-Clip am `fire_frame`; Fire/AimFire der Ego-Clips nennen `Fire` neben `Shot`.
 - Finger animiert (Abzugfinger in Fire/AimFire, Nachfassen in Reload), `FusionRifle_Charge` als Zustands-Loop (letzter Clip), `ce_action_clips`.
+- UV1-Drehgrenze (`uv1_source`, Vertrag 4) 0,5° statt 0,1°: Packer-Rauschen je Plattform (Magnetgreifer Mac 0,097°, Linux 0,1015°), Entscheidung des Nutzers.
 - Prüfung: Handkontakt je Clipbild, ADS-Zielpose (Bildmitte frei, ≤ 25 % über der Mitte, Fingerbefund) in `qa_game_fps.json` › `ads`.
 - Mindestversion des Abnehmers: keine (Cube Escape 0.72 liest `Socket_Sight` live aus dem Modell, ohne ihn gilt das Ersatz-Visier hinter der Mündung); Mindestversion für Vertrag 4 bleibt Cube Escape 0.71; Fassung ohne die neuen Anker: Stand `624a011` (0.11.0 Primer) erzeugen, ohne Karten `--contract 3`.
 

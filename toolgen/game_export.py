@@ -62,7 +62,9 @@ CONTRACT_FORMAT = 4              # 4: UV1, glTF tangents on UV1, surface maps (s
 CONTRACT_FORMATS = (1, 2, 3, 4)  # 3: ego clips (<asset>_FPS_Game_Clips.*); 2: MT_<Channel> slots for equipment tools; 1 = 0.7
 EGO_CLIPS_CONTRACT = 3
 SURFACE_CONTRACT = surface_maps.SURFACE_CONTRACT
-UV1_ROTATION_LIMIT_DEGREES = .1   # packing may not turn islands (float noise of the scale step stays far below)
+# Packing may not turn islands (it catches real 90-degree turns of the packer). 0.5, not 0.1: the packer's float noise differs by
+# platform (Magnet gripper, Blender 5.2.2, 16.10.2026: Mac 0.097, Linux 0.1015 degrees; user decision).
+UV1_ROTATION_LIMIT_DEGREES = .5
 CHANNELS = ("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail")   # Cube Escape ColorChannels.cs
 EMITTING_CHANNELS = ("Energy", "Emission")
 LOD1_TARGET = .30
@@ -1339,6 +1341,11 @@ def check_ads(checks, work, contract, tool):
                                "meshes within viewmodel_framing's tolerance)")
 
 
+def uv1_rotation_ok(rotation):
+    """UV1 packing kept the islands' orientation (largest turn per face in degrees, None = not measured)."""
+    return rotation is not None and rotation <= UV1_ROTATION_LIMIT_DEGREES
+
+
 def collider_box(collider):
     data = collider["blender"]
     return (data["center"], data["axes"], data["half_extents"])
@@ -1389,7 +1396,7 @@ def check_uv1(checks, expected):
     checks.add("uv1_layers", layers_ok, layers=sorted({tuple(names) for names in layers.values()}), render_map_uv0=render)
     checks.add("uv1_lod0", not errors0, errors=errors0, **lod0)
     checks.add("uv1_lod1", not errors1, errors=errors1, **lod1)
-    checks.add("uv1_source", rotation is not None and rotation <= UV1_ROTATION_LIMIT_DEGREES,
+    checks.add("uv1_source", uv1_rotation_ok(rotation),
                limit_degrees=UV1_ROTATION_LIMIT_DEGREES, **info)
 
 
