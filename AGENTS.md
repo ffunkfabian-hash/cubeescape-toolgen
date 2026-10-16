@@ -57,11 +57,9 @@ ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Um
 Schwere Läufe (`--tier full`, `scripts/check_output.sh`) warten auf `scripts/heavy_lock.py`, die gemeinsame Sperre mit Robogen,
 Cube Escape und Cubegen (`CE_HEAVY_LOCK=0` überspringt sie); sie wird nur gemeinsam mit den anderen Repos geändert.
 
-Grafik- und schwere Läufe nur in Mac-Sitzungen (Regel des Nutzers, 16.10.2026, globale Regeln 1.2.0): Cloud-Sitzungen prüfen nur
-schnell (`./check`, `python3 toolgen/generate_tools.py --tier quick` ohne Bilder, Syntax, Doku). `--tier standard`/`full`, `surface_bake`,
-Previews, Kontaktbögen, MP4, Viewer-Builds und Unity-Läufe laufen in einer Mac-Sitzung (Remote Control oder lokal) mit `heavy_lock`
-und Zeitband; Cloud-Zeiten werden nicht bewertet. Die Cloud-Sitzung schließt solche Arbeit als „ungeprüft“ ab und übergibt den
-Prüfweg (Stufen, Befehle, erwartete Unterschiede und Cache-Treffer).
+**Cloud-Sitzungen** führen nur `./check` und `--tier quick` (ohne Bilder) aus; `standard`/`full`, `surface_bake`, Renderings, GIFs,
+Viewer-Build/-Tests und die Unity-Abnahme laufen in einer Mac-Sitzung (`heavy_lock`, Zeitband). Eine Cloud-Sitzung schließt als
+„ungeprüft“ ab und übergibt den Prüfweg (Stufen, Befehle, erwartete Unterschiede) an den Mac. Cloud-Zeiten werden nicht bewertet.
 
 Maximal zwei Worker standardmäßig; Threads werden unter ihnen aufgeteilt. `--workers` und `--threads` dürfen zusammen
 die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Prozesse, Zusammenführung in Katalogreihenfolge.
@@ -121,7 +119,7 @@ Subagent-Definitionen: `.claude/agents/tg-test-runner.md` (prüft, schreibt kein
 Profile mit dem Wächter aus `ce-agent-tools` prüfen: `python3 scripts/check_rules.py --shared <ce-agent-tools-Pfad>`.
 Diese Definitionen erteilen keinen Auftrag, andere laufende Chats anzuschreiben oder Subagents ungefragt zu starten.
 Cloud-SessionStart übernimmt Robogens Blender-Python-/ImageMagick-Kompatibilität. Swift und native Viewer-Abnahme brauchen
-macOS; Cloud-Zeiten sind nicht mit dem Mac vergleichbar.
+macOS; Cloud-Läufe siehe › Befehle (Cloud-Sitzungen).
 
 ## Pipeline-Details
 
