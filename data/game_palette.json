@@ -99,6 +99,45 @@
       "role": "warm white lamp lens and core (flashlight)",
       "ce_base": null,
       "ce_status": "new in Cube Escape (create at import)"
+    },
+    "M_GlowVoid": {
+      "color_srgb": [
+        0.72,
+        0.38,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "emission": 4.0,
+      "role": "void weapons: violet energy",
+      "ce_base": null,
+      "ce_status": "new in Cube Escape (create at import)"
+    },
+    "M_GlowArc": {
+      "color_srgb": [
+        0.3,
+        0.52,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "emission": 4.0,
+      "role": "arc weapons: blue energy",
+      "ce_base": null,
+      "ce_status": "new in Cube Escape (create at import)"
+    },
+    "M_GlowKinetic": {
+      "color_srgb": [
+        0.93,
+        0.95,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "emission": 2.5,
+      "role": "kinetic weapons: cool white light",
+      "ce_base": null,
+      "ce_status": "new in Cube Escape (create at import)"
     }
   },
   "map": {
@@ -137,6 +176,126 @@
     "FPS_Robot_Grey": "M_Metal_Matte",
     "FPS_Robot_Dark": "M_RobotDark_Matte",
     "FPS_Robot_Cyan": "M_GlowCyan",
-    "FPS_Robot_Orange": "M_HazardOrange_Matte"
+    "FPS_Robot_Orange": "M_HazardOrange_Matte",
+    "PG_Void": "M_GlowVoid",
+    "PG_Arc": "M_GlowArc",
+    "PG_Kinetic": "M_GlowKinetic",
+    "PG_Primary": "M_RobotBody_Matte",
+    "PG_Secondary": "M_RobotDark_Matte",
+    "PG_Accent": "M_HazardOrange_Matte",
+    "PG_Detail": "M_RobotDark_Matte",
+    "PG_Display": "M_GlowCyan"
+  },
+  "channels": {
+    "note": "Equipment convention of Cube Escape 0.64+ (Docs/EQUIPMENT.md, Assets/Scripts/Equipment/ColorChannels.cs): tools with \"materials\": \"equipment_channels\" in data/tools.json name their game-export slots MT_<Channel>; the game colours them per renderer slot (MaterialPropertyBlock). 'slots' are the default looks (same matte finish rule; only MT_Energy and MT_Emission emit; MT_Energy takes the colour of the tool's element glow), 'map' assigns the source materials of those tools to a slot. Sources missing here (the robot hands of the viewmodel) keep the palette material. Contract 1 (game_export.py --contract 1) ignores this section.",
+    "convention": "MT_<Channel>",
+    "max_materials_per_tool": 7,
+    "max_materials_per_viewmodel": 12,
+    "slots": {
+      "MT_Primary": {
+        "color_srgb": [
+          0.92,
+          0.93,
+          0.96
+        ],
+        "metallic": 0.1,
+        "roughness": 0.62,
+        "emission": 0.0,
+        "channel": "Primary",
+        "material_kind": "PaintedSteel",
+        "role": "main armour shell"
+      },
+      "MT_Secondary": {
+        "color_srgb": [
+          0.16,
+          0.17,
+          0.2
+        ],
+        "metallic": 0.2,
+        "roughness": 0.62,
+        "emission": 0.0,
+        "channel": "Secondary",
+        "material_kind": "PaintedSteel",
+        "role": "dark frame, receiver and cladding panels"
+      },
+      "MT_Accent": {
+        "color_srgb": [
+          1.0,
+          0.45,
+          0.1
+        ],
+        "metallic": 0.05,
+        "roughness": 0.6,
+        "emission": 0.0,
+        "channel": "Accent",
+        "material_kind": "PaintedSteel",
+        "role": "accent stripes, markers, small painted parts"
+      },
+      "MT_Metal": {
+        "color_srgb": [
+          0.42,
+          0.46,
+          0.52
+        ],
+        "metallic": 0.35,
+        "roughness": 0.55,
+        "emission": 0.0,
+        "channel": "Metal",
+        "material_kind": "BrushedMetal",
+        "role": "bare metal: barrel, bolts, mechanics"
+      },
+      "MT_Energy": {
+        "color_srgb": [
+          0.1,
+          0.85,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "emission": 4.0,
+        "channel": "Energy",
+        "material_kind": "EnergyGlass",
+        "role": "energy cells, coils, element glow (colour of the element)"
+      },
+      "MT_Emission": {
+        "color_srgb": [
+          0.1,
+          0.85,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "emission": 3.0,
+        "channel": "Emission",
+        "material_kind": "EnergyGlass",
+        "role": "displays, sight reticles, status lights"
+      },
+      "MT_Detail": {
+        "color_srgb": [
+          0.07,
+          0.075,
+          0.085
+        ],
+        "metallic": 0.0,
+        "roughness": 0.75,
+        "emission": 0.0,
+        "channel": "Detail",
+        "material_kind": "Rubber",
+        "role": "grip rubber, lens glass, dark small parts"
+      }
+    },
+    "map": {
+      "PG_Primary": "MT_Primary",
+      "PG_Secondary": "MT_Secondary",
+      "PG_Accent": "MT_Accent",
+      "PG_Metal": "MT_Metal",
+      "PG_Detail": "MT_Detail",
+      "PG_Display": "MT_Emission",
+      "PG_Kinetic": "MT_Energy",
+      "PG_Cyan": "MT_Energy",
+      "PG_Amber": "MT_Energy",
+      "PG_Void": "MT_Energy",
+      "PG_Arc": "MT_Energy"
+    }
   }
 }

@@ -7,6 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 from generate_tools import catalog, valid_package
 
+PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
+
 output = Path(sys.argv[1])
 index = json.loads((output / "catalog.json").read_text())
 checks = 0
@@ -58,7 +60,14 @@ for tool in catalog():
     assert ego["variant"] == "viewmodel" and not ego["colliders"] and ego["viewmodel"]["player_fov_dependency"] == "none"
     assert ego["viewmodel"]["vertical_fov_degrees"] == json.loads((package / "viewmodel_camera.json").read_text())["vertical_fov_degrees"]
     assert ego["lods"]["LOD0"]["triangles"] <= ego["budget"]["triangles_limit"] * 1.05, (tool["id"], "ego triangle budget")
-    assert len(ego["materials"]) <= 7 and len(ego["nodes"]) + len(ego["renderers"]) <= 60, (tool["id"], "ego nodes")
+    # equipment tools (contract 2): seven MT_ slots plus the hands' palette materials
+    equipment = ego.get("material_convention") == "equipment_channels"
+    limit = PALETTE["channels"]["max_materials_per_viewmodel"] if equipment else PALETTE["max_materials_per_viewmodel"]
+    assert len(ego["materials"]) <= limit and len(ego["nodes"]) + len(ego["renderers"]) <= 60, (tool["id"], "ego nodes")
+    if equipment:
+        assert set(ego["equipment"]["channels"]) == {"Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail"}
+        assert all(name.startswith("M_") for name in ego["equipment"]["untouched_slots"]), tool["id"]
+        checks += 2
     assert json.loads((package / "qa_game_fps.json").read_text())["passed"]
     assert tool["asset"] + "_FPS_Game.glb" in manifest["files"]
     checks += 5

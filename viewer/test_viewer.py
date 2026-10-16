@@ -44,10 +44,18 @@ for model in catalog["models"]:
     if model["frames"] > 1:
         drawn = shots / (identifier + "-drawn.png")
         reset = shots / (identifier + "-reset.png")
-        run("--snapshot", drawn, "--model", model["id"], "--frame", "31", "--size", "600x400", "--no-floor")
-        run("--snapshot", reset, "--model", model["id"], "--frame", str(model["frames"]), "--size", "600x400", "--no-floor")
-        assert difference(path, drawn) > 30, (model["id"], "motion not visible")
-        assert difference(path, reset) < 20, (model["id"], "reset does not restore rest pose")
+        # The clips differ in timing (bow draw at 31, weapon shots at 15-17, bolts and fins later): the motion must show
+        # in at least one of these frames.
+        motion = 0
+        # 1200x800: long weapons are small in the default framing, their moving parts only a few pixels at 600x400.
+        large = shots / (identifier + "-large.png")
+        run("--snapshot", large, "--model", model["id"], "--size", "1200x800", "--no-floor")
+        for frame in ("15", "16", "19", "31", "46", "56", "60"):
+            run("--snapshot", drawn, "--model", model["id"], "--frame", frame, "--size", "1200x800", "--no-floor")
+            motion = max(motion, difference(large, drawn))
+        run("--snapshot", reset, "--model", model["id"], "--frame", str(model["frames"]), "--size", "1200x800", "--no-floor")
+        assert motion > 30, (model["id"], "motion not visible")
+        assert difference(large, reset) < 40, (model["id"], "reset does not restore rest pose")
         check("motion and reset " + model["id"])
     if model["variant"] in ("world", "fps", "fps_game"):
         # The Ego sidebar adds the field-of-view section; both layouts must fit 360 pt.

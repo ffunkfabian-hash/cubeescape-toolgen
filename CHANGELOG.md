@@ -1,5 +1,54 @@
 # Änderungen
 
+## 0.8.0 – Gunmetal (16.10.2026)
+
+Waffen 1–9 detailreicher und mit den Ausrüstungs-Slots von Cube Escape ([TECHNIK](docs/TECHNIK.md) › Waffen-Module, [UNITY_EINBAU](docs/UNITY_EINBAU.md) › Ausrüstungs-Slots).
+
+- Module je Waffe: Verkleidungen mit Fugen, Seitenpanzer, Anzeigen (zur Ego-Kamera), Energiezellen, Kühlrippen, Akzente, Griffsporn;
+  Anker, Knoten, Pivots, Clips und Maßstab gleich wie 0.7.1 (gegen die Verträge in Cube Escape 0.63 verglichen).
+- Vertragsänderung (Format 2): Waffen-Slots `MT_Primary/Secondary/Accent/Metal/Energy/Emission/Detail`, `material_convention`, Block `equipment`;
+  Hände und übrige Werkzeuge bleiben bei `M_*`. Mindestversion des Abnehmers: Cube Escape 0.64 (Equipment-Import);
+  ältere Fassung: `python3 toolgen/generate_tools.py --tier standard --contract 1`.
+- Ego-Hände/-Arme (Befund CE 0.65): Stützhand im Untergriff, Unterarme diagonal von unten (`arm_pose`, Daten), neue Prüfungen
+  Handgelenkwinkel je Bild (Ziel 45°, Grenze 55°; vorher 105°/160°, jetzt rechts 46–52°, links 30–31°), Läufe in der Ego-Pose fast
+  waagerecht, Bildausschnitt bei 1,7× Vergrößerung, Knoten `Wrist_R`/`Wrist_L` für die Messung im Spiel (additiv); nur Hand-/Armknoten
+  und die Ego-Pose ändern sich.
+- Budgets der Waffen +1 000–2 000 Dreiecke (Welt 4 500–8 000, Ego 13 000–16 000; Schätzungen); `verify_output.py` kennt die Slot-Grenze.
+- Prüfung: `./check` (157 Tests), `--tier standard` alle 13 Werkzeuge grün, Wiederholung 13 Cache-Treffer, `verify_output.py` 378 Prüfungen;
+  `--contract 1` quick für Pistole und Schrotflinte. Codex-Prüfung (`gpt-6.1-sol`, high): 3 Befunde, behoben (1,7×-Rahmen verbindlich, kein `-Infinity` im QA-JSON, Waffenquellen ohne `MT_`-Slot brechen ab). Grenzen: kein `--tier full`, kein Viewer-Bau, keine Unity-Abnahme.
+
+## 0.7.1 – Ironsight (16.10.2026)
+
+Vertragsänderung auf Wunsch des Nutzers (über die Cube-Escape-Sitzung): `Socket_SupportHand` von Portalkanone, Magnetgreifer und
+Taschenlampe liegt jetzt am Gehäuse statt 35–37 mm daneben.
+
+- Portalkanone und Magnetgreifer: (0, −0,045, −0,008) → (0, −0,045, 0,03), Abstand zur Oberfläche +1 mm; Taschenlampe: (0, −0,018, 0,018) →
+  (0, −0,018, 0,07), 15 mm im Gehäuse. Alle anderen Anker (`Socket_Hand`, `Socket_Muzzle`, `Socket_Grab`, `Socket_Camera`) unverändert; Vertragsformat 1 unverändert.
+- Die Ego-Hände ändern sich nicht (Stützhand der älteren Werkzeuge sitzt weiter über `support_offset`); `hand_touch_m` ≤ 0,13 mm.
+- Mindestversion des Abnehmers: Modelle aus Toolgen ≥ 0.7.1; wer `Socket_SupportHand` dieser drei Werkzeuge nutzt, muss neu importieren.
+  Ältere Fassung: `git checkout 807a6d9 -- scripts/tool_assets/Portalkanone/create_portal_gun.py scripts/tool_assets/Magnetgreifer/create_magnet_gripper.py scripts/tool_assets/Taschenlampe/create_flashlight.py`
+  und neu erzeugen (807a6d9 = 0.6.3).
+- Prüfung: `./check`, `--tier standard` für die drei Werkzeuge.
+
+## 0.7.0 – Ironsight (15.10.2026)
+
+Neun Handwaffen (Konzepttafel 1–9, ohne Bogen) als Werkzeuge: Pistole, Sturmgewehr, Impulsgewehr, Schrotflinte, Scharfschützengewehr,
+Maschinenpistole, Fusionsgewehr, Spurgewehr, Raketenwerfer. Technik: [docs/TECHNIK.md](docs/TECHNIK.md) › Waffen 1–9.
+
+- Je Waffe Welt- und Ego-Modell, Anker (`Socket_Hand`, `Socket_SupportHand`, `Socket_Muzzle`, `Socket_CenterOfMass`), Einzelclip `<Name>_Use`
+  (97 Bilder, Ruhepose am Ende), Spiel-Export mit Vertrag, Elementfarbe (kinetic, energy, solar, void, arc); keine Munition, keine Regeln.
+  Ein Baukasten (`weapon_kit.py`, `weapon_designs.py`) mit je Waffe einem Ordner aus fünf Starter-Dateien statt neun Kopien.
+- Vertrag: Block `hold` (Anker, Griffachse, Haltewinkel, Mündungsachse, Element), `anchors[].surface_distance_m` und QA
+  `grip_sockets_on_tool` (Handanker höchstens 4 mm außerhalb des Werkzeugs; für die älteren Werkzeuge nur Information: Portalkanone und
+  Magnetgreifer 37 mm, Taschenlampe 35 mm außerhalb; mit 0.7.1 korrigiert).
+- Use-Clips schreiben keine Wurzelkurven (QA `clip_root_free`, `clips[0].root_curves`): unabhängig von der 180°-Drehung des Unity-Imports.
+- Ego: Stützhand am Anker `Socket_SupportHand` mit eigenem Handschutz-Radius (`support_socket`, `support_radius`), QA `hand_touch_m`
+  (Hand berührt das Werkzeug, Grenze 8 mm), Rückstoß (`motion`, `motion_profiles.recoil_impulse`), je Werkzeug anpassbare Kopfgrenzen
+  (`head.limits`). Die älteren Werkzeuge behalten ihr Verhalten (neu nur der Messwert `hand_touch_m`).
+- Palette: `M_GlowVoid`, `M_GlowArc`, `M_GlowKinetic` (neu in Cube Escape). Budgets: Welt 3 500–7 000, Ego 11 000–15 000 Dreiecke (Schätzungen).
+- Prüfung: 141 Unit-Tests (neu `tests/test_weapons.py`, Rückstoß in `test_motion.py`), `--tier standard` für alle 13 Werkzeuge grün,
+  `verify_output.py` 360 Prüfungen (53 Modelle). Grenzen: kein `--tier full`, keine Unity-Abnahme.
+
 ## 0.6.3 – Sightline (15.10.2026)
 
 Doku-/Vertragspatch: die 180°-Drehung beim Unity-Import (Achsenfund aus dem Cube-Escape-Einbau).

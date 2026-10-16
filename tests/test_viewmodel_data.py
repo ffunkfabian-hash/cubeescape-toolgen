@@ -42,6 +42,7 @@ class ViewmodelPoseTests(unittest.TestCase):
 
     def test_heads_use_semantic_anchors_except_the_bow(self):
         expected = {"portal_emitter": "Socket_Muzzle", "magnet_gripper": "Socket_Grab", "flashlight": "Socket_Muzzle"}
+        expected.update({tool: "Socket_Muzzle" for tool, entry in TOOLS.items() if entry.get("hold")})  # the nine weapons
         for tool, profile in DATA["tools"].items():
             if tool == "bow":
                 self.assertNotIn("head", profile)

@@ -228,6 +228,151 @@ matte Palettenmaterialien statt der 8–14 glänzenden Generatormaterialien (Met
 
 Offen bleibt der Einbau in Unity (siehe Grenzen).
 
+## Waffen 1–9 (0.7.0 Ironsight)
+
+Neun Handwaffen als Werkzeuge in der Roboterhand (Auftrag des Nutzers vom 15.10.2026: Waffen 1–9 der Konzepttafel, der Bogen
+ausdrücklich nicht): Pistole, Sturmgewehr, Impulsgewehr, Schrotflinte, Scharfschützengewehr, Maschinenpistole, Fusionsgewehr,
+Spurgewehr und Raketenwerfer. Stil wie die anderen Werkzeuge (weiße Schalen, Graphitmechanik, Metall); Farbe trägt nur das Element
+(Destiny-2-angelehnt): KINETIC grau/weiß, ENERGY cyan, SOLAR orange, VOID violett, ARC blau. Es sind Cube-Escape-Werkzeuge in der
+Hand: keine Munition, kein Schaden, keine Regeln, kein Projektil im Asset. Die Verteilung der Elemente ist eine Wahl dieser Arbeit
+(das Konzeptbild war beim Bau nicht lesbar): `element` je Eintrag in `data/tools.json` und `DESIGNS` (`weapon_designs.py`).
+
+**Aufbau.** Ein Baukasten statt neun Kopien: `scripts/tool_assets/weapon_kit.py` (Welt, FPS-Kopie, Use-Clip, Reimport-Prüfung),
+`weapon_designs.py` (Geometrie und Clip-Daten je Waffe, ohne bpy) und `weapon_gif.py` (Animations-GIF, Systempython). Die Primitive
+kommen aus dem Portalkanonen-Helfer wie bei der Taschenlampe. Jede Waffe hat wie jedes Werkzeug einen eigenen Ordner
+(`Pistole/`, `Sturmgewehr/`, `Impulsgewehr/`, `Schrotflinte/`, `Scharfschuetzengewehr/`, `Maschinenpistole/`, `Fusionsgewehr/`,
+`Spurgewehr/`, `Raketenwerfer/`; die Pipeline arbeitet je Ordner) mit fünf Starter-Dateien von drei Zeilen. Der Autoren-Kopierordner
+enthält kein `data/`; Asset, Clip, Element und Griffneigung stehen deshalb in `DESIGNS`, `tools.json` spiegelt sie, ein Test
+(`tests/test_weapons.py`) hält beide gleich. Eine zehnte Waffe ist ein Eintrag in `DESIGNS`, in `tools.json`, `viewmodels.json` und
+`game_budget.json` plus ein Ordner mit den fünf Startern.
+
+**Koordinaten und Anker.** Blender: vorn −Y, oben +Z, Meter, Wurzel am Ursprung; der Ursprung ist die Mitte des Pistolengriffs
+(`Socket_Hand`). Jede Waffe hat `Socket_Hand` (Griffmitte), `Socket_SupportHand` (Mitte des Handschutzes bzw. Vorderschafts,
+bei der Pistole am Rahmen), `Socket_Muzzle` und `Socket_CenterOfMass`. Die Anker liegen im jeweiligen Griffteil: `weapon_kit.py`
+bricht den Bau ab, wenn `Socket_Hand` oder `Socket_SupportHand` mehr als 4 mm außerhalb des Teils liegen (`grip_part`/`support_part`),
+der Spiel-Export misst dasselbe am Netz (`grip_sockets_on_tool` in `qa_game.json`, `surface_distance_m` je Anker im Vertrag;
+negativ = im Teil, Grenze +4 mm). Der Griff ist um `grip_tilt_degrees` nach vorn geneigt (Pistole 14°, Maschinenpistole 18° …);
+`Socket_Hand` bleibt unrotiert (Lauf = −Y), die Hand folgt der Neigung über `hand_rotation_degrees` im Ego-Profil.
+
+**Haltung im Vertrag (`hold`).** `unity_contract.json` und `unity_contract_fps.json` enthalten für jede Waffe den Block `hold`:
+Anker (`hand_socket`, `support_socket`, `muzzle_socket`), `two_handed`, `grip_tilt_degrees`, `grip_axis` (Griffunterkante → Griffoberkante),
+`muzzle_axis` (−Y bzw. +Z in Unity), `grip_to_muzzle_degrees` (90° − Neigung), `element` und eine Anleitung. Damit richtet das Spiel
+die Roboterhand an der Griffachse aus und lässt den Lauf entlang der Zielrichtung zeigen; der Lauf zeigt im Modell nie nach oben oder
+unten. Die Vektoren stehen im Wurzelraum wie die Anker: die 180°-Drehung des FBX-Imports (`axes.fbx.export_yaw_degrees`) gilt für sie
+genauso und wird genau einmal angewendet ([UNITY_EINBAU](UNITY_EINBAU.md) › Waffen in der Hand).
+
+**Stützhand.** Das Ego-Profil einer Waffe nennt `support_socket` (`Socket_SupportHand`) und `support_radius` (halbe Höhe und
+Breite des Handschutzes): `first_person.py` legt die linke Hand an den Anker des Werkzeugs und schließt die Finger um dessen
+Querschnitt. Die älteren Werkzeuge setzen die Stützhand weiter mit festem Versatz (`support_offset`) und festem Radius an den Griffanker. Die QA misst den Abstand der Finger-, Daumen- und Handflächenpunkte zur Werkzeugoberfläche
+(`hand_touch_m`, Grenze `touch_tolerance_m` = 8 mm) und verwirft eine Hand in der Luft. Beide Hände hängen starr am Werkzeug (der
+Rückstoß bewegt Werkzeug und Hände gemeinsam), die Messung im Ruhebild gilt daher für den ganzen Clip. Gemessen an den vier älteren
+Werkzeugen berührt die Stützhand der Portalkanone und des Magnetgreifers die Oberfläche (0,1 mm); ihr Weltanker `Socket_SupportHand`
+lag bis 0.7.0 dagegen 37 mm außerhalb des Gehäuses (Vertrag `surface_distance_m`; Magnetgreifer 37 mm, Taschenlampe 35 mm); 0.7.1 legt ihn ans Gehäuse (+1 mm bzw. 15 mm innen).
+
+**Use-Clip.** Ein Einzelclip `<Name>_Use`, 97 Bilder bei 24 fps, keine Wiederholung, kein Autoplay, Ruhepose am Ende. Der Clip
+schreibt **keine Kurve auf die Wurzel**: bewegt werden nur Kind-Knoten (`Anim_Slide`, `Anim_Bolt`, `Anim_Cell`, `Anim_Fin*`, `Anim_Coil`,
+`Anim_Hatch`). Der Unity-Import dreht das Modell um 180° um Y; eine Wurzelkurve müsste mitgedreht werden, ohne sie ist der Clip
+unabhängig vom Yaw. `clip_root_free` in `qa_game*.json` verlangt das für die Waffen, `clips[0].root_curves` im Vertrag nennt die
+Kurven der Wurzel (leer). Bewegungen: Pistole der Schlitten (Bild 14–30), Sturmgewehr/Maschinenpistole/Spurgewehr der Verschluss,
+Impulsgewehr die Zelle (drei Impulse), Schrotflinte der Repetierschieber (Bild 36–56), Scharfschützengewehr der Kammerstängel
+(drehen, zurück, vor, drehen), Fusionsgewehr zwei Flossen und ein Spulenring beim Aufladen (Bild 10–47), Raketenwerfer die
+Ladeklappe. Der Ego-Clip `<Name>_Use` fügt den Rückstoß hinzu.
+
+**Rückstoß (Ego).** `motion` im Ego-Profil (`fire_frame`, `kick_m`, `pitch_degrees`, `recovery_frames`, optional `charge_m`,
+`yaw_degrees`): `Viewmodel_Motion` schiebt Waffe und Hände ruckartig zum Spieler und hebt die Mündung um die Hand (nicht um die
+Kamera), danach Abklingen bis in die Ruhe (`recoil_pose`, Impulskurve in `motion_profiles.recoil_impulse`). Fusionsgewehr: Schuss bei Bild 46
+nach dem Aufladen. Ohne `motion` bleibt die alte Anwendungsbewegung der Werkzeuge.
+
+**Kopfprüfung.** Bei schlanken Läufen unter der Stützhand ist der Mündungskopf klein; `head.limits` im Profil lockert beim
+Impulsgewehr, Scharfschützengewehr, bei der Maschinenpistole und beim Spurgewehr `head_min_unoccluded_fraction` auf 0,3 und
+`head_min_screen_fraction` auf 0,001; die wirksamen Werte stehen in `qa_viewmodel.json` › `head.limits` und werden von
+`verify_output.py` erneut geprüft.
+
+**Materialien und Budgets.** Neue Palettenmaterialien `M_GlowVoid`, `M_GlowArc`, `M_GlowKinetic` (neu in Cube Escape, beim Import
+anlegen; ENERGY und SOLAR nutzen die vorhandenen `M_GlowCyan`/`M_GlowOrange`). Eine Waffe braucht 4–5 Palettenmaterialien (Ego 5–6).
+Budgets: Welt 3 500–7 000, Ego 11 000–15 000 Dreiecke LOD0 (Datenwerte, Schätzungen wie die übrigen).
+
+Werte (0.7.0, `output/_standard`; Dreiecke LOD0 / LOD1, Quelle = vor dem Export):
+
+| Waffe | Element | Länge (m) | Welt: Quelle → LOD0 / LOD1 | Renderer | Ego: Quelle → LOD0 | Hände (Berührung) |
+|---|---|---|---|---|---|---|
+| 1 Pistole | kinetic | 0.24 | 6 076 → 3 498 / 1 048 | 2 | 12 808 → 10 996 | 0.0 mm |
+| 2 Sturmgewehr | kinetic | 0.93 | 13 636 → 5 998 / 1 798 | 2 | 27 100 → 13 996 | 0.0 mm / 0.1 mm |
+| 3 Impulsgewehr | energy | 0.86 | 8 924 → 5 998 / 1 796 | 2 | 22 388 → 13 998 | 0.0 mm / 0.1 mm |
+| 4 Schrotflinte | solar | 0.90 | 10 508 → 5 998 / 1 798 | 2 | 23 972 → 13 994 | 0.0 mm / 0.0 mm |
+| 5 Scharfschützengewehr | void | 1.13 | 15 168 → 6 998 / 2 098 | 2 | 28 632 → 14 998 | 0.1 mm / 0.0 mm |
+| 6 Maschinenpistole | arc | 0.62 | 10 392 → 4 998 / 1 498 | 2 | 23 856 → 12 996 | 0.0 mm / 0.0 mm |
+| 7 Fusionsgewehr | energy | 0.96 | 11 524 → 6 996 / 2 096 | 4 | 24 988 → 14 994 | 0.1 mm / 0.0 mm |
+| 8 Spurgewehr | kinetic | 1.04 | 13 784 → 5 998 / 1 798 | 2 | 27 248 → 13 998 | 0.0 mm / 0.2 mm |
+| 9 Raketenwerfer | solar | 0.72 | 11 364 → 6 998 / 2 098 | 2 | 24 828 → 14 996 | 0.0 mm / 0.0 mm |
+
+
+
+## Waffen-Module und Ausrüstungs-Slots (0.8.0 Gunmetal)
+
+Auftrag (über die Cube-Escape-Sitzung, 16.10.2026): die Waffen 1–9 detailreicher, Industrial-Sci-Fi nach Destiny 2, mit den
+Material-Slots des Ausrüstungssystems von Cube Escape 0.64 Anodize. Anker, Knoten, Pivots, Clips und Maßstab bleiben wie in 0.7.1
+(verglichen mit den in Cube Escape 0.63 importierten Verträgen: Anker, Knoten und Clips gleich).
+
+**Module.** `weapon_designs.py` hat gemeinsame Hard-Surface-Bausteine: `panel` (Verkleidung mit dunkler Fuge), `side_armor`
+(abgeschrägte Seitenplatten beidseitig), `display` (Rahmen, dunkles Glas, leuchtende Segmentbalken; Normale +X oder zum Spieler +Y),
+`energy_cell` (Elementkern zwischen Metallkappen im Käfig), `heat_sink` (Kühlrippen), `accent`. Jede Waffe ruft nach ihrem 0.7-Körper
+`<name>_modules(k)` auf; die Module liegen außerhalb der Griff- und Stützhandzone. Lesbar aus der Ego-Ansicht sind vor allem die
+Anzeigen auf der +X-Seite und auf der Rückseite der Visiere (die Kamera sieht die +X-Seite und die Oberseite). Der Griff bekommt
+Griffsporn (`GripTail`) und Schrauben. Kennzeichen je Klasse: Pistole Kompensator und Munitionsanzeige hinten am Schlitten,
+Sturmgewehr Seiten- und Visieranzeige, Kühlrippen, Akzentkappe; Impulsgewehr Bugpanzer, zwei Zellen am Schaft; Schrotflinte
+Patronenträger mit zwei Patronen; Scharfschützengewehr Sonnenblende, Zielfernrohranzeige, Laufrippen; Maschinenpistole Arc-Zelle oben,
+Trommelschrauben; Fusionsgewehr Ladeanzeige, Kühlrippen, Akzentspitzen an den beweglichen Flossen; Spurgewehr Laufrücken,
+Mündungsring; Raketenwerfer Zielbildschirm, Antenne, Rohrpanzer, Abgasstreben.
+
+**Materialien = Kanäle.** Der Baukasten hat je Kanal ein Quellmaterial: `PG_Primary`, `PG_Secondary`, `PG_Accent`, `PG_Metal`,
+`PG_Detail`, `PG_Display` und die Elementleuchte (`PG_Kinetic`/`Cyan`/`Amber`/`Void`/`Arc`). `data/game_palette.json` › `channels`
+bildet sie auf `MT_Primary` … `MT_Detail` ab (Elementleuchte → `MT_Energy`, Anzeige → `MT_Emission`); `map` behält die Abbildung
+auf die `M_*`-Palette für Vertrag 1. `game_export.tool_palette` wählt je Werkzeug: `"materials": "equipment_channels"` in
+`data/tools.json` (nur die Waffen) und Vertrag ≥ 2 → Slots; `MT_Energy` bekommt Farbe und Leuchtstärke des Elements. Quellen ohne
+Kanal (die Roboterhände im Ego-Modell) behalten die Palette. Grenzen: 7 Materialien je Weltmodell, 12 je Ego-Modell (7 Slots plus
+Handmaterialien); im Vertrag 1 bleibt es bei 6/7.
+
+**Hände und Arme (Befund Cube Escape 0.65 „Holdfast“).** Die Ego-Hände hielten die Waffen verdreht: rechts stand der Unterarm
+senkrecht unter dem Griff (Handgelenk ≈ 105° abgeknickt), links lag die Hand oben auf dem Handschutz, die Finger zeigten zum Ellbogen
+(≈ 160°). Anker und Greifen waren richtig, falsch war die Armpose. Jetzt:
+
+- `support_grip: "underhand"`: die Stützhand liegt unter dem Handschutz (Handfläche unten, Zeigefinger vorn, Daumen zur Kamera +X,
+  Finger um die ferne Seite).
+- `arm_pose` je Seite (Kameraraum: rechts = −X, vorn = −Y, oben = +Z): `upper` = Ellbogen → Schulter; der Unterarm entweder
+  absolut (`forearm`, Ellbogen → Handgelenk; links) oder relativ zur Hand (`forearm_rise_degrees` über der Knöchelrichtung,
+  `forearm_yaw_degrees` zum Handflächenrand hin; rechts 27°/6°, Pistole 31°). `aim_arm` setzt Ellbogen und Schulter aus der Ruhepose;
+  die starre Zweigliederkette folgt der Hand durch den Clip. `shoulders` entfällt bei den Waffen.
+- Läufe in der Ego-Pose fast waagerecht (`aim_target_m` 0–3° unter der Hand statt 12–14°), Stützhand 35° zur Kameraseite gerollt
+  (`support_roll_degrees`): beides lässt die Knöchel weniger nach unten bzw. zur fernen Seite zeigen.
+- Prüfung je Bild des Clips (`qa_viewmodel.json` › `wrist_bend`): Winkel Unterarm ↔ Knöchelrichtung höchstens `max_wrist_bend_degrees`
+  (Entscheidung des Nutzers 16.10.2026: Ziel 45°, harte Grenze 55°, als Test festgehalten) und Ellbogen auf der Handflächenseite.
+  Gemessen (`output/_standard`): rechts 45,7–52,1° (Pistole 52,1, MP 52,0, Sturmgewehr 50,7, Scharfschützen-/Spurgewehr 45,9/45,7),
+  links 30,3–30,6°; vorher 105°/160°. Rechts liegt über dem Ziel, weil die Griffneigung (12–18°) die Knöchel nach unten kippt und der
+  Unterarm für den Bildausschnitt ≈ 27° steigen muss; flacher ginge nur mit flacheren Griffen (Vertrag `hold.grip_axis`).
+- Bildausschnitt auch bei 1,7× um `Socket_Hand` (`GAME_ENLARGEMENT_MAX`, so vergrößert Cube Escape 0.65 die Waffen), verbindlich:
+  `proximal_forearm_max_screen_y_enlarged` < 0.
+
+Anker, `hold`, Vertragsformat unverändert; geändert sind nur Hand- und Armknoten (Ruhe und Clip) der Ego-Modelle.
+
+**Vertrag 2.** `format` 2, `material_convention`, bei den Waffen Block `equipment` ([UNITY_EINBAU](UNITY_EINBAU.md) › Ausrüstungs-Slots).
+`generate_tools.py --contract 1` (oder `game_export.py --contract 1`) schreibt das 0.7-Layout; die Wahl steckt im Stufenschlüssel
+(Eintrag `game_contract` im Werkzeug, nur bei 1).
+
+Werte (0.8.0, `output/_standard`; Dreiecke LOD0 / LOD1, Quelle = vor dem Export; Budgets in `data/game_budget.json` um 1 000–2 000 angehoben):
+
+| Waffe | Welt: Quelle → LOD0 / LOD1 | Renderer | Ego: Quelle → LOD0 | Hände (Berührung) |
+|---|---|---|---|---|
+| 1 Pistole | 8 764 → 4 498 / 1 348 | 2 | 15 496 → 12 996 | 0.0 mm |
+| 2 Sturmgewehr | 17 240 → 6 998 / 2 098 | 2 | 30 704 → 15 994 | 0.0 mm / 0.0 mm |
+| 3 Impulsgewehr | 12 748 → 6 998 / 2 096 | 2 | 26 212 → 15 996 | 0.0 mm / 0.1 mm |
+| 4 Schrotflinte | 14 920 → 6 998 / 2 098 | 2 | 28 384 → 15 996 | 0.0 mm / 0.0 mm |
+| 5 Scharfschützengewehr | 20 284 → 7 998 / 2 394 | 2 | 33 748 → 15 996 | 0.1 mm / 0.0 mm |
+| 6 Maschinenpistole | 12 900 → 5 998 / 1 792 | 2 | 26 364 → 14 994 | 0.0 mm / 0.0 mm |
+| 7 Fusionsgewehr | 13 864 → 7 994 / 2 394 | 4 | 27 328 → 15 996 | 0.1 mm / 0.0 mm |
+| 8 Spurgewehr | 16 452 → 6 998 / 2 098 | 2 | 29 916 → 15 994 | 0.0 mm / 0.2 mm |
+| 9 Raketenwerfer | 15 352 → 7 998 / 2 393 | 2 | 28 816 → 15 994 | 0.0 mm / 0.0 mm |
+
 ## Cache und Worker
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer

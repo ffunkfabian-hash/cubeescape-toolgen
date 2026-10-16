@@ -47,6 +47,168 @@
       "animation": "animate_standard_bow.py",
       "clip": "Bow_Use",
       "arrow": "CubeEscape_Arrow_Standard"
+    },
+    {
+      "id": "pistol",
+      "label": "Pistole",
+      "folder": "Pistole",
+      "asset": "CubeEscape_Pistol",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "Pistol_Use",
+      "fps_clip": "Pistol_Use",
+      "element": "kinetic",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 14,
+        "two_handed": false
+      }
+    },
+    {
+      "id": "assault_rifle",
+      "label": "Sturmgewehr",
+      "folder": "Sturmgewehr",
+      "asset": "CubeEscape_AssaultRifle",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "AssaultRifle_Use",
+      "fps_clip": "AssaultRifle_Use",
+      "element": "kinetic",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 16,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "pulse_rifle",
+      "label": "Impulsgewehr",
+      "folder": "Impulsgewehr",
+      "asset": "CubeEscape_PulseRifle",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "PulseRifle_Use",
+      "fps_clip": "PulseRifle_Use",
+      "element": "energy",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 14,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "shotgun",
+      "label": "Schrotflinte",
+      "folder": "Schrotflinte",
+      "asset": "CubeEscape_Shotgun",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "Shotgun_Use",
+      "fps_clip": "Shotgun_Use",
+      "element": "solar",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 15,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "sniper_rifle",
+      "label": "Scharfschützengewehr",
+      "folder": "Scharfschuetzengewehr",
+      "asset": "CubeEscape_SniperRifle",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "SniperRifle_Use",
+      "fps_clip": "SniperRifle_Use",
+      "element": "void",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 12,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "smg",
+      "label": "Maschinenpistole",
+      "folder": "Maschinenpistole",
+      "asset": "CubeEscape_SubmachineGun",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "SubmachineGun_Use",
+      "fps_clip": "SubmachineGun_Use",
+      "element": "arc",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 18,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "fusion_rifle",
+      "label": "Fusionsgewehr",
+      "folder": "Fusionsgewehr",
+      "asset": "CubeEscape_FusionRifle",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "FusionRifle_Use",
+      "fps_clip": "FusionRifle_Use",
+      "element": "energy",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 14,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "scout_rifle",
+      "label": "Spurgewehr",
+      "folder": "Spurgewehr",
+      "asset": "CubeEscape_ScoutRifle",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "ScoutRifle_Use",
+      "fps_clip": "ScoutRifle_Use",
+      "element": "kinetic",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 12,
+        "two_handed": true
+      }
+    },
+    {
+      "id": "rocket_launcher",
+      "label": "Raketenwerfer",
+      "folder": "Raketenwerfer",
+      "asset": "CubeEscape_RocketLauncher",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "RocketLauncher_Use",
+      "fps_clip": "RocketLauncher_Use",
+      "element": "solar",
+      "materials": "equipment_channels",
+      "hold": {
+        "grip_tilt_degrees": 14,
+        "two_handed": true
+      }
     }
   ]
 }

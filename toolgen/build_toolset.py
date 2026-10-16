@@ -14,7 +14,7 @@ from pathlib import Path
 
 TOOLGEN_ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT = TOOLGEN_ROOT.parent / "output/_quick"
-IMPLEMENTED_TOOLS = ("portal_emitter", "magnet_gripper", "flashlight", "bow")
+IMPLEMENTED_TOOLS = tuple(tool["id"] for tool in json.loads((TOOLGEN_ROOT.parent / "data/tools.json").read_text())["tools"])
 REQUIRED_OUTPUTS = (
     "PortalEmitter.blend",
     "PortalEmitter.fbx",

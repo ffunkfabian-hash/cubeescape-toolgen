@@ -21,7 +21,7 @@ from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
-from motion_profiles import draw_hand_offset, envelope, settle, solve_elbow
+from motion_profiles import draw_hand_offset, envelope, recoil_impulse, settle, solve_elbow
 
 
 def aspect_ratio(name):
@@ -258,6 +258,46 @@ def pose_arm(rig, bake=True, frame=1):
             node.keyframe_insert(data_path="rotation_quaternion", frame=frame)
 
 
+def aim_arm(rig, spec, sign):
+    """Arm pose as data (``arm_pose`` in the Ego profile, camera frame: right = -X, forward = -Y, up = +Z): ``forearm`` is the
+    direction elbow -> wrist (or ``forearm_rise_degrees`` / ``forearm_yaw_degrees`` relative to the knuckle heading),
+    ``upper`` the direction elbow -> shoulder. Shoulder and elbow plane follow from the rest pose,
+    so the rigid two-link chain reproduces that elbow and keeps following the hand through the clip."""
+    bpy.context.view_layer.update()
+    wrist = rig["hand"].matrix_world @ rig["wrist"]
+    upper, lower = rig["lengths"]
+    if "forearm" in spec:
+        forearm = Vector(spec["forearm"]).normalized()
+    else:
+        # Relative to the hand: the knuckle heading (horizontal), turned outward to the palm side by forearm_yaw_degrees
+        # and rising by forearm_rise_degrees; the wrist bend is then about rise + the downward knuckle angle.
+        knuckles = rig["hand"].matrix_world.to_3x3() @ Vector((0, -1, 0))
+        heading = Vector((knuckles.x, knuckles.y, 0)).normalized()
+        outward = (rig["hand"].matrix_world.to_3x3() @ Vector((sign, 0, 0)))
+        # the elbow (behind the wrist) goes to the palm side, so the forearm heading turns towards the finger side
+        turn = math.radians(spec["forearm_yaw_degrees"]) * (1 if heading.cross(Vector((-outward.x, -outward.y, 0))).z > 0 else -1)
+        heading = Matrix.Rotation(turn, 3, "Z") @ heading
+        rise = math.radians(spec["forearm_rise_degrees"])
+        forearm = (heading * math.cos(rise) + Vector((0, 0, math.sin(rise)))).normalized()
+    elbow = wrist - forearm * lower
+    shoulder = elbow + Vector(spec["upper"]).normalized() * upper
+    rig["shoulder"] = shoulder
+    rig["pole"] = elbow - shoulder
+    rig["arm_limits"] = {"max_wrist_bend_degrees": spec["max_wrist_bend_degrees"], "palm_side": sign}
+    pose_arm(rig, bake=False)
+
+
+def wrist_bend(rig):
+    """Angle (degrees) between the forearm (elbow -> wrist) and the knuckle direction of the hand, and whether the elbow lies
+    on the palm side, i.e. opposite the fingertips (hand-local X)."""
+    hand = rig["hand"].matrix_world
+    wrist = hand @ rig["wrist"]
+    forearm = (wrist - rig["lower"].matrix_world.translation).normalized()
+    knuckles = (hand.to_3x3() @ Vector((0, -1, 0))).normalized()
+    elbow_local = hand.inverted() @ rig["lower"].matrix_world.translation
+    return math.degrees(forearm.angle(knuckles)), elbow_local.x * rig["arm_limits"]["palm_side"] > 0
+
+
 def link(name, parent, first, last, width, depth, mat):
     first, last = Vector(first), Vector(last)
     delta = last - first
@@ -266,6 +306,9 @@ def link(name, parent, first, last, width, depth, mat):
 
 
 GRIPPING_FINGERS = 3
+# Cube Escape 0.65 enlarges the weapon viewmodels 1.35-1.7x about Socket_Hand (Resources/Toolgen/viewmodel_holds.json);
+# the proximal forearm halves must leave the frame at that size as well.
+GAME_ENLARGEMENT_MAX = 1.7
 # Finger rows along the palm's Z axis (Robogen Mitt: three fingers at a 31 mm pitch).
 # Thinner links than the Mitt keep visible gaps, so each finger reads at FPS distance.
 GRIP_ROWS = (.029, 0, -.029)
@@ -332,6 +375,12 @@ def hand(side, parent, pose, shoulder, radius, mats, proportions, pinch=False):
     rig = arm(side, parent.parent, joint, wrist_local, shoulder, mats, proportions)
     contact = empty("GripContact_" + side, joint)
     contact["ce_role"] = "hand_contact"
+    # Wrist point for the game's own wrist check (Cube Escape 0.65): angle between LowerArm origin (elbow) -> Wrist_<side>
+    # and the knuckle direction, local -Y of Hand_<side>; the same measure as wrist_bend in qa_viewmodel.json.
+    wrist = empty("Wrist_" + side, joint)
+    wrist.location = wrist_local
+    wrist["ce_role"] = "wrist"
+    wrist["ce_knuckle_axis"] = "-Y of Hand_" + side
     return joint, fingers, contact, rig
 
 
@@ -435,18 +484,39 @@ def build(directory, spec, profile):
     twists = {side: Euler(tuple(math.radians(value) for value in profile.get("hand_rotation_degrees", {}).get(side, (0, 0, 0))), "XYZ").to_matrix().to_4x4() for side in ("L", "R")}
     main, _, contact, rig = hand(grip_side, motion, socket.matrix_world @ twists[grip_side], shoulders[grip_side], [r * tool_scale / proportions["hand_scale"] for r in profile["grip_radius"]], mats, proportions)
     hands.append(main); arms.append(rig); contact_targets[contact.name] = "Socket_Hand"
+    arm_pose = profile.get("arm_pose", {})
+    if grip_side in arm_pose:
+        aim_arm(rig, arm_pose[grip_side], 1 if grip_side == "L" else -1)
     if tool == "bow":
         nock = scene.objects["Socket_Nock"]
         draw_pose = nock.matrix_world @ twists["R"]
         draw, fingers, draw_contact, rig = hand("R", motion, draw_pose, shoulders["R"], (.012, .015), mats, proportions, pinch=True)
         hands.append(draw); arms.append(rig); contact_targets[draw_contact.name] = "Socket_Nock"
     elif profile["support"]:
-        support_pose = pose @ Matrix.Translation(profile["support_offset"])
+        support_radius = (.086, .085)
+        if profile.get("support_socket"):
+            # The support hand closes around the handguard at the tool's own anchor (cross-section half extents
+            # support_radius: height, width), so it grips the tool in every pose instead of hovering near it.
+            anchor = scene.objects[profile["support_socket"]].matrix_world.translation
+            support_pose = Matrix.LocRotScale(anchor, rotation, Vector((1, 1, 1)))
+            support_radius = [r * tool_scale / proportions["hand_scale"] for r in profile["support_radius"]]
+        else:
+            support_pose = pose @ Matrix.Translation(profile["support_offset"])
         # Turning the support hand about the barrel keeps its fingers off the tool head.
         support_pose = support_pose @ Matrix.Rotation(math.radians(profile.get("support_roll_degrees", 0)), 4, "Y")
-        support_pose = support_pose @ Matrix(((0, -1, 0, 0), (0, 0, 1, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
-        support, _, _, rig = hand("L", motion, support_pose, shoulders["L"], (.086, .085), mats, proportions)
+        if profile.get("support_grip") == "underhand":
+            # Relaxed underhand support (weapons): palm under the handguard, index finger forward (-Y), thumb on the
+            # camera side (+X), fingers curling up the far side; the wrist lies on the camera side, so the forearm
+            # comes in from the left shoulder without crossing under the tool.
+            support_pose = support_pose @ Matrix(((0, 1, 0, 0), (0, 0, -1, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
+        else:
+            support_pose = support_pose @ Matrix(((0, -1, 0, 0), (0, 0, 1, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
+        support, _, support_contact, rig = hand("L", motion, support_pose, shoulders["L"], support_radius, mats, proportions)
         hands.append(support); arms.append(rig)
+        if "L" in arm_pose:
+            aim_arm(rig, arm_pose["L"], 1)
+        if profile.get("support_socket"):
+            contact_targets[support_contact.name] = profile["support_socket"]
     rest = {obj: obj.matrix_world.copy() for obj in hands}
     scene.render.fps = 24; scene.frame_start = 1; scene.frame_end = 97
     clip = spec.get("fps_clip") or spec["clip"]
@@ -472,6 +542,9 @@ def build(directory, spec, profile):
             shift = Vector((-.012 * tension, -.035 * tension + .025 * kick, .008 * tension - .004 * kick))
             motion.rotation_euler = rotation
             motion.location = pivot + shift - rotation.to_matrix() @ pivot
+        elif profile.get("motion"):
+            # Weapon: recoil impulse about the hand (back toward the player, muzzle up), then settling to rest.
+            motion.rotation_euler, motion.location = recoil_pose(profile["motion"], frame, Vector(profile["hand"]))
         else:
             pressure = envelope(frame, ((1, 0), (14, 1), (45, 1), (73, 0), (97, 0)))
             kick = settle(frame, 14, 28, 1)
@@ -493,14 +566,28 @@ def build(directory, spec, profile):
                 finger.keyframe_insert(data_path="rotation_euler", frame=frame)
         for rig in arms:
             pose_arm(rig, frame=frame)
+            if "arm_limits" in rig:
+                bend, palm_side = wrist_bend(rig)
+                record = rig.setdefault("bend", {"max_degrees": 0.0, "elbow_on_palm_side": True})
+                record["max_degrees"] = max(record["max_degrees"], round(bend, 2))
+                record["elbow_on_palm_side"] = record["elbow_on_palm_side"] and palm_side
     for obj in [motion, *hands, *(node for rig in arms for node in (rig["upper"], rig["lower"])), *(obj for obj in root.children_recursive if obj.name.startswith("Fingers_"))]:
         finish_keys(obj)
     scene.frame_set(1); bpy.context.view_layer.update()
     # Grip hand remains rigidly attached to the tool throughout the clip.
     assert (main.matrix_world.translation - socket.matrix_world.translation).length < 1e-5
-    report = validate(scene, root, contact_targets, tool, arms, settings, profile.get("head"))
+    report = validate(scene, root, contact_targets, tool, arms, settings, profile.get("head"), profile.get("touch_tolerance_m"))
     report["robogen_reference"] = config["reference"]
     report["clip"] = clip; report["hand_sides"] = [obj.name for obj in hands]
+    # Relaxed wrists (Cube Escape 0.65 finding: forearm straight under the grip, wrist bent ~105 deg / folded ~160 deg).
+    report["wrist_bend"] = {rig["hand"].name: dict(rig["bend"], limit_degrees=rig["arm_limits"]["max_wrist_bend_degrees"])
+                            for rig in arms if "bend" in rig}
+    bent = [f"{name}: wrist bent {value['max_degrees']:.1f} deg (limit {value['limit_degrees']}), elbow on the palm side "
+            f"{value['elbow_on_palm_side']}"
+            for name, value in report["wrist_bend"].items()
+            if value["max_degrees"] > value["limit_degrees"] or not value["elbow_on_palm_side"]]
+    print("WRIST_BEND", tool, json.dumps({name: value["max_degrees"] for name, value in report["wrist_bend"].items()}), flush=True)
+    assert not bent, (tool, bent)
     for obj, matrix in rest.items():
         assert max(abs(obj.matrix_world[i][j] - matrix[i][j]) for i in range(4) for j in range(4)) < 1e-5, obj.name
     (directory / "qa_viewmodel.json").write_text(json.dumps(report, indent=2) + "\n")
@@ -531,6 +618,18 @@ def build(directory, spec, profile):
     print(f"VIEWMODEL_OK {tool}: {len(hands)} hands, 97 frames, contact={report['max_contact_error_m']:.8f} m, "
           f"FOV {settings['vertical_fov_degrees']:.2f} deg vertical, {summary['binding_configurations']} binding framings, "
           f"range {summary['range_ok']}/{summary['range_checked']} ok, hand margin {summary['min_hand_margin']:.4f}, head {json.dumps(report['head'])}")
+
+
+def recoil_pose(config, frame, pivot):
+    """Euler rotation and location of Viewmodel_Motion for a weapon shot: ``fire_frame`` (impulse), ``kick_m`` (travel
+    toward the player), ``pitch_degrees`` (muzzle up), ``recovery_frames``; optional ``charge_m`` pulls the weapon back
+    slowly before the shot (charged weapons). Rotation about the hand; zero before the charge and after the recovery."""
+    fire, recovery = config["fire_frame"], config["recovery_frames"]
+    impulse = recoil_impulse(frame, fire, recovery)
+    charge = envelope(frame, ((1, 0), (fire - 2, 1), (fire - 1, 0))) * config.get("charge_m", 0) if config.get("charge_m") else 0
+    rotation = Euler((-math.radians(config["pitch_degrees"]) * impulse, math.radians(config.get("yaw_degrees", 0)) * impulse, 0), "XYZ")
+    shift = Vector((0, config["kick_m"] * impulse + charge, .004 * impulse))
+    return rotation, pivot + shift - rotation.to_matrix() @ pivot
 
 
 def configure_camera(scene, settings):
@@ -650,13 +749,39 @@ def head_visibility(scene, root, head, frusta, settings):
     return results
 
 
-def validate(scene, root, targets, tool, arms, settings, head):
+def hand_touch(scene, root, arms):
+    """Smallest distance (m) from each hand's finger, thumb and palm vertices to the tool surface at rest (the hands
+    are rigid with the tool; the rest pose is the pose of the whole clip). A hand in the air shows a large value."""
+    scene.frame_set(1); bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    tool = [obj for obj in root.children_recursive if obj.type == "MESH" and not obj.name.startswith("SM_FPS_")]
+    vertices, polygons, _ = mesh_data(tool, graph)
+    surface = BVHTree.FromPolygons(vertices, polygons)
+    result = {}
+    for rig in arms:
+        nearest = float("inf")
+        for obj in rig["hand"].children_recursive:
+            if obj.type == "MESH" and obj.name.startswith(("SM_FPS_Finger_", "SM_FPS_Thumb", "SM_FPS_Palm", "SM_FPS_Knuckle")):
+                evaluated = obj.evaluated_get(graph)
+                for vertex in evaluated.data.vertices:
+                    hit = surface.find_nearest(evaluated.matrix_world @ vertex.co)
+                    if hit[0] is not None:
+                        nearest = min(nearest, float(hit[3]))
+        result[rig["hand"].name] = nearest
+    return result
+
+
+def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None):
     limits = settings["qa"]
     frusta = frustum_configurations(settings)
     tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
     base = {"tan_h": tan_v * aspect_ratio(settings["reference_aspect"]), "tan_v": tan_v}
     reticle = limits["reticle_half_extent"]
     near = settings["near_clip_m"]
+    # A tool may relax the two head limits in its profile (head.limits: slender barrels under the support hand);
+    # the effective values are reported with the head summary and checked again by scripts/verify_output.py.
+    head_limits = {key: (head or {}).get("limits", {}).get(key, limits[key])
+                   for key in ("head_anchor_margin", "head_min_unoccluded_fraction", "head_min_screen_fraction")}
     failures = []
     max_contact = 0; minimum_depth = float("inf")
     maximum_arm_error = 0
@@ -664,6 +789,9 @@ def validate(scene, root, targets, tool, arms, settings, head):
     visible_forearms = {rig["hand"].name: 0 for rig in arms}
     proximal = [{rig["hand"].name: -float("inf") for rig in arms} for _ in frusta]
     proximal_base = {rig["hand"].name: -float("inf") for rig in arms}
+    grip_socket = scene.objects.get("Socket_Hand") if tool != "bow" else None
+    # only measured hands get a value (the bow is not enlarged by the game; no -Infinity in the JSON report)
+    proximal_enlarged = {rig["hand"].name: -float("inf") for rig in arms} if grip_socket is not None else {}
     hand_margin = [{rig["hand"].name: float("inf") for rig in arms} for _ in frusta]
     hand_worst_frame = [{rig["hand"].name: None for rig in arms} for _ in frusta]
     hand_edges = [{rig["hand"].name: [float("inf")] * 4 for rig in arms} for _ in frusta]
@@ -715,6 +843,13 @@ def validate(scene, root, targets, tool, arms, settings, head):
             for index, frustum in enumerate(frusta):
                 proximal[index][name] = max(proximal[index][name], float(screen(u, v, frustum)[1].max()))
             proximal_base[name] = max(proximal_base[name], float(screen(u, v, base)[1].max()))
+            if grip_socket is not None:
+                pivot = np.array(grip_socket.matrix_world.translation)
+                world = corners @ matrix[:3, :3].T + matrix[:3, 3]
+                u, v, depth = camera_space((world - pivot) * GAME_ENLARGEMENT_MAX + pivot)
+                y = screen(u, v, base)[1]
+                # behind the near plane is out of view (the projection would flip it)
+                proximal_enlarged[name] = max(proximal_enlarged[name], float(np.where(depth > near, y, -1.0).max()))
             for local in forearm_local.get(name, ()):
                 u, v, depth = camera_space(local @ matrix[:3, :3].T + matrix[:3, 3])
                 x, y = screen(u, v, base)
@@ -776,6 +911,10 @@ def validate(scene, root, targets, tool, arms, settings, head):
     bow_rotation = math.degrees(grip_rest.to_quaternion().rotation_difference(grip_draw.to_quaternion()).angle) if tool == "bow" else None
     if tool == "bow":
         assert bow_shift > .02 and bow_rotation > 5, ("bow stays static during draw", bow_shift, bow_rotation)
+    touch = hand_touch(scene, root, arms)
+    if touch_limit is not None:
+        failures.extend(f"{name} does not touch the tool (nearest {distance * 1000:.1f} mm, limit {touch_limit * 1000:.0f} mm)"
+                        for name, distance in touch.items() if distance > touch_limit)
     head_results = head_visibility(scene, root, head, frusta, settings) if head else [None] * len(frusta)
     configurations = []
     fov_range = []
@@ -793,11 +932,11 @@ def validate(scene, root, targets, tool, arms, settings, head):
                 reasons.append(f"proximal forearm of {name} enters the viewport (y {value:.4f})")
         result = head_results[index]
         if head:
-            if result["anchor_margin"] < limits["head_anchor_margin"]:
+            if result["anchor_margin"] < head_limits["head_anchor_margin"]:
                 reasons.append(f"{head['anchor']} too close to the frame edge ({result['anchor_margin']:.4f})")
-            if result["unoccluded_on_screen_fraction"] < limits["head_min_unoccluded_fraction"]:
+            if result["unoccluded_on_screen_fraction"] < head_limits["head_min_unoccluded_fraction"]:
                 reasons.append(f"tool head occluded ({result['unoccluded_on_screen_fraction']:.3f})")
-            if result["screen_fraction"] < limits["head_min_screen_fraction"]:
+            if result["screen_fraction"] < head_limits["head_min_screen_fraction"]:
                 reasons.append(f"tool head too small on screen ({result['screen_fraction']:.4f})")
         entry = {"vertical_fov_degrees": frustum["vertical_fov_degrees"], "aspect": frustum["aspect"],
                  "horizontal_fov_degrees": math.degrees(2 * math.atan(frustum["tan_h"])), "binding": frustum["binding"],
@@ -812,6 +951,9 @@ def validate(scene, root, targets, tool, arms, settings, head):
                           "binding": frustum["binding"], "ok": not reasons, "reasons": reasons})
         if frustum["binding"]:
             failures.extend(f"{label}: {reason}" for reason in reasons)
+    # Measured in the reference frustum (configured FOV and aspect), binding like the configured framings.
+    failures.extend(f"proximal forearm of {name} enters the viewport at {GAME_ENLARGEMENT_MAX}x (y {value:.4f})"
+                    for name, value in proximal_enlarged.items() if value >= 0)
     binding = [index for index, frustum in enumerate(frusta) if frustum["binding"]]
     summary = {"vertical_fov_degrees": settings["vertical_fov_degrees"], "aspects": settings["qa_aspects"],
                "binding_configurations": len(binding),
@@ -828,9 +970,9 @@ def validate(scene, root, targets, tool, arms, settings, head):
                         "min_unoccluded_on_screen_fraction": min(item["unoccluded_on_screen_fraction"] for item in values),
                         "min_screen_fraction": min(item["screen_fraction"] for item in values),
                         "main_occluders": values[0]["main_occluders"],
-                        "limits": {"anchor_margin": limits["head_anchor_margin"],
-                                   "unoccluded_fraction": limits["head_min_unoccluded_fraction"],
-                                   "screen_fraction": limits["head_min_screen_fraction"]}}
+                        "limits": {"anchor_margin": head_limits["head_anchor_margin"],
+                                   "unoccluded_fraction": head_limits["head_min_unoccluded_fraction"],
+                                   "screen_fraction": head_limits["head_min_screen_fraction"]}}
     scene.frame_set(1); bpy.context.view_layer.update()
     report = {"passed": not failures, "failures": failures, "frames_checked": 97, "max_contact_error_m": max_contact,
               "viewmodel_camera": {key: value for key, value in settings.items() if key != "qa"},
@@ -842,11 +984,14 @@ def validate(scene, root, targets, tool, arms, settings, head):
               "bow_draw_rotation_degrees": bow_rotation,
               "max_arm_link_error_m": maximum_arm_error, "rigid_arm_links": len(arms) * 2,
               "visible_forearm_vertex_extents": visible_forearms, "proximal_forearm_max_screen_y": proximal_base,
+              "proximal_forearm_max_screen_y_enlarged": {"enlargement": GAME_ENLARGEMENT_MAX, "about": "Socket_Hand",
+                                                         "values": proximal_enlarged},
               "proximal_forearm_offscreen": summary["proximal_forearm_max_screen_y"] < 0,
               "visible_forearm_fraction_limit": max(rig["visible_fraction"] for rig in arms),
               "finger_count_per_hand": GRIPPING_FINGERS + 1, "gripping_fingers_per_hand": GRIPPING_FINGERS,
               "thumb_count_per_hand": 1, "handedness_checked": tool == "bow",
               "min_hand_side_clearance_m": minimum_hand_side_clearance if tool == "bow" else None,
+              "hand_touch_m": touch, "hand_touch_limit_m": touch_limit,
               "min_camera_depth_m": minimum_depth, "reticle_clear": summary["reticle_clear"], "max_reset_matrix_error": maximum_reset,
               "poses": poses, "fps": 24, "autoplay": False, "loop": False}
     return report

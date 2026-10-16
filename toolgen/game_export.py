@@ -11,7 +11,10 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   stay separate: meshes below an object with an animation (merged per animated owner, the owner and its hierarchy
   are kept) and shape-key meshes (merged per parent and identical key animation). Every empty, including all
   ``Socket_*`` anchors, keeps its world matrix and parent; the clip keeps its name, length and event frames.
-* matte palette from ``data/game_palette.json`` (matte variants of Cube Escape materials, glow names, at most six per tool).
+* matte palette from ``data/game_palette.json`` (matte variants of Cube Escape materials, glow names, at most six per tool);
+  tools with ``"materials": "equipment_channels"`` (the nine weapons) get the equipment slots ``MT_<Channel>`` of its
+  ``channels`` section instead (contract 2, Cube Escape 0.64+). ``--contract 1`` writes the Toolgen 0.7 layout (palette
+  names only) for older Cube Escape versions.
 * ``<part>_LOD0`` / ``<part>_LOD1`` (about 30 % of the triangles), the suffix convention Cube Escape's Cubegen import
   understands (Unity builds the LODGroup); box colliders in the Cubegen sidecar format (part-relative, Unity axes).
 * LOD0 is reduced to the triangle budget of ``data/game_budget.json`` (collapse decimation, shape keys follow).
@@ -44,7 +47,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PALETTE_PATH = ROOT / "data/game_palette.json"
 BUDGET_PATH = ROOT / "data/game_budget.json"
 TOOLS_PATH = ROOT / "data/tools.json"
-CONTRACT_FORMAT = 1
+CONTRACT_FORMAT = 2              # 2: "material_convention" and, for equipment tools, MT_<Channel> slots; --contract 1 = 0.7 layout
+CONTRACT_FORMATS = (1, 2)
+CHANNELS = ("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail")   # Cube Escape ColorChannels.cs
+EMITTING_CHANNELS = ("Energy", "Emission")
 LOD1_TARGET = .30
 LOD1_RANGE = (.25, .40)
 MAX_RENDERERS = 4                 # LOD0 renderers of a world model: one static plus the moving parts
@@ -55,6 +61,8 @@ ROUNDTRIP_BOUNDS_TOLERANCE_M = .002
 ANCHOR_TOLERANCE = 1e-6           # native .blend: the empties are not touched at all
 ROUNDTRIP_MATRIX_TOLERANCE = 1e-3
 LOD1_BOUNDS_RELATIVE = .02        # LOD1 bounds within 2 % of the part diagonal (silhouette check)
+SOCKET_SURFACE_LIMIT_M = .004     # weapons: Socket_Hand / Socket_SupportHand lie inside the tool or at most 4 mm outside its surface
+HAND_SOCKETS = ("Socket_Hand", "Socket_SupportHand")
 COLLIDER_SLACK_M = .002
 MIN_COLLIDER_SIZE_M = .004
 COLLIDER_LIMITS = {"root": 6, "moving": 3}
@@ -71,6 +79,12 @@ OPENING_PROBES = {
     "bow": [("Socket_Hand", "Socket_Nock", .5, (0.0, 0.0, 0.0)), ("Socket_Hand", "Socket_Nock", .75, (0.0, 0.0, 0.0)),
             ("Socket_Nock", None, 0.0, (0.0, -.05, .235)), ("Socket_Nock", None, 0.0, (0.0, -.05, -.365))],
 }
+# The nine weapons: the line of fire in front of the muzzle stays free of colliders.
+for _weapon in ("pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle", "scout_rifle",
+                "rocket_launcher"):
+    OPENING_PROBES[_weapon] = [("Socket_Muzzle", None, 0.0, (0.0, -.03, 0.0)), ("Socket_Muzzle", None, 0.0, (0.0, -.10, 0.0))]
+# Element glow source of the weapon kit (scripts/tool_assets/weapon_kit.py, Kit.glow_material) per element.
+ELEMENT_SOURCES = {"kinetic": "PG_Kinetic", "energy": "PG_Cyan", "solar": "PG_Amber", "void": "PG_Void", "arc": "PG_Arc"}
 # Blender (Z up, front -Y) -> Unity (Y up, front +Z): FBX axis_forward -Z / axis_up Y imported with Unity's
 # bakeAxisConversion, glTF Y up with the X mirror of Unity's importers. Same mapping as Cubegen (asset.to_unity).
 TO_UNITY = ((-1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, -1.0, 0.0))
@@ -145,7 +159,68 @@ def validate_palette(palette):
     for source, target in palette["map"].items():
         if target not in materials:
             errors.append(f"{source}: unknown palette material {target}")
+    return errors + channel_errors(palette)
+
+
+def channel_errors(palette):
+    """Errors of the equipment section ``channels``: MT_<Channel> names, the finish rule, emission only on Energy/Emission,
+    a complete map onto the slots, and every mapped source also in the palette map (contract 1 needs it)."""
+    channels = palette.get("channels")
+    if channels is None:
+        return []
+    errors = []
+    finish = palette["finish"]
+    slots = channels["slots"]
+    for name, spec in slots.items():
+        channel = name.removeprefix("MT_")
+        if not name.startswith("MT_") or channel not in CHANNELS or spec.get("channel") != channel:
+            errors.append(f"{name}: equipment slots are MT_<Channel> with a channel of {', '.join(CHANNELS)}")
+            continue
+        if len(spec["color_srgb"]) != 3 or not all(0 <= c <= 1 for c in spec["color_srgb"]):
+            errors.append(f"{name}: color_srgb needs three values 0..1")
+        glow = spec["emission"] > 0
+        if glow != (channel in EMITTING_CHANNELS):
+            errors.append(f"{name}: only MT_Energy and MT_Emission emit")
+        if not glow and (spec["metallic"] > finish["max_metallic"] or spec["roughness"] < finish["min_roughness"]):
+            errors.append(f"{name}: not matte (metallic {spec['metallic']}, roughness {spec['roughness']})")
+    for source, target in channels["map"].items():
+        if target not in slots:
+            errors.append(f"{source}: unknown equipment slot {target}")
+        if source not in palette["map"]:
+            errors.append(f"{source}: equipment source missing in the palette map (contract 1)")
     return errors
+
+
+def tool_palette(palette, tool, contract=CONTRACT_FORMAT):
+    """The palette one export uses. Tools with ``"materials": "equipment_channels"`` (data/tools.json) get the MT_<Channel>
+    slots from contract 2 on; MT_Energy takes colour and emission of the palette material the element glow had. Every
+    other source (and every source in contract 1) keeps the shared matte palette."""
+    if contract < 2 or tool.get("materials") != "equipment_channels":
+        return dict(palette, convention="palette")
+    channels = palette["channels"]
+    slots = {name: dict(spec) for name, spec in channels["slots"].items()}
+    glow = sorted({palette["map"][source] for source, target in channels["map"].items()
+                   if target == "MT_Energy" and source == ELEMENT_SOURCES.get(tool.get("element"))})
+    if glow:
+        element = palette["materials"][glow[0]]
+        slots["MT_Energy"].update(color_srgb=element["color_srgb"], emission=element["emission"],
+                                  element=tool.get("element"), legacy=glow[0])
+    return dict(palette, materials={**palette["materials"], **slots}, map={**palette["map"], **channels["map"]},
+                convention="equipment_channels", max_materials_per_tool=channels["max_materials_per_tool"],
+                max_materials_per_viewmodel=channels["max_materials_per_viewmodel"])
+
+
+def equipment_block(palette, used):
+    """Contract 2 of an equipment tool: which slot carries which channel, with the default look (Cube Escape paints the
+    slots per renderer and leaves every other slot, e.g. the robot hands, untouched)."""
+    slots = {name: palette["materials"][name] for name in used if name.startswith("MT_")}
+    return {"convention": palette["channels"]["convention"], "slot_prefix": "MT_",
+            "channels": {spec["channel"]: {"slot": name, **{key: spec[key] for key in spec if key != "channel"}}
+                         for name, spec in sorted(slots.items(), key=lambda item: CHANNELS.index(item[1]["channel"]))},
+            "untouched_slots": sorted(name for name in used if not name.startswith("MT_")),
+            "minimum_consumer": "Cube Escape 0.64 (equipment system, MT_ slot import)",
+            "older_consumers": "toolgen/game_export.py --contract 1 (or generate_tools.py --contract 1): palette names "
+                               "M_* as in Toolgen 0.7"}
 
 
 def budget_errors(budget, tools):
@@ -592,7 +667,19 @@ def palette_materials(palette):
     return created
 
 
+def unmapped_channel_sources(palette, names):
+    """Source materials of an equipment tool that would silently keep a palette material: everything except the robot
+    hands of the viewmodel (FPS_*) must have an MT_ slot."""
+    if palette.get("convention") != "equipment_channels":
+        return []
+    return sorted(name for name in names if not name.startswith("FPS_") and not palette["map"].get(name, "").startswith("MT_"))
+
+
 def remap_materials(root, palette, materials):
+    names = {material.name for obj in tree(root) if obj.type == "MESH" for material in obj.data.materials if material}
+    missing = unmapped_channel_sources(palette, names)
+    if missing:
+        raise RuntimeError(f"Equipment tool sources without an MT_ slot in data/game_palette.json channels: {missing}")
     used = set()
     for obj in tree(root):
         if obj.type != "MESH":
@@ -814,6 +901,25 @@ def export_files(scene, root, work, name, clip):
 
 
 # --------------------------------------------------------------------------------------------- contract
+def hold_block(tool):
+    """How the weapon sits in a hand (tools.json ``hold``): sockets, grip axis (bottom to top of the grip, leaning forward by
+    the grip tilt), muzzle axis and the angle between them. Vectors are in root space like the anchors (Blender and Unity);
+    apply the FBX import yaw to them exactly like to the anchors (axes.fbx.export_yaw_degrees), never twice."""
+    hold = tool["hold"]
+    tilt = math.radians(hold["grip_tilt_degrees"])
+    grip, muzzle = [0.0, -math.sin(tilt), math.cos(tilt)], [0.0, -1.0, 0.0]
+    return {"hand_socket": "Socket_Hand", "support_socket": "Socket_SupportHand", "muzzle_socket": "Socket_Muzzle",
+            "two_handed": hold["two_handed"], "grip_tilt_degrees": hold["grip_tilt_degrees"],
+            "grip_axis": {"blender": [round(v, 6) + 0.0 for v in grip], "unity": [round(v, 6) + 0.0 for v in unity_position(grip)]},
+            "muzzle_axis": {"blender": muzzle, "unity": [round(v, 6) + 0.0 for v in unity_position(muzzle)]},
+            "grip_to_muzzle_degrees": round(math.degrees(math.acos(round(sum(a * b for a, b in zip(grip, muzzle)), 9))), 4),
+            "element": tool.get("element"),
+            "note": "Align the hand's grip axis (palm to fingertips along the grip) with grip_axis and let the model's "
+                    "muzzle_axis point along the character's aim direction; Socket_Hand sits in the middle of the pistol "
+                    "grip and Socket_SupportHand in the middle of the handguard, so the second hand needs no offset. "
+                    "The model is not mirrored: the grip hand is the right hand, the support hand the left."}
+
+
 def local_transform(obj):
     local = obj.parent.matrix_world.inverted() @ obj.matrix_world if obj.parent else obj.matrix_world.copy()
     location, rotation, scale = local.decompose()
@@ -825,8 +931,39 @@ def local_transform(obj):
                       "localScale": [round(v, 6) for v in unity_scale(scale)]}}
 
 
+def socket_surface_distances(root):
+    """Signed distance (m) of the hand sockets to the tool's surface at the first frame (before the merge, per source
+    mesh): negative = inside a closed part (depth to its surface), positive = outside every part (distance to the nearest
+    surface). A socket in the air (positive, large) means a hand that hovers beside the tool."""
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    trees = []
+    for obj in tree(root):
+        if obj.type == "MESH" and len(obj.data.polygons):
+            evaluated = obj.evaluated_get(depsgraph)
+            vertices = [evaluated.matrix_world @ vertex.co for vertex in evaluated.data.vertices]
+            trees.append(BVHTree.FromPolygons(vertices, [list(polygon.vertices) for polygon in evaluated.data.polygons]))
+    found = {}
+    for obj in tree(root):
+        if obj.type != "EMPTY" or obj.name not in HAND_SOCKETS:
+            continue
+        point = obj.matrix_world.translation
+        inside, outside = [], []
+        for part in trees:
+            location, _, _, distance = part.find_nearest(point)
+            hits, origin = 0, point.copy()
+            while True:                      # parity of the surface crossings along +Z: odd = inside this closed part
+                hit = part.ray_cast(origin, Vector((0, 0, 1)))
+                if hit[0] is None:
+                    break
+                hits += 1
+                origin = hit[0] + Vector((0, 0, 1e-6))
+            (inside if hits % 2 else outside).append(float(distance))
+        found[obj.name] = round(-max(inside) if inside else min(outside), 6)
+    return found
+
+
 def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                   viewmodel=None):
+                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT):
     def renderer_entry(obj):
         mesh = obj.data
         return {"name": obj.name, "parent": obj.parent.name, "role": obj["ce_role"], "lod": obj["ce_lod"],
@@ -835,7 +972,8 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
                 "blend_shapes": [block.name for block in mesh.shape_keys.key_blocks][1:] if mesh.shape_keys else [],
                 "renderer": "SkinnedMeshRenderer" if mesh.shape_keys else "MeshRenderer"}
 
-    anchors = [{"name": obj.name, "parent": obj.parent.name, "animated": bool(action_of(obj)), **local_transform(obj)}
+    anchors = [{"name": obj.name, "parent": obj.parent.name, "animated": bool(action_of(obj)), **local_transform(obj),
+                **({"surface_distance_m": surface[obj.name]} if surface and obj.name in surface else {})}
                for obj in tree(root) if obj.type == "EMPTY" and obj.name.startswith("Socket_")]
     nodes = [{"name": obj.name, "parent": obj.parent.name if obj.parent else None, "type": obj.type,
               "animated": bool(action_of(obj)), **local_transform(obj)}
@@ -843,8 +981,13 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
     lod0_tris = sum(triangles(obj.data) for obj in renderers)
     lod1_tris = sum(triangles(obj.data) for obj in lods)
     parents = sorted({obj.parent.name for obj in renderers})
+    used = sorted({m.name for obj in renderers for m in obj.data.materials})
+    convention = {}
+    if contract >= 2:
+        convention = {"material_convention": palette["convention"],
+                      **({"equipment": equipment_block(palette, used)} if palette["convention"] == "equipment_channels" else {})}
     return {
-        "format": CONTRACT_FORMAT, "generator": "toolgen", "version": source_info["version"],
+        "format": contract, "generator": "toolgen", "version": source_info["version"],
         "tool": tool["id"], "variant": "viewmodel" if viewmodel else "world", "asset": tool["asset"],
         "model": tool["asset"] + "_Game",
         "units": "meter", "scale": 1.0,
@@ -865,8 +1008,8 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
                                                    if key.startswith("ce_")}},
         "anchors": anchors, "nodes": nodes,
         "renderers": [renderer_entry(obj) for obj in [*renderers, *lods]],
-        "materials": {name: palette["materials"][name] for name in
-                      sorted({m.name for obj in renderers for m in obj.data.materials})},
+        "materials": {name: palette["materials"][name] for name in used},
+        **convention,
         "lods": {"convention": "Cubegen <part>_LOD0 / <part>_LOD1 siblings; Unity's FBX import builds a LODGroup "
                                "on their parent; collision only from LOD0",
                  "groups": [{"parent": parent,
@@ -876,6 +1019,7 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
                                                          "ratio": round(lod1_tris / lod0_tris, 4)}},
         "budget": budget_info,
         "colliders": colliders,
+        **({"hold": hold_block(tool)} if tool.get("hold") else {}),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
         "clips": [clip_info] if clip_info else [],
@@ -959,6 +1103,11 @@ def check_blend(checks, path, source, expected, palette):
                    and markers == source["markers"] and keys == source["key_frames"]
                    and {k: str(root[k]) for k in root.keys() if k.startswith("ce_")} == source["root_properties"],
                    frames=scene.frame_end - scene.frame_start + 1, markers=markers, key_frames=len(keys))
+        # Weapons: the clip animates child nodes only. The Unity import turns the root by export_yaw_degrees, so a root
+        # curve (position or rotation) would have to be turned with it; without root curves the clip is yaw-independent.
+        root_curves = sorted(curve.data_path for curve in action_curves(action_of(root))) if action_of(root) else []
+        checks.add("clip_root_free", not root_curves or not expected["root_free_required"], root_curves=root_curves,
+                   required=expected["root_free_required"], children_animated=expected["clip"]["animated_nodes"])
     if expected["camera"]:
         check_framing(checks, scene, source, expected, renderers)
     lod0_tris = sum(triangles(obj.data) for obj in renderers)
@@ -1255,7 +1404,7 @@ def contract_name(viewmodel):
     return "unity_contract_fps.json" if viewmodel else "unity_contract.json"
 
 
-def export(work, tool, palette, budget, viewmodel=False):
+def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMAT):
     """Game export of the world model, or of the first-person model (``viewmodel``: root ``<asset>_FPS``, no collision,
     its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract)."""
     if viewmodel:
@@ -1278,6 +1427,7 @@ def export(work, tool, palette, budget, viewmodel=False):
                        "aspects": data["qa"]["aspects"], "reticle_half_extent": data["qa"]["reticle_half_extent"],
                        "tolerance": FRAMING_TOLERANCE_SCREEN}
     source = record_source(scene, root, groups, frames, camera_data["near_clip_m"] if camera_data else None)
+    surface = None if viewmodel else socket_surface_distances(root)
     source.update({
         "frame_start": scene.frame_start, "frame_end": scene.frame_end, "fps": scene.render.fps / scene.render.fps_base,
         "markers": sorted((marker.name, marker.frame) for marker in scene.timeline_markers),
@@ -1324,6 +1474,7 @@ def export(work, tool, palette, budget, viewmodel=False):
                                 for name, frame in source["markers"]],
                      "key_frames": source["key_frames"] if len(source["key_frames"]) <= 24 else "every frame",
                      "animated_nodes": animated_nodes, "morph_renderers": morph_renderers,
+                     "root_curves": sorted(curve.data_path for curve in action_curves(action_of(root))) if action_of(root) else [],
                      "visibility_nodes": sorted(obj.name for obj in tree(root) if obj.get("ce_visibility_animation"))}
     source_info = {"asset": asset, "blend": source_path.name, "sha256": file_sha256(source_path),
                    "nodes": source["node_count"], "meshes": source["mesh_count"], "triangles": source["triangles"],
@@ -1347,18 +1498,19 @@ def export(work, tool, palette, budget, viewmodel=False):
                                      "model is checked against it at vertical_fov_degrees only (qa_game_fps.json "
                                      "viewmodel_framing). Use another FOV only after re-checking.")
         camera["source"] = camera_path.name
-    contract = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                              camera)
-    (work / contract_name(viewmodel)).write_text(json.dumps(contract, indent=2, ensure_ascii=False) + "\n")
+    document = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
+                              camera, surface, contract)
+    (work / contract_name(viewmodel)).write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
     expected = {"root": asset, "renderers": [obj.name for obj in renderers], "lods": [obj.name for obj in lods],
                 "groups": [{"name": group.name, "renderer": group.name + "_LOD0"} for group in groups],
                 "materials": {obj.name: [m.name for m in obj.data.materials] for obj in [*renderers, *lods]},
                 "clip": clip_info and dict(clip_info, frames=clip_info["frames"]),
-                "viewmodel": viewmodel, "camera": camera_data,
+                "viewmodel": viewmodel, "camera": camera_data, "root_free_required": bool(tool.get("hold")),
+                "socket_surface": surface, "sockets_on_tool_required": bool(tool.get("hold")),
                 "max_renderers": MAX_RENDERERS_VIEWMODEL if viewmodel else MAX_RENDERERS,
                 "sample_frames": sample_frames(scene.frame_start, scene.frame_end, [f for _, f in source["markers"]],
                                                source["key_frames"]) if clip_name else frames}
-    return source, contract, expected, files
+    return source, document, expected, files
 
 
 def main():
@@ -1369,6 +1521,9 @@ def main():
     parser.add_argument("--viewmodel", action="store_true",
                         help="export the first-person model <asset>_FPS (no collision, own budget, camera data)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
+    parser.add_argument("--contract", type=int, choices=CONTRACT_FORMATS, default=CONTRACT_FORMAT,
+                        help="contract format: 2 (default, MT_<Channel> slots for equipment tools) or 1 (Toolgen 0.7 layout, "
+                             "palette names only, for Cube Escape before 0.64)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     work = args.directory.resolve()
     checks = Checks()
@@ -1385,13 +1540,21 @@ def main():
         if errors:
             raise RuntimeError("; ".join(errors))
         phase = time.perf_counter()
-        source, contract, expected, files = export(work, tool, palette, budget, args.viewmodel)
+        palette = tool_palette(palette, tool, args.contract)
+        report["contract_format"] = args.contract
+        report["material_convention"] = palette["convention"]
+        source, contract, expected, files = export(work, tool, palette, budget, args.viewmodel, args.contract)
         timings["export"] = time.perf_counter() - phase
         phase = time.perf_counter()
         check_blend(checks, files["blend"], source, expected, palette)
         check_budget(checks, contract)
         if not args.viewmodel:
             check_colliders(checks, contract, source, args.tool)
+            required = expected["sockets_on_tool_required"]
+            checks.add("grip_sockets_on_tool", not required or (set(expected["socket_surface"]) == set(HAND_SOCKETS) and all(
+                       distance <= SOCKET_SURFACE_LIMIT_M for distance in expected["socket_surface"].values())),
+                       required=required, signed_distance_m=expected["socket_surface"], limit_m=SOCKET_SURFACE_LIMIT_M,
+                       note="negative = inside the tool; tools with a hold block must keep both hand sockets on the tool")
         for kind in ("glb", "fbx"):
             try:
                 check_import(checks, kind, files[kind], source, expected)

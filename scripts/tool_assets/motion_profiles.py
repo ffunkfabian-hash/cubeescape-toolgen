@@ -24,6 +24,12 @@ def settle(frame, start, duration, amplitude):
     return amplitude * math.sin(3 * math.pi * t) * (1 - smooth(t)) * smooth(min(1, t * 5))
 
 
+def recoil_impulse(frame, fire_frame, recovery_frames):
+    """Weapon recoil impulse 0..1: rises within three frames to 1 at ``fire_frame`` + 2 and decays smoothly to 0 at
+    ``fire_frame`` + ``recovery_frames``; exactly 0 before the shot and after the recovery."""
+    return envelope(frame, ((fire_frame - 1, 0), (fire_frame + 2, 1), (fire_frame + recovery_frames, 0)))
+
+
 def draw_value(frame):
     return max(0, min(1, envelope(frame, ((1, 0), (31, 1), (43, 1), (48, 0), (97, 0))) + settle(frame, 48, 14, .035)))
 

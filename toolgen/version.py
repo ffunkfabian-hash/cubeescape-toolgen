@@ -1,2 +1,2 @@
-VERSION = "0.6.3"
-CODENAME = "Sightline"
+VERSION = "0.8.0"
+CODENAME = "Gunmetal"

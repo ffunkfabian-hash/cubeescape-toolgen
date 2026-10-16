@@ -83,7 +83,7 @@ def build():
 
     # Semantic anchors: local forward is -Y and the light axis is the emitter centerline.
     empty('Socket_Hand', STATE['GEO'], root, (0, .088, -.025))
-    empty('Socket_SupportHand', STATE['GEO'], root, (0, -.018, .018))
+    empty('Socket_SupportHand', STATE['GEO'], root, (0, -.018, .07))
     empty('Socket_Muzzle', STATE['GEO'], root, (0, -.179, .112))
     empty('Socket_CenterOfMass', STATE['GEO'], root, (0, .038, .066))
 

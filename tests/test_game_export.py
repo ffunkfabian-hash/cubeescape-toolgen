@@ -22,6 +22,8 @@ PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
 BUDGET = json.loads((ROOT / "data/game_budget.json").read_text())
 TOOLS = {tool["id"]: tool for tool in json.loads((ROOT / "data/tools.json").read_text())["tools"]}
 ASSETS = ROOT / "scripts/tool_assets"
+# The nine weapons share one material table (weapon_kit.py); tests/test_weapons.py covers it.
+WEAPONS = {tool_id for tool_id, tool in TOOLS.items() if tool.get("hold")}
 FIRST_PERSON = ROOT / "toolgen/first_person.py"
 
 # Per tool: the script that creates the world model's materials and the script that defines the ``material`` helper
@@ -155,7 +157,7 @@ class PaletteCoverageTests(unittest.TestCase):
         self.assertIn("HELPER['material']", text)
 
     def test_every_tool_script_is_listed(self):
-        self.assertEqual(set(TOOLS), set(WORLD_MATERIALS), "a new tool needs an entry in WORLD_MATERIALS")
+        self.assertEqual(set(TOOLS) - WEAPONS, set(WORLD_MATERIALS), "a new tool needs an entry in WORLD_MATERIALS")
         for tool_id, (script, _) in WORLD_MATERIALS.items():
             self.assertEqual(script.name, TOOLS[tool_id]["world"])
             self.assertEqual(script.parent.name, TOOLS[tool_id]["folder"])
@@ -218,7 +220,7 @@ class PaletteRulesTests(unittest.TestCase):
             targets = {PALETTE["map"][name] for name, _, _ in defined_materials(tool_id)}
             with self.subTest(tool=tool_id):
                 self.assertTrue(0 < len(targets) <= PALETTE["max_materials_per_tool"], sorted(targets))
-        self.assertLessEqual(len(PALETTE["materials"]), 6 + 3, "palette grew, review the per-tool limit")
+        self.assertLessEqual(len(PALETTE["materials"]), 6 + 3 + 3, "palette grew, review the per-tool limit")
 
     def test_map_prefixes_match_the_tool_helpers(self):
         prefixes = {helper_prefix(helper) for _, helper in WORLD_MATERIALS.values()} | {helper_prefix(FIRST_PERSON)}
@@ -610,3 +612,84 @@ class ImportYawTests(unittest.TestCase):
 
     def test_contract_source_names_the_yaw(self):
         self.assertIn('"export_yaw_degrees": FBX_IMPORT_YAW_DEGREES', Path(ge.__file__).read_text())
+
+
+class EquipmentChannelTests(unittest.TestCase):
+    """Contract 2: the nine weapons carry the Cube Escape equipment slots MT_<Channel>; contract 1 keeps the 0.7 layout."""
+
+    def valid(self):
+        return json.loads(json.dumps(PALETTE))
+
+    def test_channels_match_cube_escape(self):
+        self.assertEqual(("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail"), ge.CHANNELS)
+        self.assertEqual({"MT_" + channel for channel in ge.CHANNELS}, set(PALETTE["channels"]["slots"]))
+
+    def test_pipeline_default_is_the_export_default(self):
+        source = (ROOT / "toolgen/generate_tools.py").read_text()
+        self.assertIn("GAME_CONTRACT = %d " % ge.CONTRACT_FORMAT, source)
+        self.assertEqual((1, 2), ge.CONTRACT_FORMATS)
+        self.assertIn('"--contract", "{game_contract}"', source)
+
+    def test_shipped_channels_are_valid(self):
+        self.assertEqual([], ge.channel_errors(PALETTE))
+        self.assertEqual([], ge.channel_errors({key: value for key, value in PALETTE.items() if key != "channels"}))
+
+    def test_channel_rules(self):
+        palette = self.valid()
+        palette["channels"]["slots"]["MT_Paint"] = dict(palette["channels"]["slots"]["MT_Primary"], channel="Paint")
+        self.assertTrue(any("MT_Paint" in error for error in ge.channel_errors(palette)))
+        palette = self.valid()
+        palette["channels"]["slots"]["MT_Primary"]["emission"] = 1.0
+        self.assertTrue(any("MT_Primary" in error and "emit" in error for error in ge.channel_errors(palette)))
+        palette = self.valid()
+        palette["channels"]["slots"]["MT_Detail"]["roughness"] = .2
+        self.assertTrue(any("MT_Detail" in error and "matte" in error for error in ge.channel_errors(palette)))
+        palette = self.valid()
+        palette["channels"]["map"]["PG_New"] = "MT_Primary"
+        self.assertTrue(any("PG_New" in error and "contract 1" in error for error in ge.channel_errors(palette)))
+        palette = self.valid()
+        palette["channels"]["map"]["PG_Primary"] = "MT_Nothing"
+        self.assertTrue(any("MT_Nothing" in error for error in ge.channel_errors(palette)))
+
+    def test_other_tools_keep_the_palette(self):
+        for tool_id, tool in TOOLS.items():
+            if tool_id in WEAPONS:
+                continue
+            with self.subTest(tool=tool_id):
+                palette = ge.tool_palette(PALETTE, tool)
+                self.assertEqual("palette", palette["convention"])
+                self.assertEqual(PALETTE["map"], palette["map"])
+                self.assertEqual(PALETTE["materials"], palette["materials"])
+
+    def test_contract_one_is_the_old_palette(self):
+        tool = TOOLS["shotgun"]
+        palette = ge.tool_palette(PALETTE, tool, 1)
+        self.assertEqual("palette", palette["convention"])
+        self.assertEqual(PALETTE["map"], palette["map"])
+        self.assertEqual(PALETTE["max_materials_per_tool"], palette["max_materials_per_tool"])
+
+    def test_every_weapon_source_needs_a_slot(self):
+        palette = ge.tool_palette(PALETTE, TOOLS["pistol"], 2)
+        self.assertEqual([], ge.unmapped_channel_sources(palette, ["PG_Primary", "PG_Void", "FPS_Robot_White"]))
+        broken = self.valid()
+        del broken["channels"]["map"]["PG_Primary"]
+        palette = ge.tool_palette(broken, TOOLS["pistol"], 2)
+        self.assertEqual(["PG_Primary"], ge.unmapped_channel_sources(palette, ["PG_Primary", "FPS_Robot_White"]))
+        self.assertEqual([], ge.unmapped_channel_sources(ge.tool_palette(broken, TOOLS["pistol"], 1), ["PG_Primary"]))
+
+    def test_hands_stay_palette_materials_in_the_viewmodel(self):
+        palette = ge.tool_palette(PALETTE, TOOLS["pistol"], 2)
+        for name, _, line in first_person_materials():
+            with self.subTest(material=name, line=line):
+                self.assertTrue(palette["map"][name].startswith("M_"))
+
+    def test_equipment_block(self):
+        palette = ge.tool_palette(PALETTE, TOOLS["sniper_rifle"], 2)
+        used = sorted({*PALETTE["channels"]["slots"], "M_RobotBody_Matte"})
+        block = ge.equipment_block(palette, used)
+        self.assertEqual(list(ge.CHANNELS), list(block["channels"]))
+        self.assertEqual("MT_Energy", block["channels"]["Energy"]["slot"])
+        self.assertEqual("void", block["channels"]["Energy"]["element"])
+        self.assertEqual(["M_RobotBody_Matte"], block["untouched_slots"])
+        self.assertIn("--contract 1", block["older_consumers"])
+        self.assertIn("0.64", block["minimum_consumer"])

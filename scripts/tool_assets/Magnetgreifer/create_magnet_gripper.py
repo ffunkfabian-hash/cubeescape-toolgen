@@ -235,7 +235,7 @@ def build():
             'Cyan',.0015,parent=group)
     empty('Socket_Hand',GEO,ROOT,(0,.116,-.057))
     empty('Socket_Muzzle',GEO,ROOT,(0,-.237,.084))
-    empty('Socket_SupportHand',GEO,ROOT,(0,-.045,-.008))
+    empty('Socket_SupportHand',GEO,ROOT,(0,-.045,.03))
     empty('Socket_Grab',GEO,ROOT,(0,-.406,.084))
 
 

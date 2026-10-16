@@ -46,6 +46,7 @@ ROUNDTRIP_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["ro
 CACHE_SCHEMA = 3
 # Stage results: raise when stages would write something else although none of their key parts changed.
 STAGE_SCHEMA = 1
+GAME_CONTRACT = 2               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
 # Source fingerprints (ASTs) of the functions that decide what a stage writes and how a package is assembled.
 # Timing, reporting and orchestration edits stay outside, so they rebuild nothing (Robogen's producer fingerprint).
 # New helpers that write stage outputs or packages belong in these lists.
@@ -116,13 +117,14 @@ STAGES = (
           tiers=ROUNDTRIP_TIERS, reads=("qa_viewmodel.json", "{asset}_FPS.blend", "{asset}_FPS.glb", "{asset}_FPS.fbx")),
     # Game export of the world model: merged renderers, matte palette, LOD1, collision, unity_contract.json; adds the
     # viewer model "game" (root <asset>_Game, world clip).
-    Stage("game", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}"),
+    Stage("game", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--contract", "{game_contract}"),
           reads=("{asset}.blend",), sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game.json",),
           variants=(Variant("game", "{asset}_Game", clip=("clip",), node="{asset}"),)),
     # The same for the first-person model (hands, arms, tool): own triangle budget, no collision, camera data in
     # unity_contract_fps.json. Viewer model "fps_game" (root <asset>_FPS_Game, LOD0 only): the Ego view of the reduced model.
-    Stage("game_fps", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--viewmodel"),
+    Stage("game_fps", "toolgen/game_export.py",
+          args=("--directory", "{work}", "--tool", "{id}", "--viewmodel", "--contract", "{game_contract}"),
           reads=("{asset}_FPS.blend", "viewmodel_camera.json"),
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game_fps.json",),
@@ -163,6 +165,7 @@ def hash_file(path):
 def template(text, tool):
     values = {key: value for key, value in tool.items() if isinstance(value, str)}
     values["work"] = "{work}"
+    values.setdefault("game_contract", str(GAME_CONTRACT))   # set in the tool entry (and so in the key) only for --contract 1
     return text.format(**values)
 
 
@@ -719,6 +722,8 @@ def main():
     parser.add_argument("--threads", type=int)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--device", choices=("auto", "cpu", "metal"), default="auto")
+    parser.add_argument("--contract", type=int, choices=(1, GAME_CONTRACT), default=GAME_CONTRACT,
+                        help="game export contract: 2 (default) or 1 (Toolgen 0.7 layout for Cube Escape before 0.64)")
     args = parser.parse_args()
     lock = None
     try:
@@ -732,6 +737,8 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
         (output / "logs").mkdir(exist_ok=True)
         selected = [tool for tool in catalog() if not args.tool or tool["id"] in args.tool]
+        if args.contract != GAME_CONTRACT:
+            selected = [dict(tool, game_contract=str(args.contract)) for tool in selected]
         if args.tier == "full":     # one heavy run at a time on this Mac (shared with Robogen, Cube Escape, Cubegen)
             lock = heavy_lock.HeavyLock(f"toolgen full {output}", str(ROOT)).acquire()
         store = toolcache.Store()

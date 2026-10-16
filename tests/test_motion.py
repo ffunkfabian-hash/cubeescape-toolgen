@@ -9,6 +9,7 @@ from motion_profiles import (
     draw_hand_offset,
     draw_value,
     envelope,
+    recoil_impulse,
     settle,
     smooth,
     solve_elbow,
@@ -66,6 +67,28 @@ class MotionTests(unittest.TestCase):
             solve_elbow((0, 0, 0), (0, 0, 2), .4, .4, (1, 0, 0))
         with self.assertRaises(ValueError):
             solve_elbow((0, 0, 0), (0, 0, .5), .4, .4, (0, 0, 1))
+
+
+class RecoilTests(unittest.TestCase):
+    def test_recoil_is_zero_before_the_shot_and_after_the_recovery(self):
+        for fire, recovery in ((14, 26), (46, 30), (14, 12)):
+            with self.subTest(fire=fire, recovery=recovery):
+                for frame in (1, fire - 1, fire + recovery, fire + recovery + 1, 97):
+                    self.assertEqual(0, recoil_impulse(frame, fire, recovery), frame)
+
+    def test_recoil_peaks_right_after_the_shot_and_decays(self):
+        values = [recoil_impulse(frame, 14, 26) for frame in range(1, 98)]
+        peak = max(range(len(values)), key=values.__getitem__) + 1
+        self.assertEqual(16, peak, "the impulse peaks two frames after the shot")
+        self.assertEqual(1.0, values[peak - 1])
+        self.assertLessEqual(max(values), 1.0)
+        self.assertGreaterEqual(min(values), 0.0, "never pulls the weapon forward")
+        self.assertLess(values[14 + 26 - 2 - 1], .02, "almost back at rest shortly before the recovery ends")
+        self.assertTrue(all(a >= b for a, b in zip(values[peak - 1:], values[peak:])), "monotone decay after the peak")
+
+    def test_recoil_is_continuous(self):
+        values = [recoil_impulse(frame, 14, 26) for frame in range(1, 98)]
+        self.assertLess(max(abs(b - a) for a, b in zip(values, values[1:])), .75)
 
 
 if __name__ == "__main__":

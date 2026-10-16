@@ -234,7 +234,7 @@ def build():
             'Cyan',.002,parent=group,rot=tiprot)
     empty('Socket_Hand', GEO, ROOT, (0,.116,-.057))
     empty('Socket_Muzzle', GEO, ROOT, (0,-.257,.084))
-    empty('Socket_SupportHand', GEO, ROOT, (0,-.045,-.008))
+    empty('Socket_SupportHand', GEO, ROOT, (0,-.045,.03))
 
 
 def validate():
