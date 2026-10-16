@@ -297,5 +297,20 @@
       "PG_Void": "MT_Energy",
       "PG_Arc": "MT_Energy"
     }
+  },
+  "channel_map": {
+    "note": "Contract 4 (Cube Escape 0.71 mask mode): the channel each palette material paints in the weight maps W0/W1 (toolgen/surface.py). Equipment slots MT_<Channel> carry the channel of their name. Same assignment as Cube Escape's equipment definitions (Docs/EQUIPMENT.md, Anbindung an Werkzeuge und Waffen): glow materials are Energy, the amber status lights Emission. Every palette material needs an entry.",
+    "materials": {
+      "M_RobotBody_Matte": "Primary",
+      "M_RobotDark_Matte": "Secondary",
+      "M_HazardOrange_Matte": "Accent",
+      "M_Metal_Matte": "Metal",
+      "M_GlowCyan": "Energy",
+      "M_GlowWarm": "Energy",
+      "M_GlowVoid": "Energy",
+      "M_GlowArc": "Energy",
+      "M_GlowKinetic": "Energy",
+      "M_GlowOrange": "Emission"
+    }
   }
 }

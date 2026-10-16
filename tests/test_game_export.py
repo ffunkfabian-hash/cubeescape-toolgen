@@ -166,6 +166,7 @@ class PaletteCoverageTests(unittest.TestCase):
         """Only the known helpers create Blender materials in the generator scripts (game_export builds the palette)."""
         creators = {path.resolve() for path in (WORLD_MATERIALS["portal_emitter"][1], WORLD_MATERIALS["magnet_gripper"][1],
                                                  WORLD_MATERIALS["bow"][1], FIRST_PERSON)}
+        creators.add((ROOT / "toolgen/surface_bake.py").resolve())   # its bake material is never saved or exported
         for path in [*ASSETS.rglob("*.py"), *(ROOT / "toolgen").glob("*.py")]:
             if path.name == "game_export.py":
                 continue
@@ -627,7 +628,8 @@ class EquipmentChannelTests(unittest.TestCase):
     def test_pipeline_default_is_the_export_default(self):
         source = (ROOT / "toolgen/generate_tools.py").read_text()
         self.assertIn("GAME_CONTRACT = %d " % ge.CONTRACT_FORMAT, source)
-        self.assertEqual((1, 2, 3), ge.CONTRACT_FORMATS)
+        self.assertEqual((1, 2, 3, 4), ge.CONTRACT_FORMATS)
+        self.assertIn("CONTRACTS = (1, 2, 3, 4)", source)
         self.assertIn('"--contract", "{game_contract}"', source)
 
     def test_shipped_channels_are_valid(self):
