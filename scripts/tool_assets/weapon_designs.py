@@ -71,12 +71,20 @@ def stock(k, name, points, width, pad, pad_size, pad_y, pad_z, mat='Primary'):
     k.box('Buttpad', (0, pad_y, pad_z), pad_size, pad, .004)
 
 
+EYE_LENS = .9          # eye lens radius / scope tube radius (inner radius of the open eyepiece)
+EYE_RECESS = .008      # the eye lens sits this far inside the eyepiece's rear end
+
+
 def scope(k, y, z, length, radius, lens_radius=None):
     """Optical sight along Y: tube, objective, eyepiece, glowing front lens, turret, two mounts."""
     lens = lens_radius or radius * 1.35
     k.cyl('ScopeTube', (0, y, z), radius, length, 'Secondary', n=24)
     k.cyl('ScopeObjective', (0, y - length / 2 + .01, z), lens, length * .30, 'Primary', n=24)
-    k.cyl('ScopeEyepiece', (0, y + length / 2 - .005, z), radius * 1.2, length * .22, 'Primary', n=24)
+    # Open eyepiece (0.11.0, Cube Escape 0.72): a ring with the eye lens set in from its rear end, where the game draws its
+    # scope picture (Socket_Eye at the lens centre, hold.eye_radius_m = its radius in the first-person model).
+    k.tube('ScopeEyepiece', (0, y + length / 2 - .005, z), radius * 1.2, radius * EYE_LENS, length * .22, 'Primary', n=24)
+    k.cyl('ScopeEyeLens', (0, y + length / 2 - .005 + length * .11 - EYE_RECESS, z), radius * EYE_LENS, .002, 'Detail',
+          n=24, bevel=.0003)
     k.cyl('ScopeLens', (0, y - length / 2 - length * .30 / 2 + .012, z), lens * .86, .004, k.glow_material, n=24, bevel=.0005)
     k.cyl('ScopeTurret', (0, y, z + radius + .006), radius * .55, .016, 'Metal', axis='z', n=16, bevel=.001)
     for dy in (-length * .28, length * .24):
@@ -649,13 +657,10 @@ def slide_keys(*pairs):
     return [(1, 0)] + list(pairs) + [(97, 0)]
 
 
-def sight_rule(kind, parts, mode, tool_scale, above=0.0, eye_distance=None):
-    """Line of sight for sight.py in world-model metres: ``above`` (ads.eye_above_m) and ``eye_distance``
-    (hold.eye_distance_m, scopes) are first-person values, divided by the weapon's tool_scale (data/viewmodels.json)."""
-    rule = {'kind': kind, 'parts': list(parts), 'mode': mode, 'above_m': above / tool_scale}
-    if eye_distance is not None:
-        rule['eye_back_m'] = eye_distance / tool_scale
-    return rule
+def sight_rule(kind, parts, mode, tool_scale, above=0.0):
+    """Line of sight for sight.py in world-model metres: ``above`` (ads.eye_above_m) is a first-person value, divided by
+    the weapon's tool_scale (data/viewmodels.json)."""
+    return {'kind': kind, 'parts': list(parts), 'mode': mode, 'above_m': above / tool_scale}
 
 
 DESIGNS = {
@@ -671,7 +676,7 @@ DESIGNS = {
         'asset': 'CubeEscape_AssaultRifle', 'clip': 'AssaultRifle_Use', 'class': 'assault_rifle', 'element': 'kinetic',
         'grip_tilt_degrees': 16, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.12, .05), 'view_scale': 1.15, 'trigger': 'FireAction', 'build': assault_rifle,
-        'fire_frame': 14, 'sight': sight_rule('reflex', ('Optic',), 'center', .72),
+        'fire_frame': 14, 'sight': sight_rule('reflex', ('Optic', 'OpticGlow', 'OpticHood'), 'top', .72, .004),
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (16, .05), (22, .006), (28, 0))}],
     },
@@ -679,7 +684,7 @@ DESIGNS = {
         'asset': 'CubeEscape_PulseRifle', 'clip': 'PulseRifle_Use', 'class': 'pulse_rifle', 'element': 'energy',
         'grip_tilt_degrees': 14, 'grip_part': 'Grip', 'support_part': 'Shroud',
         'view_center': (0, -.09, .05), 'view_scale': .95, 'trigger': 'FireAction', 'build': pulse_rifle,
-        'fire_frame': 14, 'sight': sight_rule('holo', ('Sight',), 'center', .744),
+        'fire_frame': 14, 'sight': sight_rule('holo', ('Sight', 'SightGlow'), 'top', .744, .004),
         'use_clip': [{'node': 'Anim_Cell', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (15, .026), (17, 0), (18, 0), (19, .026), (21, 0), (22, 0), (23, .026), (25, 0))}],
     },
@@ -695,7 +700,7 @@ DESIGNS = {
         'asset': 'CubeEscape_SniperRifle', 'clip': 'SniperRifle_Use', 'class': 'sniper_rifle', 'element': 'void',
         'grip_tilt_degrees': 12, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.14, .05), 'view_scale': 1.45, 'trigger': 'FireAction', 'build': sniper_rifle,
-        'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .624, eye_distance=.22),
+        'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .624),
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'rotation', 'axis': 1,
                       'keys': slide_keys((38, 0), (46, -75), (68, -75), (76, 0))},
                      {'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
@@ -722,7 +727,7 @@ DESIGNS = {
         'asset': 'CubeEscape_ScoutRifle', 'clip': 'ScoutRifle_Use', 'class': 'scout_rifle', 'element': 'kinetic',
         'grip_tilt_degrees': 12, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.14, .05), 'view_scale': 1.35, 'trigger': 'FireAction', 'build': scout_rifle,
-        'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .648, eye_distance=.20),
+        'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .648),
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (16, .045), (24, .005), (30, 0))}],
     },
@@ -730,7 +735,7 @@ DESIGNS = {
         'asset': 'CubeEscape_RocketLauncher', 'clip': 'RocketLauncher_Use', 'class': 'rocket_launcher', 'element': 'solar',
         'grip_tilt_degrees': 14, 'grip_part': 'Grip', 'support_part': 'Foregrip',
         'view_center': (0, -.17, .07), 'view_scale': 1.20, 'trigger': 'FireAction', 'build': rocket_launcher,
-        'fire_frame': 14, 'sight': sight_rule('iron', ('Targeting',), 'center', .6),
+        'fire_frame': 14, 'sight': sight_rule('iron', ('Targeting', 'TargetingGlow'), 'top', .6, .004),
         'use_clip': [{'node': 'Anim_Hatch', 'channel': 'rotation', 'axis': 0, 'keys': slide_keys((30, 0), (40, -30), (62, -30), (72, 0))}],
     },
 }

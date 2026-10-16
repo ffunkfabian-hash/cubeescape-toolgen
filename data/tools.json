@@ -150,7 +150,8 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "scope",
-        "eye_distance_m": 0.22
+        "eye_distance_m": 0.22,
+        "eye_radius_m": 0.011232
       }
     },
     {
@@ -213,7 +214,8 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "scope",
-        "eye_distance_m": 0.2
+        "eye_distance_m": 0.2,
+        "eye_radius_m": 0.008748
       }
     },
     {

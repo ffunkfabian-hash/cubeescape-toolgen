@@ -193,10 +193,10 @@ REST_GEOMETRY = {
     'assault_rifle': '089c206226a86b2a7c9aa05e44d7609ad8c915ba7909c7e149b6a48e804df3e5',
     'pulse_rifle': 'bbddbf7b6ff9c3646ff3bfdcdb08bca5ba8c6866ce03f68f57a67c81b60be079',
     'shotgun': '2491986a481529dd79eb91c86b8486f841fb596d27d6d6685b5cf59aeb92b1ef',
-    'sniper_rifle': '4fcf4ae9d41b9ea7be90bb150d83227a7fcfa6c7b8db31dacb7678ef7547e884',
+    'sniper_rifle': '0f601cd763db3e9a215568c56a483bd40cb2d4fd54fde6049f8e475b1ccbf455',   # 0.11.0: open eyepiece, eye lens
     'smg': 'e6da85fa3089a499b3a23df8e4fad454ee922c7841a4ba5c84fc13419193ee73',
     'fusion_rifle': '3bfd949adbf11990c5bdceb79c370c0b62c71ba42053f28e4bdd9b0f06b30a5d',
-    'scout_rifle': '4dac3eaf8b41641cf08ef91fc9fbbad07bf37cf5b03504467256551c393dd16b',
+    'scout_rifle': '8927f99cdb416fb94c88ea3d0993b628f51c56d7a68603c53b69ad4e4ff95d60',   # 0.11.0: open eyepiece, eye lens
     'rocket_launcher': 'abdb6a660623d638e24692b9bbc625d015ac87a4e1d79b5d4cb7e762e49db48e',
 }
 

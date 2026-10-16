@@ -313,6 +313,8 @@ PROXIMAL_MARGIN = .01             # ego clips keep the proximal forearm half thi
 # Cube Escape 0.65 enlarges the weapon viewmodels 1.35-1.7x about Socket_Hand (Resources/Toolgen/viewmodel_holds.json);
 # the proximal forearm halves must leave the frame at that size as well.
 GAME_ENLARGEMENT_MAX = 1.7
+ADS_TOP_LIMIT = .25               # ADS target pose: model at most this share of the screen height above the centre (CE 0.72)
+ADS_CENTRE_ALLOWED = ("ScopeEyeLens",)   # the only part the centre ray may meet in the ADS target pose (scope picture)
 SIGHT_LINE_TOLERANCE_M = .0001   # Socket_Sight against the AimIdle line of sight (lateral and vertical)
 # Finger rows along the palm's Z axis (Robogen Mitt: three fingers at a 31 mm pitch).
 # Thinner links than the Mitt keep visible gaps, so each finger reads at FPS distance.
@@ -776,7 +778,7 @@ def build(directory, spec, profile):
     if os.environ.get("TOOLGEN_FPS_DEBUG"):
         bpy.ops.wm.save_as_mainfile(filepath=os.environ["TOOLGEN_FPS_DEBUG"], copy=True)
     report["ego_clips"] = ego_clip_report(scene, root, clips, clip_records, aim, aim_frames, settings, part_name, part)
-    # T6 (Cube Escape 0.66 Deadeye): Socket_Sight on the AimIdle line, hand touch in every clip frame, ADS target pose.
+    # T6 (Cube Escape 0.72 Sightline): Socket_Sight on the AimIdle line, hand touch in every clip frame, ADS target pose.
     sight_line = sight_socket_check(scene, hold, aim)
     report["ego_clips"]["sight_socket"] = sight_line
     if sight_line and not sight_line["ok"]:
@@ -795,7 +797,8 @@ def build(directory, spec, profile):
         report["ads_target"] = ads_target_report(scene, root, arms, settings, spec["hold"]["eye_distance_m"],
                                                  support_hand.name if support_hand else None)
         print("ADS_TARGET", tool, json.dumps({key: report["ads_target"][key] for key in
-                                              ("eye_distance_m", "passed", "eye_distance_range_m", "failures")}), flush=True)
+                                              ("eye_distance_m", "passed", "eye_distance_range_m", "centre_hit",
+                                               "model_top_above_centre", "failures")}), flush=True)
     root["toolgen_ego_clips"] = json.dumps({"timeline_start": clips[0]["frame_start"] if clips else None,
                                             "timeline_end": ego_clips.timeline_end(clips),
                                             "reload_part": part.name if part is not None else None,
@@ -1265,7 +1268,7 @@ def hand_vertex_sets(rig, graph):
 
 
 def clip_hand_touch(scene, root, arms, clips, detached, support_hand):
-    """hand_touch per ego clip frame (T6, Cube Escape 0.66): the largest per-frame distance of each hand to the tool
+    """hand_touch per ego clip frame (T6, Cube Escape 0.72): the largest per-frame distance of each hand to the tool
     surface within a clip. A hand released on purpose (reload: ``detached`` frames of the support hand) is left out."""
     tool = [obj for obj in root.children_recursive if obj.type == "MESH" and not obj.name.startswith("SM_FPS_")]
     result = {}
@@ -1381,6 +1384,8 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
             eu, ev, edepth = camera_space(moved(every, distance))
             ex, ey = screen(eu, ev, frustum)
             seen = (ex >= 0) & (ex <= 1) & (ey >= 0) & (ey <= 1) & (edepth > 0)
+            beside = (ex >= 0) & (ex <= 1) & (edepth > near)
+            entry["model_top_screen_y"] = round(float(ey[beside].max()), 5) if beside.any() else None
             closest = float(edepth[seen].min()) if seen.any() else None
             entry["min_visible_depth_m"] = closest and round(closest, 5)
             if closest is not None and closest <= near:
@@ -1392,6 +1397,16 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
         return configurations, failures
 
     configurations, failures = evaluate(eye_distance_m)
+    # Cube Escape 0.72: the screen centre stays free (the ray along the view meets no part, a scope's eye lens excepted)
+    # and the model reaches at most ADS_TOP_LIMIT of the screen height above the centre, at the profile distance.
+    vertices, polygons, owners = mesh_data(meshes, graph)
+    shifted = moved(np.array([tuple(vertex) for vertex in vertices]), eye_distance_m)
+    tree = BVHTree.FromPolygons([Vector(point) for point in shifted.tolist()], polygons)
+    hit = tree.ray_cast(Vector((0, 0, 0)), Vector((0, -1, 0)), 50.0)
+    centre_hit = owners[hit[2]] if hit[0] is not None else None
+    centre_clear = centre_hit is None or centre_hit.removeprefix("SM_PG_") in ADS_CENTRE_ALLOWED
+    tops = [entry["model_top_screen_y"] for entry in configurations if entry["model_top_screen_y"] is not None]
+    top_above = round(max(tops) - .5, 5) if tops else None
     steps = [round(.10 + .005 * index, 3) for index in range(141)]           # 0.10 ... 0.80 m
     passing = [distance for distance in steps if not evaluate(distance)[1]]
     bends = {}
@@ -1408,6 +1423,8 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
             "frame_matrix_blender": [[round(float(value), 7) for value in row] for row in matrix],
             "near_clip_m": near, "support_forearm_exempt": support_hand, "configurations": configurations,
             "passed": not failures, "failures": failures,
+            "centre_clear": centre_clear, "centre_hit": centre_hit, "model_top_above_centre": top_above,
+            "model_top_limit": ADS_TOP_LIMIT, "model_top_ok": top_above is None or top_above <= ADS_TOP_LIMIT,
             "eye_distance_range_m": [passing[0], passing[-1]] if passing else None,
             "eye_distance_steps_m": [steps[0], steps[-1], .005],
             "eye_distance_range_contiguous": bool(passing) and len(passing) == round((passing[-1] - passing[0]) / .005) + 1,

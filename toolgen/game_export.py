@@ -992,12 +992,15 @@ def hold_block(tool):
             "element": tool.get("element"),
             **({"sight_socket": "Socket_Sight", "sight_kind": hold["sight_kind"],
                 "eye_socket": "Socket_Eye" if hold["sight_kind"] == "scope" else None,
+                "eye_radius_m": hold.get("eye_radius_m"),
                 "ads_eye_distance_m": hold["eye_distance_m"],
                 "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
                               "optic, eyepiece of a scope); its +Z (Unity) looks along the bore, +Y is up. Aiming down "
                               "sights puts it on the camera axis at ads_eye_distance_m (first-person metres; Toolgen "
-                              "checks that pose, qa_game_fps.json ads). Scopes: Socket_Eye on the same line, "
-                              "ads_eye_distance_m behind Socket_Sight in the first-person model."}
+                              "checks that pose, qa_game_fps.json ads). Iron, reflex and holo: the line runs over the "
+                              "top of the housing, the screen centre stays free. Scopes: Socket_Eye on the same line at "
+                              "the centre of the eye lens inside the open eyepiece (ScopeEyeLens), eye_radius_m its "
+                              "radius in the first-person model (world model: divided by the viewmodel tool_scale)."}
                if "sight_kind" in hold else {}),
             "note": "Align the hand's grip axis (palm to fingertips along the grip) with grip_axis and let the model's "
                     "muzzle_axis point along the character's aim direction; Socket_Hand sits in the middle of the pistol "
@@ -1284,30 +1287,36 @@ def check_budget(checks, contract):
 
 
 def check_ads(checks, work, contract, tool):
-    """Aim down sights (Cube Escape 0.66, T6): Socket_Sight (and Socket_Eye for scopes) in the contract with the tool's
+    """Aim down sights (Cube Escape 0.72, T6): Socket_Sight (and Socket_Eye for scopes) in the contract with the tool's
     rotation, and the ADS target pose of the authored model (qa_viewmodel.json ads_target: framing, near clip, wrists) passed.
     Returns the block for qa_game_fps.json ``ads``."""
     hold = tool["hold"]
     anchors = {anchor["name"]: anchor for anchor in contract["anchors"]}
     sight, eye = anchors.get("Socket_Sight"), anchors.get("Socket_Eye")
     scope = hold["sight_kind"] == "scope"
-    distance = None
+    distance = off_line = None
     if sight and eye and sight["parent"] == eye["parent"]:
         a, b = sight["blender"]["location"], eye["blender"]["location"]
-        distance = math.dist(a, b)
+        distance, off_line = math.dist(a, b), max(abs(a[0] - b[0]), abs(a[2] - b[2]))
     rotation_ok = bool(sight) and (not eye or sight["blender"]["rotation_wxyz"] == eye["blender"]["rotation_wxyz"])
-    eye_ok = (eye is None and not scope) or (scope and distance is not None
-                                              and abs(distance - hold["eye_distance_m"]) <= 1e-4)
+    # Socket_Eye: same line, inside the eyepiece just in front of Socket_Sight (the eyepiece's rear end)
+    eye_ok = (eye is None and not scope) or (scope and distance is not None and off_line <= 1e-6 and distance <= .03
+                                              and bool(hold.get("eye_radius_m")))
     checks.add("sight_anchors", bool(sight) and rotation_ok and eye_ok, sight_kind=hold["sight_kind"],
-               socket_eye=bool(eye), sight_to_eye_m=distance, eye_distance_m=hold["eye_distance_m"])
+               socket_eye=bool(eye), sight_to_eye_m=distance, eye_radius_m=hold.get("eye_radius_m"))
     qa = json.loads((work / "qa_viewmodel.json").read_text())
     ads = qa.get("ads_target")
-    # Binding: the sight reaches the screen centre and some eye distance keeps the framing rule. Whether the game
-    # profile's distance (hold.eye_distance_m) keeps it is reported (ads.passed) for Cube Escape to tune, not binding.
+    # Binding: the sight reaches the screen centre, the centre ray is free (or meets the scope's eye lens), the model
+    # stays within 25 % of the screen height above the centre at the profile distance (Cube Escape 0.72) and some eye
+    # distance keeps the framing rule. Whether the game profile's distance (hold.eye_distance_m) keeps the finger
+    # framing is reported (ads.passed) for Cube Escape to tune, not binding.
     centred = bool(ads) and all(max(abs(value - .5) for value in entry["sight_screen"]) <= .002
                                 for entry in ads["configurations"])
     on_line = bool((qa.get("ego_clips", {}).get("sight_socket") or {}).get("ok"))
-    checks.add("ads_target_pose", centred and on_line and bool(ads["eye_distance_range_m"]),
+    view_ok = bool(ads) and ads["centre_clear"] and ads["model_top_ok"]
+    checks.add("ads_target_pose", centred and on_line and view_ok and bool(ads["eye_distance_range_m"]),
+               centre_clear=(ads or {}).get("centre_clear"), centre_hit=(ads or {}).get("centre_hit"),
+               model_top_above_centre=(ads or {}).get("model_top_above_centre"),
                eye_distance_m=hold["eye_distance_m"], profile_distance_passed=bool(ads) and ads["passed"],
                eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
                failures_at_profile_distance=(ads or {}).get("failures", ["qa_viewmodel.json has no ads_target"]),

@@ -93,7 +93,7 @@ for tool in catalog():
         assert all(entry["take"] == ego["ego_clips"]["take"] for entry in ego["clips"][1:])
         checks += 4
     if tool.get("hold", {}).get("sight_kind"):
-        # 0.11.0 (Cube Escape 0.66 T1/T2/T6): sight anchors in both contracts, Fire marker on the shot, ADS target pose
+        # 0.11.0 (Cube Escape 0.72 T1/T2/T6): sight anchors in both contracts, Fire marker on the shot, ADS target pose
         world = json.loads((package / "unity_contract.json").read_text())
         scope = tool["hold"]["sight_kind"] == "scope"
         for contract in (world, ego):

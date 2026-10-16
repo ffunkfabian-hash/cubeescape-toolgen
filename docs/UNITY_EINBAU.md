@@ -177,15 +177,17 @@ dieselben Daten maschinenlesbar).
 
 ## Visier und Zielen (0.11.0, Vertrag 3 additiv)
 
-Zulieferung für Cube Escape 0.66 „Deadeye“ (T1, T2, T6; Technik: [TECHNIK](TECHNIK.md) › Visier und Zielen). Nur Ergänzungen:
+Zulieferung für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (T1, T2, T6; Technik: [TECHNIK](TECHNIK.md) › Visier und Zielen). Nur Ergänzungen:
 alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
 
 - **Anker:** `Socket_Sight` je Waffe in Welt- und Ego-Modell (`anchors[]` wie `Socket_Muzzle`, im FBX-/GLB-Reimport geprüft): Punkt auf der
-  Visierlinie am hinteren Ende des Visiers, Drehung wie die Waffe – Unity +Z = Blick entlang des Laufs, +Y = oben. Scopes
-  (Scharfschützen-, Spurgewehr) zusätzlich `Socket_Eye`: dieselbe Linie, `hold.ads_eye_distance_m` hinter `Socket_Sight` (Ego-Modell; im
-  Weltmodell durch `tool_scale` geteilt). Die 180°-Importdrehung gilt wie für alle Anker genau einmal.
+  Visierlinie am hinteren Ende des Visiers, Drehung wie die Waffe – Unity +Z = Blick entlang des Laufs, +Y = oben. Bei Kimme/Korn, Reflex,
+  Holo und Energie läuft die Linie über das Gehäuse (Oberkante des Visiers = Zielpunkt, die Bildmitte bleibt frei). Scopes
+  (Scharfschützen-, Spurgewehr): offenes Okular mit Linse `ScopeEyeLens` 8 mm innen; `Socket_Eye` in deren Mitte auf derselben Linie,
+  `hold.eye_radius_m` ihr Radius im Ego-Modell (Weltmodell: durch `tool_scale` geteilt) – dort die Render-Texture-Linse setzen. Die
+  180°-Importdrehung gilt wie für alle Anker genau einmal.
 - **`hold`:** neu `sight_socket` (`Socket_Sight`), `sight_kind` (`iron`, `reflex`, `holo`, `scope`, `energy`), `eye_socket` (`Socket_Eye` oder
-  null), `ads_eye_distance_m` (der Augenabstand, mit dem Toolgen die Zielpose prüft) und `sight_note`.
+  null), `eye_radius_m` (Scopes, sonst null), `ads_eye_distance_m` (der Augenabstand, mit dem Toolgen die Zielpose prüft) und `sight_note`.
 - **Ereignisse:** `clips[0].events` des Use-Clips enthält `Fire` am Schussbild (= `fire_frame` in `data/viewmodels.json`; Bild 14,
   Fusionsgewehr 46; `seconds` ab Clipstart). Fire/AimFire der Ego-Clips nennen neben `Shot` das gleichbedeutende `Fire` (Bild 0). Achtung Versatz: die Ego-Clips Fire/AimFire beginnen ein Bild vor dem Schussbild des Use-Clips (`fire_frame` − 1, Rückstoßbeginn), ihr `Fire` bei Bild 0 entspricht also Use-Bild 13 (Fusion 45), nicht 14 – wie `Shot` seit 0.9.0.
 - **Finger:** `Fingers_R_0` (Abzugfinger; Fire/AimFire) und bei den Gewehren `Fingers_L_0…2` (Nachfassen in Reload) sind animierte Knoten
@@ -197,21 +199,21 @@ alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
   Kameraachse liegt (`frame_matrix_blender`), Bildausschnitt je 16:9/16:10, `eye_distance_range_m` = Abstände, bei denen drei Greiffinger
   und Daumen beider Hände im Bild und die Griffarm-Unterarmhälfte draußen bleiben.
 
-Gemessen mit Toolgen 0.11.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
+Gemessen mit Toolgen 0.11.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Verbindlich und bei allen erfüllt: Bildmitte frei (Scopes: Okularlinse), Modell höchstens 25 % der Bildhöhe über der Mitte (negativ = ganz darunter). Nicht verbindlich, Befund für Cube Escape: die Finger beim Profilabstand. Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
 
-| Waffe | `sight_kind` | Profilabstand (m) | hält dort | Bereich, der hält (m) | Grund beim Profilabstand |
-|---|---|---:|---|---|---|
-| Pistole | `iron` | 0.30 | nein | 0.355–0.500 | Finger nicht im Bild: links, rechts |
-| Sturmgewehr | `reflex` | 0.26 | nein | 0.280–0.465 | Finger nicht im Bild: rechts |
-| Impulsgewehr | `holo` | 0.26 | nein | 0.270–0.455 | Finger nicht im Bild: rechts |
-| Schrotflinte | `iron` | 0.28 | nein | 0.590–0.770 | Finger nicht im Bild: links, rechts |
-| Scharfschützengewehr | `scope` | 0.22 | ja | 0.210–0.400 | — |
-| Maschinenpistole | `reflex` | 0.24 | nein | 0.365–0.535 | Finger nicht im Bild: rechts |
-| Fusionsgewehr | `energy` | 0.26 | nein | 0.345–0.530 | Finger nicht im Bild: rechts |
-| Spurgewehr | `scope` | 0.20 | nein | 0.215–0.405 | Finger nicht im Bild: rechts |
-| Raketenwerfer | `iron` | 0.30 | nein | 0.350–0.535 | Finger nicht im Bild: rechts |
+| Waffe | `sight_kind` | Profilabstand (m) | Bildmitte | Modell über der Mitte | Finger im Bild beim Profil | Bereich, der hält (m) |
+|---|---|---:|---|---:|---|---|
+| Pistole | `iron` | 0.30 | frei | -2.6 % | nein | 0.355–0.500 |
+| Sturmgewehr | `reflex` | 0.26 | frei | -1.4 % | nein | 0.335–0.515 |
+| Impulsgewehr | `holo` | 0.26 | frei | -1.5 % | nein | 0.310–0.495 |
+| Schrotflinte | `iron` | 0.28 | frei | -2.4 % | nein | 0.590–0.770 |
+| Scharfschützengewehr | `scope` | 0.22 | Okularlinse | 8.1 % | ja | 0.210–0.400 |
+| Maschinenpistole | `reflex` | 0.24 | frei | -4.8 % | nein | 0.365–0.535 |
+| Fusionsgewehr | `energy` | 0.26 | frei | -2.1 % | nein | 0.345–0.530 |
+| Spurgewehr | `scope` | 0.20 | Okularlinse | 8.5 % | nein | 0.215–0.405 |
+| Raketenwerfer | `iron` | 0.30 | frei | 4.7 % | nein | 0.390–0.575 |
 
-- **Mindestversion des Abnehmers:** keine – Cube Escape 0.66 liest `Socket_Sight` erst in Phase 4 und nutzt bis dahin das Ersatz-Visier
+- **Mindestversion des Abnehmers:** keine – Cube Escape 0.72 liest `Socket_Sight` live aus dem animierten Modell; ohne den Anker nutzt es das Ersatz-Visier
   (`ads.sight_back_m`, `sight_up_m`, `sight_offset_m`); die neuen Felder und Anker sind zusätzlich. `--contract 1` und `--contract 2`
   enthalten die Anker und Felder ebenfalls (Zusatzdaten, die ältere Stände nicht lesen).
 

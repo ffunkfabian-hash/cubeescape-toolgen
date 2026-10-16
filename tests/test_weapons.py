@@ -359,6 +359,7 @@ class HoldContractTests(unittest.TestCase):
                 self.assertEqual("Socket_Sight", hold["sight_socket"])
                 self.assertEqual(tool["hold"]["sight_kind"], hold["sight_kind"])
                 self.assertEqual("Socket_Eye" if hold["sight_kind"] == "scope" else None, hold["eye_socket"])
+                self.assertEqual(tool["hold"].get("eye_radius_m"), hold["eye_radius_m"])
                 self.assertEqual(tool["hold"]["eye_distance_m"], hold["ads_eye_distance_m"])
         old = ge.hold_block({"hold": {"grip_tilt_degrees": 14, "two_handed": True}})
         self.assertNotIn("sight_socket", old, "tools without a sight keep the 0.10 hold block")
@@ -369,10 +370,10 @@ class HoldContractTests(unittest.TestCase):
 
 
 class SightTests(unittest.TestCase):
-    """T1 (Cube Escape 0.66 Deadeye): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
+    """T1 (Cube Escape 0.72 Sightline): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
     KINDS = {"pistol": "iron", "assault_rifle": "reflex", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
              "smg": "reflex", "fusion_rifle": "energy", "scout_rifle": "scope", "rocket_launcher": "iron"}
-    # Cube Escape 0.66 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
+    # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
     # heavy 0.30, scout rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
     EYE = {"pistol": .30, "assault_rifle": .26, "pulse_rifle": .26, "shotgun": .28, "sniper_rifle": .22, "smg": .24,
            "fusion_rifle": .26, "scout_rifle": .20, "rocket_launcher": .30}
@@ -398,10 +399,14 @@ class SightTests(unittest.TestCase):
                     self.assertTrue(all(any(marker in part for marker in ads["sight_markers"]) for part in rule["parts"]))
                 if rule["mode"] == "top":
                     self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * scale, places=12)
-                if rule["kind"] == "scope":
-                    self.assertAlmostEqual(tool["hold"]["eye_distance_m"], rule["eye_back_m"] * scale, places=12)
+                if rule["kind"] == "scope":       # eye lens inside the open eyepiece, radius in first-person metres
+                    radius = {"sniper_rifle": .020, "scout_rifle": .015}[key] * designs.EYE_LENS * scale
+                    self.assertAlmostEqual(radius, tool["hold"]["eye_radius_m"], places=6)
+                    self.assertEqual("center", rule["mode"])
                 else:
-                    self.assertNotIn("eye_back_m", rule)
+                    self.assertNotIn("eye_radius_m", tool["hold"])
+                    # Cube Escape 0.72: iron, reflex and holo lines run over the top of the housing (free centre)
+                    self.assertEqual("top", rule["mode"])
                 # Names the build function writes literally (scope() and the rear-sight loop build theirs inside).
                 built = {name for _, name in build_calls(key)} | {"ScopeTube", "RearSight_-1", "RearSight_1"}
                 self.assertTrue(set(rule["parts"]) <= built, (key, rule["parts"]))
@@ -414,10 +419,11 @@ class SightTests(unittest.TestCase):
         self.assertEqual((0.0, .04, .09), tuple(round(v, 9) for v in found["sight"]))
         self.assertIsNone(found["eye"])
         scope = {"SM_PG_ScopeTube": ((-.02, -.16, .12), (.02, .08, .16)),
-                 "SM_PG_ScopeEyepiece": ((-.024, .05, .116), (.024, .11, .164))}
-        found = sight.line(scope, {"kind": "scope", "parts": ["ScopeTube"], "mode": "center", "above_m": 0.0, "eye_back_m": .3})
+                 "SM_PG_ScopeEyepiece": ((-.024, .05, .116), (.024, .11, .164)),
+                 "SM_PG_ScopeEyeLens": ((-.018, .101, .122), (.018, .103, .158))}
+        found = sight.line(scope, {"kind": "scope", "parts": ["ScopeTube"], "mode": "center", "above_m": 0.0})
         self.assertEqual((0.0, .11, .14), tuple(round(v, 9) for v in found["sight"]), "eyepiece rear, tube axis")
-        self.assertEqual((0.0, .41, .14), tuple(round(v, 9) for v in found["eye"]))
+        self.assertEqual((0.0, .102, .14), tuple(round(v, 9) for v in found["eye"]), "eye lens centre")
         with self.assertRaises(AssertionError):
             sight.line(bounds, {"kind": "iron", "parts": ["Missing"], "mode": "top", "above_m": 0.0})
 
@@ -444,9 +450,9 @@ class SightTests(unittest.TestCase):
 class AdsCheckTests(unittest.TestCase):
     """game_export.check_ads: the binding part (sight centred, socket on the AimIdle line, some eye distance keeps the
     framing) against the reported part (the game profile's distance)."""
-    TOOL = {"hold": {"sight_kind": "scope", "eye_distance_m": .22}}
+    TOOL = {"hold": {"sight_kind": "scope", "eye_distance_m": .22, "eye_radius_m": .011}}
 
-    def contract(self, eye_y=.22):
+    def contract(self, eye_y=-.008):
         socket = {"parent": "Viewmodel_Hold", "blender": {"location": [0.0, .1, .2], "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]}}
         eye = {"parent": "Viewmodel_Hold", "blender": {"location": [0.0, .1 + eye_y, .2], "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]}}
         return {"anchors": [dict(socket, name="Socket_Sight"), dict(eye, name="Socket_Eye")]}
@@ -460,9 +466,11 @@ class AdsCheckTests(unittest.TestCase):
             block = ge.check_ads(checks, work, contract or self.contract(), self.TOOL)
             return checks.results, block
 
-    def ads(self, passed, distances, screen=(.5, .5)):
+    def ads(self, passed, distances, screen=(.5, .5), clear=True, top_ok=True):
         return {"passed": passed, "eye_distance_range_m": distances, "failures": [] if passed else ["too close"],
-                "eye_distance_m": .22, "configurations": [{"sight_screen": list(screen)}]}
+                "eye_distance_m": .22, "configurations": [{"sight_screen": list(screen)}], "centre_clear": clear,
+                "centre_hit": None if clear else "SM_PG_Optic", "model_top_above_centre": .1 if top_ok else .3,
+                "model_top_ok": top_ok}
 
     def test_profile_distance_is_reported_not_binding(self):
         results, block = self.run_check(self.ads(False, [.3, .5]))
@@ -476,7 +484,11 @@ class AdsCheckTests(unittest.TestCase):
         self.assertFalse(self.run_check(self.ads(True, [.2, .4], (.51, .5)))[0]["ads_target_pose"]["passed"], "off centre")
         self.assertFalse(self.run_check(self.ads(True, [.2, .4]), on_line=False)[0]["ads_target_pose"]["passed"])
         self.assertFalse(self.run_check(self.ads(True, [.2, .4]), self.contract(.3))[0]["sight_anchors"]["passed"],
-                         "Socket_Eye at the wrong distance")
+                         "Socket_Eye far behind the eyepiece")
+        self.assertFalse(self.run_check(self.ads(True, [.2, .4], clear=False))[0]["ads_target_pose"]["passed"],
+                         "a closed housing on the screen centre")
+        self.assertFalse(self.run_check(self.ads(True, [.2, .4], top_ok=False))[0]["ads_target_pose"]["passed"],
+                         "model over 25 % of the screen height above the centre")
 
 
 class FramesTests(unittest.TestCase):

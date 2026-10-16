@@ -414,21 +414,24 @@ Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
 
 ## Visier und Zielen (0.11.0 Sightline)
 
-Zulieferung T1, T2 und T6 für Cube Escape 0.66 „Deadeye“ (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:
+Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:
 [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen.
 
 - **`Socket_Sight` / `Socket_Eye` (T1).** `weapon_kit.world` legt die Anker aus `DESIGNS[key]['sight']` (`sight.py`, reines Python)
   in das Weltmodell; das Ego-Modell übernimmt sie mit der übrigen Waffe. Die Visierlinie ist die der AimIdle-Pose
-  (`data/ego_clips.json` › `ads`): über die Oberkante der Visierteile plus `eye_above_m` (Kimme/Korn, `sight_mode` „top“) oder durch
-  ihre Mitte (Optiken, „center“). `eye_above_m` gilt im Ego-Modell; das Weltmodell bekommt ihn durch `tool_scale` geteilt, so tragen
-  beide dieselbe Linie. Der Anker liegt am hinteren Ende des Visiers (Kimme, Rückseite der Optik, Okular), Drehung wie die Waffe
-  (Unity +Z = Blick entlang des Laufs, +Y = oben). Scopes (Scharfschützen- und Spurgewehr) haben zusätzlich `Socket_Eye` auf
-  derselben Linie, `hold.eye_distance_m` hinter `Socket_Sight` (im Ego-Modell in Kamerametern). Visierart je Waffe:
-  `hold.sight_kind` in `data/tools.json` (Pistole, Schrotflinte, Raketenwerfer `iron`; Sturmgewehr, Maschinenpistole `reflex`;
-  Impulsgewehr `holo`; Fusionsgewehr `energy`; Scharfschützen-, Spurgewehr `scope`). Der Autoren-Kopierordner hat kein `data/`:
-  Regel und Schussbild stehen deshalb in `DESIGNS`, `tests/test_weapons.py` hält sie gleich mit `tools.json`, `viewmodels.json` und
-  `ego_clips.json`; `first_person.py` prüft den gebauten Anker gegen die Visierlinie der AimIdle-Pose (≤ 0,1 mm,
-  `qa_viewmodel.json` › `ego_clips.sight_socket`).
+  (`data/ego_clips.json` › `ads`): bei Kimme/Korn, Reflex, Holo und Energie über die Oberkante der Visierteile plus `eye_above_m`
+  (`sight_mode` „top“; Sturmgewehr, Impulsgewehr, Raketenwerfer seit 0.11.0 mit 4 mm über dem Gehäuse statt durch dessen Mitte –
+  Befund der Unity-Abnahme Cube Escape 0.72: ein geschlossenes Gehäuse verdeckte die Bildmitte), bei Scopes durch die Rohrmitte
+  („center“). `eye_above_m` gilt im Ego-Modell; das Weltmodell bekommt ihn durch `tool_scale` geteilt, so tragen beide dieselbe Linie.
+  Der Anker liegt am hinteren Ende des Visiers (Kimme, Rückseite der Optik, Okular), Drehung wie die Waffe (Unity +Z = Blick entlang
+  des Laufs, +Y = oben). Scopes (Scharfschützen- und Spurgewehr) haben ein offenes Okular (`ScopeEyepiece` als Ring) mit der Linse
+  `ScopeEyeLens` 8 mm innen (Radius 0,9 × Rohrradius, Material Detail); `Socket_Eye` sitzt in ihrer Mitte auf der Linie, ihr Radius im
+  Ego-Modell steht als `hold.eye_radius_m` im Vertrag (Cube Escape zeichnet dort sein Scope-Bild). Visierart: `hold.sight_kind` in
+  `data/tools.json` (Pistole, Schrotflinte, Raketenwerfer `iron`; Sturmgewehr, Maschinenpistole `reflex`; Impulsgewehr `holo`;
+  Fusionsgewehr `energy`; Scharfschützen-, Spurgewehr `scope`). Der Autoren-Kopierordner hat kein `data/`: Regel und Schussbild stehen
+  deshalb in `DESIGNS`, `tests/test_weapons.py` hält sie gleich mit `tools.json`, `viewmodels.json` und `ego_clips.json`;
+  `first_person.py` prüft den gebauten Anker gegen die Visierlinie der AimIdle-Pose (≤ 0,1 mm, `qa_viewmodel.json` ›
+  `ego_clips.sight_socket`).
 - **Ereignisse (T2).** Der Use-Clip beider Modelle trägt den Marker `Fire` am Schussbild (`DESIGNS[key]['fire_frame']` =
   `motion.fire_frame` in `data/viewmodels.json`: Bild 14, Fusionsgewehr 46); der Vertrag nennt ihn in `clips[0].events`,
   `action_contract.json` in `events`. Fire und AimFire der Ego-Clips tragen zusätzlich zu `Shot` das gleichbedeutende `Fire` (Bild 0).
@@ -441,9 +444,11 @@ Zulieferung T1, T2 und T6 für Cube Escape 0.66 „Deadeye“ (`Docs/FIRST_PERSO
   der Daumen jeder Hand im Bild, proximale Unterarmhälften unter dem Bild (der Stützarm wird wie in den Ziel-Clips nur gemessen,
   Entscheidung des Nutzers), kein sichtbarer Punkt vor der Near-Clip-Ebene. Ergebnis: `qa_viewmodel.json` › `ads_target`, im Spiel-Export
   `qa_game_fps.json` › `ads` mit den Prüfungen `sight_anchors` und `ads_target_pose`. Zusätzlich sucht die Prüfung den Bereich der
-  Augenabstände (0,10–0,80 m, 5 mm Schritt), in dem der Bildausschnitt hält (`eye_distance_range_m`). Verbindlich ist: Visier auf
-  der Linie, Anker im Vertrag, ein solcher Bereich existiert. Ob der Profilabstand selbst hält (`ads.passed`), ist ein Befund für
-  Cube Escape (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen), kein Abbruch.
+  Augenabstände (0,10–0,80 m, 5 mm Schritt), in dem der Bildausschnitt hält (`eye_distance_range_m`). Beim Profilabstand zusätzlich
+  (Cube Escape 0.72): der Strahl durch die Bildmitte trifft kein Teil (`centre_clear`; bei Scopes nur die Okularlinse) und das Modell
+  reicht höchstens 25 % der Bildhöhe über die Mitte (`model_top_above_centre`). Verbindlich ist: Visier auf der Linie, Anker im Vertrag,
+  Bildmitte frei, 25-%-Grenze, ein Bereich existiert. Ob die Finger beim Profilabstand im Bild bleiben (`ads.passed`), ist ein Befund
+  für Cube Escape (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen), kein Abbruch.
 - **Finger (T5).** Pose-Werte `trigger` und `regrip` (`ego_clips.py`, Daten `defaults.fingers` in `data/ego_clips.json`): in Fire und
   AimFire hebt der Zeigefinger der Griffhand (`Fingers_R_0`, oberste Reihe am Abzug) nach dem Schuss um `trigger_deg` (10°) ab und legt sich
   wieder an (2 Bilder hoch, 4 zurück); in Reload öffnen sich die drei Finger der Stützhand um `regrip_deg` (24°), während sie den
