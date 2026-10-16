@@ -19,10 +19,10 @@ from pathlib import Path
 
 RUNS = 8
 LIMIT_PX = 1.0
-# Unstable before the z-fighting fixes of 0.12.0 (Mac, 16.10.2026, 8 runs, largest differing pixels). Reported as
-# "expected" until the Mac shows them stable after the fix; then remove the entry (the run prints KNOWN_NOW_STABLE).
-KNOWN_UNSTABLE = {"smg/world": 30.0, "smg/game": 4.4, "assault_rifle/world": 14.6, "sniper_rifle/world": 9.4,
-                  "sniper_rifle/game": 3.3, "scout_rifle/world": 5.5, "scout_rifle/game": 3.8}
+# Known unstable models (largest differing pixels, Mac 16.10.2026). Reported as "expected", never skipped; remove an entry
+# once the run prints KNOWN_NOW_STABLE. The muzzle faces of assault/sniper/scout rifle and SMG (2-30 px) and the fusion
+# rifle (2.2 px) are fixed in 2ce69db and not listed: if they still flip, the check fails.
+KNOWN_UNSTABLE = {"portal_emitter/world": 1.7}   # 3 of 11 at 1.6-1.7 px (Mac, 3396e1f), cause not found, borderline
 
 
 def difference(first, second):

@@ -510,6 +510,15 @@ def flat_faces(kind, values):
         low = [center[i] - size[i] / 2 for i in range(3)]
         high = [center[i] + size[i] / 2 for i in range(3)]
         return [(axis, sign, (high if sign > 0 else low)[axis], low, high) for axis in range(3) for sign in (-1, 1)]
+    if kind in ("cyl", "tube"):          # end discs along the axis (muzzle rings, lenses, caps)
+        if kind == "cyl":
+            center, radius, length, _, axis, _, _ = values
+        else:
+            center, radius, _, length, _, axis, _ = values
+        index = "xyz".index(axis)
+        low = [center[i] - (length / 2 if i == index else radius) for i in range(3)]
+        high = [center[i] + (length / 2 if i == index else radius) for i in range(3)]
+        return [(index, sign, (high if sign > 0 else low)[index], low, high) for sign in (-1, 1)]
     if kind == "slab":
         points, width, _, x, _ = values
         low = [x - width / 2, min(p[0] for p in points), min(p[1] for p in points)]
@@ -520,7 +529,8 @@ def flat_faces(kind, values):
 
 class CoplanarDecorTests(unittest.TestCase):
     """0.12.0 (Mac viewer, shotgun/fps): a decor face lying in another part's face z-fights; the result flipped with the
-    draw order. Accent and glow decors stand at least 0.5 mm proud of what they sit on."""
+    draw order. Accent and glow decors, muzzle rings, lenses and the other parts the mesh scan found stand at least 0.5 mm
+    proud of what they sit on (box, slab and cylinder end faces)."""
     KNOWN = set()          # no exceptions (0.12.0: the fusion rifle's fin accents were raised as well)
 
     def test_decors_are_not_coplanar(self):
@@ -529,9 +539,10 @@ class CoplanarDecorTests(unittest.TestCase):
         for key, spec in designs.DESIGNS.items():
             kit = RecordingKit(spec)
             spec["build"](kit)
-            decor = {name for name, (kind, values) in kit.geometry.items() if kind == "box"
-                     and (values[2] in ("Accent", spec["element"]) or "Glow" in name or "Accent" in name
-                          or name.startswith("StockCell"))}
+            decor = {name for name, (kind, values) in kit.geometry.items()
+                     if (kind == "box" and (values[2] in ("Accent", spec["element"]) or "Glow" in name or "Accent" in name
+                                            or name.startswith("StockCell")))
+                     or name in ("MuzzleRing", "ScopeLens", "SightPost", "Hammer", "StockCore", "Trigger")}
             faces = [(name, face) for name, (kind, values) in kit.geometry.items() for face in flat_faces(kind, values)]
             for name, (axis, sign, plane, low, high) in faces:
                 if name not in decor or (key, name) in self.KNOWN:
