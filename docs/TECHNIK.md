@@ -495,6 +495,21 @@ Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals
 - **Clip-Liste.** Wurzeleigenschaft `ce_action_clips` (JSON-Liste: Use, dann die Ego-Clips in Zeitleistenreihenfolge) neben dem
   bisherigen `ce_action_clip`.
 
+## Viewer-Prüfung und Determinismus (0.12.0)
+
+`viewer/test_viewer.py` rendert jedes Modell, Bewegung und Rücksetzen, Looks, beschädigte Daten und die Seitenleiste.
+`viewer/test_determinism.py` (macOS, in `scripts/check_output.sh` nach dem Viewer-Test) rendert dasselbe Bild je Modell achtmal
+(`--runs`, Standard 8, Größe 1200×800) und vergleicht jedes mit dem ersten (`magick compare -metric AE -fuzz 2%`); über 1 Pixel
+(`--limit`) gilt ein Modell als instabil, darunter liegt nur Antialiasing-Rauschen. Zweck: koplanare Flächen verschiedener Teile
+(Z-Fighting) finden, die bei geänderter Zeichenreihenfolge kippen. Befund 16.10.2026: Schaft-Dekor der Schrotflinte (Ego, 57,5 px) –
+sichtbar geworden, als `Socket_Sight` als neuer Knoten die Reihenfolge änderte; der Rücksetz-Test allein hätte es als Zufall gezeigt.
+`KNOWN_UNSTABLE` in der Datei nennt vorbestehende Fälle mit Pixelwert: sie werden gemeldet (`EXPECTED_UNSTABLE`), nie übersprungen,
+und als `KNOWN_NOW_STABLE`, sobald sie halten (dann Eintrag entfernen). Die Auswertung ist ohne Viewer getestet (`tests/test_determinism.py`).
+Im Generator gilt: Dekore, Ringe und Linsen stehen ≥ 0,5 mm über der Fläche, auf der sie sitzen (`CoplanarDecorTests`; Netzprüfung
+der Weltmodelle in der Sitzung vom 16.10.2026: Mündungsring/-bremse, Scope-Linse/Objektiv, Schaftkern, Abzug, Hahn, Visierpfosten,
+Flossen-Dekor, Leuchtstreifen über Lüftungsschlitzen abgehoben; das Impulsgewehr-Paar Zellschacht/Energiezelle hat dasselbe Material
+und blieb).
+
 ## Cache und Worker
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer

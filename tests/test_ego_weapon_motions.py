@@ -138,6 +138,16 @@ class WeaponMotionTests(unittest.TestCase):
                 self.assertLess(speeds[1], speeds[0])
 
 
+def rounded(value):
+    if isinstance(value, float):
+        return round(value, 10) + 0.0
+    if isinstance(value, dict):
+        return {key: rounded(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [rounded(item) for item in value]
+    return value
+
+
 class RecordingKit:
     """Record primitive parameters and parents without importing bpy or approximating mesh generation."""
     def __init__(self, spec):
@@ -184,20 +194,23 @@ class RecordingKit:
         self.sockets[name] = location
 
     def geometry_digest(self):
-        return hashlib.sha256(json.dumps({"geometry": self.geometry, "sockets": self.sockets}, sort_keys=True).encode()).hexdigest()
+        # Rounded to 0.1 nm: the last float digits of math.cos/sin differ by platform (fusion rifle: Linux vs macOS).
+        return hashlib.sha256(json.dumps(rounded({"geometry": self.geometry, "sockets": self.sockets}),
+                                         sort_keys=True).encode()).hexdigest()
 
 
 # Primitive arguments and all sockets of the pre-reload designs (07df813); parentage is deliberately excluded.
+# 0.12.0: digests over values rounded to 0.1 nm (platform-independent) and the z-fighting fixes.
 REST_GEOMETRY = {
-    'pistol': 'e29cf7447ea13d2f62fec2dac328388a20f7e1fbbf18c4ab74fbb9f512896ee1',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
-    'assault_rifle': '8f981998a008ac76d017d012a5c31192a728f37f762cac0d479058746ec13900',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
-    'pulse_rifle': 'bbddbf7b6ff9c3646ff3bfdcdb08bca5ba8c6866ce03f68f57a67c81b60be079',
-    'shotgun': '87bf2a5fa8afe68e47cafff5cdbb9126740254efd0285393a95ed99fc6fe79cf',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
-    'sniper_rifle': '77047b675b14e289a22e4f825c4a184f4905b4561b0e8739bda4d8234ceb8917',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
-    'smg': 'e6da85fa3089a499b3a23df8e4fad454ee922c7841a4ba5c84fc13419193ee73',
-    'fusion_rifle': '3bfd949adbf11990c5bdceb79c370c0b62c71ba42053f28e4bdd9b0f06b30a5d',
-    'scout_rifle': '37516dca0bc05e09cea178d6b80836c0868ec2e760b1e034c9cdd006823edda1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
-    'rocket_launcher': 'abdb6a660623d638e24692b9bbc625d015ac87a4e1d79b5d4cb7e762e49db48e',
+    'pistol': '241a56a69b2414e1941d20735f4128ae844c1bccf32cf3b4b367997ef0a9d056',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
+    'assault_rifle': '0ebce506807193b81d4e2807b86cf47b1c9413f494a74a93ed395ddfbdbd1538',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
+    'pulse_rifle': '5e6264bde87a14f2130cbb1e7e282a87203c4ac4e8669aca0bdfe7767a566b75',
+    'shotgun': 'cf77d8ee2ffe99348fb8234929c40d1e81bb96e63e7602fe4fd0f89ae81c2746',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
+    'sniper_rifle': 'dcada8e3fd379bfd123e0ac916efef3c2458357b90ddcb2e5cb8785362dfdd46',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
+    'smg': 'fe0ab25c6161db85fb80811004ee1342f54d91518e8f75ae7b9f31f912dd9302',
+    'fusion_rifle': '0c69447989fc4a4bb114a0d0b5d8a4fc14214303b7ad7dca3e638cdc83252982',
+    'scout_rifle': 'd14c0f9fd091f5f798c055e6ef2bc3d0a201f9046e4034b91cb6f95c5e27c756',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
+    'rocket_launcher': 'ba6f02a8ad6c993dee3fbe1f5ba24beae0285e562be1da1a89208f47370d8675',
 }
 
 

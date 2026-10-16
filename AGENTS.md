@@ -89,6 +89,7 @@ Doku und Skills auf Endstand, Grenzen benannt. Unity-Gameplay nie aus Blender-/V
 Native SwiftUI-/SceneKit-App nach dem Aufbau von Robogen: linke Modellansicht, rechte scrollbare Seitenleiste,
 Welt/FPS/Pfeil-Auswahl, Ansichten, Aktionssteuerung, Material-Looks, A/B-Vergleich und PNG-Export.
 Nach Änderungen: `bash viewer/build.sh [output-dir]` und `bash viewer/test_viewer.sh [output-dir]`.
+`python3 viewer/test_determinism.py <output-dir>` rendert jedes Modell achtmal und verlangt gleiche Bilder (Z-Fighting; Teil von `check_output.sh`).
 Sichtbare Änderungen mit Screenshots prüfen; `--sidebar-check` muss bei 360 pt passen. Der Playhead beobachtet nur die
 Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, keine dauernden Dateizugriffe.
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.

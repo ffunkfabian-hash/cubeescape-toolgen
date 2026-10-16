@@ -10,6 +10,7 @@ run_checks() {
     "$BLENDER_BIN" --background --factory-startup --python-exit-code 1 --python scripts/verify_surface.py -- "$TASK_OUT"
     bash viewer/build.sh "$TASK_OUT"
     bash viewer/test_viewer.sh "$TASK_OUT"
+    python3 viewer/test_determinism.py "$TASK_OUT"   # same snapshot 8x: z-fighting / unstable renders (16.10.2026)
     python3 scripts/check_docs.py
 }
 if [[ "${1:-}" == "--locked" ]]; then

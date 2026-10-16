@@ -85,7 +85,8 @@ def scope(k, y, z, length, radius, lens_radius=None):
     k.tube('ScopeEyepiece', (0, y + length / 2 - .005, z), radius * 1.2, radius * EYE_LENS, length * .22, 'Primary', n=24)
     k.cyl('ScopeEyeLens', (0, y + length / 2 - .005 + length * .11 - EYE_RECESS, z), radius * EYE_LENS, .002, 'Detail',
           n=24, bevel=.0003)
-    k.cyl('ScopeLens', (0, y - length / 2 - length * .30 / 2 + .012, z), lens * .86, .004, k.glow_material, n=24, bevel=.0005)
+    # 0.12.0: 1 mm proud of the objective's front face (coplanar faces z-fought)
+    k.cyl('ScopeLens', (0, y - length / 2 - length * .30 / 2 + .011, z), lens * .86, .004, k.glow_material, n=24, bevel=.0005)
     k.cyl('ScopeTurret', (0, y, z + radius + .006), radius * .55, .016, 'Metal', axis='z', n=16, bevel=.001)
     for dy in (-length * .28, length * .24):
         k.box('ScopeMount_%d' % int(dy * 1000), (0, y + dy, z - radius - .012), (.020, .026, .030), 'Metal', .003)
@@ -95,7 +96,8 @@ def muzzle_device(k, y, z, radius, length, rings=2):
     """Muzzle brake with an element-glow ring and a metal end ring."""
     k.cyl('MuzzleBrake', (0, y, z), radius, length, 'Secondary', n=28)
     k.tube('MuzzleGlow', (0, y - length * .18, z), radius + .0015, radius * .55, .006, k.glow_material, n=28)
-    k.tube('MuzzleRing', (0, y - length / 2 + .004, z), radius + .002, radius * .5, .008, 'Metal', n=28)
+    # 0.12.0: 1 mm ahead of the brake's front face (coplanar faces z-fought in the Mac viewer)
+    k.tube('MuzzleRing', (0, y - length / 2 + .003, z), radius + .002, radius * .5, .008, 'Metal', n=28)
     for i in range(rings):
         k.box('MuzzleSlot_%d' % i, (0, y + length * .12 + i * length * .22, z + radius), (radius * .8, .006, .003), 'Detail', .0006)
 
@@ -195,7 +197,7 @@ def pistol(k):
     k.box('Frame', (0, -.045, .034), (.030, .165, .020), 'Secondary', .006)
     k.box('FrameRail', (0, -.108, .026), (.020, .060, .008), 'Metal', .002)
     trigger_group(k, -.071, -.011, .008, .036)
-    k.box('Hammer', (0, .060, .069), (.010, .014, .016), 'Secondary', .003)
+    k.box('Hammer', (0, .060, .0696), (.010, .014, .016), 'Secondary', .003)   # 0.12.0: bottom 0.6 mm off the slide display glass
     slide = k.pivot('Anim_Slide', (0, -.045, .062))
     k.box('SlideBody', (0, -.045, .062), (.036, .205, .034), 'Primary', .008, parent=slide)
     k.box('SlideTop', (0, -.045, .082), (.016, .190, .007), 'Secondary', .003, parent=slide)
@@ -235,7 +237,7 @@ def assault_rifle(k):
     trigger_group(k, -.066, -.008, .010, .040)
     stock(k, 'Stock', [(.095, .093), (.27, .103), (.345, .098), (.345, -.045), (.31, -.05), (.205, .008), (.095, .040)],
           .040, 'Detail', (.044, .014, .148), .352, .028)
-    k.box('StockCore', (0, .16, .052), (.030, .13, .030), 'Secondary', .006)
+    k.box('StockCore', (0, .161, .052), (.030, .13, .030), 'Secondary', .006)   # 0.12.0: front face 1 mm off the stock's (z-fighting)
     k.box('Handguard', (0, -.235, zb), (.058, .21, .054), 'Primary', .010)
     k.box('HandguardRail', (0, -.235, zb - .031), (.024, .20, .008), 'Secondary', .002)
     side_vents(k, 'HandguardVent', -.175, .028, 5, zb + .004, .0295)
@@ -273,7 +275,7 @@ def pulse_rifle(k):
     magazine(k, 'EnergyCell', [(.145, -.03), (.215, -.03), (.215, -.100), (.145, -.100)], .034, glow_height=.04, parent=mag)
     for side in (-1, 1):
         k.glow('CellWindow_%d' % side, (side * .0175, .18, -.065), (.002, .040, .040), parent=mag)
-    trigger_group(k, -.060, -.010, .014, .040)
+    trigger_group(k, -.060, -.010, .0135, .040)   # 0.12.0: trigger bottom 0.5 mm below the chassis bottom (z-fighting)
     k.box('Buttpad', (0, .335, .030), (.052, .014, .130), 'Detail', .004)
     k.cyl('Shroud', (0, -.29, zb), .030, .19, 'Primary', n=32, bevel=.003)
     k.cyl('ShroudCore', (0, -.25, zb), .024, .26, 'Secondary', n=28)
@@ -443,7 +445,7 @@ def fusion_rifle(k):
     for i in range(3):
         a = 2 * math.pi * i / 3
         k.glow('CoilCell_%d' % i, (.0415 * math.cos(a), -.19, zb + .0415 * math.sin(a)), (.008, .016, .008), parent=coil)
-    k.box('SightPost', (0, -.12, .108), (.008, .012, .022), 'Metal', .002)
+    k.box('SightPost', (0, -.1206, .108), (.008, .012, .022), 'Metal', .002)   # 0.12.0: rear face 0.6 mm off the rail slot's
     cell = k.pivot('Anim_Magazine', (.024, .220, .040))
     fusion_rifle_modules(k, fins, cell)
     k.socket('Socket_Hand', (0, 0, 0))
@@ -625,7 +627,7 @@ def fusion_rifle_modules(k, fins, cell):
     display(k, 'ChargeDisplay', (.0286, .040, .080), (.0016, .045, .014), 'x', bars=5)
     for side in (-1, 1):
         heat_sink(k, 'HeatVent_%d' % side, (side * .0300, -.020, .045), 4, .012, (.004, .004, .020))
-        accent(k, 'FinAccent_%d' % side, (side * .045, -.560, .075), (.0112, .020, .047), parent=fins[side])
+        accent(k, 'FinAccent_%d' % side, (side * .045, -.5608, .075), (.0112, .020, .047), parent=fins[side])   # 0.12.0: 0.8 mm proud of the fin's front face
         k.box('CoreBrace_%d' % side, (side * .022, -.205, .075), (.010, .022, .030), 'Secondary', .002)
     energy_cell(k, 'PowerCell', (.024, .220, .040), .008, .080, parent=cell)
     panel(k, 'BodyPlate', (.0290, -.090, .080), (.0025, .07, .018))

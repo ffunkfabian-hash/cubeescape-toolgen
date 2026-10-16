@@ -23,7 +23,7 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
 5. Vor Commit `--tier standard`, für den Lieferstand `--tier full`: alle Welt-/FPS- und Pfeil-Exporte reimportieren.
    Der Bogen prüft alle 97 Frames und die exportierten Morphs; der Magnetgreifer prüft die Aktionsposen. Fehler im
    aktuellen Schrittlog beheben, nie den Prüfer lockern oder gespeicherte QA von Hand „grün“ machen.
-6. Viewer: `bash viewer/build.sh <Ausgabe>` und `bash viewer/test_viewer.sh <Ausgabe>`. Tests schreiben Bilder nach
+6. Viewer: `bash viewer/build.sh <Ausgabe>`, `bash viewer/test_viewer.sh <Ausgabe>` und `python3 viewer/test_determinism.py <Ausgabe>` (gleiches Bild achtmal, ≤ 1 px). Tests schreiben Bilder nach
    `<Ausgabe>/QA/Viewer`; alle Varianten, Motion/Reset, Looks, beschädigte Puffer, unbekannte IDs und Seitenleistenbreite.
    Mindestens Welt- und FPS-Modell sowie Bogen gespannt und entspannt ansehen. Bei Interaktionsänderungen native App
    öffnen und Werkzeugwechsel, Leertaste, Schieberegler und Erzeugung praktisch prüfen.

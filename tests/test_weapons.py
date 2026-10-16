@@ -521,8 +521,7 @@ def flat_faces(kind, values):
 class CoplanarDecorTests(unittest.TestCase):
     """0.12.0 (Mac viewer, shotgun/fps): a decor face lying in another part's face z-fights; the result flipped with the
     draw order. Accent and glow decors stand at least 0.5 mm proud of what they sit on."""
-    # The fusion rifle's fin accents share the fins' front face (faces away from the Ego camera; left as built).
-    KNOWN = {("fusion_rifle", "FinAccent_-1"), ("fusion_rifle", "FinAccent_1")}
+    KNOWN = set()          # no exceptions (0.12.0: the fusion rifle's fin accents were raised as well)
 
     def test_decors_are_not_coplanar(self):
         from test_ego_weapon_motions import RecordingKit
