@@ -1,0 +1,245 @@
+{
+  "format": 1,
+  "note": "Surface recipes of the nine weapons (Toolgen 0.13 Enamel), source: Cube Escape Docs/EQUIPMENT.md > Zielbild > Texturen 1-9 (concept sheet weapon_textures_1-9.webp, 16.10.2026). 'recipe' goes into the contract (surface.recipe, a proposal for Cube Escape's presets: material kind, smoothness, wear, glow per channel); Toolgen bakes only 'relief' (normal map) and the decals (weapon_designs.py DECALS). Relief keys select the parts of a weapon: a glob on the source part name without the SM_PG_ prefix, or '@<Channel>' for every part of that channel; the first matching key wins; a value is one pattern or a list of patterns that add up. Sizes in mm in the tool frame (Socket_Hand; forward -y, up +z, lateral x). Height of every pattern 0..1 x strength x limits.max_height_mm.",
+  "limits": {"max_height_mm": 0.3, "smoothness_max": 0.45, "wear_levels": {"subtle": 0.2, "medium": 0.5, "strong": 0.8}},
+  "patterns": {
+    "knurl": "diamond knurling: two families of grooves at +-45 degrees between 'direction' and 'across'; size_mm = pitch",
+    "grooves": "round corrugation repeating along 'direction' (the grooves run across it); size_mm = pitch",
+    "lamellae": "flat ribs with gaps repeating along 'direction'; size_mm = pitch",
+    "seams": "narrow panel joints (width_mm) every size_mm along 'direction', a second family along 'across' when 'across_mm' is set; pressed in",
+    "brushed": "fine streaks running along 'direction' (anisotropic noise, size_mm = streak width)",
+    "grain": "isotropic fine grain (ceramic, cast metal), size_mm = feature size"
+  },
+  "materials": ["painted", "painted_matte", "ceramic", "brushed", "satin", "polished", "rough_cast", "rubber", "energy_glass"],
+  "weapons": {
+    "pistol": {
+      "sheet": 1, "title": "Pistole / Sidearm",
+      "palette": ["#E3E5E8", "#4A4F57", "#F28C28", "#C8502A"],
+      "glow": {"color": "#FF8C2E", "element": "solar"},
+      "wear": "subtle",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.32, "note": "lackiert, leicht matt"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.22},
+        "Accent": {"material": "painted", "smoothness": 0.32},
+        "Metal": {"material": "brushed", "smoothness": 0.38, "note": "gebürstet, robust"},
+        "Detail": {"material": "rubber", "smoothness": 0.08, "note": "griffig strukturiert"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Orange, klar"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Symbole, Nummern",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.2, "direction": "z", "across": "y", "strength": 0.7},
+        "GripCore": {"type": "knurl", "size_mm": 2.2, "direction": "z", "across": "x", "strength": 0.5},
+        "GripRib*": {"type": "grooves", "size_mm": 1.4, "direction": "x", "strength": 0.6},
+        "SlideBody": {"type": "seams", "size_mm": 48, "width_mm": 0.8, "direction": "y", "strength": 0.9},
+        "@Metal": {"type": "brushed", "size_mm": 0.6, "direction": "y", "strength": 0.35}
+      }
+    },
+    "assault_rifle": {
+      "sheet": 2, "title": "Sturmgewehr / Auto Rifle",
+      "palette": ["#E3E5E8", "#4A4F57", "#F28C28", "#2F8CFF"],
+      "glow": {"color": "#2F8CFF", "element": "arc"},
+      "wear": "medium",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.3, "note": "lackiert, leicht matt"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.2},
+        "Accent": {"material": "painted", "smoothness": 0.3},
+        "Metal": {"material": "brushed", "smoothness": 0.3, "note": "Industrie-Finish"},
+        "Detail": {"material": "rubber", "smoothness": 0.08, "note": "Struktur an Griffen"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Blau, Tech-Elemente"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "militärisch, Tech",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.6, "direction": "z", "across": "y", "strength": 0.7},
+        "GripCore": {"type": "knurl", "size_mm": 2.6, "direction": "z", "across": "x", "strength": 0.5},
+        "GripRib*": {"type": "grooves", "size_mm": 1.6, "direction": "x", "strength": 0.6},
+        "Buttpad": {"type": "grooves", "size_mm": 3.0, "direction": "z", "strength": 0.8},
+        "Receiver*": {"type": "seams", "size_mm": 64, "width_mm": 1.0, "direction": "y", "strength": 0.9},
+        "Handguard": {"type": "seams", "size_mm": 72, "width_mm": 1.0, "direction": "y", "strength": 0.9},
+        "Stock": {"type": "seams", "size_mm": 60, "width_mm": 1.0, "direction": "y", "strength": 0.8},
+        "@Metal": [{"type": "brushed", "size_mm": 0.9, "direction": "y", "strength": 0.35},
+                   {"type": "grain", "size_mm": 1.4, "strength": 0.2}]
+      }
+    },
+    "pulse_rifle": {
+      "sheet": 3, "title": "Impulsgewehr / Pulse Rifle",
+      "palette": ["#E3E5E8", "#4A4F57", "#9B5CF0", "#7A3CE0"],
+      "glow": {"color": "#A35CFF", "element": "void"},
+      "wear": "subtle",
+      "channels": {
+        "Primary": {"material": "ceramic", "smoothness": 0.4, "note": "Keramik-Look"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.22},
+        "Accent": {"material": "ceramic", "smoothness": 0.4},
+        "Metal": {"material": "satin", "smoothness": 0.34, "note": "dunkel, satiniert"},
+        "Detail": {"material": "rubber", "smoothness": 0.08, "note": "strukturiert"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Violett, leuchtend"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Tech-Symbole",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "y", "strength": 0.6},
+        "GripCore": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "x", "strength": 0.45},
+        "GripRib*": {"type": "grooves", "size_mm": 1.6, "direction": "x", "strength": 0.5},
+        "Buttpad": {"type": "grooves", "size_mm": 3.0, "direction": "z", "strength": 0.7},
+        "Chassis": [{"type": "grain", "size_mm": 0.9, "strength": 0.3},
+                    {"type": "seams", "size_mm": 70, "width_mm": 1.0, "direction": "y", "strength": 0.7}],
+        "Shroud": [{"type": "grain", "size_mm": 0.9, "strength": 0.3},
+                   {"type": "seams", "size_mm": 56, "width_mm": 1.0, "direction": "y", "strength": 0.7}],
+        "@Primary": {"type": "grain", "size_mm": 0.9, "strength": 0.35},
+        "@Accent": {"type": "grain", "size_mm": 0.9, "strength": 0.35},
+        "@Metal": {"type": "brushed", "size_mm": 0.7, "direction": "y", "strength": 0.2}
+      }
+    },
+    "shotgun": {
+      "sheet": 4, "title": "Schrotflinte / Shotgun",
+      "palette": ["#D8D9DB", "#4A4F57", "#F07F22", "#6B3A2A"],
+      "glow": {"color": "#FF7A1E", "element": "solar"},
+      "wear": "strong",
+      "channels": {
+        "Primary": {"material": "painted_matte", "smoothness": 0.2, "note": "strapazierfähig, matt"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.18},
+        "Accent": {"material": "painted_matte", "smoothness": 0.22},
+        "Metal": {"material": "rough_cast", "smoothness": 0.2, "note": "rau, massiv"},
+        "Detail": {"material": "rubber", "smoothness": 0.08, "note": "Griffzonen"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Orange, kräftig"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Warnhinweise",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.8, "direction": "z", "across": "y", "strength": 0.8},
+        "GripCore": {"type": "knurl", "size_mm": 2.8, "direction": "z", "across": "x", "strength": 0.6},
+        "GripRib*": {"type": "grooves", "size_mm": 1.8, "direction": "x", "strength": 0.6},
+        "ForeEnd": {"type": "grooves", "size_mm": 4.0, "direction": "y", "strength": 0.8},
+        "Buttpad": {"type": "grooves", "size_mm": 3.4, "direction": "z", "strength": 0.8},
+        "Receiver": {"type": "seams", "size_mm": 58, "width_mm": 1.1, "direction": "y", "strength": 0.9},
+        "BarrelShroud": {"type": "seams", "size_mm": 66, "width_mm": 1.1, "direction": "y", "strength": 0.9},
+        "@Metal": [{"type": "grain", "size_mm": 1.2, "strength": 0.55},
+                   {"type": "brushed", "size_mm": 1.2, "direction": "y", "strength": 0.25}]
+      }
+    },
+    "sniper_rifle": {
+      "sheet": 5, "title": "Scharfschützengewehr / Sniper",
+      "palette": ["#E3E5E8", "#4A4F57", "#22C8F0", "#4AA8F0"],
+      "glow": {"color": "#3FC8FF", "element": "energy"},
+      "wear": "subtle",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.36, "note": "sauber, präzise"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.24},
+        "Accent": {"material": "painted", "smoothness": 0.36},
+        "Metal": {"material": "brushed", "smoothness": 0.42, "note": "hochwertig, fein"},
+        "Detail": {"material": "rubber", "smoothness": 0.1, "note": "minimal griffig"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Hellblau, präzise"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Seriennummern (S-07)",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "y", "strength": 0.4},
+        "GripCore": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "x", "strength": 0.3},
+        "GripRib*": {"type": "grooves", "size_mm": 1.6, "direction": "x", "strength": 0.4},
+        "Buttpad": {"type": "grooves", "size_mm": 3.0, "direction": "z", "strength": 0.6},
+        "Receiver": {"type": "seams", "size_mm": 80, "width_mm": 1.0, "direction": "y", "strength": 0.8},
+        "Handguard": {"type": "seams", "size_mm": 90, "width_mm": 1.0, "direction": "y", "strength": 0.8},
+        "@Metal": {"type": "brushed", "size_mm": 0.6, "direction": "y", "strength": 0.25}
+      }
+    },
+    "smg": {
+      "sheet": 6, "title": "Maschinenpistole / SMG",
+      "palette": ["#E3E5E8", "#4A4F57", "#19D3F0", "#1E6E9A"],
+      "glow": {"color": "#22D8FF", "element": "energy"},
+      "wear": "medium",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.3, "note": "leicht, widerstandsfähig"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.2},
+        "Accent": {"material": "painted", "smoothness": 0.3},
+        "Metal": {"material": "satin", "smoothness": 0.28, "note": "dunkel, genutzt"},
+        "Detail": {"material": "rubber", "smoothness": 0.06, "note": "stark strukturiert"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Cyan, lebendig"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "taktisch, Pfeile",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.0, "direction": "z", "across": "y", "strength": 0.9},
+        "GripCore": {"type": "knurl", "size_mm": 2.0, "direction": "z", "across": "x", "strength": 0.7},
+        "GripRib*": {"type": "grooves", "size_mm": 1.4, "direction": "x", "strength": 0.8},
+        "StockPad": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "x", "strength": 0.8},
+        "Body": {"type": "seams", "size_mm": 52, "width_mm": 0.9, "direction": "y", "strength": 0.9},
+        "@Metal": {"type": "brushed", "size_mm": 0.8, "direction": "y", "strength": 0.3}
+      }
+    },
+    "fusion_rifle": {
+      "sheet": 7, "title": "Fusionsgewehr / Fusion Rifle",
+      "palette": ["#E3E5E8", "#4A4F57", "#9B5CF0", "#7A3CE0"],
+      "glow": {"color": "#A050FF", "element": "void"},
+      "wear": "subtle",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.4, "note": "Hochtechnologie, glatt"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.24},
+        "Accent": {"material": "painted", "smoothness": 0.38},
+        "Metal": {"material": "brushed", "smoothness": 0.4, "note": "präzise, clean"},
+        "Detail": {"material": "rubber", "smoothness": 0.1, "note": "technisch, Lamellen"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Violett, intensiv"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Forschungs-Symbol",
+      "relief": {
+        "GripShell*": {"type": "lamellae", "size_mm": 2.0, "direction": "z", "strength": 0.8},
+        "GripCore": {"type": "lamellae", "size_mm": 2.0, "direction": "z", "strength": 0.6},
+        "GripRib*": {"type": "grooves", "size_mm": 1.4, "direction": "x", "strength": 0.5},
+        "Buttpad": {"type": "lamellae", "size_mm": 2.6, "direction": "z", "strength": 0.8},
+        "HeatVent*": {"type": "lamellae", "size_mm": 2.2, "direction": "y", "strength": 0.9},
+        "Body": {"type": "seams", "size_mm": 76, "width_mm": 0.9, "direction": "y", "strength": 0.8},
+        "@Metal": {"type": "brushed", "size_mm": 0.5, "direction": "y", "strength": 0.2}
+      }
+    },
+    "scout_rifle": {
+      "sheet": 8, "title": "Spurgewehr / Trace Rifle",
+      "palette": ["#E3E5E8", "#4A4F57", "#2E8CF0", "#1F5FD0"],
+      "glow": {"color": "#2F7BFF", "element": "arc"},
+      "wear": "subtle",
+      "channels": {
+        "Primary": {"material": "painted", "smoothness": 0.4, "note": "glatt, sauber"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.24},
+        "Accent": {"material": "painted", "smoothness": 0.38},
+        "Metal": {"material": "polished", "smoothness": 0.45, "note": "Premium, poliert (Glätte im Masken-Modus, finish bleibt)"},
+        "Detail": {"material": "rubber", "smoothness": 0.1, "note": "minimal"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Blau, kontinuierlich"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Tech-Linien",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "y", "strength": 0.35},
+        "GripCore": {"type": "knurl", "size_mm": 2.4, "direction": "z", "across": "x", "strength": 0.25},
+        "GripRib*": {"type": "grooves", "size_mm": 1.6, "direction": "x", "strength": 0.35},
+        "Buttpad": {"type": "grooves", "size_mm": 3.0, "direction": "z", "strength": 0.5},
+        "Receiver": {"type": "seams", "size_mm": 84, "width_mm": 0.9, "direction": "y", "strength": 0.7},
+        "Handguard": {"type": "seams", "size_mm": 96, "width_mm": 0.9, "direction": "y", "strength": 0.7}
+      }
+    },
+    "rocket_launcher": {
+      "sheet": 9, "title": "Raketenwerfer / Rocket Launcher",
+      "palette": ["#E3E5E8", "#4A4F57", "#F07F22", "#6B3A2A"],
+      "glow": {"color": "#FF7A1E", "element": "solar"},
+      "wear": "strong",
+      "channels": {
+        "Primary": {"material": "painted_matte", "smoothness": 0.22, "note": "schwer, robust"},
+        "Secondary": {"material": "painted_matte", "smoothness": 0.18},
+        "Accent": {"material": "painted_matte", "smoothness": 0.22},
+        "Metal": {"material": "rough_cast", "smoothness": 0.2, "note": "massiv, angeraut"},
+        "Detail": {"material": "rubber", "smoothness": 0.06, "note": "stoßdämpfend"},
+        "Energy": {"material": "energy_glass", "smoothness": 0.45, "note": "Orange, Hitze"},
+        "Emission": {"material": "energy_glass", "smoothness": 0.45}
+      },
+      "decals_note": "Warnzeichen",
+      "relief": {
+        "GripShell*": {"type": "knurl", "size_mm": 3.0, "direction": "z", "across": "y", "strength": 0.8},
+        "GripCore": {"type": "knurl", "size_mm": 3.0, "direction": "z", "across": "x", "strength": 0.6},
+        "GripRib*": {"type": "grooves", "size_mm": 1.8, "direction": "x", "strength": 0.6},
+        "Foregrip": {"type": "grooves", "size_mm": 4.0, "direction": "z", "strength": 0.9},
+        "Tube": {"type": "seams", "size_mm": 110, "width_mm": 1.4, "direction": "y", "strength": 0.9},
+        "@Metal": [{"type": "grain", "size_mm": 1.6, "strength": 0.55},
+                   {"type": "brushed", "size_mm": 1.4, "direction": "y", "strength": 0.2}]
+      }
+    }
+  }
+}

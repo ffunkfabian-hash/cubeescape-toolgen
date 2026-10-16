@@ -746,3 +746,32 @@ DESIGNS = {
         'use_clip': [{'node': 'Anim_Hatch', 'channel': 'rotation', 'axis': 0, 'keys': slide_keys((30, 0), (40, -30), (62, -30), (72, 0))}],
     },
 }
+
+
+def decal(part, face, rect, image, channel, rotation=0):
+    """Decal anchor (toolgen/decals.py): ``part`` source part (without SM_PG_), ``face`` the box face it is projected on
+    (+x is the side the first-person camera sees), ``rect`` (u0, v0, u1, v1) as fractions of the part's bounding box on that
+    face (u to the right and v up, seen from outside), ``image`` an id of data/decals.json, ``channel`` the weight channel
+    its texels take (Emission glows), ``rotation`` 0/90/180/270 degrees."""
+    return {'part': part, 'face': face, 'rect': rect, 'image': image, 'channel': channel, 'rotation': rotation}
+
+
+# Decals of the concept sheet "Waffen Texturen 1-9" (Toolgen 0.13 Enamel): baked into the weight maps by surface_bake.py.
+DECALS = {
+    'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
+               decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
+    'assault_rifle': [decal('ReceiverLower', '+x', (.5, .2, .658, .5), 'mil_ar2', 'Secondary'),
+                      decal('Handguard', '+x', (.048, .41, .19, .69), 'tech_bars', 'Accent')],
+    'pulse_rifle': [decal('Chassis', '+x', (.755, .658, .793, .79), 'tech_ring', 'Emission'),
+                    decal('Shroud', '+x', (.06, .45, .22, .7), 'tech_bars', 'Accent')],
+    'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
+                decal('BarrelShroud', '+x', (.033, .175, .167, .41), 'hazard_stripes', 'Accent')],
+    'sniper_rifle': [decal('Receiver', '+x', (.233, .348, .333, .63), 'serial_s07', 'Accent')],
+    'smg': [decal('Shroud', '+x', (.094, .375, .281, .643), 'arrows_chevron', 'Accent'),
+            decal('DrumCap_1', '+x', (.41, .41, .59, .59), 'arrow_triangle', 'Secondary')],
+    'fusion_rifle': [decal('Body', '+x', (.577, .217, .654, .55), 'research', 'Emission'),
+                     decal('Handguard', '+x', (.25, .37, .5, .63), 'fusion_px7', 'Secondary')],
+    'scout_rifle': [decal('Handguard', '+x', (.077, .34, .231, .66), 'tech_lines', 'Energy')],
+    'rocket_launcher': [decal('Tube', '+x', (.70, .3, .783, .7), 'warning_triangle', 'Accent'),
+                        decal('Tube', '+x', (.033, .41, .133, .59), 'hazard_stripes', 'Accent')],
+}

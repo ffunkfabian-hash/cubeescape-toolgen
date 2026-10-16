@@ -228,6 +228,20 @@ def map_validate(folder, block, raster, counts, labels):
         for other in range(len(surface.CHANNELS)):
             if other != channel:
                 mismatch |= own & (pixels[..., other] != 0)
+    # Decals (Toolgen 0.13, surface.recipe.decals): their texels carry the decal's channel instead of the slot's; they
+    # count apart, up to the number the bake declared, and only in the decal channels.
+    decal_list = block.get("recipe", {}).get("decals", [])
+    declared = sum(int(entry.get("texels", 0)) for entry in decal_list)
+    decal_channels = sorted({surface.CHANNELS.index(entry["channel"]) for entry in decal_list})
+    decal_texels = 0
+    if decal_channels:
+        hot = np.argmax(pixels, axis=2)
+        as_decal = mismatch & np.isin(hot, decal_channels) & (pixels.max(axis=2) == 255) \
+            & ((pixels == 255).sum(axis=2) == 1)
+        decal_texels = int(as_decal.sum())
+        if decal_texels > declared:
+            errors.append(f"decal texels {decal_texels} > declared {declared}")
+        mismatch &= ~as_decal
     denominator = int(unique.sum())
     mismatch_count = int(mismatch.sum())
     ratio = mismatch_count / denominator if denominator else 0.0
@@ -236,7 +250,8 @@ def map_validate(folder, block, raster, counts, labels):
     values = surface.map_checks(decoded, raster, sorted({surface.CHANNELS[i] for i in set(labels.tolist()) if i >= 0}),
                                 total_bytes)
     errors.extend(surface.map_errors(values))
-    return {"bytes": total_bytes, "unique_texels": denominator, "mismatches": mismatch_count,
+    return {"bytes": total_bytes, "unique_texels": denominator, "mismatches": mismatch_count, "decal_texels": decal_texels,
+            "decal_texels_declared": declared,
             "mismatch_ratio": ratio, "hashes": hashes, "map_checks": values, "errors": errors}
 
 
@@ -283,7 +298,8 @@ def verify_model(folder, contract_path, clip=False):
 
 
 def determinism(folder, tool):
-    names = [p.name for p in folder.iterdir() if p.name.endswith("_Game.blend") or p.name.endswith("_Game_Clips.fbx")
+    # the bake also reads the source models (part labels of relief and decals, Toolgen 0.13)
+    names = [p.name for p in folder.iterdir() if p.name.endswith(".blend") or p.name.endswith("_Game_Clips.fbx")
              or p.name.startswith("unity_contract") and p.suffix == ".json" or p.name.startswith("qa_game") and p.suffix == ".json"]
     with tempfile.TemporaryDirectory(prefix="verify_surface_") as temp:
         work = Path(temp)

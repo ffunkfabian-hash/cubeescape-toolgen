@@ -13,6 +13,13 @@ and ``qa_surface.json`` (exit code 1 when a check fails).
 * Fields: R ambient occlusion (Cycles AO bake), G convex edge (bevel normal against the shading normal, concave creases
   removed with a local AO), B up (max(0, world normal . up)), A height (0..1 over the model's LOD0 height), Cycles EMIT bake.
 * Normal: Cycles NORMAL bake in tangent space of UV1, OpenGL (Y+), from the bevel normal (rounded edges), flat = 128,128,255.
+  Weapons with a recipe (data/surface_recipes.json, Toolgen 0.13) add their relief there: a Bump node on the bevel normal
+  driven by the patterns of toolgen/surface_relief.py, at most 0.3 mm high, selected per face by its source part.
+* Decals (scripts/tool_assets/weapon_designs.py DECALS, images toolgen/decals.py): projected onto the texels of their part
+  and written into the channel raster before the dilation, so W0/W1 stay one-hot 255 (the decal's channel wins).
+
+Every LOD0 triangle learns its source part (``part_labels``): the nearest triangle of the same channel among the SM_PG_*
+meshes of ``<asset>.blend`` / ``<asset>_FPS.blend`` (BVH), both in the tool frame of Socket_Hand at rest.
 
 All bakes run on the CPU with a fixed seed and fixed samples per variant (never the tier's render samples), so standard and
 full give the same files; the hands are removed before baking (no occlusion from them) and moving parts bake at rest.
@@ -27,16 +34,26 @@ from pathlib import Path
 import bpy
 import bmesh
 import numpy as np
+from mathutils import Matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 import surface  # noqa: E402
+import decals  # noqa: E402
+import surface_relief  # noqa: E402
+sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import weapon_designs  # noqa: E402
 
 PALETTE_PATH = ROOT / "data/game_palette.json"
 TOOLS_PATH = ROOT / "data/tools.json"
-BAKE_SCHEMA = 1                  # raise when the baked content changes without any key part changing
+VIEWMODELS_PATH = ROOT / "data/viewmodels.json"
+BAKE_SCHEMA = 2                  # raise when the baked content changes without any key part changing (2: relief, decals)
 VARIANTS = (("world", "", "unity_contract.json", "qa_game.json"),
             ("viewmodel", "_FPS", "unity_contract_fps.json", "qa_game_fps.json"))
+RELIEF_ATTRIBUTE = "ce_relief"   # face attribute of the bake meshes: relief entry (-1 none)
+RELIEF_SAMPLES = 16              # Cycles samples of the NORMAL bake with relief (fine patterns average inside a texel)
+PART_MATCH_MM = 1.5              # a LOD0 triangle farther than this from every source triangle of its channel stays unlabelled
+FRAME_SOCKET = "Socket_Hand"
 
 
 def renderers_at_rest(asset):
@@ -72,21 +89,93 @@ def mesh_key(objects):
     return parts
 
 
-def channel_raster(objects, palette, resolution):
-    """Channel index per texel (CHANNELS order, -1 = none) and the set of channels painted by some face."""
-    triangles, labels = [], []
-    for obj in objects:
-        tris, faces, _ = surface.mesh_triangles(obj.data)
+def triangle_table(objects, palette, frame_inverse):
+    """The painted LOD0 triangles in raster order: UV1 (N x 3 x 2), channel index, corners in the tool frame (N x 3 x 3),
+    owner object index and its face index."""
+    triangles, labels, corners, owners, faces_out = [], [], [], [], []
+    for number, obj in enumerate(objects):
+        tris, faces, vertices = surface.mesh_triangles(obj.data)
         slots = [surface.channel_of(material.name, palette) for material in obj.data.materials]
         index = np.empty(len(obj.data.polygons), dtype=np.int32)
         obj.data.polygons.foreach_get("material_index", index)
         per_face = np.array([surface.CHANNELS.index(slots[i]) if slots[i] else -1 for i in index], dtype=np.int32)
         painted = ~np.all(tris == 0, axis=(1, 2)) & (per_face[faces] >= 0)
+        co = np.empty(len(obj.data.vertices) * 3, dtype=np.float64)
+        obj.data.vertices.foreach_get("co", co)
+        matrix = np.array(frame_inverse @ obj.matrix_world, dtype=np.float64)
+        co = co.reshape(-1, 3) @ matrix[:3, :3].T + matrix[:3, 3]
         triangles.append(tris[painted])
         labels.append(per_face[faces][painted])
-    triangles, labels = np.concatenate(triangles), np.concatenate(labels)
-    raster = surface.rasterize(triangles, labels, resolution)
-    return raster, sorted({surface.CHANNELS[i] for i in set(labels.tolist())})
+        corners.append(co[vertices[painted]])
+        owners.append(np.full(int(painted.sum()), number, dtype=np.int32))
+        faces_out.append(faces[painted])
+    return {"uv": np.concatenate(triangles), "channel": np.concatenate(labels), "corners": np.concatenate(corners),
+            "owner": np.concatenate(owners), "face": np.concatenate(faces_out)}
+
+
+def channel_raster(table, resolution):
+    """Channel index per texel (CHANNELS order, -1 = none), the triangle index per texel and the channels painted."""
+    triangles = surface.rasterize(table["uv"], np.arange(len(table["uv"]), dtype=np.int32), resolution)
+    raster = np.where(triangles >= 0, table["channel"][np.maximum(triangles, 0)], -1).astype(np.int32)
+    return raster, triangles, sorted({surface.CHANNELS[i] for i in set(table["channel"].tolist())})
+
+
+def frame_inverse(scene):
+    """Tool frame: Socket_Hand at rest (the grip centre; identity in the world model, the hold pose in the Ego model)."""
+    return scene.objects[FRAME_SOCKET].matrix_world.inverted()
+
+
+def source_parts(path, palette):
+    """{channel index: (vertices M x 3, triangles K x 3, part name per triangle)} of the SM_PG_* meshes of a source model
+    in its tool frame at rest."""
+    from collections import defaultdict
+    bpy.ops.wm.open_mainfile(filepath=str(path))
+    scene = bpy.context.scene
+    scene.frame_set(scene.frame_start)
+    inverse = frame_inverse(scene)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    slots = palette["channels"]["map"]
+    collected = defaultdict(lambda: ([], [], []))
+    for obj in sorted(scene.objects, key=lambda obj: obj.name):
+        if obj.type != "MESH" or not obj.name.startswith(surface_relief.PART_PREFIX):
+            continue
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh()
+        mesh.calc_loop_triangles()
+        matrix = inverse @ evaluated.matrix_world
+        vertices = [tuple(matrix @ vertex.co) for vertex in mesh.vertices]
+        for triangle in mesh.loop_triangles:
+            slot_material = obj.material_slots[triangle.material_index].material if obj.material_slots else None
+            slot = slots.get(slot_material.name) if slot_material else None
+            if slot is None:
+                continue
+            store = collected[surface.CHANNELS.index(slot[3:])]
+            offset = len(store[0])
+            store[0].extend(vertices[i] for i in triangle.vertices)
+            store[1].append((offset, offset + 1, offset + 2))
+            store[2].append(surface_relief.part_name(obj.name))
+        evaluated.to_mesh_clear()
+    return {channel: (np.array(v, dtype=np.float64), t, p) for channel, (v, t, p) in collected.items()}
+
+
+def part_labels(table, sources):
+    """Source part name per painted triangle (None where no source triangle of its channel lies within PART_MATCH_MM)
+    and the match distances (mm)."""
+    from mathutils.bvhtree import BVHTree
+    trees = {channel: BVHTree.FromPolygons([tuple(v) for v in vertices], triangles, all_triangles=True)
+             for channel, (vertices, triangles, _) in sources.items()}
+    centres = table["corners"].mean(axis=1)
+    names, distances = [], []
+    for centre, channel in zip(centres, table["channel"].tolist()):
+        found = trees[channel].find_nearest(tuple(centre)) if channel in trees else (None, None, None, None)
+        if found[2] is None:
+            names.append(None)
+            distances.append(float("inf"))
+            continue
+        distance = found[3] * 1000.0
+        names.append(sources[channel][2][found[2]] if distance <= PART_MATCH_MM else None)
+        distances.append(distance)
+    return names, np.array(distances)
 
 
 def strip_unpainted(objects):
@@ -193,14 +282,101 @@ def to_bytes(values):
     return np.clip(np.rint(values * 255.0), 0, 255).astype(np.uint8)
 
 
-def bake_model(work, model, asset, variant, palette):
-    """Maps (v-up arrays), channel raster, channels used, the content key parts and the LOD0 layout report."""
+def apply_decals(anchors, catalog, table, triangles, raster, names, islands, command):
+    """Writes the decals into the channel raster (in place) and returns their QA entries."""
+    texels = decals.texel_positions(triangles, table["uv"], table["corners"])
+    normals = decals.face_normals(table["corners"])
+    part_ids = {name: index for index, name in enumerate(sorted({name for name in names if name}))}
+    triangle_parts = np.array([part_ids.get(name, -1) for name in names], dtype=np.int32)
+    ys, xs, tris, _ = texels
+    island_of_texel = islands[tris]
+    results = []
+    for anchor in anchors:
+        entry = {"image": anchor["image"], "part": anchor["part"], "face": anchor["face"], "channel": anchor["channel"]}
+        if anchor["part"] not in part_ids:
+            entry.update(passed=False, error="part not in the model")
+            results.append(entry)
+            continue
+        own = triangle_parts == part_ids[anchor["part"]]
+        corners = table["corners"][own].reshape(-1, 3)
+        box = (corners.min(axis=0), corners.max(axis=0))
+        mask = decals.mask_array(decals.render(anchor["image"], catalog, command))
+        hit = decals.project(anchor, mask, texels, triangle_parts, normals, part_ids[anchor["part"]], box)
+        touched = sorted(set(island_of_texel[hit].tolist()))
+        island_texels = int(np.isin(island_of_texel, touched).sum()) if touched else 0
+        share = float(hit.sum()) / island_texels if island_texels else 0.0
+        foreign = int(np.count_nonzero(triangle_parts[tris[hit]] != part_ids[anchor["part"]]))
+        aspect = decals.rect_aspect_error(anchor, box, mask.shape)
+        raster[ys[hit], xs[hit]] = surface.CHANNELS.index(anchor["channel"])
+        errors = []
+        if not decals.AREA_SHARE[0] <= share <= decals.AREA_SHARE[1]:
+            errors.append(f"area share {share:.4f} outside {decals.AREA_SHARE}")
+        if len(touched) != 1:
+            errors.append(f"decal lies on {len(touched)} UV islands (seam)")
+        if foreign:
+            errors.append(f"{foreign} decal texels outside the target part")
+        if aspect > decals.ASPECT_TOLERANCE:
+            errors.append(f"rect aspect differs {aspect:.2f} from the image")
+        entry.update(passed=not errors, errors=errors, texels=int(hit.sum()), islands=len(touched),
+                     island_share=round(share, 4), foreign_texels=foreign, aspect_error=round(aspect, 3),
+                     box_mm=[round(float(v) * 1000, 2) for v in (*box[0], *box[1])])
+        results.append(entry)
+    return results
+
+
+def triangle_islands(table):
+    """UV1 island index per painted triangle (islands of one object never join another's)."""
+    result = np.empty(len(table["uv"]), dtype=np.int64)
+    offset = 0
+    for owner in sorted(set(table["owner"].tolist())):
+        members = np.nonzero(table["owner"] == owner)[0]
+        corners = [tuple(map(tuple, np.round(c, 6))) for c in table["corners"][members].tolist()]
+        ids = surface.island_ids(corners, [tuple(map(tuple, t)) for t in table["uv"][members].tolist()])
+        result[members] = np.asarray(ids) + offset
+        offset += max(ids, default=-1) + 1
+    return result
+
+
+def set_relief_attribute(objects, table, relief_ids):
+    """Face attribute RELIEF_ATTRIBUTE (relief entry per face, -1 none) on the LOD0 meshes."""
+    for number, obj in enumerate(objects):
+        values = np.full(len(obj.data.polygons), -1, dtype=np.int32)
+        members = table["owner"] == number
+        values[table["face"][members]] = np.asarray(relief_ids, dtype=np.int32)[members]
+        if RELIEF_ATTRIBUTE in obj.data.attributes:
+            obj.data.attributes.remove(obj.data.attributes[RELIEF_ATTRIBUTE])
+        obj.data.attributes.new(RELIEF_ATTRIBUTE, "INT", "FACE").data.foreach_set("value", values)
+
+
+def bake_model(work, model, asset, variant, palette, design):
+    """Maps (v-up arrays), channel raster, channels used, the content key parts, the LOD0 layout report, timings and the
+    design QA (part labels, relief, decals). ``design``: None or {"recipe", "limits", "anchors", "catalog", "magick"}."""
+    sources = source_parts(work / (asset + ".blend"), palette) if design else None
     bpy.ops.wm.open_mainfile(filepath=str(work / (model + ".blend")))
     scene, root, lod0 = renderers_at_rest(asset)
     resolution, samples = surface.MAP_RESOLUTION[variant], surface.AO_SAMPLES[variant]
     key_parts = mesh_key(lod0)
     layout = surface.uv1_report(lod0)
-    raster, channels = channel_raster(lod0, palette, resolution)
+    inverse = frame_inverse(scene)
+    table = triangle_table(lod0, palette, inverse)
+    raster, triangles, channels = channel_raster(table, resolution)
+    design_qa, relief = {}, {}
+    if design:
+        names, distances = part_labels(table, sources)
+        found = np.isfinite(distances)
+        design_qa["parts"] = {"triangles": len(names), "unlabelled": sum(name is None for name in names),
+                              "max_match_mm": round(float(distances[found].max()), 4) if found.any() else None,
+                              "parts": len({name for name in names if name})}
+        relief = design["recipe"].get("relief", {})
+        relief_ids = surface_relief.relief_index(relief, names, [surface.CHANNELS[c] for c in table["channel"].tolist()])
+        counts = np.bincount(np.asarray(relief_ids) + 1, minlength=len(relief) + 1)
+        design_qa["relief"] = {"max_height_mm": design["limits"]["max_height_mm"],
+                               "triangles": {selector: int(counts[i + 1]) for i, selector in enumerate(relief)},
+                               "triangles_without": int(counts[0])}
+        set_relief_attribute(lod0, table, relief_ids)
+        if design["anchors"]:
+            design_qa["decals"] = apply_decals(design["anchors"], design["catalog"], table, triangles, raster, names,
+                                               triangle_islands(table), design["command"])
     maps, _ = surface.weight_maps(raster)
     slots = sorted({material.name for obj in lod0 for material in obj.data.materials})
     targets = strip_unpainted(lod0)
@@ -231,7 +407,22 @@ def bake_model(work, model, asset, variant, palette):
     timings["ao"], phase = time.perf_counter() - phase, time.perf_counter()
     emit = bake_pass("EMIT", image_node, resolution, (0, 0, 0, 1), surface.DETAIL_SAMPLES)
     timings["emit"], phase = time.perf_counter() - phase, time.perf_counter()
-    normal = bake_pass("NORMAL", image_node, resolution, (.5, .5, 1, 1), surface.DETAIL_SAMPLES, normal_space="TANGENT",
+    normal_samples = surface.DETAIL_SAMPLES
+    if relief:
+        # only now: AO and EMIT (Fields) never see the relief, so they stay byte-identical
+        frame = bpy.data.objects.new("ReliefFrame", None)
+        scene.collection.objects.link(frame)
+        # the first-person parts are scaled by tool_scale (first_person.py): the patterns keep the world model's millimetres
+        frame.matrix_world = inverse.inverted() @ Matrix.Scale(design["scale"][variant], 4)
+        nodes = material.node_tree.nodes
+        bevel = next(node for node in nodes if node.bl_idname == "ShaderNodeBevel")
+        bsdf = next(node for node in nodes if node.bl_idname == "ShaderNodeBsdfPrincipled")
+        bumped = surface_relief.relief_nodes(material, bevel.outputs["Normal"], relief, frame,
+                                             design["limits"]["max_height_mm"], RELIEF_ATTRIBUTE)
+        material.node_tree.links.new(bumped, bsdf.inputs["Normal"])
+        nodes.active = image_node
+        normal_samples = RELIEF_SAMPLES
+    normal = bake_pass("NORMAL", image_node, resolution, (.5, .5, 1, 1), normal_samples, normal_space="TANGENT",
                        normal_r="POS_X", normal_g="POS_Y", normal_b="POS_Z")
     timings["normal"] = time.perf_counter() - phase
     maps["Fields"] = to_bytes(np.stack([ao[..., 0], emit[..., 0], emit[..., 1], emit[..., 2]], axis=2))
@@ -241,7 +432,13 @@ def bake_model(work, model, asset, variant, palette):
                 "ao_distance_m": surface.AO_DISTANCE_M, "bevel_radius_m": surface.BEVEL_RADIUS_M, "edge_gain": surface.EDGE_GAIN,
                 "edge_convex": surface.EDGE_CONVEX, "dilation_px": surface.DILATION_PX, "device": "CPU", "seed": 0,
                 "height_range_m": [round(z, 6) for z in z_range]}
-    return maps, raster, channels, slots, key_parts, settings, layout, timings
+    if design:
+        settings["design"] = {"relief": relief, "max_height_mm": design["limits"]["max_height_mm"],
+                              "normal_samples": normal_samples, "part_match_mm": PART_MATCH_MM,
+                              "pattern_scale": design["scale"][variant],
+                              "decals": design["anchors"], "decal_images": surface.digest(design["catalog"]),
+                              "imagemagick": design["magick"]}
+    return maps, raster, channels, slots, key_parts, settings, layout, timings, design_qa
 
 
 def surface_block(model, variant, palette, slots, settings, files, set_bytes, key, layout, shared, minimum, clips):
@@ -296,6 +493,22 @@ def main():
         report["checks"]["channel_map"] = {"passed": not errors, "errors": errors}
         if errors:
             raise RuntimeError("; ".join(errors))
+        recipes = surface_relief.load()
+        recipe = recipes["weapons"].get(args.tool)
+        anchors = weapon_designs.DECALS.get(args.tool, [])
+        design = None
+        if recipe or anchors:
+            catalog = decals.load()
+            command = decals.magick_command() if anchors else None
+            errors = (surface_relief.recipe_errors({**recipes, "weapons": {args.tool: recipe}}) if recipe else []) \
+                + decals.catalog_errors(catalog) + decals.anchor_errors(anchors, catalog)
+            report["checks"]["design"] = {"passed": not errors, "errors": errors}
+            if errors:
+                raise RuntimeError("; ".join(errors))
+            tool_scale = json.loads(VIEWMODELS_PATH.read_text())["tools"].get(args.tool, {}).get("tool_scale", 1)
+            design = {"recipe": recipe or {}, "limits": recipes["limits"], "anchors": anchors, "catalog": catalog,
+                      "scale": {"world": 1.0, "viewmodel": float(tool_scale)},
+                      "command": command, "magick": decals.magick_version(command) if command else None}
         qa = {variant: json.loads((work / qa_name).read_text()) for variant, _, _, qa_name in VARIANTS}
         world_uv1, ego_uv1 = qa["world"]["checks"]["uv1_source"], qa["viewmodel"]["checks"]["uv1_source"]
         shared = bool(ego_uv1.get("shared_with_world")) and ego_uv1.get("world_sha256") == world_uv1.get("sha256")
@@ -305,8 +518,8 @@ def main():
             phase = time.perf_counter()
             asset = tool["asset"] + suffix
             model = asset + "_Game"
-            maps, raster, channels, slots, key_parts, settings, layout, timings = bake_model(work, model, asset, variant,
-                                                                                             palette)
+            maps, raster, channels, slots, key_parts, settings, layout, timings, design_qa = bake_model(
+                work, model, asset, variant, palette, design)
             names = surface.map_names(model)
             files, set_bytes = {}, 0
             for kind in surface.MAP_KINDS:
@@ -323,11 +536,22 @@ def main():
             contract = json.loads(contract_path.read_text())
             contract["surface"] = surface_block(model, variant, palette, slots, settings, files, set_bytes, key, layout,
                                                 shared, "Cube Escape 0.71 (mask mode of the PAINT recipe)", clips)
+            if recipe:
+                placed = [{**anchor, "rect": list(anchor["rect"]), "texels": entry.get("texels", 0)}
+                          for anchor, entry in zip(anchors, design_qa.get("decals", [{}] * len(anchors)))]
+                contract["surface"]["recipe"] = surface_relief.recipe_block(
+                    args.tool, recipe, recipes["limits"], placed, weapon_designs.DESIGNS[args.tool]["element"])
             contract_path.write_text(json.dumps(contract, indent=2, ensure_ascii=False) + "\n")
             report["checks"][f"maps_{variant}"] = {"passed": not errors, "errors": errors, "model": model, **values,
                                                     "channels": channels, "seconds": round(time.perf_counter() - phase, 3),
                                                     "bake_seconds": {k: round(v, 3) for k, v in timings.items()}}
             report["checks"][f"uv1_{variant}"] = {"passed": not layout_errors, **layout}
+            if design:
+                decal_entries = design_qa.get("decals", [])
+                parts = design_qa["parts"]
+                report["checks"][f"design_{variant}"] = {
+                    "passed": all(entry["passed"] for entry in decal_entries) and parts["unlabelled"] <= .02 * parts["triangles"],
+                    **design_qa}
     except Exception as error:  # noqa: BLE001 - reported as a failed QA with exit code 1
         traceback.print_exc()
         report["checks"]["surface_bake"] = {"passed": False, "error": f"{type(error).__name__}: {error}"}

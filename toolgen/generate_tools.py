@@ -144,11 +144,13 @@ STAGES = (
           variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),
     # Contract 4: mask maps W0/W1/Fields/Normal of both game models and the "surface" block in both contracts. Fixed bake
     # settings (not the tier's samples), so standard and full share the result; quick leaves it out (manifest "surface").
+    # 0.13: relief and decals of the weapons (data/surface_recipes.json, weapon_designs.py DECALS) label the LOD0 triangles
+    # with the source parts of <asset>.blend / <asset>_FPS.blend; decal masks come from ImageMagick.
     Stage("surface_bake", "toolgen/surface_bake.py", args=("--directory", "{work}", "--tool", "{id}"),
           reads=("{asset}_Game.blend", "{asset}_FPS_Game.blend", "{asset}_FPS_Game_Clips.fbx", "unity_contract.json",
-                 "unity_contract_fps.json", "qa_game.json", "qa_game_fps.json"),
-          sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface.json",), heavy=True,
-          min_contract=4),
+                 "unity_contract_fps.json", "qa_game.json", "qa_game_fps.json", "{asset}.blend", "{asset}_FPS.blend"),
+          sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface.json",), programs=("magick",),
+          heavy=True, min_contract=4),
 )
 # Serialises the heavy stage builds of this process' workers (the shared lock marks its holder in os.environ).
 HEAVY_STAGES = threading.Lock()

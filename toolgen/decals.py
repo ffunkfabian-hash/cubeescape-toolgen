@@ -1,0 +1,295 @@
+"""Decals of the weapons (Toolgen 0.13 Enamel): one-colour masks from data/decals.json, rendered by ImageMagick, and their
+projection onto the weight maps.
+
+* ``render(decal_id)``: the decal's mask (height x width, uint8 0/255) - ImageMagick draws the elements (stroke font from
+  the catalogue, polylines, polygons, circles) antialiased, then thresholds at 50 %, so ImageMagick 6 and 7 differ at most
+  in single edge pixels (tests/test_decals.py compares both with a tolerance). Same call pattern as Cubegen's
+  ``ImageMagick.run`` (magick or convert, PATH plus the Homebrew/MacPorts folders, no date chunks: PGM output has none).
+* ``project``: box projection of one anchor (weapon_designs.py DECALS: part, face, rect in part coordinates, image, channel,
+  rotation) onto the texels of the target part whose face looks along the face axis; the result is a texel mask that
+  surface_bake.py writes into the channel raster before the dilation (one-hot 255 stays; the decal texel takes its channel).
+
+Pure Python plus numpy for the projection (Blender's Python has numpy).
+"""
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+try:
+    import numpy as np
+except ImportError:  # system Python of the unit tests: rendering and catalogue only
+    np = None
+
+ROOT = Path(__file__).resolve().parents[1]
+CATALOG_PATH = ROOT / "data/decals.json"
+GLYPH_ADVANCE = 5                # glyph cell 4 x 6 plus one unit gap
+GLYPH_HEIGHT = 6
+FACES = {                        # face -> (normal axis, sign, u axis, u sign, v axis, v sign): u right, v up seen from outside
+    "+x": (0, 1, 1, 1, 2, 1), "-x": (0, -1, 1, -1, 2, 1),
+    "+y": (1, 1, 0, -1, 2, 1), "-y": (1, -1, 0, 1, 2, 1),
+    "+z": (2, 1, 0, 1, 1, 1), "-z": (2, -1, 0, 1, 1, -1),
+}
+FACING_MIN = .7                  # texels whose face normal . face axis is below this get no decal (bevels, sides)
+AREA_SHARE = (.005, .06)         # decal texels per island texels (QA)
+ASPECT_TOLERANCE = .25           # rect (mm) against image aspect
+CHANNELS = ("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail")   # surface.CHANNELS
+EXTRA_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin")
+
+
+class ImageMagickError(RuntimeError):
+    pass
+
+
+def load(path=CATALOG_PATH):
+    return json.loads(Path(path).read_text())
+
+
+def _which(name):
+    found = shutil.which(name)
+    if found:
+        return found
+    for folder in EXTRA_DIRS:
+        candidate = os.path.join(folder, name)
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+
+def magick_command(binary=None):
+    """[magick] (ImageMagick 7) or [convert] (ImageMagick 6); TOOLGEN_MAGICK overrides."""
+    binary = binary or os.environ.get("TOOLGEN_MAGICK")
+    if binary:
+        return [shutil.which(binary) or binary]
+    for name in ("magick", "convert"):
+        found = _which(name)
+        if found:
+            return [found]
+    raise ImageMagickError("ImageMagick not found (magick or convert); set TOOLGEN_MAGICK")
+
+
+def magick_version(command=None):
+    command = command or magick_command()
+    result = subprocess.run(command + ["-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout.splitlines()[0] if result.returncode == 0 and result.stdout else "unknown"
+
+
+def run(args, command=None):
+    """One ImageMagick call (single thread: same pixels whatever the core count)."""
+    command = command or magick_command()
+    env = dict(os.environ, MAGICK_THREAD_LIMIT="1")
+    result = subprocess.run(command + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    if result.returncode != 0:
+        raise ImageMagickError(f"ImageMagick failed ({' '.join(command + list(args)[:3])} ...): {result.stderr.decode(errors='replace').strip()}")
+    return result.stdout
+
+
+# --------------------------------------------------------------------------------------------- drawing
+def text_polylines(text, glyphs, x, y, height):
+    """Polylines (image fractions are not used here: x, y, height in pixels) of a text in the stroke font."""
+    scale = height / GLYPH_HEIGHT
+    lines = []
+    for index, char in enumerate(text):
+        if char not in glyphs:
+            raise KeyError(f"glyph {char!r} missing in the stroke font")
+        for line in glyphs[char]:
+            lines.append([(x + (index * GLYPH_ADVANCE + gx) * scale, y + gy * scale) for gx, gy in line])
+    return lines
+
+
+def text_width(text, height):
+    return (len(text) * GLYPH_ADVANCE - 1) * height / GLYPH_HEIGHT
+
+
+def draw_args(decal, glyphs):
+    """ImageMagick arguments that draw one decal white on black (before the output)."""
+    width, height = decal["size"]
+    stroke = decal["stroke"] * height
+
+    def points(values):
+        return " ".join(f"{px:.3f},{py:.3f}" for px, py in values)
+
+    def scaled(values):
+        return [(px * width, py * height) for px, py in values]
+
+    strokes, fills = [], []
+    for element in decal["elements"]:
+        if "polyline" in element:
+            strokes.append(f"polyline {points(scaled(element['polyline']))}")
+        elif "polygon" in element:
+            fills.append(f"polygon {points(scaled(element['polygon']))}")
+        elif "circle" in element:
+            cx, cy, radius = element["circle"]
+            strokes.append(f"circle {cx * width:.3f},{cy * height:.3f} {cx * width + radius * height:.3f},{cy * height:.3f}")
+        elif "text" in element:
+            for line in text_polylines(element["text"], glyphs, element["x"] * width, element["y"] * height,
+                                       element["height"] * height):
+                strokes.append(f"polyline {points(line)}")
+        else:
+            raise ValueError(f"unknown decal element {sorted(element)}")
+    args = ["-size", f"{width}x{height}", "xc:black"]
+    if fills:
+        args += ["-fill", "white", "-stroke", "none", "-draw", " ".join(fills)]
+    if strokes:
+        args += ["-fill", "none", "-stroke", "white", "-strokewidth", f"{stroke:.3f}",
+                 "-draw", "stroke-linecap round stroke-linejoin round " + " ".join(strokes)]
+    return args + ["-colorspace", "Gray", "-threshold", "50%", "-depth", "8"]
+
+
+def read_pgm(data):
+    """(width, height, bytes) of a binary 8-bit PGM (P5)."""
+    fields, position = [], 0
+    while len(fields) < 4:
+        while data[position:position + 1].isspace():
+            position += 1
+        if data[position:position + 1] == b"#":
+            position = data.index(b"\n", position) + 1
+            continue
+        end = position
+        while not data[end:end + 1].isspace():
+            end += 1
+        fields.append(data[position:end])
+        position = end
+    if fields[0] != b"P5" or int(fields[3]) != 255:
+        raise ValueError("not an 8-bit binary PGM")
+    width, height = int(fields[1]), int(fields[2])
+    start = position + 1
+    return width, height, data[start:start + width * height]
+
+
+def render(decal_id, catalog=None, command=None):
+    """Mask of a decal: (width, height, bytes row by row, top row first, 0 or 255)."""
+    catalog = catalog or load()
+    decal = catalog["decals"][decal_id]
+    with tempfile.TemporaryDirectory() as folder:
+        target = Path(folder) / "decal.pgm"
+        run(draw_args(decal, catalog["glyphs"]) + [f"PGM:{target}"], command)
+        width, height, pixels = read_pgm(target.read_bytes())
+    if (width, height) != tuple(decal["size"]):
+        raise ImageMagickError(f"{decal_id}: ImageMagick wrote {width}x{height}, expected {decal['size']}")
+    return width, height, bytes(255 if value >= 128 else 0 for value in pixels)
+
+
+def mask_array(rendered):
+    width, height, pixels = rendered
+    return np.frombuffer(pixels, dtype=np.uint8).reshape(height, width)
+
+
+def catalog_errors(catalog):
+    errors = []
+    glyphs = catalog.get("glyphs", {})
+    for decal_id, decal in catalog.get("decals", {}).items():
+        width, height = decal.get("size", (0, 0))
+        if not (16 <= width <= 1024 and 16 <= height <= 1024):
+            errors.append(f"{decal_id}: size out of 16..1024")
+        for element in decal.get("elements", []):
+            if "text" in element:
+                missing = sorted(set(element["text"]) - set(glyphs))
+                if missing:
+                    errors.append(f"{decal_id}: glyphs missing {missing}")
+                elif element["x"] * width + text_width(element["text"], element["height"] * height) > width:
+                    errors.append(f"{decal_id}: text wider than the image")
+    return errors
+
+
+def anchor_errors(anchors, catalog, parts=None):
+    """Problems of the DECALS anchors of one weapon (parts: its source part names, optional)."""
+    errors = []
+    for index, anchor in enumerate(anchors):
+        where = f"decal {index} ({anchor.get('image')})"
+        if anchor.get("image") not in catalog["decals"]:
+            errors.append(f"{where}: unknown image")
+        if anchor.get("face") not in FACES:
+            errors.append(f"{where}: face must be one of {sorted(FACES)}")
+        if anchor.get("channel") not in CHANNELS:
+            errors.append(f"{where}: unknown channel")
+        if anchor.get("rotation", 0) not in (0, 90, 180, 270):
+            errors.append(f"{where}: rotation must be 0, 90, 180 or 270")
+        rect = anchor.get("rect", ())
+        if len(rect) != 4 or not (0 <= rect[0] < rect[2] <= 1 and 0 <= rect[1] < rect[3] <= 1):
+            errors.append(f"{where}: rect must be (u0, v0, u1, v1) inside 0..1")
+        if parts is not None and anchor.get("part") not in parts:
+            errors.append(f"{where}: part {anchor.get('part')} not in the model")
+    return errors
+
+
+# --------------------------------------------------------------------------------------------- projection (numpy)
+def texel_positions(triangle_raster, uv_triangles, corners):
+    """Barycentric interpolation per painted texel: (ys, xs, triangle index, position N x 3) of a raster of triangle
+    indices (row 0 = v near 0)."""
+    resolution = triangle_raster.shape[0]
+    ys, xs = np.nonzero(triangle_raster >= 0)
+    tris = triangle_raster[ys, xs]
+    point = np.stack([(xs + .5) / resolution, (ys + .5) / resolution], axis=1)
+    a, b, c = uv_triangles[tris, 0], uv_triangles[tris, 1], uv_triangles[tris, 2]
+    v0, v1, v2 = b - a, c - a, point - a
+    d00 = (v0 * v0).sum(1)
+    d01 = (v0 * v1).sum(1)
+    d11 = (v1 * v1).sum(1)
+    d20 = (v2 * v0).sum(1)
+    d21 = (v2 * v1).sum(1)
+    denominator = d00 * d11 - d01 * d01
+    safe = np.where(np.abs(denominator) > 1e-30, denominator, 1.0)
+    wb = (d11 * d20 - d01 * d21) / safe
+    wc = (d00 * d21 - d01 * d20) / safe
+    wa = 1 - wb - wc
+    positions = wa[:, None] * corners[tris, 0] + wb[:, None] * corners[tris, 1] + wc[:, None] * corners[tris, 2]
+    return ys, xs, tris, positions
+
+
+def face_normals(corners):
+    normal = np.cross(corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0])
+    length = np.linalg.norm(normal, axis=1)
+    return normal / np.where(length > 0, length, 1.0)[:, None]
+
+
+def rotate_local(a, b, rotation):
+    """Local rect coordinates (0..1, a right, b up) turned by the decal rotation (counter-clockwise, degrees)."""
+    if rotation == 90:
+        return b, 1 - a
+    if rotation == 180:
+        return 1 - a, 1 - b
+    if rotation == 270:
+        return 1 - b, a
+    return a, b
+
+
+def project(anchor, mask, texels, triangle_parts, normals, part_index, part_box):
+    """Texel selection of one decal: boolean over ``texels`` (ys, xs, tris, positions of texel_positions).
+    ``part_index``: index of the anchor's part; ``part_box``: (min xyz, max xyz) of that part in the tool frame."""
+    ys, xs, tris, positions = texels
+    axis, sign, u_axis, u_sign, v_axis, v_sign = FACES[anchor["face"]]
+    low, high = np.asarray(part_box[0], dtype=np.float64), np.asarray(part_box[1], dtype=np.float64)
+    span = np.where(high - low > 1e-9, high - low, 1.0)
+    own = (triangle_parts[tris] == part_index) & (normals[tris, axis] * sign >= FACING_MIN)
+    s = (positions[:, u_axis] - low[u_axis]) / span[u_axis]
+    t = (positions[:, v_axis] - low[v_axis]) / span[v_axis]
+    s = s if u_sign > 0 else 1 - s
+    t = t if v_sign > 0 else 1 - t
+    u0, v0, u1, v1 = anchor["rect"]
+    a = (s - u0) / (u1 - u0)
+    b = (t - v0) / (v1 - v0)
+    inside = own & (a >= 0) & (a < 1) & (b >= 0) & (b < 1)
+    a, b = rotate_local(a, b, anchor.get("rotation", 0))
+    height, width = mask.shape
+    column = np.clip((a * width).astype(np.int64), 0, width - 1)
+    row = np.clip(((1 - b) * height).astype(np.int64), 0, height - 1)
+    hit = np.zeros(len(ys), dtype=bool)
+    hit[inside] = mask[row[inside], column[inside]] >= 128
+    return hit
+
+
+def rect_aspect_error(anchor, part_box, mask_shape):
+    """Relative difference of the rect's aspect (mm on the part) and the image's aspect (after the rotation)."""
+    _, _, u_axis, _, v_axis, _ = FACES[anchor["face"]]
+    low, high = part_box
+    u0, v0, u1, v1 = anchor["rect"]
+    width_mm = (u1 - u0) * (high[u_axis] - low[u_axis])
+    height_mm = (v1 - v0) * (high[v_axis] - low[v_axis])
+    rows, columns = mask_shape
+    image = columns / rows if anchor.get("rotation", 0) in (0, 180) else rows / columns
+    if height_mm <= 0 or width_mm <= 0:
+        return float("inf")
+    return abs((width_mm / height_mm) / image - 1)
