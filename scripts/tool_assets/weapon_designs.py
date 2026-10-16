@@ -352,7 +352,8 @@ def sniper_rifle(k):
     k.box('CheekRiser', (0, .28, .118), (.036, .12, .020), 'Secondary', .005)
     k.box('Handguard', (0, -.24, zb), (.042, .20, .040), 'Primary', .008)
     for side in (-1, 1):
-        k.glow('HandguardGlow_%d' % side, (side * .0215, -.24, zb), (.002, .13, .006))
+        # 0.12.0: 0.8 mm proud of the vent slots (coplanar faces z-fought)
+        k.glow('HandguardGlow_%d' % side, (side * .0223, -.24, zb), (.002, .13, .006))
     side_vents(k, 'HandguardVent', -.19, .025, 5, zb + .008, .0215, (.002, .010, .014))
     k.cyl('Barrel', (0, -.47, zb), .0105, .31, 'Metal', n=22)
     k.cyl('BarrelSleeve', (0, -.40, zb), .015, .12, 'Secondary', n=22)
@@ -470,7 +471,8 @@ def scout_rifle(k):
     k.box('Handguard', (0, -.25, zb), (.040, .26, .038), 'Primary', .008)
     k.box('HandguardUnder', (0, -.25, zb - .023), (.020, .24, .008), 'Secondary', .002)
     for side in (-1, 1):
-        k.glow('HandguardGlow_%d' % side, (side * .0205, -.25, zb), (.002, .16, .005))
+        # 0.12.0: 0.8 mm proud of the vent slots (coplanar faces z-fought)
+        k.glow('HandguardGlow_%d' % side, (side * .0213, -.25, zb), (.002, .16, .005))
     side_vents(k, 'HandguardVent', -.17, .026, 7, zb + .006, .0205, (.002, .010, .012))
     k.cyl('Barrel', (0, -.50, zb), .0095, .22, 'Metal', n=20)
     muzzle_device(k, -.635, zb, .016, .05, rings=2)
@@ -534,7 +536,7 @@ def pistol_modules(k, slide, mag):
         k.box('SlideRib_%d' % i, (0, -.105 - i * .009, .0858), (.011, .0035, .0016), 'Detail', 0, parent=slide)
     energy_cell(k, 'FrameCell', (.0152, -.098, .033), .0058, .040)
     k.bolts('FrameBolt', [(.0152, -.03, .034), (.0152, -.128, .030)], radius=.0028, depth=.003)
-    accent(k, 'HammerAccent', (0, .060, .0775), (.0105, .010, .0015))
+    accent(k, 'HammerAccent', (0, .060, .0775), (.011, .010, .0015))   # 0.12.0: 0.5 mm over each hammer side
     r = k.tilt(k.grip_tilt)
     y, z = along(k, 0, -.102 / 2 - .0125)
     accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r, parent=mag)
@@ -549,8 +551,9 @@ def assault_rifle_modules(k, mag):
     display(k, 'AmmoDisplay', (.0236, .042, .058), (.0016, .036, .018), 'x', bars=4)
     display(k, 'OpticDisplay', (0, .0184, .138), (.024, .0016, .016), 'y', bars=3)
     k.box('OpticHood', (0, -.060, .1595), (.038, .020, .007), 'Primary', .002)
-    k.box('StockCellFrame', (.0205, .245, .050), (.002, .070, .026), 'Secondary', .0006)
-    k.glow('StockCellWindow', (.0218, .245, .050), (.0012, .056, .014))
+    # 0.12.0: frame and window 0.8 mm proud of the stock inset (its face lies at x = .0215; coplanar faces z-fought)
+    k.box('StockCellFrame', (.0213, .245, .050), (.002, .070, .026), 'Secondary', .0006)
+    k.glow('StockCellWindow', (.0226, .245, .050), (.0012, .056, .014))
     k.bolts('StockBolt', [(.0215, .200, .050), (.0215, .290, .050)], radius=.0026, depth=.003)
     heat_sink(k, 'HandguardFin', (0, -.175, .1145), 5, .03, (.042, .006, .005))
     accent(k, 'HandguardCap', (0, -.3425, .085), (.060, .005, .056))
@@ -584,7 +587,8 @@ def shotgun_modules(k):
     for i, y in enumerate((-.22, -.40)):
         k.tube('ShroudBand_%d' % i, (0, y, .070), .0345, .030, .012, 'Secondary', n=32)
     k.box('ShroudRib', (0, -.310, .1045), (.012, .26, .006), 'Secondary', .0015)
-    accent(k, 'StockAccent', (.0245, .250, .030), (.002, .060, .030))
+    # 0.12.0: proud of the stock inset (its face lies at x = .0255): coplanar faces z-fought in the viewer (Mac, shotgun/fps)
+    accent(k, 'StockAccent', (.0262, .250, .030), (.002, .060, .030))
     for side in (-1, 1):
         panel(k, 'ReceiverPanel_%d' % side, (side * .0315, -.105, .074), (.0025, .036, .018))
 
@@ -636,7 +640,8 @@ def scout_rifle_modules(k):
     energy_cell(k, 'StockCell', (.019, .220, .050), .007, .070)
     k.tube('MuzzleAccent', (0, -.604, .072), .0175, .009, .008, 'Accent', n=24)
     k.box('BarrelSpine', (0, -.47, .0835), (.008, .14, .005), 'Secondary', .0015)
-    accent(k, 'StockAccent', (.0185, .300, .030), (.002, .050, .028))
+    # 0.12.0: 0.8 mm proud of the stock inset (its face lies at x = .0195; coplanar faces z-fought)
+    accent(k, 'StockAccent', (.0193, .300, .030), (.002, .050, .028))
 
 
 def rocket_launcher_modules(k, hatch):

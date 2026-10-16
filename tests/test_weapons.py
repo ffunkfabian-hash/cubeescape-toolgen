@@ -501,6 +501,50 @@ class Uv1RotationTests(unittest.TestCase):
             self.assertFalse(ge.uv1_rotation_ok(value), value)
 
 
+def flat_faces(kind, values):
+    """Axis-aligned faces (axis, sign, plane, low, high) of an unrotated box or a slab of the recorded design."""
+    if kind == "box":
+        center, size, _, _, rot = values
+        if rot is not None:
+            return []
+        low = [center[i] - size[i] / 2 for i in range(3)]
+        high = [center[i] + size[i] / 2 for i in range(3)]
+        return [(axis, sign, (high if sign > 0 else low)[axis], low, high) for axis in range(3) for sign in (-1, 1)]
+    if kind == "slab":
+        points, width, _, x, _ = values
+        low = [x - width / 2, min(p[0] for p in points), min(p[1] for p in points)]
+        high = [x + width / 2, max(p[0] for p in points), max(p[1] for p in points)]
+        return [(0, -1, low[0], low, high), (0, 1, high[0], low, high)]
+    return []
+
+
+class CoplanarDecorTests(unittest.TestCase):
+    """0.12.0 (Mac viewer, shotgun/fps): a decor face lying in another part's face z-fights; the result flipped with the
+    draw order. Accent and glow decors stand at least 0.5 mm proud of what they sit on."""
+    # The fusion rifle's fin accents share the fins' front face (faces away from the Ego camera; left as built).
+    KNOWN = {("fusion_rifle", "FinAccent_-1"), ("fusion_rifle", "FinAccent_1")}
+
+    def test_decors_are_not_coplanar(self):
+        from test_ego_weapon_motions import RecordingKit
+        found = []
+        for key, spec in designs.DESIGNS.items():
+            kit = RecordingKit(spec)
+            spec["build"](kit)
+            decor = {name for name, (kind, values) in kit.geometry.items() if kind == "box"
+                     and (values[2] in ("Accent", spec["element"]) or "Glow" in name or "Accent" in name
+                          or name.startswith("StockCell"))}
+            faces = [(name, face) for name, (kind, values) in kit.geometry.items() for face in flat_faces(kind, values)]
+            for name, (axis, sign, plane, low, high) in faces:
+                if name not in decor or (key, name) in self.KNOWN:
+                    continue
+                for other, (axis2, sign2, plane2, low2, high2) in faces:
+                    if other == name or axis2 != axis or sign2 != sign or abs(plane - plane2) > .0005 - 1e-9:
+                        continue
+                    if all(min(high[b], high2[b]) - max(low[b], low2[b]) > 1e-4 for b in range(3) if b != axis):
+                        found.append((key, name, other, "xyz"[axis], round(plane - plane2, 6)))
+        self.assertEqual([], found)
+
+
 class FramesTests(unittest.TestCase):
     def test_kit_frame_constants_match_the_pipeline(self):
         constants = {}

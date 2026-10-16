@@ -189,14 +189,14 @@ class RecordingKit:
 
 # Primitive arguments and all sockets of the pre-reload designs (07df813); parentage is deliberately excluded.
 REST_GEOMETRY = {
-    'pistol': '3d6700ab484a77df860db78604abacc3837edc67c8d76a7264e138af8271e66a',   # 0.10.0: Socket_SupportHand at the grip
-    'assault_rifle': '089c206226a86b2a7c9aa05e44d7609ad8c915ba7909c7e149b6a48e804df3e5',
+    'pistol': 'e29cf7447ea13d2f62fec2dac328388a20f7e1fbbf18c4ab74fbb9f512896ee1',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
+    'assault_rifle': '8f981998a008ac76d017d012a5c31192a728f37f762cac0d479058746ec13900',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
     'pulse_rifle': 'bbddbf7b6ff9c3646ff3bfdcdb08bca5ba8c6866ce03f68f57a67c81b60be079',
-    'shotgun': '2491986a481529dd79eb91c86b8486f841fb596d27d6d6685b5cf59aeb92b1ef',
-    'sniper_rifle': '0f601cd763db3e9a215568c56a483bd40cb2d4fd54fde6049f8e475b1ccbf455',   # 0.11.0: open eyepiece, eye lens
+    'shotgun': '87bf2a5fa8afe68e47cafff5cdbb9126740254efd0285393a95ed99fc6fe79cf',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
+    'sniper_rifle': '77047b675b14e289a22e4f825c4a184f4905b4561b0e8739bda4d8234ceb8917',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
     'smg': 'e6da85fa3089a499b3a23df8e4fad454ee922c7841a4ba5c84fc13419193ee73',
     'fusion_rifle': '3bfd949adbf11990c5bdceb79c370c0b62c71ba42053f28e4bdd9b0f06b30a5d',
-    'scout_rifle': '8927f99cdb416fb94c88ea3d0993b628f51c56d7a68603c53b69ad4e4ff95d60',   # 0.11.0: open eyepiece, eye lens
+    'scout_rifle': '37516dca0bc05e09cea178d6b80836c0868ec2e760b1e034c9cdd006823edda1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
     'rocket_launcher': 'abdb6a660623d638e24692b9bbc625d015ac87a4e1d79b5d4cb7e762e49db48e',
 }
 
