@@ -141,6 +141,35 @@ Ego-Modell; die Roboterhände des Ego-Modells behalten ihre Palettenmaterialien 
   `python3 toolgen/generate_tools.py --tier standard --contract 1 --output output/_contract1` (Palettennamen wie in 0.7, Geometrie neu,
   Anker und Clips unverändert). `data/game_palette.json` bleibt Format 1; der Abschnitt `channels` ist für 0.63 unsichtbar.
 
+## Ego-Clips (0.9.0, Vertrag 3)
+
+Jedes Ego-Modell bekommt Zustandsclips (Waffen 15, übrige Werkzeuge 8); Tabelle mit Längen, Loops, Posen, Events und
+Übergängen: [EGO_CLIPS.md](EGO_CLIPS.md) (erzeugt aus `data/ego_clips.json`, `python3 scripts/ego_clip_table.py --json <pfad>` liefert
+dieselben Daten maschinenlesbar).
+
+- Dateien: `<Asset>_FPS_Game.fbx/.glb` bleiben wie bisher (nur `<Name>_Use`, 97 Frames). Neu `<Asset>_FPS_Game_Clips.fbx/.glb`: dasselbe
+  Modell mit derselben Hierarchie und einem Take `<Name>_EgoClips` über alle Ego-Clips (Frames ab 101, drei Frames Abstand).
+- Vertrag `unity_contract_fps.json`, `format` 3: `clips[0]` ist weiter der Use-Clip; danach je Ego-Clip ein Eintrag mit `name`
+  (`<Name>_<Suffix>`, z. B. `Pistol_AimIn`), `state` (Suffix), `file`, `take`, `take_frame_start`/`take_frame_end` (Frames im Take, 0 = erster Frame),
+  `frames` (Samples), `duration_seconds`, `loop`, `autoplay` (immer false), `from`/`to` (= `from_pose`/`to_pose`), `reticle_free`, `interruptible`,
+  `events` (Frame und Sekunden ab Clipstart). Block `ego_clips`: Clipnamen als Konstanten (`names`: Suffix → Name), Posen,
+  `transitions` (welcher Clip ohne Überblendung folgen darf), Regeln, Import-Hinweis, `reload_part`.
+- Import: Clips-Datei wie das Hauptmodell (Generic, `bakeAxisConversion`), Take mit `ModelImporter.clipAnimations` teilen: je Eintrag
+  ein Clip, `firstFrame`/`lastFrame` = Startzeit des Takes (`importedTakeInfos`) + `take_frame_start`/`take_frame_end`, `loopTime` = `loop`.
+  Die Clips binden über die Knotennamen an das Hauptmodell; sie schreiben keine Wurzelkurve (die 180°-Drehung bleibt unberührt).
+- Posen: Jeder Clip beginnt und endet exakt in seiner benannten Pose (`rest` = Frame 1 von Use, `aim`, `sprint`, `lowered`); Schnitt
+  ohne Überblendung, wenn `to_pose` = `from_pose` des nächsten. Loops (Idle, Walk, Sprint, AimIdle; letztes Sample = erstes) dürfen an
+  jedem Frame mit kurzer Überblendung verlassen werden; `interruptible` false (Draw, Holster) nur am Ende.
+- Geprüft je Frame jedes Clips (`qa_viewmodel.json` › `ego_clips`): Handgelenk unter 55° (Ziel 45°), Hände im Bild, proximale
+  Unterarme aus dem Bild (auch 1,7× um `Socket_Hand`; Ausnahme: Stützarm in den Ziel-Clips, `support_forearm_visible`), Hand–Socket-Kontakt (außer der Stützhand im Reload-Fenster), Fadenkreuz frei
+  bei `reticle_free`, Visierlinie in AimIdle auf der Bildmitte und Visier nicht von Händen verdeckt; Reimport der Clips-Datei
+  (`roundtrip_clips_fbx/glb` in `qa_game_fps.json`). Farbe und Material gehen in keinen Clip ein.
+- Fire/AimFire: Schuss bei Frame 0, Rückstoß in den ersten ≈ 0,1 s, Länge höchstens die Abklingzeit der Waffe in Cube Escape
+  (`fire_cooldown_s`, Werte aus CE `Items/Weapons.cs`: der nächste Schuss startet den Clip neu); das Fusionsgewehr feuert ohne Aufladen.
+- **Mindestversion des Abnehmers:** keine für den bisherigen Einbau: Cube Escape ab 0.64 liest `clips[0]` und ignoriert die neuen
+  Einträge. Die Ego-Clips nutzt erst der Cube-Escape-Stand mit Ego-Zustandslogik (Sitzung „Ego-Waffenhaltung“). Ältere Fassung ohne
+  Clips-Datei: `python3 toolgen/generate_tools.py --tier standard --contract 2` (Layout 0.8).
+
 ## Prüfen
 
 Unity-seitig sind offen: Materialzuordnung, LODGroup-Schwellen, Layer/Culling der Viewmodel-Kamera, Z-Fighting mit der Weltkamera

@@ -46,7 +46,7 @@ ROUNDTRIP_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["ro
 CACHE_SCHEMA = 3
 # Stage results: raise when stages would write something else although none of their key parts changed.
 STAGE_SCHEMA = 1
-GAME_CONTRACT = 2               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
+GAME_CONTRACT = 3               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
 # Source fingerprints (ASTs) of the functions that decide what a stage writes and how a package is assembled.
 # Timing, reporting and orchestration edits stay outside, so they rebuild nothing (Robogen's producer fingerprint).
 # New helpers that write stage outputs or packages belong in these lists.
@@ -165,7 +165,7 @@ def hash_file(path):
 def template(text, tool):
     values = {key: value for key, value in tool.items() if isinstance(value, str)}
     values["work"] = "{work}"
-    values.setdefault("game_contract", str(GAME_CONTRACT))   # set in the tool entry (and so in the key) only for --contract 1
+    values.setdefault("game_contract", str(GAME_CONTRACT))   # set in the tool entry (and so in the key) only for --contract 1 or 2
     return text.format(**values)
 
 
@@ -722,8 +722,9 @@ def main():
     parser.add_argument("--threads", type=int)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--device", choices=("auto", "cpu", "metal"), default="auto")
-    parser.add_argument("--contract", type=int, choices=(1, GAME_CONTRACT), default=GAME_CONTRACT,
-                        help="game export contract: 2 (default) or 1 (Toolgen 0.7 layout for Cube Escape before 0.64)")
+    parser.add_argument("--contract", type=int, choices=(1, 2, GAME_CONTRACT), default=GAME_CONTRACT,
+                        help="game export contract: 3 (default, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 "
+                             "(Toolgen 0.7 layout for Cube Escape before 0.64)")
     args = parser.parse_args()
     lock = None
     try:

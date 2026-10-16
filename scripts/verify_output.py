@@ -5,9 +5,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
-from generate_tools import catalog, valid_package
+sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import ego_clips  # noqa: E402
+from generate_tools import catalog, valid_package  # noqa: E402
 
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
+EGO = ego_clips.load()
+PROFILES = json.loads((ROOT / "data/viewmodels.json").read_text())["tools"]
 
 output = Path(sys.argv[1])
 index = json.loads((output / "catalog.json").read_text())
@@ -16,6 +20,7 @@ for tool in catalog():
     package = output / tool["id"]
     assert valid_package(package), tool["id"]
     manifest = json.loads((package / "manifest.json").read_text())
+    clips, _ = ego_clips.clip_list(EGO, tool, PROFILES[tool["id"]].get("motion"))
     for variant in ["world", "fps", *(["arrow"] if tool.get("arrow") else [])]:
         asset = tool["arrow"] if variant == "arrow" else tool["asset"] + ("_FPS" if variant == "fps" else "")
         for ext in ("blend", "fbx", "glb"):
@@ -29,7 +34,13 @@ for tool in catalog():
             assert scene["clip"] == clip
         if variant == "fps":
             rig = json.loads((package / "qa_viewmodel.json").read_text())
-            assert rig["passed"] and rig["frames_checked"] == 97 and rig["max_contact_error_m"] < .0001
+            assert rig["passed"] and rig["max_contact_error_m"] < .0001
+            # every frame of the Use clip and of every ego clip is checked; each clip starts and ends in its named pose
+            assert rig["frames_checked"] == 97 + sum(clip["length"] + 1 for clip in clips), (tool["id"], "frames checked")
+            assert [clip["name"] for clip in rig["ego_clips"]["clips"]] == [clip["name"] for clip in clips]
+            assert not rig["ego_clips"]["failures"] and rig["ego_clip_boundary_max_error"] < .0001
+            assert all(value["max_degrees"] <= value["limit_degrees"] and value["elbow_on_palm_side"]
+                       for value in rig["wrist_bend"].values()), (tool["id"], "wrist bend")
             assert rig["proximal_forearm_offscreen"] and rig["visible_forearm_fraction_limit"] <= .5
             assert all(y < 0 for y in rig["proximal_forearm_max_screen_y"].values())
             assert rig["centered_wrist_max_error_m"] < .00001
@@ -68,8 +79,19 @@ for tool in catalog():
         assert set(ego["equipment"]["channels"]) == {"Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail"}
         assert all(name.startswith("M_") for name in ego["equipment"]["untouched_slots"]), tool["id"]
         checks += 2
-    assert json.loads((package / "qa_game_fps.json").read_text())["passed"]
+    game_qa = json.loads((package / "qa_game_fps.json").read_text())
+    assert game_qa["passed"]
     assert tool["asset"] + "_FPS_Game.glb" in manifest["files"]
+    # contract 3: Use clip first (main files), then the ego clips in the clips file, each with its frame range
+    names = [clip["name"] for clip in ego["clips"]]
+    assert names[0] == tool.get("fps_clip", tool["clip"]), (tool["id"], "Use clip first")
+    if ego["format"] >= 3:
+        assert names[1:] == [clip["name"] for clip in clips], (tool["id"], "ego clip names")
+        for kind in ("fbx", "glb"):
+            assert tool["asset"] + "_FPS_Game_Clips." + kind in manifest["files"], (tool["id"], kind)
+            assert game_qa["checks"]["roundtrip_clips_" + kind]["passed"], (tool["id"], kind)
+        assert all(entry["take"] == ego["ego_clips"]["take"] for entry in ego["clips"][1:])
+        checks += 4
     checks += 5
     if manifest["tier"] != "quick":
         for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else [])]:

@@ -1,6 +1,6 @@
 # Cube Escape – Toolgen
 
-**0.8.0 · Gunmetal.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.9.0 · Cadence.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -16,7 +16,8 @@ open output/_quick/ToolGenViewer.app
 ```
 
 Dazu kommen neun Handwaffen (Pistole bis Raketenwerfer, Elementfarben KINETIC/ENERGY/SOLAR/VOID/ARC) mit Ego-Modell, Stützhand am Handschutz,
-Rückstoß und Use-Clip: [TECHNIK](docs/TECHNIK.md) › Waffen 1–9.
+Rückstoß und Use-Clip: [TECHNIK](docs/TECHNIK.md) › Waffen 1–9. Seit 0.9.0 tragen alle Ego-Modelle Zustandsclips (Idle, Walk,
+Sprint, Fire, Zielen, Draw/Holster, Inspect, Reload) in einer eigenen Clips-Datei: [EGO_CLIPS](docs/EGO_CLIPS.md).
 
 Die App bündelt den Katalog und zeigt die Portalkanone sofort an. Portalkanone, Magnetgreifer, Taschenlampe und Bogen
 haben Welt- und FPS-Modelle, der Bogen zusätzlich einen separaten Pfeil. Die beiden Gehäuse sind schmaler und kürzer;

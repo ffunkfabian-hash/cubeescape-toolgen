@@ -21,6 +21,9 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
 * ``unity_contract.json`` and ``qa_game.json``; the exit code is 1 when a check fails.
 * ``--viewmodel``: the same for the first-person model ``<asset>_FPS`` (hands, arms and tool): own budget, no collision,
   ``unity_contract_fps.json`` / ``qa_game_fps.json`` with the viewmodel camera data of ``viewmodel_camera.json``.
+  Contract 3 adds the ego clips (data/ego_clips.json): ``<asset>_FPS_Game_Clips.fbx/.glb``, the same model with all ego
+  clips on one take ``<Name>_EgoClips`` after the Use clip's frames, listed in ``clips`` (frame ranges in the take) and
+  ``ego_clips`` (names, poses, transitions). The main files keep the Use clip alone, so older consumers read clips[0].
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -44,11 +47,14 @@ except ImportError:  # unit tests import the pure helpers with the system Python
     bpy = None
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import ego_clips  # noqa: E402 - pure Python, needs the tool_assets path
 PALETTE_PATH = ROOT / "data/game_palette.json"
 BUDGET_PATH = ROOT / "data/game_budget.json"
 TOOLS_PATH = ROOT / "data/tools.json"
-CONTRACT_FORMAT = 2              # 2: "material_convention" and, for equipment tools, MT_<Channel> slots; --contract 1 = 0.7 layout
-CONTRACT_FORMATS = (1, 2)
+CONTRACT_FORMAT = 3              # 3: first-person ego clips (<asset>_FPS_Game_Clips.*, "ego_clips"); --contract 2 = 0.8 layout
+CONTRACT_FORMATS = (1, 2, 3)     # 2: "material_convention" and MT_<Channel> slots for equipment tools; 1 = 0.7 layout
+EGO_CLIPS_CONTRACT = 3
 CHANNELS = ("Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail")   # Cube Escape ColorChannels.cs
 EMITTING_CHANNELS = ("Energy", "Emission")
 LOD1_TARGET = .30
@@ -900,6 +906,76 @@ def export_files(scene, root, work, name, clip):
         raise RuntimeError("FBX export failed")
 
 
+def ego_take_name(clip_name):
+    """FBX take / glTF animation of the ego clips file: Pistol_Use -> Pistol_EgoClips."""
+    return ego_clips.clip_stem({"clip": clip_name}) + "_EgoClips"
+
+
+def ego_sample_frames(clips):
+    """Check frames of the ego clips: both ends, the quarters (loops are at rest in the middle) and every event."""
+    return sorted({frame for clip in clips
+                   for frame in (*(clip["frame_start"] + round(clip["length"] * share) for share in (0, .25, .5, .75, 1)),
+                                 *(event["frame"] for event in clip["events"]))})
+
+
+def export_ego_clips(scene, root, work, game, take, ego):
+    """<game>_Clips.fbx/.glb: the same model and hierarchy with the ego clips' frames as one take (FBX take = scene name,
+    glTF animation of that name). The scene range and the actions' manual ranges cover the Use clip in the main files."""
+    actions = {action: (action.use_frame_range, tuple(action.frame_range)) for action in bpy.data.actions}
+    saved = (scene.name, scene.frame_start, scene.frame_end)
+    try:
+        for action in actions:
+            action.use_frame_range = False
+        scene.name = take
+        scene.frame_start, scene.frame_end = ego["timeline_start"], ego["timeline_end"]
+        set_frame(scene, scene.frame_start)
+        export_files(scene, root, work, game + "_Clips", take)
+    finally:
+        scene.name = saved[0]
+        scene.frame_start, scene.frame_end = saved[1], saved[2]
+        for action, (manual, frame_range) in actions.items():
+            action.use_frame_range = manual
+            if manual:
+                action.frame_start, action.frame_end = frame_range
+        set_frame(scene, scene.frame_start)
+    return {"clips_fbx": work / (game + "_Clips.fbx"), "clips_glb": work / (game + "_Clips.glb")}
+
+
+def ego_contract(ego, game, take, fps, animated_nodes):
+    """Contract entries of the ego clips (after the Use clip in ``clips``) and the ``ego_clips`` block."""
+    start = ego["timeline_start"]
+    infos = [{"name": clip["name"], "suffix": clip["suffix"], "state": clip["suffix"], "file": game + "_Clips.fbx",
+              "glb": game + "_Clips.glb",
+              "take": take, "frame_start": clip["frame_start"], "frame_end": clip["frame_end"],
+              "frames": clip["length"] + 1, "take_frame_start": clip["frame_start"] - start,
+              "take_frame_end": clip["frame_end"] - start, "take_seconds_start": (clip["frame_start"] - start) / fps,
+              "fps": fps, "duration_seconds": clip["length"] / fps, "loop": clip["loop"], "autoplay": False,
+              "from_pose": clip["from"], "to_pose": clip["to"], "from": clip["from"], "to": clip["to"],
+              "reticle_free": clip["reticle_free"],
+              "interruptible": clip["interruptible"], "support_forearm_visible": clip["support_forearm_visible"],
+              "events": [{"name": event["name"], "frame": event["frame"], "seconds": (event["frame"] - clip["frame_start"]) / fps}
+                         for event in clip["events"]],
+              "animated_nodes": animated_nodes, "root_curves": []} for clip in ego["clips"]]
+    data = ego_clips.load()
+    block = {"format": data["format"], "file": game + "_Clips.fbx", "glb": game + "_Clips.glb", "take": take,
+             "timeline": [start, ego["timeline_end"]], "fps": fps,
+             "names": {clip["suffix"]: clip["name"] for clip in ego["clips"]},
+             "poses": data["poses"], "reload_part": ego.get("reload_part"),
+             "transitions": ego_clips.transitions(ego["clips"]),
+             "rules": "Every clip starts and ends exactly in its named pose (from_pose, to_pose; rest = frame 1 of the Use "
+                      "clip): a clip may follow another without a crossfade when its from_pose is the other's to_pose. "
+                      "Loop clips (loop true; last sample = first) may be left at any frame with a short crossfade into a "
+                      "clip of the same pose; interruptible false = leave only at the end. Nothing plays by itself "
+                      "(autoplay false): the game picks every clip. Clips never animate the root, materials or colours.",
+             "unity": "Import the clips file like the main model (Generic, bakeAxisConversion) and split its take with "
+                      "ModelImporter.clipAnimations: one clip per entry, firstFrame/lastFrame = take start (importedTakeInfos) "
+                      "+ take_frame_start/take_frame_end, loopTime = loop. The clips bind to the main model's hierarchy "
+                      "(same node names); apply the half turn of axes.fbx.export_yaw_degrees only to root curves (none).",
+             "older_consumers": "toolgen/game_export.py --contract 2 (or generate_tools.py --contract 2): no clips file, "
+                                "clips lists the Use clip only (Toolgen 0.8 layout)."}
+    return infos, block
+
+
 # --------------------------------------------------------------------------------------------- contract
 def hold_block(tool):
     """How the weapon sits in a hand (tools.json ``hold``): sockets, grip axis (bottom to top of the grip, leaning forward by
@@ -963,7 +1039,7 @@ def socket_surface_distances(root):
 
 
 def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT):
+                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT, ego_infos=(), ego_block=None):
     def renderer_entry(obj):
         mesh = obj.data
         return {"name": obj.name, "parent": obj.parent.name, "role": obj["ce_role"], "lod": obj["ce_lod"],
@@ -1022,7 +1098,8 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
         **({"hold": hold_block(tool)} if tool.get("hold") else {}),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
-        "clips": [clip_info] if clip_info else [],
+        "clips": ([clip_info] if clip_info else []) + list(ego_infos),
+        **({"ego_clips": ego_block} if ego_block else {}),
         "source": source_info,
         "files": {kind: {"path": path.name, "sha256": file_sha256(path)} for kind, path in files.items()},
     }
@@ -1143,6 +1220,7 @@ def check_framing(checks, scene, source, expected, renderers):
     camera = expected["camera"]
     tan_v = math.tan(math.radians(camera["vertical_fov_degrees"]) / 2)
     worst, blocked = 0.0, []
+    exempt = set(expected["ego"]["reticle_exempt"]) if expected.get("ego") else set()
     names = {group["renderer"]: group["name"] for group in expected["groups"]}
     for frame in source["frames"]:
         set_frame(scene, frame)
@@ -1164,6 +1242,8 @@ def check_framing(checks, scene, source, expected, renderers):
                 tan_h = tan_v * aspect_ratio(aspect)
                 u = .5 + (-points[front, 0] / depth[front]) / (2 * tan_h)
                 v = .5 + (points[front, 2] / depth[front]) / (2 * tan_v)
+                if frame in exempt:
+                    continue           # ego clips that may cover the reticle (aim down sights, inspect, reload)
                 if ((abs(u - .5) <= camera["reticle_half_extent"]) & (abs(v - .5) <= camera["reticle_half_extent"])).any():
                     blocked.append([obj.name, frame, aspect])
     set_frame(scene, source["frames"][0])
@@ -1226,7 +1306,7 @@ def check_colliders(checks, contract, source, tool_id):
                opening_probes=probes)
 
 
-def check_import(checks, kind, path, source, expected):
+def check_import(checks, kind, path, source, expected, prefix=""):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     if kind == "glb":
         result = bpy.ops.import_scene.gltf(filepath=str(path))
@@ -1250,7 +1330,9 @@ def check_import(checks, kind, path, source, expected):
     clip_ok = True
     if clip:
         animated = [find(name) for name in clip["animated_nodes"]]
-        actions = [action_of(obj) for obj in animated if obj is not None]
+        details["unanimated_nodes"] = sorted(name for name, obj in zip(clip["animated_nodes"], animated)
+                                             if obj is None or not action_of(obj))
+        actions = [action for action in (action_of(obj) for obj in animated if obj is not None) if action]
         morphs = [find(name) for name in clip["morph_renderers"]]
         morph_actions = [key_action(obj) for obj in morphs if obj is not None]
         clip_ok = len(actions) == len(clip["animated_nodes"]) and len(morph_actions) == len(clip["morph_renderers"]) \
@@ -1285,7 +1367,7 @@ def check_import(checks, kind, path, source, expected):
                 current = bounds_of([obj], depsgraph)
                 worst_bounds = max(worst_bounds, bounds_error(current, source["group_bounds"][frame][group["name"]]))
     details.update({"sampled_frames": frames, "max_matrix_error": worst_matrix, "max_bounds_error_m": worst_bounds})
-    checks.add(f"roundtrip_{kind}", not missing and slots_ok and clip_ok and worst_matrix <= ROUNDTRIP_MATRIX_TOLERANCE
+    checks.add(f"roundtrip_{prefix}{kind}", not missing and slots_ok and clip_ok and worst_matrix <= ROUNDTRIP_MATRIX_TOLERANCE
                and worst_bounds <= ROUNDTRIP_BOUNDS_TOLERANCE_M, **details)
 
 
@@ -1417,6 +1499,15 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     root = scene.objects[asset]
     clip_name = clip_name if any(action_of(obj) or key_action(obj) for obj in tree(root)) else None
     frames = list(range(scene.frame_start, scene.frame_end + 1)) if clip_name else [scene.frame_start]
+    # Ego clips (first_person.py): keyed after the Use clip, listed on the root; written from contract 3 on.
+    ego = json.loads(root["toolgen_ego_clips"]) if viewmodel and "toolgen_ego_clips" in root else None
+    if "toolgen_ego_clips" in root:
+        del root["toolgen_ego_clips"]
+    ego = ego if ego and ego["clips"] and clip_name and contract >= EGO_CLIPS_CONTRACT else None
+    if viewmodel and not ego:                 # no stale clips file from an earlier contract 3 export
+        for suffix in (".fbx", ".glb"):
+            (work / (asset + "_Game_Clips" + suffix)).unlink(missing_ok=True)
+    ego_samples = ego_sample_frames(ego["clips"]) if ego else []
     groups = classify(root, frames, asset)
     meshes = [obj for obj in tree(root) if obj.type == "MESH"]
     camera_data = None
@@ -1426,7 +1517,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
         camera_data = {"vertical_fov_degrees": camera_file["vertical_fov_degrees"], "near_clip_m": camera_file["near_clip_m"],
                        "aspects": data["qa"]["aspects"], "reticle_half_extent": data["qa"]["reticle_half_extent"],
                        "tolerance": FRAMING_TOLERANCE_SCREEN}
-    source = record_source(scene, root, groups, frames, camera_data["near_clip_m"] if camera_data else None)
+    source = record_source(scene, root, groups, frames + ego_samples, camera_data["near_clip_m"] if camera_data else None)
     surface = None if viewmodel else socket_surface_distances(root)
     source.update({
         "frame_start": scene.frame_start, "frame_end": scene.frame_end, "fps": scene.render.fps / scene.render.fps_base,
@@ -1460,6 +1551,8 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     files = {"blend": work / (game + ".blend"), "fbx": work / (game + ".fbx"), "glb": work / (game + ".glb")}
     bpy.ops.wm.save_as_mainfile(filepath=str(files["blend"]), compress=False)
     export_files(scene, root, work, game, clip_name)
+    if ego:
+        files.update(export_ego_clips(scene, root, work, game, ego_take_name(clip_name), ego))
     from version import CODENAME, VERSION
     animated_nodes = sorted(obj.name for obj in tree(root) if action_of(obj))
     morph_renderers = sorted(obj.name for obj in renderers if obj.data.shape_keys)
@@ -1498,8 +1591,11 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
                                      "model is checked against it at vertical_fov_degrees only (qa_game_fps.json "
                                      "viewmodel_framing). Use another FOV only after re-checking.")
         camera["source"] = camera_path.name
+    ego_infos, ego_block = [], None
+    if ego:
+        ego_infos, ego_block = ego_contract(ego, game, ego_take_name(clip_name), source["fps"], animated_nodes)
     document = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                              camera, surface, contract)
+                              camera, surface, contract, ego_infos, ego_block)
     (work / contract_name(viewmodel)).write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
     expected = {"root": asset, "renderers": [obj.name for obj in renderers], "lods": [obj.name for obj in lods],
                 "groups": [{"name": group.name, "renderer": group.name + "_LOD0"} for group in groups],
@@ -1509,7 +1605,12 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
                 "socket_surface": surface, "sockets_on_tool_required": bool(tool.get("hold")),
                 "max_renderers": MAX_RENDERERS_VIEWMODEL if viewmodel else MAX_RENDERERS,
                 "sample_frames": sample_frames(scene.frame_start, scene.frame_end, [f for _, f in source["markers"]],
-                                               source["key_frames"]) if clip_name else frames}
+                                               source["key_frames"]) if clip_name else frames,
+                "ego": ego and {"take": ego_take_name(clip_name), "timeline": [ego["timeline_start"], ego["timeline_end"]],
+                                "sample_frames": ego_samples,
+                                "reticle_exempt": sorted(frame for clip in ego["clips"] if not clip["reticle_free"]
+                                                         for frame in ego_samples
+                                                         if clip["frame_start"] <= frame <= clip["frame_end"])}}
     return source, document, expected, files
 
 
@@ -1522,8 +1623,8 @@ def main():
                         help="export the first-person model <asset>_FPS (no collision, own budget, camera data)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
     parser.add_argument("--contract", type=int, choices=CONTRACT_FORMATS, default=CONTRACT_FORMAT,
-                        help="contract format: 2 (default, MT_<Channel> slots for equipment tools) or 1 (Toolgen 0.7 layout, "
-                             "palette names only, for Cube Escape before 0.64)")
+                        help="contract format: 3 (default, ego clips file for the first-person model), 2 (Toolgen 0.8 "
+                             "layout, Use clip only) or 1 (Toolgen 0.7 layout, palette names only, for Cube Escape before 0.64)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     work = args.directory.resolve()
     checks = Checks()
@@ -1561,6 +1662,18 @@ def main():
             except Exception as error:  # noqa: BLE001 - every failure belongs into the report
                 traceback.print_exc()
                 checks.add_error(f"roundtrip_{kind}", error)
+        if expected["ego"]:
+            # The clips file: the same nodes and renderers, one take over the ego clips, poses at their sample frames.
+            ego = expected["ego"]
+            ego_expected = dict(expected, sample_frames=ego["sample_frames"],
+                                clip=dict(expected["clip"], name=ego["take"], frames=ego["timeline"][1] - ego["timeline"][0] + 1))
+            for kind in ("glb", "fbx"):
+                try:
+                    check_import(checks, kind, files["clips_" + kind], dict(source, frame_start=ego["timeline"][0]),
+                                 ego_expected, "clips_")
+                except Exception as error:  # noqa: BLE001 - every failure belongs into the report
+                    traceback.print_exc()
+                    checks.add_error(f"roundtrip_clips_{kind}", error)
         timings["qa"] = time.perf_counter() - phase
         report.update({"renderers": {"LOD0": expected["renderers"], "LOD1": expected["lods"]},
                        "triangles": {"source": source["triangles"], "LOD0": contract["lods"]["LOD0"]["triangles"],

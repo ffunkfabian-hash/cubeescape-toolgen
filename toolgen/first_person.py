@@ -22,6 +22,7 @@ from mathutils.bvhtree import BVHTree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 from motion_profiles import draw_hand_offset, envelope, recoil_impulse, settle, solve_elbow
+import ego_clips
 
 
 def aspect_ratio(name):
@@ -306,6 +307,9 @@ def link(name, parent, first, last, width, depth, mat):
 
 
 GRIPPING_FINGERS = 3
+FOREARM_TWITCH_LIMIT_DEGREES = 2   # ego clips: largest change of a forearm's turn per frame between neighbouring frames
+                                  # (clips under 16 frames count half: their quick, smooth turns accelerate harder)
+PROXIMAL_MARGIN = .01             # ego clips keep the proximal forearm half this share of the screen below the frame
 # Cube Escape 0.65 enlarges the weapon viewmodels 1.35-1.7x about Socket_Hand (Resources/Toolgen/viewmodel_holds.json);
 # the proximal forearm halves must leave the frame at that size as well.
 GAME_ENLARGEMENT_MAX = 1.7
@@ -406,6 +410,34 @@ def finish_keys(obj):
                 for curve in bag.fcurves:
                     for key in curve.keyframe_points:
                         key.interpolation = "LINEAR"
+
+
+def curves_of(owner):
+    action = owner.animation_data.action if owner and owner.animation_data else None
+    if action is None:
+        return []
+    return [curve for layer in action.layers for strip in layer.strips for bag in strip.channelbags for curve in bag.fcurves]
+
+
+def clip_keys(owner, clips, fire_start, fire_scale=1.0, rest_frame=97):
+    """Keys of parts the ego clips do not pose themselves (weapon mechanics, glows, shape keys): Fire and AimFire replay
+    the Use clip from ``fire_start``, time-compressed by ``fire_scale`` like the recoil (slides, bolts and coils cycle
+    with every shot), every other clip holds the rest
+    value at both ends, so nothing drifts between clips (glTF also drops curves without keys in the clips' range)."""
+    for curve in curves_of(owner):
+        rest = curve.evaluate(rest_frame)
+        for clip in clips:
+            start, end = clip["frame_start"], clip["frame_end"]
+            if any(start <= key.co.x <= end for key in curve.keyframe_points):
+                continue                       # posed by first_person.py itself (rig, support hand, reload part)
+            # a part away from rest at the shot belongs to the charge (fusion fins, coil): it rests through Fire
+            if clip["motion"] in ("fire", "aim_fire") and abs(curve.evaluate(fire_start) - rest) < 1e-6:
+                values = [(start + offset, curve.evaluate(fire_start + offset * fire_scale)) for offset in range(clip["length"] + 1)]
+            else:
+                values = [(start, rest), (end, rest)]
+            for frame, value in values:
+                curve.keyframe_points.insert(frame, value, options={"FAST"}).interpolation = "LINEAR"
+        curve.update()
 
 
 def exports(directory, root, clip):
@@ -519,6 +551,79 @@ def build(directory, spec, profile):
             contact_targets[support_contact.name] = profile["support_socket"]
     rest = {obj: obj.matrix_world.copy() for obj in hands}
     scene.render.fps = 24; scene.frame_start = 1; scene.frame_end = 97
+    # Ego clips (data/ego_clips.json) follow the Use clip on the same timeline; the scene range stays the Use clip.
+    clips, clip_params = ego_clips.clip_list(ego_clips.load(), spec, profile.get("motion"))
+    aim = ads_setup(scene, root, hold, clip_params) if any(clip["motion"].startswith("aim") for clip in clips) else None
+    support_hand = next((obj for obj in hands if obj.name == "Hand_L"), None) if tool != "bow" and profile["support"] else None
+    support_rest = support_hand.location.copy() if support_hand else None
+    part_name = clip_params.get("reload", {}).get("part") if any(clip["motion"] == "reload" for clip in clips) else None
+    part = scene.objects.get(part_name) if part_name else None
+    part_rest = part.location.copy() if part is not None else None
+    base_shoulders = [rig["shoulder"].copy() for rig in arms]
+    base_poles = [rig["pole"].copy() for rig in arms]
+    scene.frame_set(1); bpy.context.view_layer.update()
+    # Wrist target of the ego clips (data/ego_clips.json "wrist"): 45 degrees, or the rest bend plus an allowance when that
+    # is larger, always below the arm_pose limit (55) less a margin.
+    wrist = ego_clips.load()["wrist"]
+    rest_arms = [rest_arm(rig) for rig in arms]
+    grip_forearm = (arms[0]["hand"].matrix_world @ arms[0]["wrist"], rest_arms[0][0])
+    arm_view = {"tan_v": math.tan(math.radians(settings["vertical_fov_degrees"]) / 2), "near": settings["near_clip_m"],
+                "pivot": socket.matrix_world.translation.copy() if tool != "bow" else None}
+    arm_view["rest_top"] = {rig["hand"].name: proximal_top(rig, rig["hand"].matrix_world @ rig["wrist"] - forearm * rig["lengths"][1],
+                                                           forearm, arm_view) for rig, (forearm, _) in zip(arms, rest_arms)}
+    # Arms without arm_pose (the tools) have no wrist limit; their clips only keep the rest bend plus the allowance.
+    bend_targets = {rig["hand"].name: min(rig["arm_limits"]["max_wrist_bend_degrees"] - wrist["limit_margin_degrees"]
+                                          if "arm_limits" in rig else 180.0,
+                                          max(wrist["target_degrees"], arm_bend(rig, rig["shoulder"], rig["pole"])
+                                              + wrist["rest_allowance_degrees"]))
+                    for rig in arms}
+    def place(ego, frame, previous):
+        """Pose of an ego clip frame on Viewmodel_Motion, the support hand and the reload part (not keyed)."""
+        values = ego_clips.pose_at(ego, frame, clip_params)
+        location, rotation, _ = clip_matrix(values, aim and aim["matrix"], Vector(profile["hand"]), grip_forearm).decompose()
+        motion.location = location
+        motion.rotation_euler = rotation.to_euler("XYZ", previous)
+        bpy.context.view_layer.update()
+        if support_hand is not None:
+            offset = values["support"]
+            support_hand.location = support_rest + (motion.matrix_world.to_quaternion().inverted() @ Vector(
+                (-offset["right"], offset["back"], offset["up"])) if offset else Vector())
+        if part is not None:
+            offset = values["part"]
+            part.location = part_rest + (Vector((-offset["right"], offset["back"], offset["up"])) if offset else Vector())
+        bpy.context.view_layer.update()
+        return values
+
+    def natural_arms(ego, values):
+        """Relaxed forearm directions of the posed frame; the support arm is left out while it may show (aiming)."""
+        turn = Quaternion().slerp(motion.matrix_world.to_quaternion(), values["follow"])
+        view = dict(arm_view, pivot=socket.matrix_world.translation.copy() if tool != "bow" else None)
+        result = {}
+        for rig, rest_pose in zip(arms, rest_arms):
+            forearm, data = relaxed_forearm(rig, rest_pose, turn, bend_targets[rig["hand"].name])
+            data["view"] = view
+            data["free"] = bool(ego["support_forearm_visible"] and rig["hand"] is support_hand)
+            result[rig["hand"].name] = (forearm, data)
+        return result
+
+    # Framing plan of the forearms: one pass over every ego clip frame, then one correction axis per arm (plan_corrections).
+    samples = {rig["hand"].name: {} for rig in arms}
+    previous = Euler((0, 0, 0), "XYZ")
+    for ego in clips:
+        for frame in range(ego["frame_start"], ego["frame_end"] + 1):
+            scene.frame_set(frame)
+            values = place(ego, frame, previous)
+            previous = motion.rotation_euler.copy()
+            for name, (forearm, data) in natural_arms(ego, values).items():
+                if not data["free"]:
+                    samples[name][frame] = (forearm, data)
+    plans = {rig["hand"].name: plan_corrections(rig, samples[rig["hand"].name], clips,
+                                                max(-PROXIMAL_MARGIN, arm_view["rest_top"][rig["hand"].name] + .003))
+             for rig in arms}
+    frames = [*range(1, 98), *(frame for clip in clips for frame in range(clip["frame_start"], clip["frame_end"] + 1))]
+    clip_records = {clip["name"]: {"wrist_bend_max_degrees": {}, "aim_max": 0.0} for clip in clips}
+    detached_frames, reticle_exempt, aim_frames, support_visible_frames = set(), set(), set(), set()
+    previous_euler = Euler((0, 0, 0), "XYZ")
     clip = spec.get("fps_clip") or spec["clip"]
     root["ce_action_clip"] = clip; root["ce_autoplay"] = False; root["ce_loop"] = False
     root["ce_hand_style"] = "Robogen Mitt / articulated FPS, three fingers and thumb"
@@ -527,10 +632,23 @@ def build(directory, spec, profile):
     root["ce_viewmodel_horizontal_fov_degrees"] = settings["horizontal_fov_degrees"][settings["reference_aspect"]]
     root["ce_viewmodel_reference_aspect"] = settings["reference_aspect"]
     root["ce_viewmodel_near_clip_m"] = settings["near_clip_m"]
-    for frame in range(1, 98):
+    for frame in frames:
         scene.frame_set(frame)
+        ego = ego_clips.clip_at(clips, frame) if frame > 97 else None
         motion.location = (0, 0, 0); motion.rotation_euler = (0, 0, 0)
-        if tool == "bow":
+        for rig, shoulder, pole in zip(arms, base_shoulders, base_poles):
+            rig["shoulder"], rig["pole"] = shoulder.copy(), pole.copy()
+        if ego:
+            values = place(ego, frame, previous_euler)
+            previous_euler = motion.rotation_euler.copy()
+            if not ego["reticle_free"]:
+                reticle_exempt.add(frame)
+            if ego["support_forearm_visible"]:
+                support_visible_frames.add(frame)
+            if values["aim"] > 0:
+                aim_frames.add(frame)
+            clip_records[ego["name"]]["aim_max"] = max(clip_records[ego["name"]]["aim_max"], values["aim"])
+        elif tool == "bow":
             tension = envelope(frame, ((1, 0), (31, 1), (43, 1), (49, 0), (97, 0)))
             kick = settle(frame, 43, 22, 1)
             # Rotate the bow and its grip hand together about the grip, rather
@@ -553,7 +671,35 @@ def build(directory, spec, profile):
         motion.keyframe_insert(data_path="location", frame=frame)
         motion.keyframe_insert(data_path="rotation_euler", frame=frame)
         bpy.context.view_layer.update()
-        if tool == "bow":
+        if support_hand is not None:
+            if not ego:
+                support_hand.location = support_rest
+            support_hand.keyframe_insert(data_path="location", frame=frame)
+            if ego and values["detached"]:
+                detached_frames.add(frame)
+        if part is not None:
+            if not ego:
+                part.location = part_rest
+            part.keyframe_insert(data_path="location", frame=frame)
+        if ego:
+            natural = natural_arms(ego, values)
+            for rig in arms:
+                forearm, data = natural[rig["hand"].name]
+                index, angles = plans[rig["hand"].name]
+                if not data["free"] and angles.get(frame):
+                    forearm = corrected(forearm, index, angles[frame])
+                elbow = data["wrist"] - forearm * rig["lengths"][1]
+                rig["shoulder"] = elbow + data["upper"]
+                rig["pole"] = elbow - rig["shoulder"]
+                record = clip_records[ego["name"]]
+                record["forearm_turn_max_degrees"] = max(record.get("forearm_turn_max_degrees", 0.0),
+                                                         round(math.degrees(data["rest"].angle(forearm)), 2))
+        bpy.context.view_layer.update()
+        if tool == "bow" and ego:
+            draw.matrix_world = nock.matrix_world @ twists["R"]
+            draw.keyframe_insert(data_path="location", frame=frame)
+            draw.keyframe_insert(data_path="rotation_euler", frame=frame)
+        elif tool == "bow":
             offset = Vector(draw_hand_offset(frame))
             # Nock is evaluated after weapon motion; convert back into the common rig space.
             draw.matrix_world = nock.matrix_world @ twists["R"]
@@ -571,12 +717,41 @@ def build(directory, spec, profile):
                 record = rig.setdefault("bend", {"max_degrees": 0.0, "elbow_on_palm_side": True})
                 record["max_degrees"] = max(record["max_degrees"], round(bend, 2))
                 record["elbow_on_palm_side"] = record["elbow_on_palm_side"] and palm_side
-    for obj in [motion, *hands, *(node for rig in arms for node in (rig["upper"], rig["lower"])), *(obj for obj in root.children_recursive if obj.name.startswith("Fingers_"))]:
+                if ego:
+                    per_clip = clip_records[ego["name"]]["wrist_bend_max_degrees"]
+                    per_clip[rig["hand"].name] = max(per_clip.get(rig["hand"].name, 0.0), round(bend, 2))
+                    if not palm_side:
+                        clip_records[ego["name"]]["elbow_off_palm_side"] = True
+    for rig, shoulder, pole in zip(arms, base_shoulders, base_poles):
+        rig["shoulder"], rig["pole"] = shoulder, pole
+    if clips:
+        owners = [root, *root.children_recursive, *(obj.data.shape_keys for obj in root.children_recursive
+                                                    if obj.type == "MESH" and obj.data.shape_keys)]
+        for owner in owners:
+            clip_keys(owner, clips, clip_params.get("fire_start", 1), clip_params.get("fire_scale", 1.0))
+    for obj in [motion, *hands, *(node for rig in arms for node in (rig["upper"], rig["lower"])), *(obj for obj in root.children_recursive if obj.name.startswith("Fingers_")), *([part] if part is not None else [])]:
         finish_keys(obj)
     scene.frame_set(1); bpy.context.view_layer.update()
     # Grip hand remains rigidly attached to the tool throughout the clip.
     assert (main.matrix_world.translation - socket.matrix_world.translation).length < 1e-5
-    report = validate(scene, root, contact_targets, tool, arms, settings, profile.get("head"), profile.get("touch_tolerance_m"))
+    clip_check = {"clips": clips, "params": clip_params, "frames": frames, "detached": detached_frames,
+                  "support_forearm_visible": support_visible_frames,
+                  "support_hand": support_hand.name if support_hand else None,
+                  "reticle_exempt": reticle_exempt, "support_contact": support_hand and next(
+                      (name for name, target in contact_targets.items() if target == profile.get("support_socket")), None)}
+    report = validate(scene, root, contact_targets, tool, arms, settings, profile.get("head"), profile.get("touch_tolerance_m"),
+                      clip_check)
+    if os.environ.get("TOOLGEN_FPS_DEBUG"):
+        bpy.ops.wm.save_as_mainfile(filepath=os.environ["TOOLGEN_FPS_DEBUG"], copy=True)
+    report["ego_clips"] = ego_clip_report(scene, root, clips, clip_records, aim, aim_frames, settings, part_name, part)
+    root["toolgen_ego_clips"] = json.dumps({"timeline_start": clips[0]["frame_start"] if clips else None,
+                                            "timeline_end": ego_clips.timeline_end(clips),
+                                            "reload_part": part.name if part is not None else None,
+                                            "clips": clips})
+    print("EGO_CLIP_WRIST", tool, json.dumps({clip["name"]: clip["wrist_bend_max_degrees"] for clip in report["ego_clips"]["clips"]}),
+          flush=True)
+    failures = report["ego_clips"]["failures"]
+    assert not failures, (tool, "ego clips", failures)
     report["robogen_reference"] = config["reference"]
     report["clip"] = clip; report["hand_sides"] = [obj.name for obj in hands]
     # Relaxed wrists (Cube Escape 0.65 finding: forearm straight under the grip, wrist bent ~105 deg / folded ~160 deg).
@@ -615,7 +790,7 @@ def build(directory, spec, profile):
         scene.render.filepath = str(directory / "preview_large.png")
         bpy.ops.render.render(write_still=True)
     summary = report["framing_range"]["summary"]
-    print(f"VIEWMODEL_OK {tool}: {len(hands)} hands, 97 frames, contact={report['max_contact_error_m']:.8f} m, "
+    print(f"VIEWMODEL_OK {tool}: {len(hands)} hands, {report['frames_checked']} frames ({len(clips)} ego clips), contact={report['max_contact_error_m']:.8f} m, "
           f"FOV {settings['vertical_fov_degrees']:.2f} deg vertical, {summary['binding_configurations']} binding framings, "
           f"range {summary['range_ok']}/{summary['range_checked']} ok, hand margin {summary['min_hand_margin']:.4f}, head {json.dumps(report['head'])}")
 
@@ -630,6 +805,265 @@ def recoil_pose(config, frame, pivot):
     rotation = Euler((-math.radians(config["pitch_degrees"]) * impulse, math.radians(config.get("yaw_degrees", 0)) * impulse, 0), "XYZ")
     shift = Vector((0, config["kick_m"] * impulse + charge, .004 * impulse))
     return rotation, pivot + shift - rotation.to_matrix() @ pivot
+
+
+def ads_setup(scene, root, hold, params):
+    """Aim-down-sights transform of Viewmodel_Motion (ego clip pose ``aim`` = 1): the tool's forward axis along the view
+    without roll, and its line of sight on the camera axis at ``ads.eye_distance_m``. The line of sight runs
+    ``eye_above_m`` over the top of the sight parts (``ads.sight_mode`` "top", iron sights) or through their centre
+    ("center", optics); sight parts are ``ads.sight_parts`` (mesh names without SM_PG_) or every mesh whose name contains
+    one of ``ads.sight_markers``. Without sight parts the line runs over the highest point of the tool."""
+    block = params["ads"]
+    scene.frame_set(1); bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    tool_meshes = [obj for obj in hold.children_recursive if obj.type == "MESH"]
+    if block.get("sight_parts"):
+        parts = [obj for obj in tool_meshes if obj.name.removeprefix("SM_PG_") in block["sight_parts"]]
+        assert len(parts) == len(block["sight_parts"]), ("ads.sight_parts not found", block["sight_parts"])
+    else:
+        parts = [obj for obj in tool_meshes if any(marker in obj.name for marker in block["sight_markers"])]
+    inverse = hold.matrix_world.inverted()
+    def local_points(objects):
+        return np.concatenate([world_vertices(obj, graph) @ np.array(inverse)[:3, :3].T + np.array(inverse)[:3, 3]
+                               for obj in objects])
+    mode = block.get("sight_mode", "top")
+    if parts:
+        points = local_points(parts)
+        low, high = points.min(axis=0), points.max(axis=0)
+        sight = Vector(((low[0] + high[0]) / 2, (low[1] + high[1]) / 2, high[2] if mode == "top" else (low[2] + high[2]) / 2))
+    else:
+        mode = "top"
+        points = local_points(tool_meshes)
+        sight = Vector((0, float(points[:, 1].mean()), float(points[:, 2].max())))
+    eye = sight + Vector((0, 0, block["eye_above_m"] if mode == "top" else 0))
+    rotation = hold.matrix_world.to_quaternion().inverted()
+    world_eye = rotation.to_matrix() @ (hold.matrix_world @ eye)
+    # Default distance: the sight's own depth at rest less pull_back_m, so the grip hand mostly moves sideways.
+    distance = block["eye_distance_m"] or -(hold.matrix_world @ eye).y - block["pull_back_m"]
+    matrix = Matrix.Translation(Vector((0, -distance, 0)) - world_eye) @ rotation.to_matrix().to_4x4()
+    return {"matrix": matrix, "sight_parts": sorted(obj.name for obj in parts), "mode": mode,
+            "sight_local_m": list(sight), "eye_local_m": list(eye)}
+
+
+def arm_bend(rig, shoulder, pole):
+    """wrist_bend of the arm for a shoulder and elbow pole, without posing it (the hand is already placed)."""
+    hand = rig["hand"].matrix_world
+    wrist = hand @ rig["wrist"]
+    elbow = Vector(solve_elbow(shoulder, wrist, *rig["lengths"], pole))
+    return math.degrees((wrist - elbow).normalized().angle((hand.to_3x3() @ Vector((0, -1, 0))).normalized()))
+
+
+def rest_arm(rig):
+    """Forearm direction (elbow -> wrist) and upper arm (elbow -> shoulder) of the posed rest arm, camera axes."""
+    wrist = rig["hand"].matrix_world @ rig["wrist"]
+    elbow = Vector(solve_elbow(rig["shoulder"], wrist, *rig["lengths"], rig["pole"]))
+    return (wrist - elbow).normalized(), rig["shoulder"] - elbow
+
+
+def proximal_top(rig, elbow, forearm, view):
+    """Highest screen y (0 = bottom edge) of a conservative box around the proximal forearm half, like validate: at the
+    data FOV and, about Socket_Hand, at the game's largest enlargement (points behind the near plane count as hidden)."""
+    length = rig["lengths"][1] * (1 - rig["visible_fraction"])
+    side = forearm.cross(Vector((0, 0, 1))).normalized()
+    up = side.cross(forearm).normalized()
+    points = [elbow + forearm * along + side * x + up * y for along in (0, length) for x in (-.047, .047) for y in (-.047, .047)]
+    result = -float("inf")
+    for scale in ((1.0, GAME_ENLARGEMENT_MAX) if view["pivot"] is not None else (1.0,)):
+        for point in points:
+            if scale != 1.0:
+                point = (point - view["pivot"]) * scale + view["pivot"]
+            depth = -point.y
+            result = max(result, .5 + point.z / depth / (2 * view["tan_v"]) if depth > view["near"] else -1.0)
+    return result
+
+
+def relaxed_forearm(rig, rest, turn, target):
+    """Forearm direction of an ego clip frame before the framing correction. The forearm keeps its rest direction in camera
+    space, turned by ``turn`` (the part ``follow`` of the weapon's turn), so the elbow only shifts with the hand; when the
+    wrist would bend more than ``target`` degrees the forearm turns towards the knuckles just by the excess (sideways
+    first, so the elbow keeps its height). Returns the direction and the frame data the correction needs."""
+    hand = rig["hand"].matrix_world
+    wrist = hand @ rig["wrist"]
+    forearm, upper = turn @ rest[0], turn @ rest[1]
+    knuckles = (hand.to_3x3() @ Vector((0, -1, 0))).normalized()
+    limit = math.radians(target)
+    if forearm.angle(knuckles) > limit:
+        # First swing the forearm sideways (about the camera's up axis, the elbow keeps its height and stays below the
+        # frame), towards the knuckle heading; only the rest of the excess lifts the forearm towards the knuckles.
+        heading = math.atan2(knuckles.y, knuckles.x) - math.atan2(forearm.y, forearm.x)
+        heading = (heading + math.pi) % (2 * math.pi) - math.pi
+        def swung(angle):
+            return Quaternion((0, 0, 1), angle) @ forearm
+        side = rig.get("arm_limits", {}).get("palm_side")
+        def palm_side(direction):        # wrist_bend's elbow test, with 1 cm to spare
+            return side is None or (hand.inverted() @ (wrist - direction * rig["lengths"][1])).x * side > .01
+        if not palm_side(swung(heading)):
+            low, high = 0.0, 1.0
+            for _ in range(20):
+                middle = (low + high) / 2
+                low, high = (middle, high) if palm_side(swung(heading * middle)) else (low, middle)
+            heading *= low
+        if swung(heading).angle(knuckles) <= limit:
+            low, high = 0.0, 1.0
+            for _ in range(20):
+                middle = (low + high) / 2
+                low, high = (middle, high) if swung(heading * middle).angle(knuckles) > limit else (low, middle)
+            forearm = swung(heading * high)
+        else:
+            forearm = swung(heading)
+            excess = forearm.angle(knuckles) - limit
+            forearm = Quaternion(forearm.cross(knuckles).normalized(), excess) @ forearm
+    return forearm, {"wrist": wrist, "knuckles": knuckles, "hand_inverse": hand.inverted(), "upper": upper,
+                     "rest": turn @ rest[0]}
+
+
+def correction_axis(forearm, index):
+    """One of twelve axes perpendicular to the forearm (index 0 lifts it towards camera up)."""
+    return Quaternion(forearm, math.tau * index / 12) @ forearm.cross(Vector((0, 0, 1))).normalized()
+
+
+def corrected(forearm, index, angle):
+    return Quaternion(correction_axis(forearm, index), angle) @ forearm
+
+
+def correction_ok(rig, forearm, data, allowed):
+    """Forearm direction keeps the proximal half below the frame, the wrist within its limit less 0.5 degrees and the
+    elbow on the palm side."""
+    elbow = data["wrist"] - forearm * rig["lengths"][1]
+    side = rig.get("arm_limits", {}).get("palm_side")
+    hard = rig["arm_limits"]["max_wrist_bend_degrees"] - .5 if "arm_limits" in rig else 180.0
+    return (proximal_top(rig, elbow, forearm, data["view"]) <= allowed and math.degrees(forearm.angle(data["knuckles"])) <= hard
+            and (side is None or (data["hand_inverse"] @ elbow).x * side > .01))
+
+
+def smallest_correction(rig, forearm, data, allowed, index, limit=math.radians(60)):
+    """Smallest turn about correction axis ``index`` that clears the frame (scanned outwards, the top is not monotone in
+    the angle, then refined); None when no turn up to ``limit`` does."""
+    def clear(angle):
+        return proximal_top(rig, data["wrist"] - corrected(forearm, index, angle) * rig["lengths"][1],
+                            corrected(forearm, index, angle), data["view"]) <= allowed
+    high = next((math.radians(degrees) for degrees in range(1, 61) if math.radians(degrees) <= limit and clear(math.radians(degrees))), None)
+    if high is None:
+        return None
+    low = high - math.radians(1)
+    for _ in range(10):
+        middle = (low + high) / 2
+        low, high = (middle, high) if not clear(middle) else (low, middle)
+    return high if correction_ok(rig, corrected(forearm, index, high), data, allowed) else None
+
+
+def plan_corrections(rig, samples, clips, allowed, rate=math.radians(1.5)):
+    """Framing correction of one arm over all ego clips: ONE axis for the whole timeline (the one whose largest needed turn
+    is smallest), per frame the smallest turn about it, then within each clip raised to a slope of at most ``rate`` per
+    frame (no twitch between neighbouring frames); clip ends keep their own value so equal poses stay equal. Returns
+    the axis index and {frame: angle}."""
+    needed = {frame: (forearm, data) for frame, (forearm, data) in samples.items()
+              if proximal_top(rig, data["wrist"] - forearm * rig["lengths"][1], forearm, data["view"]) > allowed}
+    if not needed:
+        return 0, {}
+    best = None
+    for index in range(12):
+        angles = {frame: smallest_correction(rig, forearm, data, allowed, index) for frame, (forearm, data) in needed.items()}
+        missing = sum(angle is None for angle in angles.values())
+        score = (missing, max((angle for angle in angles.values() if angle is not None), default=0.0))
+        if best is None or score < best[0]:
+            best = (score, index, angles)
+    _, index, raw = best
+    raw = {frame: angle or 0.0 for frame, angle in raw.items()}
+    result = {}
+    for clip in clips:
+        frames = range(clip["frame_start"], clip["frame_end"] + 1)
+        values = {frame: raw.get(frame, 0.0) for frame in frames}
+        if not any(values.values()):
+            continue
+        for frame in frames:
+            smooth = max(value - rate * abs(frame - other) for other, value in values.items())
+            if frame in (clip["frame_start"], clip["frame_end"]):
+                smooth = values[frame]
+            forearm, data = samples[frame]
+            if smooth > values[frame] and not correction_ok(rig, corrected(forearm, index, smooth), data, allowed):
+                smooth = values[frame]
+            result[frame] = smooth
+    return index, result
+
+
+def clip_matrix(values, aim, pivot, forearm=None):
+    """Viewmodel_Motion of an ego clip pose (scripts/tool_assets/ego_clips.py): the aim blend moves the grip hand on a
+    straight line and turns about it; ``twist`` turns about the grip forearm's rest axis through the wrist (``forearm``:
+    wrist point and direction; pronation, the wrist does not bend), then the pose turns about the (aimed) hand and shifts
+    in camera axes."""
+    blend = Matrix.Identity(4)
+    if aim is not None and values["aim"] > 0:
+        rotation = aim.to_quaternion()
+        target = aim @ pivot
+        blend = (Matrix.Translation(pivot.lerp(target, values["aim"]))
+                 @ Quaternion().slerp(rotation, values["aim"]).to_matrix().to_4x4() @ Matrix.Translation(-pivot))
+    if values.get("twist") and forearm is not None:
+        wrist, axis = blend @ forearm[0], blend.to_3x3() @ forearm[1]
+        # positive twist: the top tilts left as the player sees it (clockwise about an axis pointing away is negative)
+        blend = (Matrix.Translation(wrist) @ Quaternion(axis, -math.radians(values["twist"])).to_matrix().to_4x4()
+                 @ Matrix.Translation(-wrist) @ blend)
+    rotation = Euler((-math.radians(values["pitch"]), math.radians(values["roll"]), math.radians(values["yaw"])), "XYZ")
+    center = blend @ pivot
+    offset = Vector((-values["right"], values["back"], values["up"]))
+    return Matrix.Translation(center + offset) @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-center) @ blend
+
+
+def ego_clip_report(scene, root, clips, records, aim, aim_frames, settings, part_name, part):
+    """Per clip: wrist bend, aim; aim down sights: line of sight on the screen centre and the sight parts readable
+    (not hidden by the hands or other parts); no clip animates a material or colour."""
+    failures, warnings = [], []
+    ads = None
+    full_aim = [frame for clip in clips if clip["motion"] == "aim_idle" for frame in (clip["frame_start"],)]
+    if aim and full_aim:
+        frame = full_aim[0]
+        scene.frame_set(frame); bpy.context.view_layer.update()
+        graph = bpy.context.evaluated_depsgraph_get()
+        hold = scene.objects["Viewmodel_Hold"]
+        tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
+        base = {"tan_h": tan_v * aspect_ratio(settings["reference_aspect"]), "tan_v": tan_v}
+        u, v, depth = camera_space(np.array([hold.matrix_world @ Vector(aim["eye_local_m"])]))
+        x, y = screen(u, v, base)
+        sight = [scene.objects[name] for name in aim["sight_parts"]]
+        # The tool hides parts of its own sights from the side (slide, rails): only hands and arms count as occluders.
+        others = [obj for obj in root.children_recursive if obj.type == "MESH" and obj.name.startswith("SM_FPS_")]
+        vertices, polygons, owners = mesh_data(others, graph)
+        blocker = BVHTree.FromPolygons(vertices, polygons)
+        visible = total = 0
+        occluders = {}
+        for obj in sight:
+            for point in world_vertices(obj, graph)[::7]:
+                target = Vector(point.tolist())
+                hit = blocker.ray_cast(Vector(), target.normalized(), target.length - 1e-4)
+                total += 1
+                if hit[0] is None:
+                    visible += 1
+                else:
+                    occluders[owners[hit[2]]] = occluders.get(owners[hit[2]], 0) + 1
+        ads = {"frame": frame, "line_of_sight_screen": [float(x[0]), float(y[0])], "depth_m": float(depth[0]),
+               "sight_parts": aim["sight_parts"], "mode": aim["mode"], "eye_local_m": aim["eye_local_m"],
+               "sight_visible_fraction": visible / total if total else None,
+               "occluders": dict(sorted(occluders.items(), key=lambda item: -item[1])[:4])}
+        if max(abs(x[0] - .5), abs(y[0] - .5)) > .002:
+            failures.append(f"aim: line of sight off the screen centre ({x[0]:.4f}, {y[0]:.4f})")
+        if total and visible / total < .9:
+            failures.append(f"aim: sight hidden ({visible}/{total} sample points visible, {ads['occluders']})")
+        if not total:
+            warnings.append("aim: no sight parts, line of sight over the highest point of the tool")
+        scene.frame_set(1); bpy.context.view_layer.update()
+    if part_name and part is None:
+        failures.append(f"reload: part {part_name} (data/ego_clips.json reload.part) missing in the model")
+    animated_materials = sorted(item.name for item in [*bpy.data.materials, *bpy.data.node_groups]
+                                if item.animation_data and item.animation_data.action)
+    animated_materials += sorted(mat.name for mat in bpy.data.materials if mat.node_tree and mat.node_tree.animation_data
+                                 and mat.node_tree.animation_data.action)
+    if animated_materials:
+        failures.append(f"materials animated: {animated_materials}")
+    return {"clips": [{"name": clip["name"], "frame_start": clip["frame_start"], "frame_end": clip["frame_end"],
+                       "length": clip["length"], "loop": clip["loop"], "from": clip["from"], "to": clip["to"],
+                       **records[clip["name"]]} for clip in clips],
+            "frames": sum(clip["length"] + 1 for clip in clips), "aim_frames": len(aim_frames), "ads": ads,
+            "reload_part": part.name if part is not None else None, "failures": failures, "warnings": warnings}
 
 
 def configure_camera(scene, settings):
@@ -771,7 +1205,7 @@ def hand_touch(scene, root, arms):
     return result
 
 
-def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None):
+def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None, clip_check=None):
     limits = settings["qa"]
     frusta = frustum_configurations(settings)
     tan_v = math.tan(math.radians(settings["vertical_fov_degrees"]) / 2)
@@ -789,6 +1223,7 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
     visible_forearms = {rig["hand"].name: 0 for rig in arms}
     proximal = [{rig["hand"].name: -float("inf") for rig in arms} for _ in frusta]
     proximal_base = {rig["hand"].name: -float("inf") for rig in arms}
+    proximal_worst_frame = {rig["hand"].name: None for rig in arms}
     grip_socket = scene.objects.get("Socket_Hand") if tool != "bow" else None
     # only measured hands get a value (the bow is not enlarged by the game; no -Infinity in the JSON report)
     proximal_enlarged = {rig["hand"].name: -float("inf") for rig in arms} if grip_socket is not None else {}
@@ -797,9 +1232,11 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
     hand_edges = [{rig["hand"].name: [float("inf")] * 4 for rig in arms} for _ in frusta]
     rest_hand_margin = [{rig["hand"].name: float("inf") for rig in arms} for _ in frusta]
     reticle_hits = [set() for _ in frusta]
+    reticle_frames = [{} for _ in frusta]
     hand_meshes = {rig["hand"].name: {obj.name for obj in rig["hand"].children_recursive if obj.type == "MESH"} for rig in arms}
     tracking = [obj for obj in root.children_recursive if obj.type == "EMPTY" and
-                (obj.name.startswith(("Hand_", "GripContact_", "UpperArm_", "LowerArm_", "Thumb_", "Fingers_")) or obj.name == "Viewmodel_Motion")]
+                (obj.name.startswith(("Hand_", "GripContact_", "UpperArm_", "LowerArm_", "Thumb_", "Fingers_", "Anim_"))
+                 or obj.name == "Viewmodel_Motion")]
     meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
     forearm_local = {}
     for rig in arms:
@@ -814,7 +1251,13 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
     grip_rest = None
     grip_draw = None
     centered_wrist_error = 0
-    for frame in range(1, 98):
+    clip_check = clip_check or {"clips": [], "frames": list(range(1, 98)), "detached": set(), "reticle_exempt": set(),
+                                "support_contact": None, "support_forearm_visible": set(), "support_hand": None}
+    exempt_forearm = {}
+    previous_forearm, forearm_step = {}, {}
+    clip_frames = {frame for clip in clip_check["clips"] for frame in range(clip["frame_start"], clip["frame_end"] + 1)}
+    boundaries = {}
+    for frame in clip_check["frames"]:
         scene.frame_set(frame); bpy.context.view_layer.update()
         graph = bpy.context.evaluated_depsgraph_get()
         for rig in arms:
@@ -833,6 +1276,20 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
             maximum_arm_error = max(maximum_arm_error, error)
         for rig in arms:
             name = rig["hand"].name
+            direction = rig["lower"].matrix_world.to_3x3() @ Vector((0, 0, 1))
+            # twitch = change of the forearm's turn rate between neighbouring frames (a fast but smooth turn passes)
+            if frame in clip_frames and frame - 1 in clip_frames and name in previous_forearm:
+                rate = previous_forearm[name][0].cross(direction)
+                if frame - 2 in clip_frames and previous_forearm[name][1] is not None:
+                    step = math.degrees((rate - previous_forearm[name][1]).length)
+                    # short transitions (aim in/out, sprint in/out: 6-12 frames) turn fast by design: half the weight
+                    if ego_clips.clip_at(clip_check["clips"], frame)["length"] < 16:
+                        step /= 2
+                    if step > forearm_step.get(name, (0.0, None))[0]:
+                        forearm_step[name] = (step, frame)
+                previous_forearm[name] = (direction, rate)
+            else:
+                previous_forearm[name] = (direction, None)
             length = rig["lengths"][1]
             matrix = np.array(rig["lower"].matrix_world)
             # A conservative box encloses the entire proximal half, including faces
@@ -840,9 +1297,15 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
             corners = np.array([(x, y, z) for z in (0, length * (1 - rig["visible_fraction"]))
                                 for x in (-.047, .047) for y in (-.047, .047)])
             u, v, _ = camera_space(corners @ matrix[:3, :3].T + matrix[:3, 3])
+            if frame in clip_check["support_forearm_visible"] and name == clip_check["support_hand"]:
+                # Aiming down sights (user decision 16.10.2026): the support forearm may show; measured, not binding.
+                exempt_forearm[name] = max(exempt_forearm.get(name, -float("inf")), float(screen(u, v, base)[1].max()))
+                continue
             for index, frustum in enumerate(frusta):
                 proximal[index][name] = max(proximal[index][name], float(screen(u, v, frustum)[1].max()))
-            proximal_base[name] = max(proximal_base[name], float(screen(u, v, base)[1].max()))
+            value = float(screen(u, v, base)[1].max())
+            if value > proximal_base[name]:
+                proximal_base[name] = value; proximal_worst_frame[name] = frame
             if grip_socket is not None:
                 pivot = np.array(grip_socket.matrix_world.translation)
                 world = corners @ matrix[:3, :3].T + matrix[:3, 3]
@@ -859,6 +1322,9 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
         for contact_name, target in targets.items():
             if tool == "bow" and target == "Socket_Nock" and 43 < frame < 79:
                 continue
+            # Reload: the support hand leaves the handguard (ego clip ``detached``); it is framed like every hand.
+            if contact_name == clip_check["support_contact"] and frame in clip_check["detached"]:
+                continue
             error = (scene.objects[contact_name].matrix_world.translation - scene.objects[target].matrix_world.translation).length
             assert error < .0001, (tool, frame, contact_name, "hand detached", error)
             max_contact = max(max_contact, error)
@@ -869,12 +1335,14 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
             owner = next((hand for hand, names in hand_meshes.items() if obj.name in names), None)
             # The bow's draw hand travels to the cheek and down for the next arrow; it is
             # framed in its rest pose only. Grip and support hands stay framed all clip long.
-            if owner == "Hand_R" and tool == "bow" and frame not in (1, 97):
+            if owner == "Hand_R" and tool == "bow" and 1 < frame < 97:
                 owner = None
             for index, frustum in enumerate(frusta):
                 x, y = screen(u, v, frustum)
-                if ((np.abs(x - .5) < reticle) & (np.abs(y - .5) < reticle)).any():
+                # Aim down sights, inspect and reload may cover the reticle (ego clip ``reticle_free``: false).
+                if frame not in clip_check["reticle_exempt"] and ((np.abs(x - .5) < reticle) & (np.abs(y - .5) < reticle)).any():
                     reticle_hits[index].add(obj.name)
+                    reticle_frames[index].setdefault(obj.name, frame)
                 if owner:
                     edges = (float(x.min()), float((1 - x).min()), float(y.min()), float((1 - y).min()))
                     hand_edges[index][owner] = [min(a, b) for a, b in zip(hand_edges[index][owner], edges)]
@@ -892,9 +1360,32 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
         current = {obj.name: matrix_rows(obj) for obj in tracking}
         if frame == 1:
             rest = current
+        if frame == 97:
+            use_end = current
+        for clip in clip_check["clips"]:
+            if frame in (clip["frame_start"], clip["frame_end"]):
+                boundaries[(clip["name"], "from" if frame == clip["frame_start"] else "to")] = current
         if frame in (1, 16, 31, 43, 44, 48, 60, 79, 97):
             poses[str(frame)] = current
-    maximum_reset = max(abs(current[name][i][j] - matrix[i][j]) for name, matrix in rest.items() for i in range(4) for j in range(4))
+    def difference(a, b):
+        return max(abs(a[name][i][j] - matrix[i][j]) for name, matrix in b.items() for i in range(4) for j in range(4))
+    maximum_reset = difference(use_end, rest)
+    # Every clip starts and ends exactly in its named pose (rest = frame 1 of Use; aim, sprint, lowered: first occurrence),
+    # so clips that meet in a pose can be cut together without a crossfade.
+    references = {"rest": rest}
+    boundary_errors = {}
+    for clip in clip_check["clips"]:
+        for end in ("from", "to"):
+            matrices = boundaries[(clip["name"], end)]
+            reference = references.setdefault(clip[end], matrices)
+            boundary_errors[f"{clip['name']}.{end}"] = difference(matrices, reference)
+    for name, error in boundary_errors.items():
+        if error > .0001:
+            clip_name, end = name.rsplit(".", 1)
+            matrices = boundaries[(clip_name, end)]
+            reference = references[next(clip[end] for clip in clip_check["clips"] if clip["name"] == clip_name)]
+            worst = max(reference, key=lambda node: difference({node: matrices[node]}, {node: reference[node]}))
+            failures.append(f"{name}: pose differs from its named pose ({error:.6f}, {worst})")
     assert maximum_reset < .0001, (tool, "rig does not return to rest", maximum_reset)
     assert not any(obj.type == "MESH" and obj.get("ce_role") == "first_person_robot" and obj.name.startswith(("SM_FPS_UpperArm", "SM_FPS_Elbow")) for obj in root.children_recursive)
     for rig in arms:
@@ -922,14 +1413,15 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
         label = f"{frustum['vertical_fov_degrees']:.2f} deg vertical, {frustum['aspect']}"
         reasons = []
         if reticle_hits[index]:
-            reasons.append(f"reticle blocked by {sorted(reticle_hits[index])[:4]}")
+            reasons.append(f"reticle blocked by {sorted(reticle_hits[index])[:4]} (first frame "
+                           f"{min(reticle_frames[index].values())})")
         for name, margin in hand_margin[index].items():
             if margin < limits["hand_margin"]:
                 reasons.append(f"{name} leaves the frame (margin {margin:.4f}, frame {hand_worst_frame[index][name]}, "
                                f"rest {rest_hand_margin[index][name]:.4f})")
         for name, value in proximal[index].items():
             if value >= 0:
-                reasons.append(f"proximal forearm of {name} enters the viewport (y {value:.4f})")
+                reasons.append(f"proximal forearm of {name} enters the viewport (y {value:.4f}, worst frame {proximal_worst_frame[name]})")
         result = head_results[index]
         if head:
             if result["anchor_margin"] < head_limits["head_anchor_margin"]:
@@ -952,6 +1444,9 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
         if frustum["binding"]:
             failures.extend(f"{label}: {reason}" for reason in reasons)
     # Measured in the reference frustum (configured FOV and aspect), binding like the configured framings.
+    # The arm rule picks a forearm direction per frame; a jump between neighbouring clip frames would show as a twitch.
+    failures.extend(f"forearm of {name} twitches: turn rate changes by {step:.1f} deg per frame (frame {frame})"
+                    for name, (step, frame) in forearm_step.items() if step > FOREARM_TWITCH_LIMIT_DEGREES)
     failures.extend(f"proximal forearm of {name} enters the viewport at {GAME_ENLARGEMENT_MAX}x (y {value:.4f})"
                     for name, value in proximal_enlarged.items() if value >= 0)
     binding = [index for index, frustum in enumerate(frusta) if frustum["binding"]]
@@ -974,7 +1469,12 @@ def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None)
                                    "unoccluded_fraction": head_limits["head_min_unoccluded_fraction"],
                                    "screen_fraction": head_limits["head_min_screen_fraction"]}}
     scene.frame_set(1); bpy.context.view_layer.update()
-    report = {"passed": not failures, "failures": failures, "frames_checked": 97, "max_contact_error_m": max_contact,
+    report = {"passed": not failures, "failures": failures, "frames_checked": len(clip_check["frames"]),
+              "ego_clip_boundary_max_error": max(boundary_errors.values(), default=0.0),
+              "support_forearm_visible_max_screen_y": exempt_forearm or None,
+              "ego_forearm_max_twitch_degrees": {name: {"degrees": round(step, 3), "frame": frame}
+                                               for name, (step, frame) in forearm_step.items()},
+              "max_contact_error_m": max_contact,
               "viewmodel_camera": {key: value for key, value in settings.items() if key != "qa"},
               "framing_range": {"summary": summary, "limits": limits, "configurations": configurations},
               "fov_range": fov_range,

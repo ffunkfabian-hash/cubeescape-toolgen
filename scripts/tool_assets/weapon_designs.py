@@ -89,8 +89,8 @@ def muzzle_device(k, y, z, radius, length, rings=2):
         k.box('MuzzleSlot_%d' % i, (0, y + length * .12 + i * length * .22, z + radius), (radius * .8, .006, .003), 'Detail', .0006)
 
 
-def magazine(k, name, points, width, mat='Secondary', glow_height=.04):
-    k.slab(name, points, width, mat, bevel=.004)
+def magazine(k, name, points, width, mat='Secondary', glow_height=.04, parent=None):
+    k.slab(name, points, width, mat, bevel=.004, parent=parent)
 
 
 # ------------------------------------------------------------------------------------------- modular components
@@ -198,7 +198,8 @@ def pistol(k):
         k.box('RearSight_%d' % side, (side * .009, .040, .0825), (.006, .010, .010), 'Metal', .002, parent=slide)
     k.cyl('Barrel', (0, -.158, .062), .0095, .036, 'Metal', n=20)
     k.tube('MuzzleRing', (0, -.171, .062), .0125, .0065, .008, 'Secondary', n=24)
-    pistol_modules(k, slide)
+    mag = k.pivot('Anim_Magazine', (0, *along(k, 0, -.0635)))
+    pistol_modules(k, slide, mag)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.176, .062))
     k.socket('Socket_SupportHand', (0, -.05, .034))
@@ -214,9 +215,10 @@ def assault_rifle(k):
     k.box('ReceiverUpper', (0, -.03, .092), (.050, .30, .040), 'Primary', .008)
     rail(k, 'TopRail', -.17, .11, .117)
     k.box('MagWell', (0, -.092, .040), (.040, .070, .020), 'Secondary', .005)
-    magazine(k, 'Magazine', [(-.115, .038), (-.072, .038), (-.070, -.030), (-.082, -.095), (-.122, -.100), (-.118, -.030)], .032)
+    mag = k.pivot('Anim_Magazine', (0, -.095, .038))
+    magazine(k, 'Magazine', [(-.115, .038), (-.072, .038), (-.070, -.030), (-.082, -.095), (-.122, -.100), (-.118, -.030)], .032, parent=mag)
     for side in (-1, 1):
-        k.glow('MagWindow_%d' % side, (side * .0165, -.095, -.040), (.002, .018, .050))
+        k.glow('MagWindow_%d' % side, (side * .0165, -.095, -.040), (.002, .018, .050), parent=mag)
     trigger_group(k, -.066, -.008, .010, .040)
     stock(k, 'Stock', [(.095, .093), (.27, .103), (.345, .098), (.345, -.045), (.31, -.05), (.205, .008), (.095, .040)],
           .040, 'Detail', (.044, .014, .148), .352, .028)
@@ -236,7 +238,7 @@ def assault_rifle(k):
     bolt = k.pivot('Anim_Bolt', (0, 0, .095))
     k.box('BoltCover', (.0275, -.02, .095), (.007, .085, .026), 'Metal', .003, parent=bolt)
     k.cyl('BoltKnob', (.034, .02, .098), .008, .012, 'Secondary', axis='x', n=14, bevel=.001, parent=bolt)
-    assault_rifle_modules(k)
+    assault_rifle_modules(k, mag)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.578, zb))
     k.socket('Socket_SupportHand', (0, -.235, zb))
@@ -254,9 +256,10 @@ def pulse_rifle(k):
     for side in (-1, 1):
         k.glow('ChassisGlow_%d' % side, (side * .0285, .09, .102), (.002, .17, .006))
     k.box('CellWell', (0, .18, -.035), (.040, .070, .020), 'Secondary', .005)
-    magazine(k, 'EnergyCell', [(.145, -.03), (.215, -.03), (.215, -.100), (.145, -.100)], .034, glow_height=.04)
+    mag = k.pivot('Anim_EnergyCell', (0, .18, -.03))
+    magazine(k, 'EnergyCell', [(.145, -.03), (.215, -.03), (.215, -.100), (.145, -.100)], .034, glow_height=.04, parent=mag)
     for side in (-1, 1):
-        k.glow('CellWindow_%d' % side, (side * .0175, .18, -.065), (.002, .040, .040))
+        k.glow('CellWindow_%d' % side, (side * .0175, .18, -.065), (.002, .040, .040), parent=mag)
     trigger_group(k, -.060, -.010, .014, .040)
     k.box('Buttpad', (0, .335, .030), (.052, .014, .130), 'Detail', .004)
     k.cyl('Shroud', (0, -.29, zb), .030, .19, 'Primary', n=32, bevel=.003)
@@ -302,10 +305,11 @@ def shotgun(k):
     k.tube('MuzzleGlow', (0, -.468, zb), .0365, .030, .006, k.glow_material, n=32)
     k.cyl('BoreLiner', (0, -.480, zb), .023, .005, 'Detail', n=28, bevel=.0005)
     k.cyl('TubeMagazine', (0, -.28, .030), .015, .31, 'Metal', n=24)
-    k.box('ForeEnd', (0, -.26, .037), (.048, .15, .042), 'Primary', .010)
-    k.box('ForeEndRail', (0, -.26, .014), (.024, .13, .008), 'Secondary', .002)
+    loader = k.pivot('Anim_Magazine', (0, -.26, .037))
+    k.box('ForeEnd', (0, -.26, .037), (.048, .15, .042), 'Primary', .010, parent=loader)
+    k.box('ForeEndRail', (0, -.26, .014), (.024, .13, .008), 'Secondary', .002, parent=loader)
     for side in (-1, 1):
-        k.glow('ForeGlow_%d' % side, (side * .0245, -.26, .040), (.002, .09, .006))
+        k.glow('ForeGlow_%d' % side, (side * .0245, -.26, .040), (.002, .09, .006), parent=loader)
     k.box('FrontBead', (0, -.455, .1055), (.008, .008, .012), 'Metal', .002)
     bolt = k.pivot('Anim_Bolt', (0, 0, .092))
     k.box('BoltSlider', (0, -.005, .098), (.034, .080, .014), 'Metal', .003, parent=bolt)
@@ -325,9 +329,10 @@ def sniper_rifle(k):
     k.box('Receiver', (0, -.04, .062), (.044, .30, .046), 'Primary', .008)
     k.box('Chassis', (0, -.03, .036), (.036, .34, .016), 'Secondary', .004)
     rail(k, 'TopRail', -.18, .08, .090, .018)
-    k.box('MagBox', (0, -.05, .004), (.032, .070, .052), 'Secondary', .005)
+    mag = k.pivot('Anim_Magazine', (0, -.05, .030))
+    k.box('MagBox', (0, -.05, .004), (.032, .070, .052), 'Secondary', .005, parent=mag)
     for side in (-1, 1):
-        k.glow('MagWindow_%d' % side, (side * .0165, -.05, .004), (.002, .040, .028))
+        k.glow('MagWindow_%d' % side, (side * .0165, -.05, .004), (.002, .040, .028), parent=mag)
     trigger_group(k, -.058, -.008, .014, .040)
     stock(k, 'Stock', [(.12, .090), (.30, .100), (.40, .090), (.42, .080), (.42, -.07), (.38, -.075), (.34, -.03), (.22, -.01), (.12, .02)],
           .040, 'Detail', (.046, .014, .16), .427, .005)
@@ -362,10 +367,11 @@ def smg(k):
     k.box('Body', (0, -.05, .052), (.048, .24, .056), 'Primary', .010)
     k.box('BodyPlate', (0, -.05, .082), (.034, .22, .006), 'Secondary', .002)
     trigger_group(k, -.062, -.008, .010, .036)
-    k.cyl('Drum', (0, -.125, -.030), .049, .044, 'Secondary', axis='x', n=32, bevel=.004)
+    mag = k.pivot('Anim_Magazine', (0, -.125, .016))
+    k.cyl('Drum', (0, -.125, -.030), .049, .044, 'Secondary', axis='x', n=32, bevel=.004, parent=mag)
     for side in (-1, 1):
-        k.cyl('DrumCap_%d' % side, (side * .0245, -.125, -.030), .040, .006, 'Primary', axis='x', n=32, bevel=.002)
-    k.cyl('DrumHub', (0, -.125, -.030), .018, .054, k.glow_material, axis='x', n=24, bevel=.001)
+        k.cyl('DrumCap_%d' % side, (side * .0245, -.125, -.030), .040, .006, 'Primary', axis='x', n=32, bevel=.002, parent=mag)
+    k.cyl('DrumHub', (0, -.125, -.030), .018, .054, k.glow_material, axis='x', n=24, bevel=.001, parent=mag)
     k.box('DrumMount', (0, -.125, .016), (.040, .044, .018), 'Secondary', .004)
     k.box('BodyRear', (0, .095, .056), (.040, .05, .044), 'Secondary', .006)
     k.box('Stock', (0, .15, .056), (.036, .10, .040), 'Primary', .008)
@@ -384,7 +390,7 @@ def smg(k):
     bolt = k.pivot('Anim_Bolt', (0, 0, .060))
     k.box('BoltCover', (.0255, -.03, .060), (.006, .075, .022), 'Metal', .003, parent=bolt)
     k.cyl('BoltKnob', (.031, .00, .062), .007, .010, 'Secondary', axis='x', n=12, bevel=.001, parent=bolt)
-    smg_modules(k)
+    smg_modules(k, mag)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.407, zb))
     k.socket('Socket_SupportHand', (0, -.20, zb))
@@ -424,7 +430,8 @@ def fusion_rifle(k):
         a = 2 * math.pi * i / 3
         k.glow('CoilCell_%d' % i, (.0415 * math.cos(a), -.19, zb + .0415 * math.sin(a)), (.008, .016, .008), parent=coil)
     k.box('SightPost', (0, -.12, .108), (.008, .012, .022), 'Metal', .002)
-    fusion_rifle_modules(k, fins)
+    cell = k.pivot('Anim_Magazine', (.024, .220, .040))
+    fusion_rifle_modules(k, fins, cell)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.603, zb))
     k.socket('Socket_SupportHand', (0, -.17, .060))
@@ -440,9 +447,10 @@ def scout_rifle(k):
     k.box('ReceiverTop', (0, -.03, .083), (.026, .22, .010), 'Secondary', .003)
     rail(k, 'TopRail', -.14, .06, .092, .016)
     k.box('MagWell', (0, -.065, .036), (.032, .050, .016), 'Secondary', .004)
-    magazine(k, 'Magazine', [(-.088, .032), (-.044, .032), (-.044, -.045), (-.050, -.075), (-.090, -.075), (-.090, -.045)], .026)
+    mag = k.pivot('Anim_Magazine', (0, -.066, .032))
+    magazine(k, 'Magazine', [(-.088, .032), (-.044, .032), (-.044, -.045), (-.050, -.075), (-.090, -.075), (-.090, -.045)], .026, parent=mag)
     for side in (-1, 1):
-        k.glow('MagWindow_%d' % side, (side * .0135, -.066, -.018), (.002, .016, .030))
+        k.glow('MagWindow_%d' % side, (side * .0135, -.066, -.018), (.002, .016, .030), parent=mag)
     trigger_group(k, -.060, -.008, .012, .038)
     stock(k, 'Stock', [(.09, .090), (.24, .096), (.35, .088), (.37, .078), (.37, -.04), (.335, -.045), (.22, -.01), (.09, .03)],
           .036, 'Detail', (.040, .014, .13), .377, .02)
@@ -489,7 +497,8 @@ def rocket_launcher(k):
     k.cyl('Foregrip', (0, -.28, .008), .021, .13, 'Detail', n=20, bevel=.002)
     for y in (-.34, -.22):
         k.box('ForegripStrut_%d' % int(-y * 100), (0, y, .034), (.030, .018, .050), 'Secondary', .004)
-    hatch = k.pivot('Anim_Hatch', (0, -.28, .1555))
+    loader = k.pivot('Anim_Magazine', (0, 0, 0))
+    hatch = k.pivot('Anim_Hatch', (0, -.28, .1555), parent=loader)
     k.box('Hatch', (0, -.34, .1595), (.060, .12, .008), 'Primary', .003, parent=hatch)
     k.glow('HatchGlow', (0, -.34, .1645), (.030, .08, .002), parent=hatch)
     rocket_launcher_modules(k, hatch)
@@ -501,7 +510,7 @@ def rocket_launcher(k):
 
 # ---------------------------------------------------------------------------------------------- per-weapon modules
 # Additions of 0.8.0 (Gunmetal) on top of the 0.7 bodies: sockets, pivots, clip and the grip/support parts are unchanged.
-def pistol_modules(k, slide):
+def pistol_modules(k, slide, mag):
     """Sidearm: compensator with accent, rear ammo readout on the slide, exposed side cell, slide panels, baseplate."""
     k.box('SlideCompensator', (0, -.137, .0785), (.026, .020, .009), 'Secondary', .002, parent=slide)
     accent(k, 'SlideCompensatorAccent', (0, -.137, .0837), (.014, .016, .0015), parent=slide)
@@ -515,10 +524,10 @@ def pistol_modules(k, slide):
     accent(k, 'HammerAccent', (0, .060, .0775), (.0105, .010, .0015))
     r = k.tilt(k.grip_tilt)
     y, z = along(k, 0, -.102 / 2 - .0125)
-    accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r)
+    accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r, parent=mag)
 
 
-def assault_rifle_modules(k):
+def assault_rifle_modules(k, mag):
     """Assault rifle: ammo readouts (side, optic back), receiver panels, stock cell window, handguard fins, accent cap."""
     side_armor(k, 'UpperArmor', [(-.178, .077), (-.088, .077), (-.074, .097), (-.090, .108), (-.165, .108), (-.178, .097)], .025)
     side_armor(k, 'LowerArmor', [(-.093, .043), (-.052, .043), (-.040, .074), (-.093, .074)], .023, .0025, 'Metal')
@@ -532,7 +541,7 @@ def assault_rifle_modules(k):
     k.bolts('StockBolt', [(.0215, .200, .050), (.0215, .290, .050)], radius=.0026, depth=.003)
     heat_sink(k, 'HandguardFin', (0, -.175, .1145), 5, .03, (.042, .006, .005))
     accent(k, 'HandguardCap', (0, -.3425, .085), (.060, .005, .056))
-    accent(k, 'MagazineBase', (0, -.102, -.101), (.034, .044, .007))
+    accent(k, 'MagazineBase', (0, -.102, -.101), (.034, .044, .007), parent=mag)
     for side in (-1, 1):
         k.box('MuzzleFin_%d' % side, (side * .022, -.55, .085), (.006, .04, .014), 'Metal', .0015)
     k.cyl('ChargingConduit', (.026, -.110, .070), .0035, .075, 'Detail', n=10, bevel=.0005)
@@ -582,26 +591,26 @@ def sniper_rifle_modules(k):
         panel(k, 'ReceiverPanel_%d' % side, (side * .0228, .040, .066), (.0025, .06, .024))
 
 
-def smg_modules(k):
+def smg_modules(k, mag):
     """SMG: side readout, top arc cell, drum bolts, shroud spine, stock accent."""
     display(k, 'AmmoDisplay', (.0246, .046, .052), (.0016, .030, .016), 'x', bars=3)
     energy_cell(k, 'ArcCell', (.012, -.110, .0875), .006, .050)
     k.bolts('DrumBolt', [(.0278, -.125 + .028 * math.cos(a), -.030 + .028 * math.sin(a))
-                         for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4)], radius=.003, depth=.003)
+                         for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4)], radius=.003, depth=.003, parent=mag)
     k.box('ShroudSpine', (0, -.255, .0855), (.010, .14, .006), 'Secondary', .0015)
     accent(k, 'StockAccent', (0, .150, .0765), (.020, .060, .002))
     for side in (-1, 1):
         panel(k, 'BodyPanel_%d' % side, (side * .0245, -.125, .062), (.0025, .06, .020))
 
 
-def fusion_rifle_modules(k, fins):
+def fusion_rifle_modules(k, fins, cell):
     """Fusion rifle: side charge readout, side heat sinks, rear power cell, accent fin tips, core braces."""
     display(k, 'ChargeDisplay', (.0286, .040, .080), (.0016, .045, .014), 'x', bars=5)
     for side in (-1, 1):
         heat_sink(k, 'HeatVent_%d' % side, (side * .0300, -.020, .045), 4, .012, (.004, .004, .020))
         accent(k, 'FinAccent_%d' % side, (side * .045, -.560, .075), (.0112, .020, .047), parent=fins[side])
         k.box('CoreBrace_%d' % side, (side * .022, -.205, .075), (.010, .022, .030), 'Secondary', .002)
-    energy_cell(k, 'PowerCell', (.024, .220, .040), .008, .080)
+    energy_cell(k, 'PowerCell', (.024, .220, .040), .008, .080, parent=cell)
     panel(k, 'BodyPlate', (.0290, -.090, .080), (.0025, .07, .018))
 
 

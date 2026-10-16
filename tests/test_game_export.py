@@ -627,7 +627,7 @@ class EquipmentChannelTests(unittest.TestCase):
     def test_pipeline_default_is_the_export_default(self):
         source = (ROOT / "toolgen/generate_tools.py").read_text()
         self.assertIn("GAME_CONTRACT = %d " % ge.CONTRACT_FORMAT, source)
-        self.assertEqual((1, 2), ge.CONTRACT_FORMATS)
+        self.assertEqual((1, 2, 3), ge.CONTRACT_FORMATS)
         self.assertIn('"--contract", "{game_contract}"', source)
 
     def test_shipped_channels_are_valid(self):

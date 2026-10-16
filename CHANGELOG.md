@@ -1,5 +1,20 @@
 # Änderungen
 
+## 0.9.0 – Cadence (16.10.2026)
+
+Ego-Zustandsclips für alle Ego-Modelle: Waffen 15 (Idle, Walk, SprintIn/Sprint/SprintOut, Fire, AimIn/AimIdle/AimFire/AimOut, Draw,
+Holster, Inspect_A/B, Reload), Werkzeuge 8 ([EGO_CLIPS](docs/EGO_CLIPS.md), [TECHNIK](docs/TECHNIK.md) › Ego-Clips).
+
+- Vertragsänderung (Format 3, abwärtskompatibel): neue Datei `<Asset>_FPS_Game_Clips.fbx/.glb` (ein Take `<Name>_EgoClips`), `clips[0]` bleibt
+  `<Name>_Use` in der Hauptdatei, danach je Clip Framebereich, Loop, Posen, Events; Block `ego_clips` (Namen als Konstanten, Übergänge).
+  Mindestversion des Abnehmers: keine für den bisherigen Einbau (CE ab 0.64 liest `clips[0]`); ältere Fassung: `--contract 2`.
+- Abgestimmt mit CE 0.66: Fire/AimFire höchstens Abklingzeit der Waffe (Pistole 0,6 s … Raketenwerfer 2,0 s), Schuss bei 0, Fusion ohne
+  Aufladen; Draw 0,5 s / Holster 0,33 s (Pistole 0,38/0,29 s); Vertragsfelder `state`, `from`, `to`. Reload bleibt (Auftrag des Nutzers).
+- Geprüft je Frame: Handgelenk < 55° (Waffen max. 52,7°), Hände im Bild, Ellbogenhälften außerhalb (auch 1,7×; Ausnahme Stützarm beim Zielen,
+  Entscheidung des Nutzers), Kontakt, Clipgrenzen exakt, kein Zucken, Visier in AimIdle mittig; Nachladeteile `Anim_Magazine`/`Anim_EnergyCell`.
+- Prüfung: `./check` (183 Tests), `--tier standard` alle 13 grün, Wiederholung 13 Cache-Treffer, `verify_output.py` 430 Prüfungen,
+  `--contract 2` quick (Pistole). Codex: Clip-Tabelle und Waffenklassen umgesetzt; Prüfung `sol` 5 Befunde, 4 behoben (1 unzutreffend).
+
 ## 0.8.0 – Gunmetal (16.10.2026)
 
 Waffen 1–9 detailreicher und mit den Ausrüstungs-Slots von Cube Escape ([TECHNIK](docs/TECHNIK.md) › Waffen-Module, [UNITY_EINBAU](docs/UNITY_EINBAU.md) › Ausrüstungs-Slots).

@@ -373,6 +373,42 @@ Werte (0.8.0, `output/_standard`; Dreiecke LOD0 / LOD1, Quelle = vor dem Export;
 | 8 Spurgewehr | 16 452 → 6 998 / 2 098 | 2 | 29 916 → 15 994 | 0.0 mm / 0.2 mm |
 | 9 Raketenwerfer | 15 352 → 7 998 / 2 393 | 2 | 28 816 → 15 994 | 0.0 mm / 0.0 mm |
 
+## Ego-Clips (0.9.0 Cadence)
+
+Zustandsclips der Ego-Modelle nach dem Muster der Destiny-2-Ego-Waffen; Einbau: [UNITY_EINBAU](UNITY_EINBAU.md) › Ego-Clips,
+Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
+
+- Daten: `data/ego_clips.json` (Clipliste mit Länge, Loop, Start-/Endpose, Fadenkreuz frei, unterbrechbar, Events; `defaults` und
+  `classes` je Waffe; `wrist`). Bewegung: `scripts/tool_assets/ego_clips.py` (reines Python, je Clip eine Funktion Frame → Pose),
+  Inspect und Reload je Klasse in `ego_weapon_motions.py`. Die Pose zählt gegen die Ruhepose (Frame 1 von Use) in Kameraachsen:
+  `pitch` (Mündung hoch), `yaw` (Mündung links), `roll`, `twist` (Drehung um die Unterarmachse des Griffarms, kippt die Waffe ohne
+  das Handgelenk zu beugen), `right`/`up`/`back`, `aim` (Anteil der Visierpose), `follow`, `support`/`detached` (Stützhand), `part`
+  (Nachladeteil `Anim_<Teil>` in Waffenachsen).
+- `first_person.py` keyt die Clips hinter Use auf derselben Zeitleiste (ab Frame 101, drei Frames Abstand) an `Viewmodel_Motion`,
+  der Stützhand und dem Nachladeteil; die Szene und die Hauptexporte behalten 1–97. Visierpose: Waffenachse parallel zur Blickrichtung
+  ohne Rollen, Visierlinie (Oberkante der Visierteile + `eye_above_m`, Optiken durch die Mitte) auf der Bildmitte in der Tiefe der Ruhepose
+  abzüglich `pull_back_m`.
+- Arme: Der Unterarm behält in den Clips seine Bildrichtung aus der Ruhepose (nur um `follow` des Waffendrehens mitgedreht); beugt das
+  Handgelenk über max(45°, Ruhewert + 4°) (höchstens Grenze − 1°), schwenkt der Unterarm erst seitlich zur Knöchelrichtung (Ellbogen bleibt
+  unter dem Bild, Ellbogen auf der Handflächenseite), dann um den Rest hoch. Grund: Die Ruhepose aus 0.8.0 liegt schon nahe an allen
+  Grenzen (Unterarm-Rand der Pistole −0,009 Bildhöhe, Handgelenk 48,5°); frei sind Drehen um die Unterarmachse, Verschieben zur Bildmitte und
+  Mündung hoch; Absenken kostet Handrand, Heben und Wegschieben kosten den Unterarm-Rand, Mündung runter und Gieren das Handgelenk.
+- Unterarm-Rahmen: Käme die Ellbogenhälfte ins Bild, dreht `plan_corrections` den Unterarm um den kleinsten Winkel um EINE
+  Achse je Arm (aus zwölf, für die ganze Zeitleiste) und glättet die Winkel je Clip (höchstens 1,5° Zunahme je Frame, Clipenden
+  exakt); das Handgelenk darf dafür bis Grenze − 0,5°. Ausnahme: Stützarm in den Ziel-Clips (`support_forearm_visible`,
+  Entscheidung des Nutzers), dort wird nur gemessen (`support_forearm_visible_max_screen_y`). Zucken prüft
+  `ego_forearm_max_twitch_degrees` (Änderung der Drehrate je Frame ≤ 2°, Clips unter 16 Frames halb gewichtet).
+- Prüfung je Frame (`validate`, `ego_clip_report`): alle bisherigen Ego-Prüfungen über Use und alle Clips, Clipgrenzen exakt in der
+  benannten Pose (1e-4), Kontakt außer im `detached`-Fenster, Fadenkreuz nur bei `reticle_free`, Visierlinie in AimIdle auf der Mitte
+  (±0,002) und Visier zu 90 % frei von Händen, keine Material- oder Farbanimation. `qa_viewmodel.json` › `ego_clips` nennt je Clip den
+  größten Handgelenkwert und die Unterarm-Nachführung.
+- Fire/AimFire beginnen ein Frame vor dem Schuss des Use-Clips und laufen bis Rückstoß und Mechanik ruhen (`fire_end_frame`), auf
+  `fire_cooldown_s` zeitgerafft (`fire_scale`, Abstimmung mit CE 0.66); Teile, die beim Schuss nicht ruhen (Aufladen des
+  Fusionsgewehrs), bleiben in Fire in Ruhe.
+- Spiel-Export (`game_export.py`, Vertrag 3): Clips-Datei `<Asset>_FPS_Game_Clips.fbx/.glb` (Szenenbereich und manuelle Aktionsbereiche
+  vorübergehend auf die Ego-Zeitleiste). Teile, die die Clips nicht selbst stellen (Mechanik, Leuchten), bekommen in Fire/AimFire die Werte des Use-Clips ab dem Schuss (Schlitten, Verschluss, Pumpe; `fire_end_frame` verlängert Fire bis zur Ruhe), sonst Ruhekeys an jedem Clipende (`clip_keys`); ohne Keys im Clipbereich ließe glTF sie
+  fallen. Reimport beider Clips-Dateien an Clipenden, -mitten und Events; Bildausschnitt des reduzierten Modells an denselben Frames.
+
 ## Cache und Worker
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer
