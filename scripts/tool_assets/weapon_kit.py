@@ -22,6 +22,7 @@ import bmesh
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
+import sight
 import weapon_designs
 from weapon_gif import FRAMES
 
@@ -33,6 +34,7 @@ LAST_FRAME = 97
 ENLARGEMENT = 1.0
 HAND_POSITION = Vector((-.26, -.6, -.2))
 HORIZONTAL_FOV = 75
+FIRE_MARKER = 'Fire'
 
 
 class Kit:
@@ -179,6 +181,7 @@ def world(key):
     for name in ('Socket_Hand', 'Socket_Muzzle', 'Socket_SupportHand', 'Socket_CenterOfMass'):
         if not any(obj.name == name for obj in STATE['OBJECTS']):
             raise RuntimeError('Design %s lacks %s' % (key, name))
+    sight_report = sight_sockets(kit, key)
     qa = HELPER['validate']()
     qa.update(tags=['tool', 'weapon', spec['class'], spec['element'], 'handheld', 'robot-classic', 'white-shell'],
               pivot='asset root = grip centre (Socket_Hand); forward -Y, up +Z',
@@ -186,6 +189,7 @@ def world(key):
               weapon={'class': spec['class'], 'element': spec['element'],
                       'grip_tilt_degrees': tool['hold']['grip_tilt_degrees']})
     qa['sockets_checked'] = socket_report(spec)
+    qa['sight'] = sight_report
     (out / 'qa_geometry.json').write_text(json.dumps(qa, indent=2) + '\n')
     camera, target = HELPER['presentation'](scene)
     center = Vector(spec['view_center'])
@@ -210,6 +214,27 @@ def world(key):
 
 def render(scene, camera, spec, path, offset, factor):
     HELPER['render'](scene, camera, Vector(spec['view_center']), path, offset, spec['view_scale'] * factor)
+
+
+def sight_sockets(kit, key):
+    """Socket_Sight on the line of sight of the AimIdle pose (sight.py, DESIGNS sight), Socket_Eye behind it for scopes;
+    rotation identity (Unity +Z = view along the bore, +Y = up)."""
+    rule = design(key)['sight']
+    bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    bounds = {}
+    for obj in STATE['OBJECTS']:
+        if obj.type == 'MESH':
+            evaluated = obj.evaluated_get(graph)
+            points = [evaluated.matrix_world @ vertex.co for vertex in evaluated.data.vertices]
+            if points:
+                bounds[obj.name] = ([min(p[i] for p in points) for i in range(3)], [max(p[i] for p in points) for i in range(3)])
+    found = sight.line(bounds, rule)
+    kit.socket('Socket_Sight', found['sight'])
+    if found['eye']:
+        kit.socket('Socket_Eye', found['eye'])
+    return {'kind': rule['kind'], 'parts': found['parts'], 'mode': rule['mode'], 'socket_sight_m': list(found['sight']),
+            'socket_eye_m': list(found['eye']) if found['eye'] else None}
 
 
 def socket_report(spec):
@@ -472,6 +497,10 @@ def animate(key):
             animate_object(owned(scene, move['node']), move, clip)
         scene.frame_start, scene.frame_end = 1, LAST_FRAME
         scene.render.fps = FPS
+        # Event marker of the shot (contract clips[0].events, Cube Escape's game sync): the recoil frame of the Ego profile.
+        for marker in [marker for marker in scene.timeline_markers if marker.name == FIRE_MARKER]:
+            scene.timeline_markers.remove(marker)
+        scene.timeline_markers.new(FIRE_MARKER, frame=spec['fire_frame'])
         root['ce_action_clip'] = clip
         root['ce_autoplay'] = False
         root['ce_loop'] = False
@@ -486,6 +515,7 @@ def animate(key):
         print('WEAPON_USE_CLIP_OK', key, suffix, json.dumps({k: report[k] for k in ('clip', 'root_curves', 'max_travel_m')}))
     contract = {'clip': clip, 'frames': LAST_FRAME, 'fps': FPS, 'loop': False, 'autoplay': False,
                 'trigger': spec['trigger'], 'returns_to_rest': True, 'root_curves': False,
+                'events': [{'name': FIRE_MARKER, 'frame': spec['fire_frame']}],
                 'moving_nodes': sorted({move['node'] for move in spec['use_clip']}),
                 'runtime': 'Play once on the explicit trigger; the clip animates only child nodes of the root and '
                            'ends in the rest pose. Cube Escape keeps the weapon logic (no ammunition, no rules here).'}

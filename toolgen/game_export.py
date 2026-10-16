@@ -990,6 +990,15 @@ def hold_block(tool):
             "muzzle_axis": {"blender": muzzle, "unity": [round(v, 6) + 0.0 for v in unity_position(muzzle)]},
             "grip_to_muzzle_degrees": round(math.degrees(math.acos(round(sum(a * b for a, b in zip(grip, muzzle)), 9))), 4),
             "element": tool.get("element"),
+            **({"sight_socket": "Socket_Sight", "sight_kind": hold["sight_kind"],
+                "eye_socket": "Socket_Eye" if hold["sight_kind"] == "scope" else None,
+                "ads_eye_distance_m": hold["eye_distance_m"],
+                "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
+                              "optic, eyepiece of a scope); its +Z (Unity) looks along the bore, +Y is up. Aiming down "
+                              "sights puts it on the camera axis at ads_eye_distance_m (first-person metres; Toolgen "
+                              "checks that pose, qa_game_fps.json ads). Scopes: Socket_Eye on the same line, "
+                              "ads_eye_distance_m behind Socket_Sight in the first-person model."}
+               if "sight_kind" in hold else {}),
             "note": "Align the hand's grip axis (palm to fingertips along the grip) with grip_axis and let the model's "
                     "muzzle_axis point along the character's aim direction; Socket_Hand sits in the middle of the pistol "
                     "grip and Socket_SupportHand in the middle of the handguard (support_grip underhand), or on the left of "
@@ -1272,6 +1281,40 @@ def check_budget(checks, contract):
     checks.add("triangle_budget", lod0 <= budget["triangles_limit"] * 1.05 and lod0 <= budget["merged_triangles"],
                lod0_triangles=lod0, limit=budget["triangles_limit"], merged_triangles=budget["merged_triangles"],
                kept_ratio=budget["kept_ratio"])
+
+
+def check_ads(checks, work, contract, tool):
+    """Aim down sights (Cube Escape 0.66, T6): Socket_Sight (and Socket_Eye for scopes) in the contract with the tool's
+    rotation, and the ADS target pose of the authored model (qa_viewmodel.json ads_target: framing, near clip, wrists) passed.
+    Returns the block for qa_game_fps.json ``ads``."""
+    hold = tool["hold"]
+    anchors = {anchor["name"]: anchor for anchor in contract["anchors"]}
+    sight, eye = anchors.get("Socket_Sight"), anchors.get("Socket_Eye")
+    scope = hold["sight_kind"] == "scope"
+    distance = None
+    if sight and eye and sight["parent"] == eye["parent"]:
+        a, b = sight["blender"]["location"], eye["blender"]["location"]
+        distance = math.dist(a, b)
+    rotation_ok = bool(sight) and (not eye or sight["blender"]["rotation_wxyz"] == eye["blender"]["rotation_wxyz"])
+    eye_ok = (eye is None and not scope) or (scope and distance is not None
+                                              and abs(distance - hold["eye_distance_m"]) <= 1e-4)
+    checks.add("sight_anchors", bool(sight) and rotation_ok and eye_ok, sight_kind=hold["sight_kind"],
+               socket_eye=bool(eye), sight_to_eye_m=distance, eye_distance_m=hold["eye_distance_m"])
+    qa = json.loads((work / "qa_viewmodel.json").read_text())
+    ads = qa.get("ads_target")
+    # Binding: the sight reaches the screen centre and some eye distance keeps the framing rule. Whether the game
+    # profile's distance (hold.eye_distance_m) keeps it is reported (ads.passed) for Cube Escape to tune, not binding.
+    centred = bool(ads) and all(max(abs(value - .5) for value in entry["sight_screen"]) <= .002
+                                for entry in ads["configurations"])
+    on_line = bool(qa.get("ego_clips", {}).get("sight_socket", {}).get("ok"))
+    checks.add("ads_target_pose", centred and on_line and bool(ads["eye_distance_range_m"]),
+               eye_distance_m=hold["eye_distance_m"], profile_distance_passed=bool(ads) and ads["passed"],
+               eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
+               failures_at_profile_distance=(ads or {}).get("failures", ["qa_viewmodel.json has no ads_target"]),
+               sight_socket_on_aim_line=on_line)
+    return ads and dict(ads, sight_kind=hold["sight_kind"], sight_socket_on_aim_line=qa["ego_clips"].get("sight_socket"),
+                        source="qa_viewmodel.json ads_target (authored model; the game model keeps the same anchors and "
+                               "meshes within viewmodel_framing's tolerance)")
 
 
 def collider_box(collider):
@@ -1651,6 +1694,8 @@ def main():
         phase = time.perf_counter()
         check_blend(checks, files["blend"], source, expected, palette)
         check_budget(checks, contract)
+        if args.viewmodel and tool.get("hold", {}).get("sight_kind"):
+            report["ads"] = check_ads(checks, work, contract, tool)
         if not args.viewmodel:
             check_colliders(checks, contract, source, args.tool)
             required = expected["sockets_on_tool_required"]

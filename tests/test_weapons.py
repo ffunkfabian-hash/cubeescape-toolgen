@@ -14,7 +14,9 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ASSETS))
 sys.path.insert(0, str(ROOT / "tests"))
 
+import ego_clips  # noqa: E402
 import game_export as ge  # noqa: E402
+import sight  # noqa: E402
 import weapon_designs as designs  # noqa: E402
 from test_game_export import PALETTE, material_calls  # noqa: E402
 
@@ -350,9 +352,131 @@ class HoldContractTests(unittest.TestCase):
             self.assertAlmostEqual(1.0, math.dist([0, 0, 0], turned), places=5)
             self.assertAlmostEqual(hold["grip_axis"]["unity"][1], turned[1], places=6, msg="the yaw is about Y: up stays")
 
+    def test_hold_block_names_the_sight(self):
+        for key, tool in WEAPONS.items():
+            with self.subTest(weapon=key):
+                hold = ge.hold_block(tool)
+                self.assertEqual("Socket_Sight", hold["sight_socket"])
+                self.assertEqual(tool["hold"]["sight_kind"], hold["sight_kind"])
+                self.assertEqual("Socket_Eye" if hold["sight_kind"] == "scope" else None, hold["eye_socket"])
+                self.assertEqual(tool["hold"]["eye_distance_m"], hold["ads_eye_distance_m"])
+        old = ge.hold_block({"hold": {"grip_tilt_degrees": 14, "two_handed": True}})
+        self.assertNotIn("sight_socket", old, "tools without a sight keep the 0.10 hold block")
+
     def test_opening_probes_cover_every_weapon(self):
         for key in WEAPONS:
             self.assertIn(key, ge.OPENING_PROBES)
+
+
+class SightTests(unittest.TestCase):
+    """T1 (Cube Escape 0.66 Deadeye): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
+    KINDS = {"pistol": "iron", "assault_rifle": "reflex", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
+             "smg": "reflex", "fusion_rifle": "energy", "scout_rifle": "scope", "rocket_launcher": "iron"}
+    # Cube Escape 0.66 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
+    # heavy 0.30, scout rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
+    EYE = {"pistol": .30, "assault_rifle": .26, "pulse_rifle": .26, "shotgun": .28, "sniper_rifle": .22, "smg": .24,
+           "fusion_rifle": .26, "scout_rifle": .20, "rocket_launcher": .30}
+
+    def test_sight_kinds_and_eye_distances(self):
+        for key, tool in WEAPONS.items():
+            with self.subTest(weapon=key):
+                self.assertEqual(self.KINDS[key], tool["hold"]["sight_kind"])
+                self.assertEqual(self.KINDS[key], designs.DESIGNS[key]["sight"]["kind"])
+                self.assertEqual(self.EYE[key], tool["hold"]["eye_distance_m"])
+                self.assertIn(tool["hold"]["sight_kind"], sight.SIGHT_KINDS)
+
+    def test_design_rule_is_the_aim_idle_line(self):
+        data = ego_clips.load()
+        for key, tool in WEAPONS.items():
+            rule, ads = designs.DESIGNS[key]["sight"], ego_clips.class_params(data, key)["ads"]
+            scale = PROFILES[key]["tool_scale"]
+            with self.subTest(weapon=key):
+                self.assertEqual(ads.get("sight_mode", "top"), rule["mode"])
+                if ads.get("sight_parts"):
+                    self.assertEqual(sorted(ads["sight_parts"]), sorted(rule["parts"]))
+                else:                       # marker match (pistol, smg): every listed part carries a marker
+                    self.assertTrue(all(any(marker in part for marker in ads["sight_markers"]) for part in rule["parts"]))
+                if rule["mode"] == "top":
+                    self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * scale, places=12)
+                if rule["kind"] == "scope":
+                    self.assertAlmostEqual(tool["hold"]["eye_distance_m"], rule["eye_back_m"] * scale, places=12)
+                else:
+                    self.assertNotIn("eye_back_m", rule)
+                # Names the build function writes literally (scope() and the rear-sight loop build theirs inside).
+                built = {name for _, name in build_calls(key)} | {"ScopeTube", "RearSight_-1", "RearSight_1"}
+                self.assertTrue(set(rule["parts"]) <= built, (key, rule["parts"]))
+
+    def test_line_puts_the_socket_at_the_rear_of_the_sight(self):
+        bounds = {"SM_PG_Front": ((-.003, -.13, .07), (.003, -.12, .08)), "SM_PG_Rear": ((-.01, .03, .07), (.01, .04, .08)),
+                  "SM_PG_Body": ((-.02, -.2, -.1), (.02, .1, .07))}
+        found = sight.line(bounds, {"kind": "iron", "parts": ["Front", "Rear"], "mode": "top", "above_m": .01})
+        self.assertEqual(["SM_PG_Front", "SM_PG_Rear"], found["parts"])
+        self.assertEqual((0.0, .04, .09), tuple(round(v, 9) for v in found["sight"]))
+        self.assertIsNone(found["eye"])
+        scope = {"SM_PG_ScopeTube": ((-.02, -.16, .12), (.02, .08, .16)),
+                 "SM_PG_ScopeEyepiece": ((-.024, .05, .116), (.024, .11, .164))}
+        found = sight.line(scope, {"kind": "scope", "parts": ["ScopeTube"], "mode": "center", "above_m": 0.0, "eye_back_m": .3})
+        self.assertEqual((0.0, .11, .14), tuple(round(v, 9) for v in found["sight"]), "eyepiece rear, tube axis")
+        self.assertEqual((0.0, .41, .14), tuple(round(v, 9) for v in found["eye"]))
+        with self.assertRaises(AssertionError):
+            sight.line(bounds, {"kind": "iron", "parts": ["Missing"], "mode": "top", "above_m": 0.0})
+
+    def test_fire_marker_is_the_ego_shot(self):
+        """T2: the Use clip's marker Fire sits on motion.fire_frame of data/viewmodels.json (weapon_kit.animate)."""
+        kit = (ASSETS / "weapon_kit.py").read_text()
+        self.assertIn("scene.timeline_markers.new(FIRE_MARKER, frame=spec['fire_frame'])", kit)
+        self.assertIn("FIRE_MARKER = 'Fire'", kit)
+        for key in WEAPONS:
+            with self.subTest(weapon=key):
+                self.assertEqual(PROFILES[key]["motion"]["fire_frame"], designs.DESIGNS[key]["fire_frame"])
+                self.assertTrue(1 < designs.DESIGNS[key]["fire_frame"] < 97)
+
+    def test_ego_fire_clips_carry_the_fire_event(self):
+        data = ego_clips.load()
+        for key, tool in WEAPONS.items():
+            clips, _ = ego_clips.clip_list(data, tool, PROFILES[key]["motion"])
+            for clip in clips:
+                if clip["suffix"] in ("Fire", "AimFire"):
+                    names = {event["name"]: event["frame"] for event in clip["events"]}
+                    self.assertEqual(names["Shot"], names["Fire"], (key, clip["name"]))
+
+
+class AdsCheckTests(unittest.TestCase):
+    """game_export.check_ads: the binding part (sight centred, socket on the AimIdle line, some eye distance keeps the
+    framing) against the reported part (the game profile's distance)."""
+    TOOL = {"hold": {"sight_kind": "scope", "eye_distance_m": .22}}
+
+    def contract(self, eye_y=.22):
+        socket = {"parent": "Viewmodel_Hold", "blender": {"location": [0.0, .1, .2], "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]}}
+        eye = {"parent": "Viewmodel_Hold", "blender": {"location": [0.0, .1 + eye_y, .2], "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]}}
+        return {"anchors": [dict(socket, name="Socket_Sight"), dict(eye, name="Socket_Eye")]}
+
+    def run_check(self, ads, contract=None, on_line=True):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            (work / "qa_viewmodel.json").write_text(json.dumps({"ads_target": ads, "ego_clips": {"sight_socket": {"ok": on_line}}}))
+            checks = ge.Checks()
+            block = ge.check_ads(checks, work, contract or self.contract(), self.TOOL)
+            return checks.results, block
+
+    def ads(self, passed, distances, screen=(.5, .5)):
+        return {"passed": passed, "eye_distance_range_m": distances, "failures": [] if passed else ["too close"],
+                "eye_distance_m": .22, "configurations": [{"sight_screen": list(screen)}]}
+
+    def test_profile_distance_is_reported_not_binding(self):
+        results, block = self.run_check(self.ads(False, [.3, .5]))
+        self.assertTrue(results["ads_target_pose"]["passed"])
+        self.assertFalse(results["ads_target_pose"]["profile_distance_passed"])
+        self.assertTrue(results["sight_anchors"]["passed"])
+        self.assertEqual("scope", block["sight_kind"])
+
+    def test_binding_failures(self):
+        self.assertFalse(self.run_check(self.ads(True, None))[0]["ads_target_pose"]["passed"], "no distance keeps the framing")
+        self.assertFalse(self.run_check(self.ads(True, [.2, .4], (.51, .5)))[0]["ads_target_pose"]["passed"], "off centre")
+        self.assertFalse(self.run_check(self.ads(True, [.2, .4]), on_line=False)[0]["ads_target_pose"]["passed"])
+        self.assertFalse(self.run_check(self.ads(True, [.2, .4]), self.contract(.3))[0]["sight_anchors"]["passed"],
+                         "Socket_Eye at the wrong distance")
 
 
 class FramesTests(unittest.TestCase):

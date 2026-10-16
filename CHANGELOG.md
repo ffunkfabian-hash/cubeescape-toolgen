@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.11.0 – Sightline (16.10.2026)
+
+Zulieferung T1/T2/T6 für Cube Escape 0.66 „Deadeye“ (Bericht: [docs/versions/0.11.md](docs/versions/0.11.md)), Vertrag 3 nur erweitert.
+
+- `Socket_Sight` je Waffe (Scopes zusätzlich `Socket_Eye`), `hold.sight_socket`/`sight_kind`/`eye_socket`/`ads_eye_distance_m`.
+- Marker `Fire` im Use-Clip am `fire_frame`; Fire/AimFire der Ego-Clips nennen `Fire` neben `Shot`.
+- Prüfung: Handkontakt je Clipbild, ADS-Zielpose mit Bildausschnitt in `qa_game_fps.json` › `ads` (Befund: Profilabstände zu nah außer Scharfschützengewehr).
+- Mindestversion des Abnehmers: keine (Cube Escape 0.66 liest `Socket_Sight` erst in Phase 4); Fassung ohne die neuen Anker: Stand `fa46ca1` (0.10.0) erzeugen.
+
 ## 0.10.0 – Steadyhand (16.10.2026)
 
 Pistole beidhändig im Becher-Griff wie in Destiny (Wunsch des Nutzers über die CE-Sitzung Ego-Waffenhaltung): die linke Hand umfasst die

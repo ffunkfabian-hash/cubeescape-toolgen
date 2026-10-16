@@ -31,10 +31,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | SprintIn | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | rest → sprint | Ja | Ja | — |
 | Sprint | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 / 20 / 20 / 20 | Ja | sprint → sprint | Ja | Ja | FootL, FootR |
 | SprintOut | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | sprint → rest | Ja | Ja | Ready |
-| Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot |
+| Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot, Fire |
 | AimIn | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
 | AimIdle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | — / — / — / — | Ja | aim → aim | Nein | Ja | — |
-| AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot |
+| AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot, Fire |
 | AimOut | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
 | Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
 | Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
@@ -54,10 +54,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `Pistol_SprintIn` | 213–221 | 0.33 | — |
 | `Pistol_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `Pistol_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `Pistol_Fire` | 261–275 | 0.58 | Shot 0 |
+| `Pistol_Fire` | 261–275 | 0.58 | Shot 0, Fire 0 |
 | `Pistol_AimIn` | 279–287 | 0.33 | Aimed 8 |
 | `Pistol_AimIdle` | 291–363 | 3.00 | — |
-| `Pistol_AimFire` | 367–381 | 0.58 | Shot 0 |
+| `Pistol_AimFire` | 367–381 | 0.58 | Shot 0, Fire 0 |
 | `Pistol_AimOut` | 385–393 | 0.33 | — |
 | `Pistol_Draw` | 397–406 | 0.38 | Ready 9 |
 | `Pistol_Holster` | 410–417 | 0.29 | Holstered 7 |
@@ -75,10 +75,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `SubmachineGun_SprintIn` | 213–220 | 0.29 | — |
 | `SubmachineGun_Sprint` | 224–244 | 0.83 | FootL 0, FootR 10 |
 | `SubmachineGun_SprintOut` | 248–255 | 0.29 | Ready 7 |
-| `SubmachineGun_Fire` | 259–266 | 0.29 | Shot 0 |
+| `SubmachineGun_Fire` | 259–266 | 0.29 | Shot 0, Fire 0 |
 | `SubmachineGun_AimIn` | 270–277 | 0.29 | Aimed 7 |
 | `SubmachineGun_AimIdle` | 281–353 | 3.00 | — |
-| `SubmachineGun_AimFire` | 357–364 | 0.29 | Shot 0 |
+| `SubmachineGun_AimFire` | 357–364 | 0.29 | Shot 0, Fire 0 |
 | `SubmachineGun_AimOut` | 368–375 | 0.29 | — |
 | `SubmachineGun_Draw` | 379–391 | 0.50 | Ready 12 |
 | `SubmachineGun_Holster` | 395–403 | 0.33 | Holstered 8 |
@@ -96,10 +96,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `AssaultRifle_SprintIn` | 213–221 | 0.33 | — |
 | `AssaultRifle_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `AssaultRifle_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `AssaultRifle_Fire` | 261–270 | 0.38 | Shot 0 |
+| `AssaultRifle_Fire` | 261–270 | 0.38 | Shot 0, Fire 0 |
 | `AssaultRifle_AimIn` | 274–282 | 0.33 | Aimed 8 |
 | `AssaultRifle_AimIdle` | 286–358 | 3.00 | — |
-| `AssaultRifle_AimFire` | 362–371 | 0.38 | Shot 0 |
+| `AssaultRifle_AimFire` | 362–371 | 0.38 | Shot 0, Fire 0 |
 | `AssaultRifle_AimOut` | 375–383 | 0.33 | — |
 | `AssaultRifle_Draw` | 387–399 | 0.50 | Ready 12 |
 | `AssaultRifle_Holster` | 403–411 | 0.33 | Holstered 8 |
@@ -117,10 +117,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `ScoutRifle_SprintIn` | 213–221 | 0.33 | — |
 | `ScoutRifle_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `ScoutRifle_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `ScoutRifle_Fire` | 261–280 | 0.79 | Shot 0 |
+| `ScoutRifle_Fire` | 261–280 | 0.79 | Shot 0, Fire 0 |
 | `ScoutRifle_AimIn` | 284–293 | 0.38 | Aimed 9 |
 | `ScoutRifle_AimIdle` | 297–369 | 3.00 | — |
-| `ScoutRifle_AimFire` | 373–392 | 0.79 | Shot 0 |
+| `ScoutRifle_AimFire` | 373–392 | 0.79 | Shot 0, Fire 0 |
 | `ScoutRifle_AimOut` | 396–405 | 0.38 | — |
 | `ScoutRifle_Draw` | 409–421 | 0.50 | Ready 12 |
 | `ScoutRifle_Holster` | 425–433 | 0.33 | Holstered 8 |
@@ -138,10 +138,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `PulseRifle_SprintIn` | 213–221 | 0.33 | — |
 | `PulseRifle_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `PulseRifle_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `PulseRifle_Fire` | 261–275 | 0.58 | Shot 0 |
+| `PulseRifle_Fire` | 261–275 | 0.58 | Shot 0, Fire 0 |
 | `PulseRifle_AimIn` | 279–287 | 0.33 | Aimed 8 |
 | `PulseRifle_AimIdle` | 291–363 | 3.00 | — |
-| `PulseRifle_AimFire` | 367–381 | 0.58 | Shot 0 |
+| `PulseRifle_AimFire` | 367–381 | 0.58 | Shot 0, Fire 0 |
 | `PulseRifle_AimOut` | 385–393 | 0.33 | — |
 | `PulseRifle_Draw` | 397–409 | 0.50 | Ready 12 |
 | `PulseRifle_Holster` | 413–421 | 0.33 | Holstered 8 |
@@ -159,10 +159,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `Shotgun_SprintIn` | 213–223 | 0.42 | — |
 | `Shotgun_Sprint` | 227–247 | 0.83 | FootL 0, FootR 10 |
 | `Shotgun_SprintOut` | 251–261 | 0.42 | Ready 10 |
-| `Shotgun_Fire` | 265–293 | 1.17 | Shot 0 |
+| `Shotgun_Fire` | 265–293 | 1.17 | Shot 0, Fire 0 |
 | `Shotgun_AimIn` | 297–306 | 0.38 | Aimed 9 |
 | `Shotgun_AimIdle` | 310–382 | 3.00 | — |
-| `Shotgun_AimFire` | 386–414 | 1.17 | Shot 0 |
+| `Shotgun_AimFire` | 386–414 | 1.17 | Shot 0, Fire 0 |
 | `Shotgun_AimOut` | 418–427 | 0.38 | — |
 | `Shotgun_Draw` | 431–443 | 0.50 | Ready 12 |
 | `Shotgun_Holster` | 447–455 | 0.33 | Holstered 8 |
@@ -180,10 +180,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `FusionRifle_SprintIn` | 213–223 | 0.42 | — |
 | `FusionRifle_Sprint` | 227–247 | 0.83 | FootL 0, FootR 10 |
 | `FusionRifle_SprintOut` | 251–261 | 0.42 | Ready 10 |
-| `FusionRifle_Fire` | 265–301 | 1.50 | Shot 0 |
+| `FusionRifle_Fire` | 265–301 | 1.50 | Shot 0, Fire 0 |
 | `FusionRifle_AimIn` | 305–314 | 0.38 | Aimed 9 |
 | `FusionRifle_AimIdle` | 318–390 | 3.00 | — |
-| `FusionRifle_AimFire` | 394–430 | 1.50 | Shot 0 |
+| `FusionRifle_AimFire` | 394–430 | 1.50 | Shot 0, Fire 0 |
 | `FusionRifle_AimOut` | 434–443 | 0.38 | — |
 | `FusionRifle_Draw` | 447–459 | 0.50 | Ready 12 |
 | `FusionRifle_Holster` | 463–471 | 0.33 | Holstered 8 |
@@ -201,10 +201,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `SniperRifle_SprintIn` | 213–224 | 0.46 | — |
 | `SniperRifle_Sprint` | 228–248 | 0.83 | FootL 0, FootR 10 |
 | `SniperRifle_SprintOut` | 252–263 | 0.46 | Ready 11 |
-| `SniperRifle_Fire` | 267–303 | 1.50 | Shot 0 |
+| `SniperRifle_Fire` | 267–303 | 1.50 | Shot 0, Fire 0 |
 | `SniperRifle_AimIn` | 307–319 | 0.50 | Aimed 12 |
 | `SniperRifle_AimIdle` | 323–395 | 3.00 | — |
-| `SniperRifle_AimFire` | 399–435 | 1.50 | Shot 0 |
+| `SniperRifle_AimFire` | 399–435 | 1.50 | Shot 0, Fire 0 |
 | `SniperRifle_AimOut` | 439–451 | 0.50 | — |
 | `SniperRifle_Draw` | 455–467 | 0.50 | Ready 12 |
 | `SniperRifle_Holster` | 471–479 | 0.33 | Holstered 8 |
@@ -222,10 +222,10 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `RocketLauncher_SprintIn` | 213–225 | 0.50 | — |
 | `RocketLauncher_Sprint` | 229–249 | 0.83 | FootL 0, FootR 10 |
 | `RocketLauncher_SprintOut` | 253–265 | 0.50 | Ready 12 |
-| `RocketLauncher_Fire` | 269–317 | 2.00 | Shot 0 |
+| `RocketLauncher_Fire` | 269–317 | 2.00 | Shot 0, Fire 0 |
 | `RocketLauncher_AimIn` | 321–333 | 0.50 | Aimed 12 |
 | `RocketLauncher_AimIdle` | 337–409 | 3.00 | — |
-| `RocketLauncher_AimFire` | 413–461 | 2.00 | Shot 0 |
+| `RocketLauncher_AimFire` | 413–461 | 2.00 | Shot 0, Fire 0 |
 | `RocketLauncher_AimOut` | 465–477 | 0.50 | — |
 | `RocketLauncher_Draw` | 481–493 | 0.50 | Ready 12 |
 | `RocketLauncher_Holster` | 497–505 | 0.33 | Holstered 8 |

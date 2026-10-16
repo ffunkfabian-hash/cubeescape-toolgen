@@ -125,7 +125,7 @@ STAGES = (
     # unity_contract_fps.json. Viewer model "fps_game" (root <asset>_FPS_Game, LOD0 only): the Ego view of the reduced model.
     Stage("game_fps", "toolgen/game_export.py",
           args=("--directory", "{work}", "--tool", "{id}", "--viewmodel", "--contract", "{game_contract}"),
-          reads=("{asset}_FPS.blend", "viewmodel_camera.json"),
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json"),
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game_fps.json",),
           variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),

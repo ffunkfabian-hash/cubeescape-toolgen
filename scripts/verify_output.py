@@ -92,6 +92,19 @@ for tool in catalog():
             assert game_qa["checks"]["roundtrip_clips_" + kind]["passed"], (tool["id"], kind)
         assert all(entry["take"] == ego["ego_clips"]["take"] for entry in ego["clips"][1:])
         checks += 4
+    if tool.get("hold", {}).get("sight_kind"):
+        # 0.11.0 (Cube Escape 0.66 T1/T2/T6): sight anchors in both contracts, Fire marker on the shot, ADS target pose
+        world = json.loads((package / "unity_contract.json").read_text())
+        scope = tool["hold"]["sight_kind"] == "scope"
+        for contract in (world, ego):
+            anchors = {anchor["name"] for anchor in contract["anchors"]}
+            assert "Socket_Sight" in anchors and ("Socket_Eye" in anchors) == scope, (tool["id"], "sight anchors")
+            assert contract["hold"]["sight_kind"] == tool["hold"]["sight_kind"], tool["id"]
+            fire = [event["frame"] for event in contract["clips"][0]["events"] if event["name"] == "Fire"]
+            assert fire == [PROFILES[tool["id"]]["motion"]["fire_frame"]], (tool["id"], "Fire marker", fire)
+        assert game_qa["checks"]["sight_anchors"]["passed"] and game_qa["checks"]["ads_target_pose"]["passed"], tool["id"]
+        assert game_qa["ads"]["eye_distance_range_m"], (tool["id"], "no eye distance keeps the ADS framing")
+        checks += 5
     checks += 5
     if manifest["tier"] != "quick":
         for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else [])]:

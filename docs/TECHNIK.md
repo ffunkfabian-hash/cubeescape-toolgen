@@ -412,6 +412,39 @@ Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
   vorübergehend auf die Ego-Zeitleiste). Teile, die die Clips nicht selbst stellen (Mechanik, Leuchten), bekommen in Fire/AimFire die Werte des Use-Clips ab dem Schuss (Schlitten, Verschluss, Pumpe; `fire_end_frame` verlängert Fire bis zur Ruhe), sonst Ruhekeys an jedem Clipende (`clip_keys`); ohne Keys im Clipbereich ließe glTF sie
   fallen. Reimport beider Clips-Dateien an Clipenden, -mitten und Events; Bildausschnitt des reduzierten Modells an denselben Frames.
 
+## Visier und Zielen (0.11.0 Sightline)
+
+Zulieferung T1, T2 und T6 für Cube Escape 0.66 „Deadeye“ (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:
+[UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen.
+
+- **`Socket_Sight` / `Socket_Eye` (T1).** `weapon_kit.world` legt die Anker aus `DESIGNS[key]['sight']` (`sight.py`, reines Python)
+  in das Weltmodell; das Ego-Modell übernimmt sie mit der übrigen Waffe. Die Visierlinie ist die der AimIdle-Pose
+  (`data/ego_clips.json` › `ads`): über die Oberkante der Visierteile plus `eye_above_m` (Kimme/Korn, `sight_mode` „top“) oder durch
+  ihre Mitte (Optiken, „center“). `eye_above_m` gilt im Ego-Modell; das Weltmodell bekommt ihn durch `tool_scale` geteilt, so tragen
+  beide dieselbe Linie. Der Anker liegt am hinteren Ende des Visiers (Kimme, Rückseite der Optik, Okular), Drehung wie die Waffe
+  (Unity +Z = Blick entlang des Laufs, +Y = oben). Scopes (Scharfschützen- und Spurgewehr) haben zusätzlich `Socket_Eye` auf
+  derselben Linie, `hold.eye_distance_m` hinter `Socket_Sight` (im Ego-Modell in Kamerametern). Visierart je Waffe:
+  `hold.sight_kind` in `data/tools.json` (Pistole, Schrotflinte, Raketenwerfer `iron`; Sturmgewehr, Maschinenpistole `reflex`;
+  Impulsgewehr `holo`; Fusionsgewehr `energy`; Scharfschützen-, Spurgewehr `scope`). Der Autoren-Kopierordner hat kein `data/`:
+  Regel und Schussbild stehen deshalb in `DESIGNS`, `tests/test_weapons.py` hält sie gleich mit `tools.json`, `viewmodels.json` und
+  `ego_clips.json`; `first_person.py` prüft den gebauten Anker gegen die Visierlinie der AimIdle-Pose (≤ 0,1 mm,
+  `qa_viewmodel.json` › `ego_clips.sight_socket`).
+- **Ereignisse (T2).** Der Use-Clip beider Modelle trägt den Marker `Fire` am Schussbild (`DESIGNS[key]['fire_frame']` =
+  `motion.fire_frame` in `data/viewmodels.json`: Bild 14, Fusionsgewehr 46); der Vertrag nennt ihn in `clips[0].events`,
+  `action_contract.json` in `events`. Fire und AimFire der Ego-Clips tragen zusätzlich zu `Shot` das gleichbedeutende `Fire` (Bild 0).
+- **Prüfung je Clipbild (T6).** `hand_touch_m` jetzt in jedem Bild jedes Ego-Clips (`ego_clips.clips[].hand_touch_max_m`, Grenze
+  `touch_tolerance_m` = 8 mm; die Stützhand im Reload-Fenster `detached` zählt nicht); Handgelenk ≤ 55° je Bild wie seit 0.8.0.
+- **ADS-Zielpose (T6).** Toolgen rechnet die Zielpose von Cube Escape selbst (Konzept › 5.3): das ganze Ego-Modell in der Ruhepose
+  (Bild 1) starr so bewegt, dass `Socket_Sight` auf der Kameraachse im Abstand `hold.eye_distance_m` liegt (Cube-Escape-Profilklassen:
+  sidearm 0,30, rifle 0,26, submachine_gun 0,24, shotgun 0,28, sniper 0,22, heavy 0,30, Spurgewehr 0,20 m) und entlang des Blicks
+  zeigt, Maßstab 1. Geprüft beim eingestellten Viewmodel-Sichtfeld für 16:9 und 16:10: Visier in der Bildmitte, die drei Greiffinger und
+  der Daumen jeder Hand im Bild, proximale Unterarmhälften unter dem Bild (der Stützarm wird wie in den Ziel-Clips nur gemessen,
+  Entscheidung des Nutzers), kein sichtbarer Punkt vor der Near-Clip-Ebene. Ergebnis: `qa_viewmodel.json` › `ads_target`, im Spiel-Export
+  `qa_game_fps.json` › `ads` mit den Prüfungen `sight_anchors` und `ads_target_pose`. Zusätzlich sucht die Prüfung den Bereich der
+  Augenabstände (0,10–0,80 m, 5 mm Schritt), in dem der Bildausschnitt hält (`eye_distance_range_m`). Verbindlich ist: Visier auf
+  der Linie, Anker im Vertrag, ein solcher Bereich existiert. Ob der Profilabstand selbst hält (`ads.passed`), ist ein Befund für
+  Cube Escape (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen), kein Abbruch.
+
 ## Cache und Worker
 
 **Stufen.** Die Liste `STAGES` in `generate_tools.py` beschreibt die Bauschritte jedes Werkzeugs deklarativ (Skript, Läufer

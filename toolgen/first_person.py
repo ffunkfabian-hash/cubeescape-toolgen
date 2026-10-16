@@ -313,6 +313,7 @@ PROXIMAL_MARGIN = .01             # ego clips keep the proximal forearm half thi
 # Cube Escape 0.65 enlarges the weapon viewmodels 1.35-1.7x about Socket_Hand (Resources/Toolgen/viewmodel_holds.json);
 # the proximal forearm halves must leave the frame at that size as well.
 GAME_ENLARGEMENT_MAX = 1.7
+SIGHT_LINE_TOLERANCE_M = .0001   # Socket_Sight against the AimIdle line of sight (lateral and vertical)
 # Finger rows along the palm's Z axis (Robogen Mitt: three fingers at a 31 mm pitch).
 # Thinner links than the Mitt keep visible gaps, so each finger reads at FPS distance.
 GRIP_ROWS = (.029, 0, -.029)
@@ -748,6 +749,26 @@ def build(directory, spec, profile):
     if os.environ.get("TOOLGEN_FPS_DEBUG"):
         bpy.ops.wm.save_as_mainfile(filepath=os.environ["TOOLGEN_FPS_DEBUG"], copy=True)
     report["ego_clips"] = ego_clip_report(scene, root, clips, clip_records, aim, aim_frames, settings, part_name, part)
+    # T6 (Cube Escape 0.66 Deadeye): Socket_Sight on the AimIdle line, hand touch in every clip frame, ADS target pose.
+    sight_line = sight_socket_check(scene, hold, aim)
+    report["ego_clips"]["sight_socket"] = sight_line
+    if sight_line and not sight_line["ok"]:
+        report["ego_clips"]["failures"].append(f"Socket_Sight off the AimIdle line of sight ({sight_line})")
+    touch_limit = profile.get("touch_tolerance_m")
+    if clips and touch_limit is not None:
+        touch = clip_hand_touch(scene, root, arms, clips, detached_frames, support_hand.name if support_hand else None)
+        for entry in report["ego_clips"]["clips"]:
+            entry["hand_touch_max_m"] = touch[entry["name"]]
+            report["ego_clips"]["failures"].extend(
+                f"{entry['name']}: {name} leaves the tool (nearest {value['m'] * 1000:.1f} mm at frame {value['frame']}, "
+                f"limit {touch_limit * 1000:.0f} mm)" for name, value in touch[entry["name"]].items() if value["m"] > touch_limit)
+        report["ego_clips"]["hand_touch_limit_m"] = touch_limit
+    report["ads_target"] = None
+    if spec.get("hold") and scene.objects.get("Socket_Sight") is not None:
+        report["ads_target"] = ads_target_report(scene, root, arms, settings, spec["hold"]["eye_distance_m"],
+                                                 support_hand.name if support_hand else None)
+        print("ADS_TARGET", tool, json.dumps({key: report["ads_target"][key] for key in
+                                              ("eye_distance_m", "passed", "eye_distance_range_m", "failures")}), flush=True)
     root["toolgen_ego_clips"] = json.dumps({"timeline_start": clips[0]["frame_start"] if clips else None,
                                             "timeline_end": ego_clips.timeline_end(clips),
                                             "reload_part": part.name if part is not None else None,
@@ -1207,6 +1228,163 @@ def hand_touch(scene, root, arms):
                         nearest = min(nearest, float(hit[3]))
         result[rig["hand"].name] = nearest
     return result
+
+
+def hand_vertex_sets(rig, graph):
+    """Finger, thumb and palm vertices of a hand (the surface hand_touch measures)."""
+    for obj in rig["hand"].children_recursive:
+        if obj.type == "MESH" and obj.name.startswith(("SM_FPS_Finger_", "SM_FPS_Thumb", "SM_FPS_Palm", "SM_FPS_Knuckle")):
+            yield world_vertices(obj, graph)
+
+
+def clip_hand_touch(scene, root, arms, clips, detached, support_hand):
+    """hand_touch per ego clip frame (T6, Cube Escape 0.66): the largest per-frame distance of each hand to the tool
+    surface within a clip. A hand released on purpose (reload: ``detached`` frames of the support hand) is left out."""
+    tool = [obj for obj in root.children_recursive if obj.type == "MESH" and not obj.name.startswith("SM_FPS_")]
+    result = {}
+    for clip in clips:
+        worst = {}
+        for frame in range(clip["frame_start"], clip["frame_end"] + 1):
+            scene.frame_set(frame); bpy.context.view_layer.update()
+            graph = bpy.context.evaluated_depsgraph_get()
+            vertices, polygons, _ = mesh_data(tool, graph)
+            surface = BVHTree.FromPolygons(vertices, polygons)
+            for rig in arms:
+                name = rig["hand"].name
+                if name == support_hand and frame in detached:
+                    continue
+                nearest = min((float(surface.find_nearest(Vector(point))[3]) for points in hand_vertex_sets(rig, graph)
+                               for point in points.tolist()), default=float("inf"))
+                if nearest > worst.get(name, (-1.0, None))[0]:
+                    worst[name] = (nearest, frame)
+        result[clip["name"]] = {name: {"m": round(value, 6), "frame": frame} for name, (value, frame) in worst.items()}
+    scene.frame_set(1); bpy.context.view_layer.update()
+    return result
+
+
+def sight_socket_check(scene, hold, aim):
+    """Socket_Sight (sight.py, placed in the world model) lies on the AimIdle line of sight: same lateral and vertical
+    position in the tool's space as the eye point of ads_setup, and its rotation is the tool's (+Z Unity = along the bore)."""
+    socket = scene.objects.get("Socket_Sight")
+    if socket is None or aim is None:
+        return None
+    scene.frame_set(1); bpy.context.view_layer.update()
+    inverse = hold.matrix_world.inverted()
+    local = inverse @ socket.matrix_world.translation
+    eye = Vector(aim["eye_local_m"])
+    offset = max(abs(local.x - eye.x), abs(local.z - eye.z))
+    turn = math.degrees((inverse.to_quaternion() @ socket.matrix_world.to_quaternion()).angle)
+    return {"socket_local_m": [round(v, 6) for v in local], "aim_eye_local_m": [round(v, 6) for v in eye],
+            "line_offset_m": round(offset, 7), "rotation_error_degrees": round(min(turn, 360 - turn), 5),
+            "ok": offset <= SIGHT_LINE_TOLERANCE_M and min(turn, 360 - turn) <= .01}
+
+
+def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand):
+    """Cube Escape's aim-down-sights target pose (FIRST_PERSON_EQUIPMENT.md 5.3): the whole first-person model in its rest
+    pose (frame 1) moved rigidly so Socket_Sight lies on the camera axis at an eye distance and looks along the view
+    (rotation = inverse of Socket_Sight's, scale 1). Framing rule per binding frustum (configured FOV, 16:9 and 16:10):
+    sight on the screen centre; the three gripping fingers and the thumb of each hand inside the frame; the proximal
+    forearm halves below the frame (the support forearm may show while aiming, user decision 16.10.2026: measured, not
+    binding); no vertex inside the frame closer than the near clip. Reported at ``eye_distance_m`` (the game profile,
+    data/tools.json hold) and as the eye-distance range that keeps the rule (``eye_distance_range_m``). Wrist bend and
+    hand touch do not change under a rigid move; they are reported from the rest pose. The whole hand's margin is
+    measured, not binding (the palm may leave the frame at the bottom)."""
+    socket = scene.objects.get("Socket_Sight")
+    if socket is None:
+        return None
+    scene.frame_set(1); bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    near = settings["near_clip_m"]
+    sight = socket.matrix_world
+    rotation = sight.to_quaternion().inverted().to_matrix()
+    turned = np.array(rotation)
+    base = -np.array(rotation @ sight.translation)
+
+    def moved(points, distance):
+        return points @ turned.T + base + np.array((0.0, -distance, 0.0))
+
+    frusta = [frustum for frustum in frustum_configurations(settings) if frustum["binding"]]
+    meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    every = np.concatenate([world_vertices(obj, graph) for obj in meshes])
+    sight_point = np.array([sight.translation])
+    parts = {}
+    for rig in arms:
+        side = rig["hand"].name[-1]
+        groups = {f"Fingers_{side}_{index}": scene.objects[f"Fingers_{side}_{index}"] for index in range(GRIPPING_FINGERS)}
+        groups["Thumb_" + side] = scene.objects["Thumb_" + side]
+        groups[rig["hand"].name] = rig["hand"]
+        parts[rig["hand"].name] = {name: np.concatenate([world_vertices(obj, graph) for obj in node.children_recursive
+                                                        if obj.type == "MESH"]) for name, node in groups.items()}
+    forearms = {}
+    for rig in arms:
+        lower = np.array(rig["lower"].matrix_world)
+        corners = np.array([(cx, cy, cz) for cz in (0, rig["lengths"][1] * (1 - rig["visible_fraction"]))
+                            for cx in (-.047, .047) for cy in (-.047, .047)])
+        forearms[rig["hand"].name] = corners @ lower[:3, :3].T + lower[:3, 3]
+
+    def evaluate(distance):
+        configurations, failures = [], []
+        for frustum in frusta:
+            label = f"{frustum['vertical_fov_degrees']:.2f} deg vertical, {frustum['aspect']}"
+            u, v, _ = camera_space(moved(sight_point, distance))
+            x, y = screen(u, v, frustum)
+            entry = {"vertical_fov_degrees": frustum["vertical_fov_degrees"], "aspect": frustum["aspect"],
+                     "sight_screen": [round(float(x[0]), 6), round(float(y[0]), 6)], "margins": {},
+                     "proximal_forearm_max_screen_y": {}}
+            reasons = []
+            if max(abs(x[0] - .5), abs(y[0] - .5)) > .002:
+                reasons.append(f"sight off the screen centre ({x[0]:.4f}, {y[0]:.4f})")
+            for hand_name, groups in parts.items():
+                margins = {}
+                for name, points in groups.items():
+                    pu, pv, pdepth = camera_space(moved(points, distance))
+                    px, py = screen(pu, pv, frustum)
+                    margins[name] = round(float(min(px.min(), (1 - px).min(), py.min(), (1 - py).min())), 5) \
+                        if (pdepth > near).all() else -1.0
+                entry["margins"][hand_name] = margins
+                outside = sorted(name for name, margin in margins.items() if name != hand_name and margin < 0)
+                if outside:
+                    reasons.append(f"{hand_name}: {outside} not in the frame")
+            for name, corners in forearms.items():
+                cu, cv, cdepth = camera_space(moved(corners, distance))
+                top = float(np.where(cdepth > near, screen(cu, cv, frustum)[1], -1.0).max())
+                entry["proximal_forearm_max_screen_y"][name] = round(top, 5)
+                if top >= 0 and name != support_hand:
+                    reasons.append(f"proximal forearm of {name} enters the viewport (y {top:.4f})")
+            eu, ev, edepth = camera_space(moved(every, distance))
+            ex, ey = screen(eu, ev, frustum)
+            seen = (ex >= 0) & (ex <= 1) & (ey >= 0) & (ey <= 1) & (edepth > 0)
+            closest = float(edepth[seen].min()) if seen.any() else None
+            entry["min_visible_depth_m"] = closest and round(closest, 5)
+            if closest is not None and closest <= near:
+                reasons.append(f"a visible vertex lies in front of the near clip ({closest:.4f} m)")
+            entry["ok"] = not reasons
+            entry["reasons"] = reasons
+            configurations.append(entry)
+            failures.extend(f"{label}: {reason}" for reason in reasons)
+        return configurations, failures
+
+    configurations, failures = evaluate(eye_distance_m)
+    steps = [round(.10 + .005 * index, 3) for index in range(141)]           # 0.10 ... 0.80 m
+    passing = [distance for distance in steps if not evaluate(distance)[1]]
+    bends = {}
+    for rig in arms:
+        if "arm_limits" in rig:
+            bend, _ = wrist_bend(rig)
+            bends[rig["hand"].name] = {"degrees": round(bend, 2), "limit_degrees": rig["arm_limits"]["max_wrist_bend_degrees"]}
+    matrix = Matrix.Translation(Vector(base.tolist()) + Vector((0, -eye_distance_m, 0))) @ rotation.to_4x4()
+    return {"pose": "rest pose (frame 1) moved rigidly: Socket_Sight on the camera axis at the eye distance, rotation = "
+                    "inverse of Socket_Sight's (FIRST_PERSON_EQUIPMENT.md 5.3); scale 1",
+            "rule": "three gripping fingers and the thumb of each hand in the frame, proximal forearm halves below it "
+                    "(support forearm measured only, user decision 16.10.2026), no visible vertex before the near clip",
+            "sight_socket": "Socket_Sight", "eye_distance_m": eye_distance_m,
+            "frame_matrix_blender": [[round(float(value), 7) for value in row] for row in matrix],
+            "near_clip_m": near, "support_forearm_exempt": support_hand, "configurations": configurations,
+            "passed": not failures, "failures": failures,
+            "eye_distance_range_m": [passing[0], passing[-1]] if passing else None,
+            "eye_distance_steps_m": [steps[0], steps[-1], .005],
+            "eye_distance_range_contiguous": bool(passing) and len(passing) == round((passing[-1] - passing[0]) / .005) + 1,
+            "wrist_bend": bends}
 
 
 def validate(scene, root, targets, tool, arms, settings, head, touch_limit=None, clip_check=None):

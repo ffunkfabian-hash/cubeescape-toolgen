@@ -64,7 +64,9 @@
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
-        "support_grip": "cup"
+        "support_grip": "cup",
+        "sight_kind": "iron",
+        "eye_distance_m": 0.3
       }
     },
     {
@@ -83,7 +85,9 @@
       "hold": {
         "grip_tilt_degrees": 16,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "reflex",
+        "eye_distance_m": 0.26
       }
     },
     {
@@ -102,7 +106,9 @@
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "holo",
+        "eye_distance_m": 0.26
       }
     },
     {
@@ -121,7 +127,9 @@
       "hold": {
         "grip_tilt_degrees": 15,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "iron",
+        "eye_distance_m": 0.28
       }
     },
     {
@@ -140,7 +148,9 @@
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "scope",
+        "eye_distance_m": 0.22
       }
     },
     {
@@ -159,7 +169,9 @@
       "hold": {
         "grip_tilt_degrees": 18,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "reflex",
+        "eye_distance_m": 0.24
       }
     },
     {
@@ -178,7 +190,9 @@
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "energy",
+        "eye_distance_m": 0.26
       }
     },
     {
@@ -197,7 +211,9 @@
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "scope",
+        "eye_distance_m": 0.2
       }
     },
     {
@@ -216,7 +232,9 @@
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
-        "support_grip": "underhand"
+        "support_grip": "underhand",
+        "sight_kind": "iron",
+        "eye_distance_m": 0.3
       }
     }
   ]
