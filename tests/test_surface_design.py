@@ -97,12 +97,15 @@ class RecipeTests(unittest.TestCase):
         pistol["relief"]["GripShell*"] = [{"type": "knurl", "size_mm": 2, "direction": "z", "across": "z", "strength": .8},
                                           {"type": "grain", "size_mm": .1, "strength": .5}]
         pistol["relief"]["@Glow"] = {"type": "wave", "size_mm": 1, "strength": 1}
+        pistol["relief"]["Frame"] = []
+        pistol["relief"]["SlideBody"] = {"type": "seams", "size_mm": float("nan"), "width_mm": 1, "direction": "y",
+                                         "across": "q", "across_mm": -2, "strength": .5}
         pistol["channels"]["Metal"]["smoothness"] = .9
         pistol["wear"] = "extreme"
         broken["limits"]["max_height_mm"] = .5
         errors = "\n".join(surface_relief.recipe_errors(broken))
         for expected in ("across", "size_mm", "more than 1", "unknown channel", "type 'wave'", "smoothness", "wear",
-                         "max_height_mm"):
+                         "max_height_mm", "at least one pattern", "finite", "across_mm", "width_mm < size_mm"):
             self.assertIn(expected, errors)
 
     def test_selectors_first_match_wins_and_channels_catch_the_rest(self):

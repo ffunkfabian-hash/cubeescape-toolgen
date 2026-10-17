@@ -13,6 +13,7 @@ The pure part (loading, checks, selectors, the recipe block) imports without Ble
 """
 import fnmatch
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,8 +70,10 @@ def recipe_errors(data, tool_ids=None, parts=None):
         if not all(_is_colour(colour) for colour in entry.get("palette", [])) or not entry.get("palette"):
             errors.append(f"{where}.palette must be a list of #RRGGBB")
         for selector, value in entry.get("relief", {}).items():
+            if not patterns_of(value):
+                errors.append(f"{where}.relief.{selector}: needs at least one pattern")
             if sum(pattern.get("strength", 0) for pattern in patterns_of(value)
-                   if isinstance(pattern.get("strength"), (int, float))) > 1 + 1e-9:
+                   if isinstance(pattern, dict) and _number(pattern.get("strength"))) > 1 + 1e-9:
                 errors.append(f"{where}.relief.{selector}: strengths add up to more than 1 (relief > max_height_mm)")
             if selector.startswith("@") and selector[1:] not in CHANNELS:
                 errors.append(f"{where}.relief.{selector}: unknown channel")
@@ -86,15 +89,22 @@ def _is_colour(value):
     return isinstance(value, str) and len(value) == 7 and value[0] == "#" and all(c in "0123456789abcdefABCDEF" for c in value[1:])
 
 
+def _number(value):
+    """A finite int or float (JSON also reads NaN and Infinity)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
 def pattern_errors(pattern):
     errors = []
+    if not isinstance(pattern, dict):
+        return ["a pattern is an object"]
     kind = pattern.get("type")
     if kind not in TYPES:
         return [f"type {kind!r} not in {TYPES}"]
-    if not isinstance(pattern.get("size_mm"), (int, float)) or pattern["size_mm"] < MIN_SIZE_MM:
-        errors.append(f"size_mm must be >= {MIN_SIZE_MM}")
+    if not _number(pattern.get("size_mm")) or pattern["size_mm"] < MIN_SIZE_MM:
+        errors.append(f"size_mm must be a finite number >= {MIN_SIZE_MM}")
     strength = pattern.get("strength")
-    if not isinstance(strength, (int, float)) or not 0 < strength <= 1:
+    if not _number(strength) or not 0 < strength <= 1:
         errors.append("strength must be in (0, 1]")
     if kind in NEEDS_DIRECTION and pattern.get("direction") not in AXES:
         errors.append(f"{kind} needs direction x, y or z")
@@ -102,8 +112,15 @@ def pattern_errors(pattern):
         errors.append("knurl needs an 'across' axis other than its direction")
     if kind == "seams":
         width = pattern.get("width_mm")
-        if not isinstance(width, (int, float)) or not 0 < width < pattern.get("size_mm", 0) / 4:
+        size = pattern.get("size_mm") if _number(pattern.get("size_mm")) else 0
+        if not _number(width) or not 0 < width < size / 4:
             errors.append("seams need 0 < width_mm < size_mm / 4")
+        if "across_mm" in pattern:
+            across = pattern["across_mm"]
+            if pattern.get("across") not in AXES or pattern.get("across") == pattern.get("direction"):
+                errors.append("seams with across_mm need an 'across' axis other than their direction")
+            if not _number(across) or not _number(width) or not across > 4 * width:
+                errors.append("seams need across_mm > 4 x width_mm")
     return errors
 
 

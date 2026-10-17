@@ -236,18 +236,24 @@ def map_validate(folder, block, raster, counts, labels):
                 mismatch |= own & (pixels[..., other] != 0)
     # Decals (Toolgen 0.13, surface.recipe.decals): their texels carry the decal's channel instead of the slot's; they
     # count apart, up to the number the bake declared, and only in the decal channels.
+    # The bake's QA (qa_surface.json design_*) checks part, island and area; here each decal channel has its own budget.
     decal_list = block.get("recipe", {}).get("decals", [])
-    declared = sum(int(entry.get("texels", 0)) for entry in decal_list)
-    decal_channels = sorted({surface.CHANNELS.index(entry["channel"]) for entry in decal_list})
+    budgets = {}
+    for entry in decal_list:
+        index = surface.CHANNELS.index(entry["channel"])
+        budgets[index] = budgets.get(index, 0) + int(entry.get("texels", 0))
+    declared = sum(budgets.values())
     decal_texels = 0
-    if decal_channels:
+    if budgets:
         hot = np.argmax(pixels, axis=2)
-        as_decal = mismatch & np.isin(hot, decal_channels) & (pixels.max(axis=2) == 255) \
-            & ((pixels == 255).sum(axis=2) == 1)
-        decal_texels = int(as_decal.sum())
-        if decal_texels > declared:
-            errors.append(f"decal texels {decal_texels} > declared {declared}")
-        mismatch &= ~as_decal
+        clean = (pixels.max(axis=2) == 255) & ((pixels == 255).sum(axis=2) == 1)
+        for index, budget in sorted(budgets.items()):
+            as_decal = mismatch & (hot == index) & clean
+            count = int(as_decal.sum())
+            if count > budget:
+                errors.append(f"decal texels in {surface.CHANNELS[index]} {count} > declared {budget}")
+            decal_texels += count
+            mismatch &= ~as_decal
     denominator = int(unique.sum())
     mismatch_count = int(mismatch.sum())
     ratio = mismatch_count / denominator if denominator else 0.0

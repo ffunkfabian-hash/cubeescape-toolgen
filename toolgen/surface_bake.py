@@ -433,7 +433,8 @@ def bake_model(work, model, asset, variant, palette, design):
                 "edge_convex": surface.EDGE_CONVEX, "dilation_px": surface.DILATION_PX, "device": "CPU", "seed": 0,
                 "height_range_m": [round(z, 6) for z in z_range]}
     if design:
-        settings["design"] = {"relief": relief, "max_height_mm": design["limits"]["max_height_mm"],
+        # relief_order: the digest sorts dict keys, but the selector order decides (first match wins)
+        settings["design"] = {"relief": relief, "relief_order": list(relief), "max_height_mm": design["limits"]["max_height_mm"],
                               "normal_samples": normal_samples, "part_match_mm": PART_MATCH_MM,
                               "pattern_scale": design["scale"][variant],
                               "decals": design["anchors"], "decal_images": surface.digest(design["catalog"]),
