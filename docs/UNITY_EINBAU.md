@@ -219,6 +219,27 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
 - **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. Ältere Fassung ohne UV1 und Karten
   (Layout 0.10): `python3 toolgen/generate_tools.py --tier standard --contract 3 --output output/_contract3`.
 
+### Relief, Decals und Block `surface.recipe` (0.13.0, Vertrag 4 additiv)
+
+Für die Equipment-Linie von Cube Escape (Presets ab 0.76). Vertrag `format` 4 bleibt, `surface.version` 1 bleibt; neu sind Inhalte der
+Karten und ein Block, den Cube Escape 0.71–0.75 ignoriert.
+
+- **Karten der neun Waffen:** `Normal` trägt Relief je Teil (Griffrändel, Rillen, Lamellen, Panel-Fugen, Bürstung, Korn; höchstens 0,3 mm
+  Höhenäquivalent, ändert weder Silhouette noch Kollision). `W0`/`W1` tragen Decals (Symbole, Nummern, Seriennummer S-07, Warnzeichen,
+  Pfeile, Tech-Linien): ihr Texel gehört dem Kanal des Decals (meist Accent, leuchtende Symbole Emission bzw. Energy), Summe weiter one-hot
+  255. Kein neuer Shaderpfad, kein neuer Import: dieselben vier Karten. `Fields` unverändert; Portalwerfer, Magnetgreifer, Taschenlampe
+  und Bogen bytegleich zu 0.12. `surface.bake.settings.schema` 2.
+- **Block `surface.recipe`** (nur Waffen, `version` 1), Vorschlag aus dem Konzeptblatt für die Presets – Cube Escape entscheidet:
+  `palette` (vier Blattfarben), `glow` (`color`, `element` des Blatts, `model_element` des Modells), `wear` (`level` subtle/medium/strong,
+  `amount` 0,2/0,5/0,8 für die Abnutzungsmenge), `channels.<Kanal>` (`material`: painted, painted_matte, ceramic, brushed, satin, polished,
+  rough_cast, rubber, energy_glass; `smoothness` ≤ 0,45 als Glätte im Masken-Modus, `note`), `decals` (Anker mit Bild, Kanal, Texelzahl),
+  `relief` (was in der Normalkarte steckt, nur zur Information), `computed_by_consumer`, `minimum_consumer`. „Poliert“/„Premium“ ist eine
+  Glätte im Masken-Modus; `game_palette.json` › `finish` gilt weiter für den Slot-Weg.
+- **Mindestversion:** Karten Cube Escape 0.71 (wie Vertrag 4), Rezept Cube Escape 0.76. Ältere Fassung ohne Relief/Decals: Toolgen 0.12.0
+  (`v0.12.0`), ohne Karten `--contract 3`.
+- **Test für den Abnehmer:** Karten aus `output/_standard` in die Testkopie importieren, `verify.sh test EditMode Toolgen`; Sichtvergleich
+  vorab ohne Unity: `output/_standard/Previews/surface_<Waffe>.png`.
+
 ## Visier und Zielen (0.12.0, Vertrag 4 additiv)
 
 Zulieferung für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (T1, T2, T6; Technik: [TECHNIK](TECHNIK.md) › Visier und Zielen). Nur Ergänzungen:

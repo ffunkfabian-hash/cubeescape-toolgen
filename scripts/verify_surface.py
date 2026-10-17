@@ -25,6 +25,12 @@ COMPONENTS = {5126: ("f", 4), 5123: ("H", 2), 5125: ("I", 4)}
 TANGENT_PRIMITIVE_QUOTE = .9
 TANGENT_MODEL_QUOTE = .98
 TYPE_WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
+# Golden maps of the weapons (Toolgen 0.13): sha256 of every map in manifest.json, full world maps W0/W1/Normal as PNG
+# (Ego only by hash: 24 MB for all of them would not fit the repository). A changed hash passes when the golden PNG exists
+# and the mean absolute difference stays within GOLDEN_TOLERANCE (same rule as Cube Escape's CubegenPaintTests).
+GOLDEN = ROOT / "tests/golden/surface"
+GOLDEN_TOLERANCE = .5            # mean |difference| in 1/255 per map
+GOLDEN_PNG_KINDS = ("W0", "W1", "Normal")
 
 
 def blender_executable():
@@ -323,12 +329,58 @@ def determinism(folder, tool):
                 "matches_each_other": hashes[0] == hashes[1]}
 
 
+def golden_check(output, tools, update=False):
+    """Compare (or with ``update`` rewrite) the weapons' maps against tests/golden/surface."""
+    manifest_path = GOLDEN / "manifest.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"maps": {}}
+    errors, compared = [], 0
+    for tool in tools:
+        folder = output / tool
+        files = sorted(folder.glob("*_Game_*.png"))
+        if not files:
+            continue
+        if update:
+            target = GOLDEN / tool
+            target.mkdir(parents=True, exist_ok=True)
+            manifest["maps"][tool] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+            for path in files:
+                if "_FPS_" not in path.name and path.stem.rsplit("_", 1)[-1] in GOLDEN_PNG_KINDS:
+                    shutil.copy2(path, target / path.name)
+            continue
+        expected = manifest["maps"].get(tool)
+        if expected is None:
+            errors.append(f"{tool}: no golden maps")
+            continue
+        for path in files:
+            compared += 1
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            if expected.get(path.name) == digest:
+                continue
+            golden = GOLDEN / tool / path.name
+            if not golden.exists():
+                errors.append(f"{tool}/{path.name}: sha256 differs from the golden and no golden PNG to compare")
+                continue
+            a = surface.png_array(path.read_bytes()).astype(np.float64)
+            b = surface.png_array(golden.read_bytes()).astype(np.float64)
+            difference = float(np.abs(a - b).mean()) if a.shape == b.shape else float("inf")
+            if difference > GOLDEN_TOLERANCE:
+                errors.append(f"{tool}/{path.name}: mean difference {difference:.3f}/255 > {GOLDEN_TOLERANCE}")
+    if update:
+        manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel, baked on the Mac, standard tier): sha256 "
+                            "of every map; world W0/W1/Normal also as PNG in <tool>/. Rewrite with verify_surface.py "
+                            "--update-golden after a deliberate change.")
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    return {"compared": compared, "errors": errors}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--tool", action="append", default=[])
     parser.add_argument("--determinism", action="store_true")
     parser.add_argument("--report", type=Path)
+    parser.add_argument("--update-golden", action="store_true", help="rewrite tests/golden/surface from this output")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     output = args.output.resolve()
     packages = sorted(p for p in output.iterdir() if p.is_dir() and (p / "manifest.json").exists())
@@ -367,6 +419,14 @@ def main():
         item["seconds"] = round(time.perf_counter() - tool_started, 3)
         print(f"TIME {folder.name} {item['seconds']:.3f}s")
         report["passed"] &= not item["errors"]
+    weapons = sorted(json.loads((ROOT / "data/surface_recipes.json").read_text())["weapons"])
+    golden = golden_check(output, [p.name for p in packages if p.name in weapons], args.update_golden)
+    report["golden"] = golden
+    if golden["errors"]:
+        report["passed"] = False
+        report["tools"].append({"tool": "golden", "errors": golden["errors"]})
+    print(f"{'PASS' if not golden['errors'] else 'FAIL'} golden maps compared={golden['compared']}"
+          f"{' (updated)' if args.update_golden else ''}")
     if args.report:
         args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     if report["passed"]:

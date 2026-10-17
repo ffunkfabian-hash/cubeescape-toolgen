@@ -445,6 +445,45 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
   Neue Stufenfelder (`heavy`, `min_contract`) stehen nur gesetzt in der Deklaration, damit bestehende Stufen ihren Schlüssel behalten.
 - Ältere Abnehmer: `--contract 3` (und 2, 1) erzeugt weder UV1 noch GLB-Tangenten noch die Stufe `surface_bake`.
 
+
+### Relief, Decals und Rezept der Waffen (0.13.0 Enamel)
+
+Zielbild: Cube Escape `Docs/EQUIPMENT.md` › Zielbild › Texturen 1–9 (Konzeptblatt des Nutzers). Toolgen liefert nur, was die Geometrie
+kennt; Farbe, Werkstoffart, Glätte, Abnutzung, Schmutz, Kratzer, Rauschen und Glühen rechnet Cube Escape (`SurfaceGenerator1`, Shader).
+
+- **Teil je Dreieck:** `surface_bake` sucht für jedes LOD0-Dreieck (Mittelpunkt) das nächste Dreieck desselben Kanals unter den
+  `SM_PG_*`-Teilen des Quellmodells (`<asset>.blend` bzw. `<asset>_FPS.blend`, BVH), beides im Werkzeugrahmen von `Socket_Hand` bei Bild 1.
+  Grenze 1,5 mm (`PART_MATCH_MM`); gemessen 0 ungelabelte Dreiecke, höchstens 0,39 mm Abstand (Dezimierung).
+- **Relief** (`data/surface_recipes.json` › `weapons.<id>.relief`, `toolgen/surface_relief.py`): Schlüssel = Glob auf den Teilnamen ohne
+  `SM_PG_` oder `@<Kanal>`, erster Treffer gewinnt; Wert = ein Muster oder eine Liste (Summe der Stärken ≤ 1). Muster als Shader-Nodes über
+  der Position im Werkzeugrahmen (mm; im Ego geteilt durch `tool_scale`, damit Welt und Ego gleich aussehen): `knurl` (Rautenrändel, zwei
+  Kosinus-Scharen ±45°), `grooves` (Rillen), `lamellae` (Rippen), `seams` (Panel-Fugen, eingedrückt), `brushed` (gestreckte Noise längs
+  der Richtung), `grain` (Keramik-/Gusskorn). Höhe 0..1 × Stärke treibt einen Bump-Node mit 0,3 mm Abstand (`limits.max_height_mm`) auf der
+  Bevel-Normale, je Fläche über das Attribut `ce_relief` gewählt. Der Bump hängt erst vor dem NORMAL-Bake am Material (AO und EMIT sehen ihn
+  nie: Fields bytegleich) und ändert weder Silhouette noch Kollision. NORMAL-Bake mit Relief 16 Samples (`RELIEF_SAMPLES`), sonst 4.
+- **Decals** (`data/decals.json`, `toolgen/decals.py`, Anker `DECALS` in `scripts/tool_assets/weapon_designs.py`): einfarbige Masken
+  (Linien, Flächen, Kreise, Text in der mitgelieferten Strichschrift `glyphs`, kein Systemfont), ImageMagick zeichnet sie geglättet und
+  schneidet bei 50 % (PGM, ein Thread; IM 6 und 7 nur an Randpixeln verschieden, Golden-Masken `tests/golden/decals`). Anker: Teil,
+  Fläche (`+x` = die Seite, die die Ego-Kamera sieht), Rechteck als Anteil der Teil-Box auf dieser Fläche (u nach rechts, v nach oben,
+  von außen gesehen), Bild, Kanal, Drehung. Box-Projektion auf die Texel des Teils, deren Fläche zu mindestens 0,7 zur Achse zeigt
+  (baryzentrisch aus dem Dreiecksraster); der Decal-Texel überschreibt im Kanalraster den Kanal **vor** der Dilatation, die Gewichte
+  bleiben one-hot 255. QA je Decal in `qa_surface.json` › `design_<variante>`: nur Zielteil (`foreign_texels` 0), genau eine UV-Insel
+  (keine Naht), 0,5–6 % der Insel, Seitenverhältnis Rechteck/Bild ≤ 25 %.
+- **Rezept** (`surface.recipe`, siehe [UNITY_EINBAU](UNITY_EINBAU.md) › Maskenkarten): Palette, Leuchtfarbe/Element des Blatts, Abnutzung
+  (subtil 0,2, mittel 0,5, stark 0,8), je Kanal Werkstoffart und Glätte (≤ 0,45 = 1 − `finish.min_roughness`), Decals mit Texelzahl, Relief.
+  `glow.element` folgt der Leuchtfarbe des Blatts, `model_element` dem Modell (`weapon_designs.py`); gleich nur bei Schrotflinte und
+  Raketenwerfer (Element-Zuordnung 15.10.2026 ohne lesbares Blatt; Angleichen ist eine Entscheidung des Nutzers, nicht Teil von 0.13).
+- **Bake-Schlüssel:** `BAKE_SCHEMA` 2; `settings.design` (Relief, Decal-Anker, Hash des Katalogs, ImageMagick-Version, Samples,
+  `pattern_scale`) gehört zum Schlüssel; die Stufe liest zusätzlich die Quellmodelle und hat `magick` im Programmschlüssel.
+  Ohne Rezept und Decals (Portalwerfer, Magnetgreifer, Taschenlampe, Bogen) bleiben alle Karten bytegleich zu 0.12.
+- **Abnahme:** `verify_surface.py` zählt Decal-Texel getrennt (höchstens die im Rezept gemeldeten, nur in Decal-Kanälen) und vergleicht die
+  Karten der Waffen mit `tests/golden/surface` (sha256 aller Karten, Welt-W0/W1/Normal als PNG; geänderte Bytes bestehen bei mittlerer
+  Abweichung ≤ 0,5/255; neu schreiben mit `--update-golden`). Determinismus: `verify_surface.py --determinism` backt bei 1 und 8 Threads.
+- **Sichtprüfung ohne Unity:** `blender -b --factory-startup --python scripts/surface_preview.py -- <output> [--tool <id>]` →
+  `<output>/Previews/surface_<id>.png` (Seite +x, Dreiviertel, Ego-Ausschnitt durch die Viewmodel-Kamera, je Modell Regionen farbcodiert,
+  Fields, Normal) und `surface_contact.png`. Das Vorschau-Material ahmt den Masken-Modus nur nach (Palette des Rezepts, Kantenabnutzung aus
+  Fields G × Abnutzung, AO, Normalkarte, Glühen; Eevee, nicht bytegleich, kein Vertrag).
+
 ## Visier und Zielen (0.12.0 Sightline)
 
 Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:

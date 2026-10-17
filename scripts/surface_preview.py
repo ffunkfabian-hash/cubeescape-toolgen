@@ -283,7 +283,8 @@ def main():
         sheet = previews / f"surface_{tool_id}.png"
         subprocess.run(magick + [
             "(", str(scratch / f"{tool_id}_side.png"), str(scratch / f"{tool_id}_quarter.png"), "+append", ")",
-            "(", str(scratch / f"{tool_id}_ego.png"),
+            "(", str(scratch / f"{tool_id}_ego.png"), "-gravity", "SouthEast", "-crop", "640x360+0+0", "+repage",
+            "-resize", "960x540", "-gravity", "NorthWest",
             "(", "(", *[str(p) for p in world_maps], "-resize", "320x320", "+append", ")",
             "(", *[str(p) for p in ego_maps], "-resize", "320x320", "+append", ")", "-append", "-resize", "960x540!", ")",
             "+append", ")", "-append",

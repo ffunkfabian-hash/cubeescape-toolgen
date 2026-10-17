@@ -762,7 +762,7 @@ DECALS = {
                decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
     'assault_rifle': [decal('ReceiverLower', '+x', (.5, .2, .658, .5), 'mil_ar2', 'Secondary'),
                       decal('Handguard', '+x', (.048, .41, .19, .69), 'tech_bars', 'Accent')],
-    'pulse_rifle': [decal('Chassis', '+x', (.755, .658, .793, .79), 'tech_ring', 'Emission'),
+    'pulse_rifle': [decal('Chassis', '+x', (.735, .53, .803, .767), 'tech_ring', 'Emission'),
                     decal('Shroud', '+x', (.06, .45, .22, .7), 'tech_bars', 'Accent')],
     'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
                 decal('BarrelShroud', '+x', (.033, .175, .167, .41), 'hazard_stripes', 'Accent')],

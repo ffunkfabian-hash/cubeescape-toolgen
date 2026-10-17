@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.13.0 – Enamel (17.10.2026)
+
+Oberflächen der Waffen 1–9 nach dem Konzeptblatt „Waffen Texturen 1–9“, Stufe A im heutigen Rahmen (Bericht: [docs/versions/0.13.md](docs/versions/0.13.md)), Vertrag 4 additiv.
+
+- Relief je Teil in der Normalkarte (Rändel, Rillen, Lamellen, Panel-Fugen, Bürstung, Korn; ≤ 0,3 mm, Fields bytegleich), Rezepte in `data/surface_recipes.json`.
+- Decals als einfarbige Regionsgewichte in W0/W1 (eigene Strichschrift, ImageMagick, `data/decals.json`, Anker `DECALS`), QA je Decal; Block `surface.recipe` (Werkstoff, Glätte, Abnutzung, Leuchtfarbe, Decals) für Cube Escape 0.76; `BAKE_SCHEMA` 2.
+- Sichtprüfung ohne Unity: `scripts/surface_preview.py` (`Previews/surface_<Waffe>.png`, Kontaktbogen); Golden-Karten `tests/golden/surface` (3,0 MB) in `verify_surface.py`.
+- Mindestversion: Karten Cube Escape 0.71, Rezept 0.76; ältere Fassung `v0.12.0`, ohne Karten `--contract 3`.
+
 ## 0.12.0 – Sightline (16.10.2026)
 
 Zulieferung T1/T2/T3/T5/T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (Bericht: [docs/versions/0.12.md](docs/versions/0.12.md)), Vertrag 4 additiv (auf 0.11.0 Primer).
