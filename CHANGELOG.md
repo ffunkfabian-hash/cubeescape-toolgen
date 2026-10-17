@@ -7,6 +7,7 @@ Oberflächen der Waffen 1–9 nach dem Konzeptblatt „Waffen Texturen 1–9“,
 - Relief je Teil in der Normalkarte (Rändel, Rillen, Lamellen, Panel-Fugen, Bürstung, Korn; ≤ 0,3 mm, Fields bytegleich), Rezepte in `data/surface_recipes.json`.
 - Decals als einfarbige Regionsgewichte in W0/W1 (eigene Strichschrift, ImageMagick, `data/decals.json`, Anker `DECALS`), QA je Decal; Block `surface.recipe` (Werkstoff, Glätte, Abnutzung, Leuchtfarbe, Decals) für Cube Escape 0.76; `BAKE_SCHEMA` 2.
 - Sichtprüfung ohne Unity: `scripts/surface_preview.py` (`Previews/surface_<Waffe>.png`, Kontaktbogen); Golden-Karten `tests/golden/surface` (3,0 MB) in `verify_surface.py`.
+- Nachträge aus dem CE-0.75-Import: Anker-Drehung ist kein Vertrag (nur Position, Achsen aus `hold.muzzle_axis`), `hold.ads_eye_distance_m` auf die Abstände von Cube Escape 0.75.
 - Mindestversion: Karten Cube Escape 0.71, Rezept 0.76; ältere Fassung `v0.12.0`, ohne Karten `--contract 3`.
 
 ## 0.12.0 – Sightline (16.10.2026)

@@ -246,7 +246,10 @@ Zulieferung für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (
 alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
 
 - **Anker:** `Socket_Sight` je Waffe in Welt- und Ego-Modell (`anchors[]` wie `Socket_Muzzle`, im FBX-/GLB-Reimport geprüft): Punkt auf der
-  Visierlinie am hinteren Ende des Visiers, Drehung wie die Waffe – Unity +Z = Blick entlang des Laufs, +Y = oben. Bei Kimme/Korn, Reflex,
+  Visierlinie am hinteren Ende des Visiers. **Vertrag ist nur die Position:** die eigene Drehung der Leerobjekte (`Socket_Sight`,
+  `Socket_Muzzle`, alle Anker) ist im importierten FBX nicht die Unity-Konvention – die Blender-Achsen bleiben erhalten, die Vorwärtsachse
+  zeigt nach unten (Befund Cube Escape 0.75); `unity.localRotation` im Vertrag (identity) beschreibt den Wurzelraum, nicht das importierte
+  Leerobjekt. Laufrichtung aus `hold.muzzle_axis` (Unity +Z im Wurzelraum), oben = +Y der Wurzel. Bei Kimme/Korn, Reflex,
   Holo und Energie läuft die Linie über das Gehäuse (Oberkante des Visiers = Zielpunkt, die Bildmitte bleibt frei). Scopes
   (Scharfschützen-, Spurgewehr): offenes Okular mit Linse `ScopeEyeLens` 8 mm innen; `Socket_Eye` in deren Mitte auf derselben Linie,
   `hold.eye_radius_m` ihr Radius im Ego-Modell (Weltmodell: durch `tool_scale` geteilt) – dort die Render-Texture-Linse setzen. Die

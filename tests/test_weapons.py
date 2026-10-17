@@ -375,8 +375,10 @@ class SightTests(unittest.TestCase):
              "smg": "reflex", "fusion_rifle": "energy", "scout_rifle": "scope", "rocket_launcher": "iron"}
     # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
     # heavy 0.30, scout rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
-    EYE = {"pistol": .30, "assault_rifle": .26, "pulse_rifle": .26, "shotgun": .28, "sniper_rifle": .22, "smg": .24,
-           "fusion_rifle": .26, "scout_rifle": .20, "rocket_launcher": .30}
+    # Cube Escape 0.75 aims with these distances (CE ads.eye_distance_m / hip.scale, table in CE Docs/versions/0.75.md;
+    # Toolgen 0.13 adopted them so the ADS QA checks the real pose).
+    EYE = {"pistol": .40, "assault_rifle": .379, "pulse_rifle": .357, "shotgun": .65, "sniper_rifle": .221, "smg": .421,
+           "fusion_rifle": .40, "scout_rifle": .221, "rocket_launcher": .453}
 
     def test_sight_kinds_and_eye_distances(self):
         for key, tool in WEAPONS.items():

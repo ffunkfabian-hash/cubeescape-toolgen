@@ -1010,7 +1010,9 @@ def hold_block(tool):
                 "eye_radius_m": hold.get("eye_radius_m"),
                 "ads_eye_distance_m": hold["eye_distance_m"],
                 "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
-                              "optic, eyepiece of a scope); its +Z (Unity) looks along the bore, +Y is up. Aiming down "
+                              "optic, eyepiece of a scope). Only its position is contract: the empty's own rotation in "
+                              "an imported FBX keeps Blender's axes (measured in Cube Escape 0.75: its forward points "
+                              "down), so take the bore from hold.muzzle_axis and up from the root's +Y. Aiming down "
                               "sights puts it on the camera axis at ads_eye_distance_m (first-person metres; Toolgen "
                               "checks that pose, qa_game_fps.json ads). Iron, reflex and holo: the line runs over the "
                               "top of the housing, the screen centre stays free. Scopes: Socket_Eye on the same line at "

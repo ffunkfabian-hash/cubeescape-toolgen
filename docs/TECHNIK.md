@@ -611,7 +611,12 @@ und freie Bildmitte über alle Frames; Reimport vergleicht Anker-Matrizen und Mo
 
 ## Grenzen
 
-Blender-Reimport und SceneKit-Bilder belegen keine Unity- oder Gameplay-Abnahme. Anker unter anderem Socket_Hand,
+Blender-Reimport und SceneKit-Bilder belegen keine Unity- oder Gameplay-Abnahme. Die Drehung der Anker-Leerobjekte ist kein
+Vertrag (FBX: Blender-Achsen bleiben im Import, Befund Cube Escape 0.75); Achsen aus `hold.muzzle_axis`/`grip_axis`. Der Blender-Reimport
+kann das nicht prüfen (er macht die Achsenumrechnung rückgängig), nur Cube Escapes Anker-Test in Unity.
+`*_FPS_Game.glb` ist zwischen zwei Läufen derselben Quellen nicht immer bytegleich (gemessen 0.13: eine Tangente um 1e-4, gegenüber dem
+0.12-Lauf die Handnetze in anderer Reihenfolge); Werkzeug-UV1, Geometrie-QA und die Maskenkarten sind davon nicht betroffen (der Bake
+entfernt die Hände). Grund nicht festgehalten. Anker unter anderem Socket_Hand,
 Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket_Grab. Ältere Contract-Zielnamen
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.
