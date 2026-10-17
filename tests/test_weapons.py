@@ -94,7 +94,9 @@ class CatalogTests(unittest.TestCase):
             self.assertTrue(tool["clip"].endswith("_Use"))
 
     def test_every_element_is_used(self):
-        self.assertEqual(set(ELEMENTS), {tool["element"] for tool in WEAPONS.values()})
+        # Since 0.13 the glow follows the concept sheet (user, 17.10.2026): no weapon is kinetic any more; its palette
+        # material stays for older contracts and as a choice in Cube Escape.
+        self.assertEqual(set(ELEMENTS) - {"kinetic"}, {tool["element"] for tool in WEAPONS.values()})
 
 
 class DesignTests(unittest.TestCase):

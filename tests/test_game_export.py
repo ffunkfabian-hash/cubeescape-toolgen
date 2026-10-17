@@ -691,7 +691,7 @@ class EquipmentChannelTests(unittest.TestCase):
         block = ge.equipment_block(palette, used)
         self.assertEqual(list(ge.CHANNELS), list(block["channels"]))
         self.assertEqual("MT_Energy", block["channels"]["Energy"]["slot"])
-        self.assertEqual("void", block["channels"]["Energy"]["element"])
+        self.assertEqual("energy", block["channels"]["Energy"]["element"])     # 0.13: sheet colour cyan
         self.assertEqual(["M_RobotBody_Matte"], block["untouched_slots"])
         self.assertIn("--contract 1", block["older_consumers"])
         self.assertIn("0.64", block["minimum_consumer"])

@@ -59,7 +59,7 @@
       "animation": "animate_weapon.py",
       "clip": "Pistol_Use",
       "fps_clip": "Pistol_Use",
-      "element": "kinetic",
+      "element": "solar",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
@@ -80,7 +80,7 @@
       "animation": "animate_weapon.py",
       "clip": "AssaultRifle_Use",
       "fps_clip": "AssaultRifle_Use",
-      "element": "kinetic",
+      "element": "arc",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 16,
@@ -101,7 +101,7 @@
       "animation": "animate_weapon.py",
       "clip": "PulseRifle_Use",
       "fps_clip": "PulseRifle_Use",
-      "element": "energy",
+      "element": "void",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
@@ -143,7 +143,7 @@
       "animation": "animate_weapon.py",
       "clip": "SniperRifle_Use",
       "fps_clip": "SniperRifle_Use",
-      "element": "void",
+      "element": "energy",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 12,
@@ -165,7 +165,7 @@
       "animation": "animate_weapon.py",
       "clip": "SubmachineGun_Use",
       "fps_clip": "SubmachineGun_Use",
-      "element": "arc",
+      "element": "energy",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 18,
@@ -186,7 +186,7 @@
       "animation": "animate_weapon.py",
       "clip": "FusionRifle_Use",
       "fps_clip": "FusionRifle_Use",
-      "element": "energy",
+      "element": "void",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 14,
@@ -207,7 +207,7 @@
       "animation": "animate_weapon.py",
       "clip": "ScoutRifle_Use",
       "fps_clip": "ScoutRifle_Use",
-      "element": "kinetic",
+      "element": "arc",
       "materials": "equipment_channels",
       "hold": {
         "grip_tilt_degrees": 12,

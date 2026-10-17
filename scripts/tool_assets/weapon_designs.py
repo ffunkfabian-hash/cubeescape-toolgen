@@ -672,7 +672,7 @@ def sight_rule(kind, parts, mode, tool_scale, above=0.0):
 
 DESIGNS = {
     'pistol': {
-        'asset': 'CubeEscape_Pistol', 'clip': 'Pistol_Use', 'class': 'sidearm', 'element': 'kinetic', 'grip_tilt_degrees': 14,
+        'asset': 'CubeEscape_Pistol', 'clip': 'Pistol_Use', 'class': 'sidearm', 'element': 'solar', 'grip_tilt_degrees': 14,
         'grip_part': 'Grip', 'support_part': 'Grip', 'view_center': (0, -.04, .02), 'view_scale': .50,
         'trigger': 'FireAction', 'build': pistol,
         'fire_frame': 14, 'sight': sight_rule('iron', ('FrontSight', 'RearSight_-1', 'RearSight_1'), 'top', 1.35, .012),
@@ -680,7 +680,7 @@ DESIGNS = {
                       'keys': slide_keys((14, 0), (16, .034), (24, .004), (30, 0))}],
     },
     'assault_rifle': {
-        'asset': 'CubeEscape_AssaultRifle', 'clip': 'AssaultRifle_Use', 'class': 'assault_rifle', 'element': 'kinetic',
+        'asset': 'CubeEscape_AssaultRifle', 'clip': 'AssaultRifle_Use', 'class': 'assault_rifle', 'element': 'arc',
         'grip_tilt_degrees': 16, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.12, .05), 'view_scale': 1.15, 'trigger': 'FireAction', 'build': assault_rifle,
         'fire_frame': 14, 'sight': sight_rule('reflex', ('Optic', 'OpticGlow', 'OpticHood'), 'top', .72, .004),
@@ -688,7 +688,7 @@ DESIGNS = {
                       'keys': slide_keys((14, 0), (16, .05), (22, .006), (28, 0))}],
     },
     'pulse_rifle': {
-        'asset': 'CubeEscape_PulseRifle', 'clip': 'PulseRifle_Use', 'class': 'pulse_rifle', 'element': 'energy',
+        'asset': 'CubeEscape_PulseRifle', 'clip': 'PulseRifle_Use', 'class': 'pulse_rifle', 'element': 'void',
         'grip_tilt_degrees': 14, 'grip_part': 'Grip', 'support_part': 'Shroud',
         'view_center': (0, -.09, .05), 'view_scale': .95, 'trigger': 'FireAction', 'build': pulse_rifle,
         'fire_frame': 14, 'sight': sight_rule('holo', ('Sight', 'SightGlow'), 'top', .744, .004),
@@ -704,7 +704,7 @@ DESIGNS = {
                       'keys': slide_keys((36, 0), (46, .07), (56, 0))}],
     },
     'sniper_rifle': {
-        'asset': 'CubeEscape_SniperRifle', 'clip': 'SniperRifle_Use', 'class': 'sniper_rifle', 'element': 'void',
+        'asset': 'CubeEscape_SniperRifle', 'clip': 'SniperRifle_Use', 'class': 'sniper_rifle', 'element': 'energy',
         'grip_tilt_degrees': 12, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.14, .05), 'view_scale': 1.45, 'trigger': 'FireAction', 'build': sniper_rifle,
         'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .624),
@@ -714,7 +714,7 @@ DESIGNS = {
                       'keys': slide_keys((46, 0), (56, .085), (66, 0))}],
     },
     'smg': {
-        'asset': 'CubeEscape_SubmachineGun', 'clip': 'SubmachineGun_Use', 'class': 'smg', 'element': 'arc',
+        'asset': 'CubeEscape_SubmachineGun', 'clip': 'SubmachineGun_Use', 'class': 'smg', 'element': 'energy',
         'grip_tilt_degrees': 18, 'grip_part': 'Grip', 'support_part': 'Shroud',
         'view_center': (0, -.08, .03), 'view_scale': .75, 'trigger': 'FireAction', 'build': smg,
         'fire_frame': 14, 'sight': sight_rule('reflex', ('Sight', 'SightGlow'), 'top', 1.02, .012),
@@ -722,7 +722,7 @@ DESIGNS = {
                       'keys': slide_keys((14, 0), (15, .032), (17, 0), (18, 0), (19, .032), (21, 0), (22, 0), (23, .032), (25, 0))}],
     },
     'fusion_rifle': {
-        'asset': 'CubeEscape_FusionRifle', 'clip': 'FusionRifle_Use', 'class': 'fusion_rifle', 'element': 'energy',
+        'asset': 'CubeEscape_FusionRifle', 'clip': 'FusionRifle_Use', 'class': 'fusion_rifle', 'element': 'void',
         'grip_tilt_degrees': 14, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.13, .05), 'view_scale': 1.15, 'trigger': 'ChargeFireAction', 'build': fusion_rifle,
         'fire_frame': 46, 'sight': sight_rule('energy', ('SightPost',), 'top', .672, .008),
@@ -731,7 +731,7 @@ DESIGNS = {
                      {'node': 'Anim_Coil', 'channel': 'rotation', 'axis': 1, 'keys': slide_keys((10, 0), (46, 720))}],
     },
     'scout_rifle': {
-        'asset': 'CubeEscape_ScoutRifle', 'clip': 'ScoutRifle_Use', 'class': 'scout_rifle', 'element': 'kinetic',
+        'asset': 'CubeEscape_ScoutRifle', 'clip': 'ScoutRifle_Use', 'class': 'scout_rifle', 'element': 'arc',
         'grip_tilt_degrees': 12, 'grip_part': 'Grip', 'support_part': 'Handguard',
         'view_center': (0, -.14, .05), 'view_scale': 1.35, 'trigger': 'FireAction', 'build': scout_rifle,
         'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .648),

@@ -201,15 +201,17 @@ class RecordingKit:
 
 # Primitive arguments and all sockets of the pre-reload designs (07df813); parentage is deliberately excluded.
 # 0.12.0: digests over values rounded to 0.1 nm (platform-independent) and the z-fighting fixes.
+# 0.13.0: seven weapons glow in the concept sheet's colour (element, user 17.10.2026); only the glow material name changes,
+# the geometry digest with the old element is unchanged (checked when the digests were updated).
 REST_GEOMETRY = {
-    'pistol': '241a56a69b2414e1941d20735f4128ae844c1bccf32cf3b4b367997ef0a9d056',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
-    'assault_rifle': '0ebce506807193b81d4e2807b86cf47b1c9413f494a74a93ed395ddfbdbd1538',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
-    'pulse_rifle': '5e6264bde87a14f2130cbb1e7e282a87203c4ac4e8669aca0bdfe7767a566b75',
+    'pistol': '068ac572f7c3c781168955d0aa0b036ad1673bfef4f9ae78fb218083b5b56f86',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
+    'assault_rifle': '29378d3a5d8183aa0d6ebba6a33b070fa1fe25c1594d07f3f7783788a9d788a1',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
+    'pulse_rifle': 'e6278e3e0c567ef6f0a74d1ae826c7141497ad5f1490c45e5c3f9410b481a702',
     'shotgun': 'cf77d8ee2ffe99348fb8234929c40d1e81bb96e63e7602fe4fd0f89ae81c2746',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
-    'sniper_rifle': 'dcada8e3fd379bfd123e0ac916efef3c2458357b90ddcb2e5cb8785362dfdd46',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
-    'smg': 'fe0ab25c6161db85fb80811004ee1342f54d91518e8f75ae7b9f31f912dd9302',
-    'fusion_rifle': '0c69447989fc4a4bb114a0d0b5d8a4fc14214303b7ad7dca3e638cdc83252982',
-    'scout_rifle': 'd14c0f9fd091f5f798c055e6ef2bc3d0a201f9046e4034b91cb6f95c5e27c756',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
+    'sniper_rifle': '5f741e3dfbbea47ac37bbd07f024625968ac5a1c88cf1a926b3713e62ebc725a',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
+    'smg': '07483640e905bf3b6463b7a903b4642ef6479b4680b3bb630e277326b8fd42bc',
+    'fusion_rifle': 'c916097c33cf27457430636e8b6e0ac3675be2ead2e1ec5c729b118c9ad27f06',
+    'scout_rifle': '69a7fd1966b6fad42c12f65c42cfe3db097e00d07d86ddc467b235f1d0ca3da1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
     'rocket_launcher': 'ba6f02a8ad6c993dee3fbe1f5ba24beae0285e562be1da1a89208f47370d8675',
 }
 

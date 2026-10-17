@@ -296,14 +296,14 @@ Werte (0.7.0, `output/_standard`; Dreiecke LOD0 / LOD1, Quelle = vor dem Export)
 
 | Waffe | Element | Länge (m) | Welt: Quelle → LOD0 / LOD1 | Renderer | Ego: Quelle → LOD0 | Hände (Berührung) |
 |---|---|---|---|---|---|---|
-| 1 Pistole | kinetic | 0.24 | 6 076 → 3 498 / 1 048 | 2 | 12 808 → 10 996 | 0.0 mm |
-| 2 Sturmgewehr | kinetic | 0.93 | 13 636 → 5 998 / 1 798 | 2 | 27 100 → 13 996 | 0.0 mm / 0.1 mm |
-| 3 Impulsgewehr | energy | 0.86 | 8 924 → 5 998 / 1 796 | 2 | 22 388 → 13 998 | 0.0 mm / 0.1 mm |
+| 1 Pistole | solar | 0.24 | 6 076 → 3 498 / 1 048 | 2 | 12 808 → 10 996 | 0.0 mm |
+| 2 Sturmgewehr | arc | 0.93 | 13 636 → 5 998 / 1 798 | 2 | 27 100 → 13 996 | 0.0 mm / 0.1 mm |
+| 3 Impulsgewehr | void | 0.86 | 8 924 → 5 998 / 1 796 | 2 | 22 388 → 13 998 | 0.0 mm / 0.1 mm |
 | 4 Schrotflinte | solar | 0.90 | 10 508 → 5 998 / 1 798 | 2 | 23 972 → 13 994 | 0.0 mm / 0.0 mm |
-| 5 Scharfschützengewehr | void | 1.13 | 15 168 → 6 998 / 2 098 | 2 | 28 632 → 14 998 | 0.1 mm / 0.0 mm |
-| 6 Maschinenpistole | arc | 0.62 | 10 392 → 4 998 / 1 498 | 2 | 23 856 → 12 996 | 0.0 mm / 0.0 mm |
-| 7 Fusionsgewehr | energy | 0.96 | 11 524 → 6 996 / 2 096 | 4 | 24 988 → 14 994 | 0.1 mm / 0.0 mm |
-| 8 Spurgewehr | kinetic | 1.04 | 13 784 → 5 998 / 1 798 | 2 | 27 248 → 13 998 | 0.0 mm / 0.2 mm |
+| 5 Scharfschützengewehr | energy | 1.13 | 15 168 → 6 998 / 2 098 | 2 | 28 632 → 14 998 | 0.1 mm / 0.0 mm |
+| 6 Maschinenpistole | energy | 0.62 | 10 392 → 4 998 / 1 498 | 2 | 23 856 → 12 996 | 0.0 mm / 0.0 mm |
+| 7 Fusionsgewehr | void | 0.96 | 11 524 → 6 996 / 2 096 | 4 | 24 988 → 14 994 | 0.1 mm / 0.0 mm |
+| 8 Spurgewehr | arc | 1.04 | 13 784 → 5 998 / 1 798 | 2 | 27 248 → 13 998 | 0.0 mm / 0.2 mm |
 | 9 Raketenwerfer | solar | 0.72 | 11 364 → 6 998 / 2 098 | 2 | 24 828 → 14 996 | 0.0 mm / 0.0 mm |
 
 
@@ -471,14 +471,14 @@ kennt; Farbe, Werkstoffart, Glätte, Abnutzung, Schmutz, Kratzer, Rauschen und G
   (keine Naht), 0,5–6 % der Insel, Seitenverhältnis Rechteck/Bild ≤ 25 %.
 - **Rezept** (`surface.recipe`, siehe [UNITY_EINBAU](UNITY_EINBAU.md) › Maskenkarten): Palette, Leuchtfarbe/Element des Blatts, Abnutzung
   (subtil 0,2, mittel 0,5, stark 0,8), je Kanal Werkstoffart und Glätte (≤ 0,45 = 1 − `finish.min_roughness`), Decals mit Texelzahl, Relief.
-  `glow.element` folgt der Leuchtfarbe des Blatts, `model_element` dem Modell (`weapon_designs.py`); gleich nur bei Schrotflinte und
-  Raketenwerfer (Element-Zuordnung 15.10.2026 ohne lesbares Blatt; Angleichen ist eine Entscheidung des Nutzers, nicht Teil von 0.13).
+  `glow.element` folgt der Leuchtfarbe des Blatts, `model_element` dem Modell (`weapon_designs.py`); seit 0.13 gleich, weil die Modelle
+  die Farbe des Blatts übernehmen (Entscheidung des Nutzers 17.10.2026).
 - **Bake-Schlüssel:** `BAKE_SCHEMA` 2; `settings.design` (Relief, Decal-Anker, Hash des Katalogs, ImageMagick-Version, Samples,
   `pattern_scale`) gehört zum Schlüssel; die Stufe liest zusätzlich die Quellmodelle und hat `magick` im Programmschlüssel.
   Ohne Rezept und Decals (Portalwerfer, Magnetgreifer, Taschenlampe, Bogen) bleiben alle Karten bytegleich zu 0.12.
 - **Abnahme:** `verify_surface.py` zählt Decal-Texel getrennt (höchstens die im Rezept gemeldeten, nur in Decal-Kanälen) und vergleicht die
-  Karten der Waffen mit `tests/golden/surface` (sha256 aller Karten, Welt-W0/W1/Normal als PNG; geänderte Bytes bestehen bei mittlerer
-  Abweichung ≤ 0,5/255; neu schreiben mit `--update-golden`). Determinismus: `verify_surface.py --determinism` backt bei 1 und 8 Threads.
+  Karten der Waffen mit `tests/golden/surface/manifest.json` (sha256 aller 72 Karten, keine Referenzbilder – Entscheidung des Nutzers;
+  jede geänderte Karte fällt durch, bis sie mit `--update-golden` bestätigt ist). Determinismus: `verify_surface.py --determinism` backt bei 1 und 8 Threads.
 - **Sichtprüfung ohne Unity:** `blender -b --factory-startup --python scripts/surface_preview.py -- <output> [--tool <id>]` →
   `<output>/Previews/surface_<id>.png` (Seite +x, Dreiviertel, Ego-Ausschnitt durch die Viewmodel-Kamera, je Modell Regionen farbcodiert,
   Fields, Normal) und `surface_contact.png`. Das Vorschau-Material ahmt den Masken-Modus nur nach (Palette des Rezepts, Kantenabnutzung aus

@@ -25,12 +25,9 @@ COMPONENTS = {5126: ("f", 4), 5123: ("H", 2), 5125: ("I", 4)}
 TANGENT_PRIMITIVE_QUOTE = .9
 TANGENT_MODEL_QUOTE = .98
 TYPE_WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
-# Golden maps of the weapons (Toolgen 0.13): sha256 of every map in manifest.json, full world maps W0/W1/Normal as PNG
-# (Ego only by hash: 24 MB for all of them would not fit the repository). A changed hash passes when the golden PNG exists
-# and the mean absolute difference stays within GOLDEN_TOLERANCE (same rule as Cube Escape's CubegenPaintTests).
+# Golden maps of the weapons (Toolgen 0.13): sha256 of every map in manifest.json, no reference images (user, 17.10.2026).
+# Every changed map fails until it is confirmed with --update-golden.
 GOLDEN = ROOT / "tests/golden/surface"
-GOLDEN_TOLERANCE = .5            # mean |difference| in 1/255 per map
-GOLDEN_PNG_KINDS = ("W0", "W1", "Normal")
 
 
 def blender_executable():
@@ -346,12 +343,7 @@ def golden_check(output, tools, update=False):
         if not files:
             continue
         if update:
-            target = GOLDEN / tool
-            target.mkdir(parents=True, exist_ok=True)
             manifest["maps"][tool] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
-            for path in files:
-                if "_FPS_" not in path.name and path.stem.rsplit("_", 1)[-1] in GOLDEN_PNG_KINDS:
-                    shutil.copy2(path, target / path.name)
             continue
         expected = manifest["maps"].get(tool)
         if expected is None:
@@ -360,20 +352,12 @@ def golden_check(output, tools, update=False):
         for path in files:
             compared += 1
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if expected.get(path.name) == digest:
-                continue
-            golden = GOLDEN / tool / path.name
-            if not golden.exists():
-                errors.append(f"{tool}/{path.name}: sha256 differs from the golden and no golden PNG to compare")
-                continue
-            a = surface.png_array(path.read_bytes()).astype(np.float64)
-            b = surface.png_array(golden.read_bytes()).astype(np.float64)
-            difference = float(np.abs(a - b).mean()) if a.shape == b.shape else float("inf")
-            if difference > GOLDEN_TOLERANCE:
-                errors.append(f"{tool}/{path.name}: mean difference {difference:.3f}/255 > {GOLDEN_TOLERANCE}")
+            if expected.get(path.name) != digest:
+                errors.append(f"{tool}/{path.name}: sha256 differs from the golden (confirm a deliberate change with "
+                              "--update-golden)")
     if update:
         manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel, baked on the Mac, standard tier): sha256 "
-                            "of every map; world W0/W1/Normal also as PNG in <tool>/. Rewrite with verify_surface.py "
+                            "of every map, no reference images. Rewrite with verify_surface.py "
                             "--update-golden after a deliberate change.")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")

@@ -15,7 +15,7 @@ bash viewer/build.sh output/_quick
 open output/_quick/ToolGenViewer.app
 ```
 
-Dazu kommen neun Handwaffen (Pistole bis Raketenwerfer, Elementfarben KINETIC/ENERGY/SOLAR/VOID/ARC) mit Ego-Modell, Stützhand am Handschutz,
+Dazu kommen neun Handwaffen (Pistole bis Raketenwerfer, Elementfarben nach dem Konzeptblatt: SOLAR, ARC, VOID, ENERGY; KINETIC bleibt in der Palette) mit Ego-Modell, Stützhand am Handschutz,
 Rückstoß und Use-Clip: [TECHNIK](docs/TECHNIK.md) › Waffen 1–9. Seit 0.9.0 tragen alle Ego-Modelle Zustandsclips (Idle, Walk,
 Sprint, Fire, Zielen, Draw/Holster, Inspect, Reload) in einer eigenen Clips-Datei: [EGO_CLIPS](docs/EGO_CLIPS.md).
 
