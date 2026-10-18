@@ -28,7 +28,8 @@ class EgoClipTableTests(unittest.TestCase):
             # 0.11.0: the fusion rifle adds its Charge loop (T3)
             self.assertEqual(len(self.tools[tool_id]["clips"]), 16 if tool_id == "fusion_rifle" else 15, tool_id)
         for tool_id in ego_clip_table.TOOL_ORDER:
-            self.assertEqual(len(self.tools[tool_id]["clips"]), 8, tool_id)
+            # 0.15.0: Inspect_B for the three ego tools, not the bow
+            self.assertEqual(len(self.tools[tool_id]["clips"]), 8 if tool_id == "bow" else 9, tool_id)
 
     def test_only_expected_clips_loop(self):
         expected = {"Idle", "Walk", "Sprint", "AimIdle"}

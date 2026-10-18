@@ -87,6 +87,8 @@ def clip_list(data, tool, motion=None):
             continue
         if "tools" in entry and tool["id"] not in entry["tools"]:
             continue                           # clip of a few weapons only (Charge: fusion rifle)
+        if tool["id"] in entry.get("except_tools", ()):
+            continue                           # not for these models (Inspect_B: not the bow)
         length = entry["length"] if isinstance(entry["length"], int) else lookup(params, entry["length"])
         assert length >= 2, (tool["id"], entry["suffix"], length)
         events = []

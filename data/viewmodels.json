@@ -74,7 +74,29 @@
         -2.0,
         -0.12
       ],
-      "support_roll_degrees": -60
+      "support_roll_degrees": -60,
+      "arm_pose": {
+        "R": {
+          "forearm": [
+            0.454,
+            -0.617,
+            0.643
+          ],
+          "upper": [
+            -0.3,
+            0.95,
+            0.15
+          ],
+          "max_wrist_bend_degrees": 55
+        },
+        "L": {
+          "max_wrist_bend_degrees": 55
+        }
+      },
+      "use_event": {
+        "name": "Fire",
+        "frame": 14
+      }
     },
     "magnet_gripper": {
       "hand": [
@@ -113,7 +135,29 @@
         -2.0,
         -0.2
       ],
-      "support_roll_degrees": -60
+      "support_roll_degrees": -60,
+      "arm_pose": {
+        "R": {
+          "forearm": [
+            0.4,
+            -0.653,
+            0.643
+          ],
+          "upper": [
+            -0.3,
+            0.95,
+            0.15
+          ],
+          "max_wrist_bend_degrees": 55
+        },
+        "L": {
+          "max_wrist_bend_degrees": 55
+        }
+      },
+      "use_event": {
+        "name": "Grab",
+        "frame": 13
+      }
     },
     "flashlight": {
       "hand": [
@@ -144,7 +188,26 @@
         0.6,
         -2.0,
         -0.3
-      ]
+      ],
+      "arm_pose": {
+        "R": {
+          "forearm": [
+            0.436,
+            -0.693,
+            0.574
+          ],
+          "upper": [
+            -0.3,
+            0.95,
+            0.15
+          ],
+          "max_wrist_bend_degrees": 55
+        }
+      },
+      "use_event": {
+        "name": "Switch",
+        "frame": 14
+      }
     },
     "bow": {
       "hand": [

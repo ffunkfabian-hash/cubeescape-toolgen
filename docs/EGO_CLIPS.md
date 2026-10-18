@@ -25,7 +25,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Suffix | Pistole | Maschinenpistole | Sturmgewehr | Spurgewehr | Impulsgewehr | Schrotflinte | Fusionsgewehr | Scharfschützengewehr | Raketenwerfer | Werkzeuge (Portalkanone / Magnetgreifer / Taschenlampe / Bogen) | Loop | Von → nach | Fadenkreuz frei | Unterbrechbar | Events (Frames je Werkzeug unten) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Use | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | Nein | rest → rest | Ja | Ja | — |
+| Use | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | Nein | rest → rest | Ja | Ja | Fire, Grab, Switch; Bogen: eigene Marker |
 | Idle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 / 72 / 72 / 72 | Ja | rest → rest | Ja | Ja | — |
 | Walk | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 / 32 / 32 / 32 | Ja | rest → rest | Ja | Ja | FootL, FootR |
 | SprintIn | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | rest → sprint | Ja | Ja | — |
@@ -39,7 +39,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
 | Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
 | Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
-| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | — / — / — / — | Nein | rest → rest | Nein | Ja | — |
+| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | — |
 | Reload | 42 | 48 | 56 | 56 | 56 | 64 | 60 | 64 | 78 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
 | Charge | — | — | — | — | — | — | 18 | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
 
@@ -49,7 +49,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `Pistol_Use` | 1–97 | 4.00 | — |
+| `Pistol_Use` | 1–97 | 4.00 | Fire 13 |
 | `Pistol_Idle` | 101–173 | 3.00 | — |
 | `Pistol_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `Pistol_SprintIn` | 213–221 | 0.33 | — |
@@ -70,7 +70,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `SubmachineGun_Use` | 1–97 | 4.00 | — |
+| `SubmachineGun_Use` | 1–97 | 4.00 | Fire 13 |
 | `SubmachineGun_Idle` | 101–173 | 3.00 | — |
 | `SubmachineGun_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `SubmachineGun_SprintIn` | 213–220 | 0.29 | — |
@@ -91,7 +91,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `AssaultRifle_Use` | 1–97 | 4.00 | — |
+| `AssaultRifle_Use` | 1–97 | 4.00 | Fire 13 |
 | `AssaultRifle_Idle` | 101–173 | 3.00 | — |
 | `AssaultRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `AssaultRifle_SprintIn` | 213–221 | 0.33 | — |
@@ -112,7 +112,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `ScoutRifle_Use` | 1–97 | 4.00 | — |
+| `ScoutRifle_Use` | 1–97 | 4.00 | Fire 13 |
 | `ScoutRifle_Idle` | 101–173 | 3.00 | — |
 | `ScoutRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `ScoutRifle_SprintIn` | 213–221 | 0.33 | — |
@@ -133,7 +133,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `PulseRifle_Use` | 1–97 | 4.00 | — |
+| `PulseRifle_Use` | 1–97 | 4.00 | Fire 13 |
 | `PulseRifle_Idle` | 101–173 | 3.00 | — |
 | `PulseRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `PulseRifle_SprintIn` | 213–221 | 0.33 | — |
@@ -154,7 +154,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `Shotgun_Use` | 1–97 | 4.00 | — |
+| `Shotgun_Use` | 1–97 | 4.00 | Fire 13 |
 | `Shotgun_Idle` | 101–173 | 3.00 | — |
 | `Shotgun_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `Shotgun_SprintIn` | 213–223 | 0.42 | — |
@@ -175,7 +175,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `FusionRifle_Use` | 1–97 | 4.00 | — |
+| `FusionRifle_Use` | 1–97 | 4.00 | Fire 45 |
 | `FusionRifle_Idle` | 101–173 | 3.00 | — |
 | `FusionRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `FusionRifle_SprintIn` | 213–223 | 0.42 | — |
@@ -197,7 +197,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `SniperRifle_Use` | 1–97 | 4.00 | — |
+| `SniperRifle_Use` | 1–97 | 4.00 | Fire 13 |
 | `SniperRifle_Idle` | 101–173 | 3.00 | — |
 | `SniperRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `SniperRifle_SprintIn` | 213–224 | 0.46 | — |
@@ -218,7 +218,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `RocketLauncher_Use` | 1–97 | 4.00 | — |
+| `RocketLauncher_Use` | 1–97 | 4.00 | Fire 13 |
 | `RocketLauncher_Idle` | 101–173 | 3.00 | — |
 | `RocketLauncher_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `RocketLauncher_SprintIn` | 213–225 | 0.50 | — |
@@ -239,7 +239,7 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `PortalEmitter_Use` | 1–97 | 4.00 | — |
+| `PortalEmitter_Use` | 1–97 | 4.00 | Fire 13 |
 | `PortalEmitter_Idle` | 101–173 | 3.00 | — |
 | `PortalEmitter_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `PortalEmitter_SprintIn` | 213–221 | 0.33 | — |
@@ -248,12 +248,13 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `PortalEmitter_Draw` | 261–273 | 0.50 | Ready 12 |
 | `PortalEmitter_Holster` | 277–285 | 0.33 | Holstered 8 |
 | `PortalEmitter_Inspect_A` | 289–385 | 4.00 | — |
+| `PortalEmitter_Inspect_B` | 389–485 | 4.00 | — |
 
 ### Magnetgreifer (`magnet_gripper`)
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `MagnetGripper_Use` | 1–97 | 4.00 | — |
+| `MagnetGripper_Use` | 1–97 | 4.00 | Grab 12 |
 | `MagnetGripper_Idle` | 101–173 | 3.00 | — |
 | `MagnetGripper_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `MagnetGripper_SprintIn` | 213–221 | 0.33 | — |
@@ -262,12 +263,13 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `MagnetGripper_Draw` | 261–273 | 0.50 | Ready 12 |
 | `MagnetGripper_Holster` | 277–285 | 0.33 | Holstered 8 |
 | `MagnetGripper_Inspect_A` | 289–385 | 4.00 | — |
+| `MagnetGripper_Inspect_B` | 389–485 | 4.00 | — |
 
 ### Taschenlampe (`flashlight`)
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `Flashlight_Use` | 1–97 | 4.00 | — |
+| `Flashlight_Use` | 1–97 | 4.00 | Switch 13 |
 | `Flashlight_Idle` | 101–173 | 3.00 | — |
 | `Flashlight_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `Flashlight_SprintIn` | 213–221 | 0.33 | — |
@@ -276,12 +278,13 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `Flashlight_Draw` | 261–273 | 0.50 | Ready 12 |
 | `Flashlight_Holster` | 277–285 | 0.33 | Holstered 8 |
 | `Flashlight_Inspect_A` | 289–385 | 4.00 | — |
+| `Flashlight_Inspect_B` | 389–485 | 4.00 | — |
 
 ### Bogen (`bow`)
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `Bow_Use` | 1–97 | 4.00 | — |
+| `Bow_Use` | 1–97 | 4.00 | Marker des Modells, `clips[0].events` im Vertrag |
 | `Bow_Idle` | 101–173 | 3.00 | — |
 | `Bow_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
 | `Bow_SprintIn` | 213–221 | 0.33 | — |
