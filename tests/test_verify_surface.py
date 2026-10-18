@@ -51,3 +51,43 @@ class VerifySurfaceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(NUMPY_AVAILABLE, "numpy is available in Blender's Python")
+class GoldenAlternatesTests(unittest.TestCase):
+    """Toolgen 0.15.1: a map may match its golden hash or a confirmed alternate (the robot normal bake flips one texel)."""
+
+    @classmethod
+    def setUpClass(cls):
+        VerifySurfaceTests.setUpClass()
+        cls.verify = VerifySurfaceTests.verify
+
+    def manifest(self):
+        return {"maps": {"t": {"a.png": "A", "b.png": "B"}}, "alternates": {"t": {"a.png": ["A2"]}}}
+
+    def test_primary_and_alternate_pass_anything_else_fails(self):
+        m = self.manifest()
+        self.assertTrue(self.verify.golden_accepts(m, "t", "a.png", "A"))
+        self.assertTrue(self.verify.golden_accepts(m, "t", "a.png", "A2"))
+        self.assertFalse(self.verify.golden_accepts(m, "t", "a.png", "B"))
+        self.assertFalse(self.verify.golden_accepts(m, "t", "b.png", "A2"), "alternates belong to one map")
+        self.assertFalse(self.verify.golden_accepts(m, "u", "a.png", "A"))
+
+    def test_update_keeps_a_flip_and_drops_alternates_of_new_content(self):
+        m = self.manifest()
+        self.verify.golden_update(m, "t", {"a.png": "A2", "b.png": "B"})       # the bake flipped: both stay accepted
+        self.assertEqual("A2", m["maps"]["t"]["a.png"])
+        self.assertEqual({"a.png": ["A"]}, m["alternates"]["t"])
+        self.verify.golden_update(m, "t", {"a.png": "NEW", "b.png": "B"})      # a deliberate change: no stale alternate
+        self.assertEqual("NEW", m["maps"]["t"]["a.png"])
+        self.assertNotIn("t", m["alternates"])
+        self.assertFalse(self.verify.golden_accepts(m, "t", "a.png", "A"))
+
+    def test_the_repository_golden_names_only_existing_maps(self):
+        import json
+        golden = json.loads((Path(__file__).resolve().parents[1] / "tests/golden/surface/manifest.json").read_text())
+        for tool, maps in golden.get("alternates", {}).items():
+            for name, hashes in maps.items():
+                self.assertIn(name, golden["maps"][tool])
+                self.assertNotIn(golden["maps"][tool][name], hashes)
+                self.assertTrue(all(len(value) == 64 for value in hashes))

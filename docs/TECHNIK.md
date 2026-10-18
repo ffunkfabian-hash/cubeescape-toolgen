@@ -714,6 +714,8 @@ staucht den Schaft (Steigung 0,13–0,4) samt seiner Kleinteile (Zellenfenster, 
 den Bereich zwischen Abzug und Stützhand (0,45–0,6); Rundteile quer zur Achse werden dort oval. Der `hold`-Block ist absichtlich
 derselbe wie im Weltmodell; sein Satz „`Socket_SupportHand` in der Mitte des Handschutzes“ gilt für die Variante nicht (Block `robot`).
 FBX und .blend tragen Exportzeit und den absoluten Pfad des Bauordners, Bytegleichheit gilt nur für GLB und Viewer-Daten.
+Der Cycles-Normal-Bake ist zwischen Läufen nicht immer bitgleich: Bei den Roboter-Varianten von Spur- und Scharfschützengewehr kippt je ein
+Texel um eine Stufe (0.15.1); das Golden führt dafür belegte Ausweich-Hashes (`tests/golden/surface/manifest.json` › `alternates`).
 Der Spiel-Export (Renderer, LODGroup, Kollision, Clip, Materialien) und die Ego-Kamera sind in Blender, GLB und FBX geprüft,
 aber noch nicht in Unity abgenommen. Die Spielmodelle kommen erst später in Cube Escape; dann entstehen dort die `_Matte`-Varianten
 und `M_GlowWarm` aus den Palettenwerten (`ce_status` im Vertrag).
@@ -754,6 +756,11 @@ Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
   `scout_rifle/robot` 1,4–1,6 px vor, Test `CoplanarRobotTests`. Auch 0,8 mm statt 1 mm an einer Kante flackerte noch (2 von 15
   Bildern): Zonen mit feinen Dekoren 1:1 lassen, die Stauchung in schlichte Teile (Lauf, Schaft) legen; nach jeder Achsenänderung
   `viewer/test_determinism.py --model <tool>/robot --runs 16`. Gilt auch für: jede nicht gleichmäßige Skalierung.
+- 18.10.2026 · Golden als sha256 und Bake-Rauschen – Ein einziger Texel auf der Rundungsgrenze macht eine Karte zwischen Läufen
+  verschieden, obwohl Eingabe und Einstellungen gleich sind (Normal-Bake, 1 von 3 Läufen, jede Thread-Zahl). Vor dem Umschreiben eines
+  Golden die Karte drei- bis fünfmal aus denselben Dateien nachbacken; zwei Bauten mit gleichem Ergebnis beweisen keine Stabilität.
+  Belegte Varianten als Ausweich-Hash führen, nicht den Hauptwert hin- und herschreiben. Beleg: 0.15.1, `GoldenAlternatesTests`.
+  Gilt auch für: jede Bild- oder Kartenprüfung über Hashes.
 - 17.10.2026 · Bytegleichheit belegen – GLB und Viewer-Daten sind zwischen Läufen bytegleich, FBX und .blend nicht (Exportzeit und
   absoluter Pfad des Bauordners, Länge je Worktree verschieden); Ego-Spiel-GLB bleibt die bekannte Ausnahme aus 0.13. Beleg:
   `scripts/compare_models.py` gegen die 0.13-Ausgabe (205 Dateien gleich). Gilt auch für: jede Zusatzvariante, die bestehende

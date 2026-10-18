@@ -1,4 +1,17 @@
 {
+  "alternates": {
+    "scout_rifle": {
+      "CubeEscape_ScoutRifle_Robot_Game_Normal.png": [
+        "74150ca02f78f620da977ebeaa50f3865ae6d7e46c46e8eea0f657b620f1971e"
+      ]
+    },
+    "sniper_rifle": {
+      "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
+        "8a7311229be4ab616858e89223e4e968974490ec69f0f4e6dbc31f7bf222c0de"
+      ]
+    }
+  },
+  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants of the scout and sniper rifle flips one texel by one step between runs (same input and settings, any thread count; measured 18.10.2026: 1 of 3 runs). Only flips seen in a bake of unchanged inputs belong here; a map with new content drops them.",
   "maps": {
     "assault_rifle": {
       "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "a43576f80f1ad45c9d63dd7db54b77bd717aab4c64b19016af29608cec7dc586",

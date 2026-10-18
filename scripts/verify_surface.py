@@ -334,37 +334,69 @@ def determinism(folder, tool):
                 "matches_each_other": hashes[0] == hashes[1]}
 
 
+def golden_accepts(manifest, tool, name, digest):
+    """Is ``digest`` a golden hash of the map: the primary one or a confirmed alternate (``manifest["alternates"]``)?"""
+    return digest == manifest["maps"].get(tool, {}).get(name) or digest in manifest.get("alternates", {}).get(tool, {}).get(name, [])
+
+
+def golden_update(manifest, tool, digests):
+    """New golden entries of one tool from ``digests`` {map: sha256}. A map whose new hash is its old primary or an old
+    alternate keeps its alternates (the old primary joins them: the bake flips between known values); a map with new
+    content drops them, so a stale alternate never masks a later change."""
+    old = manifest["maps"].get(tool, {})
+    alternates = manifest.setdefault("alternates", {})
+    kept = {}
+    for name, digest in digests.items():
+        known = [old[name]] if name in old else []
+        known += alternates.get(tool, {}).get(name, [])
+        if digest in known:
+            others = sorted({value for value in known if value != digest})
+            if others:
+                kept[name] = others
+    manifest["maps"][tool] = dict(digests)
+    if kept:
+        alternates[tool] = kept
+    else:
+        alternates.pop(tool, None)
+
+
 def golden_check(output, tools, update=False):
-    """Compare (or with ``update`` rewrite) the weapons' maps against tests/golden/surface."""
+    """Compare (or with ``update`` rewrite) the weapons' maps against tests/golden/surface. A map may also match one of its
+    confirmed alternates (``alternates``, Toolgen 0.15.1): two robot normal maps flip one texel by one step between bakes."""
     manifest_path = GOLDEN / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"maps": {}}
-    errors, compared = [], 0
+    errors, compared, alternate = [], 0, []
     for tool in tools:
         folder = output / tool
         files = sorted(folder.glob("*_Game_*.png"))
         if not files:
             continue
         if update:
-            manifest["maps"][tool] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+            golden_update(manifest, tool, {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files})
             continue
-        expected = manifest["maps"].get(tool)
-        if expected is None:
+        if tool not in manifest["maps"]:
             errors.append(f"{tool}: no golden maps")
             continue
         for path in files:
             compared += 1
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if expected.get(path.name) != digest:
+            if not golden_accepts(manifest, tool, path.name, digest):
                 errors.append(f"{tool}/{path.name}: sha256 differs from the golden (confirm a deliberate change with "
                               "--update-golden)")
+            elif digest != manifest["maps"][tool].get(path.name):
+                alternate.append(f"{tool}/{path.name}")
     if update:
         manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* "
                             "maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 "
                             "of every map, no reference images. Rewrite with verify_surface.py "
                             "--update-golden after a deliberate change.")
+        manifest["alternates_note"] = ("Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot "
+                                       "variants of the scout and sniper rifle flips one texel by one step between runs (same "
+                                       "input and settings, any thread count; measured 18.10.2026: 1 of 3 runs). Only flips "
+                                       "seen in a bake of unchanged inputs belong here; a map with new content drops them.")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    return {"compared": compared, "errors": errors}
+    return {"compared": compared, "errors": errors, "alternate_matches": alternate}
 
 
 def main():
@@ -421,7 +453,8 @@ def main():
     if golden["errors"]:
         report["passed"] = False
         report["tools"].append({"tool": "golden", "errors": golden["errors"]})
-    print(f"{'PASS' if not golden['errors'] else 'FAIL'} golden maps compared={golden['compared']}"
+    print(f"{'PASS' if not golden['errors'] else 'FAIL'} golden maps compared={golden['compared']} "
+          f"alternates={len(golden['alternate_matches'])}"
           f"{' (updated)' if args.update_golden else ''}")
     if args.report:
         args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
