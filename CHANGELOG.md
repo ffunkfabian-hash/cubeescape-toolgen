@@ -1,5 +1,21 @@
 # Änderungen
 
+## 0.16.0 – Finegrain (18.10.2026)
+
+Ego-Karten in 2048² (Entscheidung des Nutzers 18.10.2026, ersetzt „Ego 2048² nein“ vom 17.10.; Wunsch der Equipment-Linie, cubeescape-rules#3),
+Vertrag 4 additiv (Bericht: [docs/versions/0.16.md](docs/versions/0.16.md)). Gebaut in einer Cloud-Sitzung, am Mac abgenommen (Standard-Stufe, Golden neu, Karten- und Vorschauprüfung).
+
+- `surface.MAP_RESOLUTION['viewmodel']` 1024 → 2048 für alle zwölf Ego-Modelle; Welt und Roboter-Variante bleiben 512². `surface.maps.resolution` der
+  Ego-Verträge 2048, Dateinamen unverändert.
+- Dilatation je Auflösung (`dilation_px`: 512 → 8 px, 2048 → 16 px = dieselben 8/1024 des Atlas wie bei 1024), Satzgrenze je Auflösung (2048 → 10 MB,
+  gemessen 4,5–5,9 MB je Ego-Satz), Randregel als UV-Abstand ausgewiesen (`uv1.margin_px_at_map`: 2 px bei 512, 8 px bei 2048; `qa_game*.json` › `margin_px_at`).
+- Golden: die 36 Ego-Karten der Waffen neu geschrieben (`stale`-Markierung getilgt, `verify_surface.py --update-golden`); die 68 Welt- und Roboter-Hashes sind
+  bytegleich zu 0.15.1 geblieben.
+- Am Mac gefunden und behoben: die freie Ecke wurde mit 16 px bei 1024 gegen das ganze 16-px-Band geprüft, was bei Layouts mit Inseln nahe der Ecke elf Spielexporte
+  scheitern ließ (`CORNER_CHECKS`: je Karte das Eck-Texel); `verify_surface.py` bemisst die Dilatationsgrenze an einem Raster mit Randtoleranz 1e-5 (float32-UV1 der GLB; Bake rechnet
+  vorher 1 Randtexel mehr bei Sturmgewehr und Bogen).
+- Mindestversion des Abnehmers: Cube Escape 0.94 liest `maps.resolution`; ältere Fassung mit 1024²: `v0.15.1`.
+
 ## 0.15.1 – Toolgrip (18.10.2026)
 
 Golden der Oberflächenkarten mit belegten Ausweich-Hashes (Bericht: [docs/versions/0.15.md](docs/versions/0.15.md) › 0.15.1); keine Modell- oder Kartenänderung.

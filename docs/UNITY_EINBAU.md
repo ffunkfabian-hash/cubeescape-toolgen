@@ -214,7 +214,8 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
 
 - **UV1** (`TEXCOORD_1`, FBX-UV-Satz 1, Blender-Name `UV1`) auf allen Renderern, LOD0 und LOD1, auch in der Clips-Datei: je Werkzeugteil vor dem
   Zusammenführen erzeugt (Smart-Projektion 66°, gleiche Texeldichte, gepackt ohne Drehung), ein Atlas je Modell, alle Werte in 0..1,
-  LOD0 überlappungsfrei (Raster 2048), Abstand zwischen Inseln ≥ 4 px bei 1024 (gepackt mit 8 px), deterministisch. Die Kollaps-Dezimierung
+  LOD0 überlappungsfrei (Raster 2048), Abstand zwischen Inseln ≥ 4 px bei 1024 als UV-Abstand (= 2 px auf der 512²-Weltkarte, 8 px auf der
+  2048²-Ego-Karte; gepackt mit 8/1024, `uv1.margin_px_at_map` nennt den Wert der Karte), deterministisch. Die Kollaps-Dezimierung
   (Budget, LOD1) faltet einzelne Dreiecke; Toolgen entfaltet sie danach (`decimation_folds` in `qa_game*.json`).
   Hände und Arme des Ego-Modells (Quellmaterialien `FPS_*`) haben keine Insel: ihre UV1 ist der Punkt (0, 0) in einem freien Rand
   (16 px bei 1024 links und unten), dort sind alle Gewichte 0. Wo die Gewichtssumme 0 ist, behält der Slot seine eigene Farbe
@@ -224,7 +225,7 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
   ihr Ego-Werkzeug mit anderen Schrauben, sie haben je ein eigenes Atlas (false). Karten gibt es immer je Modell (eigene Auflösung, eigene Dezimierung).
 - **Tangenten:** GLB trägt `TANGENT` auf UV1 (MikkTSpace, w = Händigkeit). FBX trägt keine Tangenten: Unitys FBX-Import liest nur
   UV0-Tangenten (Messung Cube Escape 0.71, alle drei Tangenten-Modi); Cube Escape rechnet sie beim Import aus UV1 (`OnPostprocessModel`).
-- **Karten** je Modell (`<Asset>_Game_*.png` Welt 512², `<Asset>_FPS_Game_*.png` Ego 1024², gilt auch für die Clips-Datei), PNG 8 Bit RGBA, linear,
+- **Karten** je Modell (`<Asset>_Game_*.png` Welt 512², `<Asset>_FPS_Game_*.png` Ego **2048²** seit 0.16 – 1024² bis 0.15; gilt auch für die Clips-Datei), PNG 8 Bit RGBA, linear,
   ohne Farbprofil-/Gamma-Chunks, oberste PNG-Zeile = v 1:
 
   | Karte | R | G | B | A |
@@ -234,20 +235,22 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
   | `Fields` (`_FieldMap`) | AO (1 = offen) | Kante (1 = konvex) | oben = max(0, Normale·oben) | Höhe 0..1 über das LOD0-Modell |
   | `Normal` (`_BumpMap`) | Tangentenraum UV1, OpenGL (Y+), flach 128,128,255 | | | |
 
-  Gewichte one-hot 255 je Dreieck nach dem Kanal seines Slots, auf Nähten hart, jede Insel 8 px nach außen fortgesetzt (nächster Texel,
-  feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission), `wrapMode` Clamp (der Punkt (0, 0) der Hände soll
+  Gewichte one-hot 255 je Dreieck nach dem Kanal seines Slots, auf Nähten hart, jede Insel nach außen fortgesetzt (`maps.dilation_px`: 8 px auf 512²,
+  16 px auf 2048² – dieselben 8/1024 des Atlas wie die 1024²-Karten; nächster Texel, feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission), `wrapMode` Clamp (der Punkt (0, 0) der Hände soll
   nicht über den Rand filtern).
-  Satz je Modell ≤ 2,5 MB (gemessen Pistole: Welt 0,7 MB, Ego 1,9 MB). Rauschen/Detail kommt nicht von Toolgen.
+  Satz je Modell ≤ 2,5 MB bei 512² und ≤ 10 MB bei 2048² (`maps.set_bytes_limit`; gemessen: Welt 0,6–0,8 MB; Ego 1024² (0.13, Pistole) 1,9 MB, Ego 2048² (0.16) 4,5–5,9 MB je Satz). Rauschen/Detail kommt nicht von Toolgen.
 - **`channel_map`** (Block `surface`): Slot → Kanal für jeden Slot des Modells. `MT_<Kanal>` folgt aus dem Namen; die Palettennamen aus
   `data/game_palette.json` › `channel_map`: `M_RobotBody_Matte` Primary, `M_RobotDark_Matte` Secondary, `M_HazardOrange_Matte` Accent,
   `M_Metal_Matte` Metal, `M_GlowOrange` Emission, alle übrigen Glühmaterialien Energy (wie die Definitionen in CE `Docs/EQUIPMENT.md`).
-- **Block `surface`** in `unity_contract.json` und `unity_contract_fps.json` (`version` 1): `uv1` (Attribut, Auflösung 1024, `margin_px` 4,
-  `islands_rotated` false, `shared_with_world`, Layout-Werte, `unpainted`), `tangents`, `regions`, `channel_map`, `unmapped_slots`, `maps`
-  (Dateinamen, Auflösung, `files` mit sha256, `set_bytes`, `applies_to`), `fields` (Bedeutung je Kanal), `bake` (Stufe, Blender, Schlüssel,
+- **Block `surface`** in `unity_contract.json` und `unity_contract_fps.json` (`version` 1): `uv1` (Attribut, Auflösung der Randregel 1024, `margin_px` 4,
+  `margin_px_at_map`, `islands_rotated` false, `shared_with_world`, Layout-Werte, `unpainted`), `tangents`, `regions`, `channel_map`, `unmapped_slots`, `maps`
+  (Dateinamen, Auflösung – **Cube Escape liest die Kartengröße hier, nicht aus dem Dateinamen** –, `dilation_px`, `files` mit sha256, `set_bytes`, `set_bytes_limit`, `applies_to`), `fields` (Bedeutung je Kanal), `bake` (Stufe, Blender, Schlüssel,
   Einstellungen), `minimum_consumer`, `older_consumers`.
 - **Stufen:** Karten und Block entstehen in `standard` und `full` (Stufe `surface_bake`, gleiche Dateien in beiden); `quick` lässt sie weg und sagt
   das im `manifest.json` (`"surface": {"included": false, ...}`). UV1 und die GLB-Tangenten gibt es in jeder Stufe.
-- **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. Ältere Fassung ohne UV1 und Karten
+- **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. **Ego-Karten 2048² (0.16): Cube Escape 0.94** liest
+  `maps.resolution` und streamt die volle Größe nur für das gehaltene Gerät (Mip-Streaming); ältere Stände importieren die PNG mit ihrer Importer-Grenze
+  (nicht geprüft). Ältere Fassung mit Ego 1024²: Tag `v0.15.1` (`git checkout v0.15.1 && python3 toolgen/generate_tools.py --tier standard`). Ältere Fassung ohne UV1 und Karten
   (Layout 0.10): `python3 toolgen/generate_tools.py --tier standard --contract 3 --output output/_contract3`.
 
 ### Relief, Decals und Block `surface.recipe` (0.13.0, Vertrag 4 additiv)

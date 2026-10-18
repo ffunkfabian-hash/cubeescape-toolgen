@@ -453,18 +453,28 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
   Abstand ≥ 4 px bei 1024, Ecke frei), `uv1_lod1` (wie LOD0, Überlappung nur berichtet), `uv1_source` (Drehung, Hash, Übertragung,
   `decimation_folds`); Reimport: UV1 auf allen Renderern, im GLB `TEXCOORD_1` und `TANGENT` je Primitive.
 - Stufe `surface_bake` (standard/full, nach `game_fps`, `heavy`, `min_contract` 4): je Modell LOD0 bei Frame 1, Hände entfernt; Gewichte als
-  eigenes Raster (Texelmitte, erstes Dreieck gewinnt, 8 Schritte Dilatation in fester Nachbarreihenfolge); Cycles auf der CPU mit Seed 0:
+  eigenes Raster (Texelmitte, erstes Dreieck gewinnt, Dilatation in fester Nachbarreihenfolge: 8 Schritte bei 512², 16 bei 2048² – `dilation_at`); Cycles auf der CPU mit Seed 0:
   AO-Bake (Welt 16, Ego 32 Samples, 0,08 m), EMIT-Bake für Kante/oben/Höhe und NORMAL-Bake (Tangentenraum UV1) mit je 4 Samples. Kante =
   12 × (1 − Bevel-Normale · Schattierungsnormale), Bevel 4 mm, mal Konvexität aus lokalem AO (16 mm; unter 0,35 Falte = 0, über 0,7 voll).
   `render_init`-Handler von `run_asset.py` werden geleert, damit Samples und Gerät der Teststufe nicht greifen (standard = full).
-  PNG-Schreiber eigen (`png_encode`: Filter None/Sub/Up, zlib 9, nur IHDR/IDAT/IEND). Laufzeit Pistole: Welt 5 s, Ego 42 s (AO 31 s), 4 Threads.
+  PNG-Schreiber eigen (`png_encode`: Filter None/Sub/Up, zlib 9, nur IHDR/IDAT/IEND). Laufzeit Pistole bei Ego 1024²: Welt 5 s, Ego 42 s (AO 31 s), 4 Threads;
+  bei Ego 2048² (0.16) viermal so viele Texel: Stufe `surface_bake` 100–460 s je Werkzeug (Pistole 332 s; Mac 18.10.2026, zwei Worker gleichzeitig, andere Sitzungen liefen,
+  kein Zeitband).
 - QA `qa_surface.json`: `channel_map`, `uv1_shared` (Hash der Welt-UV1 in beiden Exporten gleich), je Modell `uv1_<variant>` (Layout wie oben)
   und `maps_<variant>`: Gewichte one-hot 255 in den Inseln, nichts jenseits der Dilatation, jeder vorkommende Kanal hat Texel, AO-Mittel
-  0,3–0,95, Kantenanteil (G > 0,5) 2–25 %, Satz ≤ 2,5 MB. Unabhängige Abnahme aus GLB und PNG: `scripts/verify_surface.py` (Blender).
+  0,3–0,95, Kantenanteil (G > 0,5) 2–25 %, Satz ≤ 2,5 MB (512²) bzw. ≤ 10 MB (2048², `set_bytes_limit`). Unabhängige Abnahme aus GLB und PNG:
+  `scripts/verify_surface.py` (Blender); Golden-Einträge mit `stale`-Markierung (0.16) sind rot, bis `--update-golden` sie neu schreibt.
 - Cache: `surface_bake` liest die beiden Spielmodelle, Verträge und QA-Dateien; der Bake-Schlüssel im Vertrag (`surface.bake.key`) hasht
   Positionen, Topologie, UV0/UV1, Eckennormalen, Slots, `channel_map`, Einstellungen und Blender-Version (Tangenten folgen daraus).
   Neue Stufenfelder (`heavy`, `min_contract`) stehen nur gesetzt in der Deklaration, damit bestehende Stufen ihren Schlüssel behalten.
 - Ältere Abnehmer: `--contract 3` (und 2, 1) erzeugt weder UV1 noch GLB-Tangenten noch die Stufe `surface_bake`.
+- **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.94
+  streamt die volle Größe nur für das gehaltene Gerät). Der UV1-Atlas ist für alle Auflösungen derselbe, deshalb sind alle Abstände UV-Größen:
+  Randregel 4/1024 (`margin_px_at`: 2 px bei 512, 8 px bei 2048), Packabstand 8/1024, freier Rand 16/1024, Dilatation 8 px bei 512 und 16 px bei 2048
+  (= 8/1024 wie bisher bei 1024, damit die Mip-Stufen den Rand genauso spät verlieren; `CORNER_CHECKS` prüft die freie Ecke je Karte: die Dilatation (in UV-Raum) darf das Eck-Texel
+  der Karte nicht erreichen, 16 px bei 1024 für Welt/Roboter, 8 px für Ego; Band 16 + Packabstand 8 = 24 px trägt genau das, mehr bräuchte ein breiteres `RESERVED_LOW`, also ein neues UV1-Layout). Bei 2048 berühren sich die Dilatationen benachbarter Inseln nicht mehr (Abstand 16 px gepackt, 16 px Dilatation je Seite überlappen
+  sich nur im Gleichstand), bei 1024 lagen 8 + 8 px Dilatation in 8 px Abstand. Bake-Schlüssel enthält `resolution` und `dilation_px` – Welt und
+  Roboter bleiben bytegleich, nur die Ego-Sätze werden neu gebacken.
 
 
 ### Relief, Decals und Rezept der Waffen (0.13.0 Enamel)
@@ -732,6 +742,11 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
+- 18.10.2026 · Kartenauflösung ändern – Alles, was in Pixeln formuliert ist (Randregel, Packabstand, freier Rand, Dilatation, Satzgrenze), ist in
+  Wahrheit eine UV-Größe oder eine Größe je Karte; vor dem Umstellen jede Konstante einer der beiden Klassen zuordnen und je Auflösung ausweisen,
+  sonst prüft die QA bei der neuen Größe etwas anderes als bei der alten. Golden-Hashes einer nicht gebackenen Auflösung nie raten: als `stale`
+  markieren, damit die Abnahme rot bleibt, bis der Mac sie schreibt. Beleg: 0.16 Finegrain (`surface.py` › `dilation_at`, `margin_px_at`,
+  `set_bytes_limit`; `verify_surface.py` › `golden_stale`). Gilt auch für: Welt-Karten, Roboter-Variante, Robogen-Masken.
 - 17.10.2026 · Waffe in der Roboterhand – Ein gleichmäßiger Maßstab löst Griff- und Stützhandlage nicht: Die Stützhand des
   Roboters (Arm 0,42 m, Schultern 0,56 m auseinander) erreicht nur etwa 0,10 m vor `Socket_Hand`, ein Gewehr mit Handschutz
   hat sie 0,18–0,28 m davor. Nötig ist eine eigene Form: Stützanker an Magazinschacht oder Gehäusefront, Schaft an den Griff,

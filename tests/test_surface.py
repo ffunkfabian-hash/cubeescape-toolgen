@@ -65,13 +65,21 @@ class ChannelTableTests(unittest.TestCase):
 
     def test_constants_meet_the_contract(self):
         self.assertGreaterEqual(surface.PACK_MARGIN * surface.CHECK_RESOLUTION, surface.MARGIN_PX)
-        self.assertEqual({"world": 512, "viewmodel": 1024, "robot": 512}, surface.MAP_RESOLUTION)   # robot: 0.14, a world model
+        # 0.16 Finegrain: first-person maps 2048 (user, 18.10.2026), world and robot variant (0.14, a world model) 512
+        self.assertEqual({"world": 512, "viewmodel": 2048, "robot": 512}, surface.MAP_RESOLUTION)
         self.assertEqual({"world": 16, "viewmodel": 32, "robot": 16}, surface.AO_SAMPLES)
-        # the unpainted point (0, 0) stays out of reach of the dilation at both resolutions
+        # the dilation keeps the 1024 maps' UV extent at 2048 (8/1024 of the atlas) and the world's 8 px
+        self.assertEqual((8, 8, 16), (surface.dilation_at(512), surface.dilation_at(1024), surface.dilation_at(2048)))
+        # corner texel of every map: (dilation in check pixels, texel size in check pixels): 512 -> (16, 2), 2048 -> (8, 1)
+        self.assertEqual(((8, 1), (16, 2)), surface.CORNER_CHECKS)
+        # the margin rule is a UV distance: 4 px at 1024 means 2 px at 512 and 8 px at 2048, wider than one dilation step needs
+        self.assertEqual((2.0, 4.0, 8.0), (surface.margin_px_at(512), surface.margin_px_at(1024), surface.margin_px_at(2048)))
+        self.assertGreaterEqual(surface.PACK_MARGIN * 2048, surface.dilation_at(2048))
+        # the unpainted point (0, 0) stays out of reach of the dilation at every resolution
         for resolution in surface.MAP_RESOLUTION.values():
             first_island_px = (surface.RESERVED_LOW + surface.PACK_MARGIN * (1 - surface.RESERVED_LOW)) * resolution
-            self.assertGreater(first_island_px - surface.DILATION_PX, 1)
-        self.assertEqual(2_500_000, surface.MAX_SET_BYTES)
+            self.assertGreater(first_island_px - surface.dilation_at(resolution), 1)
+        self.assertEqual((2_500_000, 10_000_000), (surface.set_bytes_limit(512), surface.set_bytes_limit(2048)))
 
 
 class PngTests(unittest.TestCase):
@@ -129,6 +137,28 @@ class RasterTests(unittest.TestCase):
         counts[:] = 0
         surface.rasterize(folded, np.array([0, 1, 2]), 64, counts=counts)
         self.assertGreater(int((counts > 1).sum()), 100)
+
+    def test_a_wider_edge_tolerance_only_adds_boundary_texels_and_bounds_the_weights(self):
+        """0.16: the independent re-check works on float32 UVs, so a texel centre a hair outside an edge may be covered by
+        the bake but not by the strict raster; the loose raster (epsilon 1e-5) covers it and the weights stay within reach."""
+        np = surface.np
+        resolution = 64
+        edge = 20.5 / resolution + 2e-7                      # the vertical edge lies just right of texel centre 20
+        triangle = np.array([[[edge, .2], [.6, .2], [edge, .7]]])
+        label = np.array([0])
+        strict = surface.rasterize(triangle, label, resolution)
+        loose = surface.rasterize(triangle, label, resolution, epsilon=1e-5)
+        self.assertTrue(np.all(strict[loose < 0] < 0))       # nothing the strict raster covers is lost
+        self.assertGreater(int((loose >= 0).sum()), int((strict >= 0).sum()))
+        weights = np.zeros((resolution, resolution, 4), dtype=np.uint8)
+        maps = {"W0": weights.copy(), "W1": weights.copy(), "Fields": weights.copy(), "Normal": weights.copy()}
+        dilated, _ = surface.weight_maps(loose, 2)
+        maps["W0"][...] = dilated["W0"]
+        maps["W1"][...] = dilated["W1"]
+        strict_values = surface.map_checks(maps, strict, [], 1, 2)
+        loose_values = surface.map_checks(maps, strict, [], 1, 2, loose)
+        self.assertEqual(0, loose_values["weights_beyond_dilation"])
+        self.assertGreaterEqual(strict_values["weights_beyond_dilation"], 0)
 
     def test_weights_are_one_hot_and_stop_after_the_dilation(self):
         np = surface.np

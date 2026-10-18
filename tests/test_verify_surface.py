@@ -1,5 +1,6 @@
 """Pure helper tests for the contract-4 surface acceptance script."""
 import importlib.util
+import json
 import struct
 import sys
 import types
@@ -82,6 +83,25 @@ class GoldenAlternatesTests(unittest.TestCase):
         self.assertEqual("NEW", m["maps"]["t"]["a.png"])
         self.assertNotIn("t", m["alternates"])
         self.assertFalse(self.verify.golden_accepts(m, "t", "a.png", "A"))
+
+    def test_stale_maps_fail_until_updated(self):
+        """Toolgen 0.16: first-person maps are marked stale until the Mac bake at 2048 confirms them."""
+        m = {**self.manifest(), "stale": {"note": "2048 pending", "maps": {"t": ["a.png"]}}}
+        self.assertTrue(self.verify.golden_stale(m, "t", "a.png"))
+        self.assertFalse(self.verify.golden_stale(m, "t", "b.png"))
+        self.assertFalse(self.verify.golden_stale(m, "u", "a.png"))
+        self.verify.golden_update(m, "t", {"a.png": "NEW", "b.png": "B"})
+        self.assertNotIn("stale", m, "the rewrite clears the mark")
+        m = {**self.manifest(), "stale": {"note": "2048 pending", "maps": {"t": ["a.png", "b.png"]}}}
+        self.verify.golden_update(m, "t", {"b.png": "B2"})
+        self.assertEqual({"t": ["a.png"]}, m["stale"]["maps"], "only rewritten maps leave the mark")
+
+    def test_the_repository_stale_marks_name_first_person_maps_of_the_golden(self):
+        golden = json.loads((Path(__file__).resolve().parents[1] / "tests/golden/surface/manifest.json").read_text())
+        for tool, names in golden.get("stale", {}).get("maps", {}).items():
+            for name in names:
+                self.assertIn(name, golden["maps"][tool])
+                self.assertIn("_FPS_Game_", name)
 
     def test_the_repository_golden_names_only_existing_maps(self):
         import json
