@@ -13,6 +13,7 @@ Every weapon needs the sockets Socket_Hand, Socket_Muzzle, Socket_SupportHand an
 Socket_Sight (and Socket_Eye for scopes).
 """
 import math
+import re
 
 
 def along(k, ly, lz):
@@ -775,3 +776,142 @@ DECALS = {
     'rocket_launcher': [decal('Tube', '+x', (.70, .3, .783, .7), 'warning_triangle', 'Accent'),
                         decal('Tube', '+x', (.033, .41, .133, .59), 'hazard_stripes', 'Accent')],
 }
+
+
+# ------------------------------------------------------------------------------------ robot variant (Toolgen 0.14 Fieldfit)
+# Cube Escape's robot (1.50 m, shoulder joints 0.82 m high and 0.56 m apart, arm 0.42 m, fist 0.09 m, chest front 0.18 m
+# ahead of the body centre; measured in Cube Escape 0.82 "Sidearm") holds the world model in its hand. The life-size
+# rifles are too long behind the grip and their handguard is out of reach of the support hand, and scaling alone cannot fix
+# that (CE 0.82 findings). The robot variant <asset>_Robot is the same design, deformed after the build:
+#
+# * x and z scale by ``cross`` about Socket_Hand (the silhouette ~1.5 times stronger: barrel >= 3 cm, housing >= 8 cm high);
+# * y (the bore) maps piecewise linearly through ``knots`` [(life y, robot y), ...]: the stock is pressed against the
+#   grip (end at most 0.12 m behind Socket_Hand), the grip zone keeps the slope ``cross`` (so the grip tilt, a contract
+#   value of the hold block, stays exact), and the overall length is the CE "length in the hand" (heldScale 1.0 after);
+# * Socket_SupportHand moves to ``support`` (life metres, on ``support_part``) before the deformation: at most 0.10 m
+#   ahead of Socket_Hand, at the magazine well or the front of the housing, about level with the grip.
+#
+# Everything else (parts, names, sockets, sight rule, Use clip, decals, recipes) is the life-size design, so later changes
+# of a design reach both models. A monotonic map keeps parts that were apart apart (no new intersections). ``body`` and
+# ``barrel`` name the parts whose robot height / diameter the tests hold against the minimums.
+ROBOT_SUFFIX = '_Robot'
+ROBOT_LIMITS = {'support_ahead_m': .10, 'stock_behind_m': .12, 'barrel_m': .03, 'body_m': .08, 'length_tolerance_m': .005}
+GRIP_ZONE = .04        # life metres around Socket_Hand that keep the slope ``cross`` (grip, tail and cap)
+# Energy cells (energy_cell: <name>Core, <name>Cap_<i>, <name>Cage_<i>) are pressed along the bore at most to this slope, about
+# their common centre: in a squashed stock their 2-3 mm steps between core, caps and cage would shrink below 0.5 mm and
+# z-fight (viewer determinism, scout rifle 0.14).
+RIGID_SLOPE = .35
+CELL_PART = re.compile(r'^(.+?)(Core|Cap_-?\d+|Cage_\d+)$')
+
+
+def robot_fit(length, cross, knots, support, support_part, body, barrel):
+    """The robot variant of one weapon: ``length`` = CE length in the hand (m), ``cross`` = x/z factor, ``knots`` the bore map
+    without the grip zone (which robot_knots adds), ``support`` the support-hand socket (life metres)."""
+    return {'length_m': length, 'cross': cross, 'knots': knots, 'support': support, 'support_part': support_part,
+            'body': body, 'barrel': barrel}
+
+
+def robot_knots(fit):
+    """The full bore map: the weapon's knots plus the grip zone (slope ``cross`` around Socket_Hand), sorted by life y."""
+    zone = [(GRIP_ZONE, GRIP_ZONE * fit['cross']), (-GRIP_ZONE, -GRIP_ZONE * fit['cross'])]
+    return sorted(fit['knots'] + zone)
+
+
+def robot_y(fit, y):
+    """Robot y of the life y (piecewise linear, the end segments extend beyond the outer knots)."""
+    if -GRIP_ZONE <= y <= GRIP_ZONE:
+        return y * fit['cross']           # exact in the grip zone: Socket_Hand stays at the origin
+    knots = robot_knots(fit)
+    index = min(max(next((i for i, (a, _) in enumerate(knots) if a > y), len(knots)) - 1, 0), len(knots) - 2)
+    (a0, b0), (a1, b1) = knots[index], knots[index + 1]
+    return b0 + (y - a0) * (b1 - b0) / (a1 - a0)
+
+
+def robot_life_y(fit, y):
+    """Life y of the robot y (the inverse of robot_y; the map is strictly increasing)."""
+    knots = [(b, a) for a, b in robot_knots(fit)]
+    index = min(max(next((i for i, (b, _) in enumerate(knots) if b > y), len(knots)) - 1, 0), len(knots) - 2)
+    (b0, a0), (b1, a1) = knots[index], knots[index + 1]
+    return a0 + (y - b0) * (a1 - a0) / (b1 - b0)
+
+
+def robot_slope(fit, y):
+    """d(robot y) / d(life y) at the life y (the right-hand segment at a knot)."""
+    return (robot_y(fit, y + 1e-4) - robot_y(fit, y)) / 1e-4
+
+
+def robot_point(fit, point, cell=None):
+    """Robot position of a life point; ``cell`` = robot_cell_map(...) of the energy cell the point belongs to."""
+    c = fit['cross']
+    y = cell[1] + (point[1] - cell[0]) * cell[2] if cell else robot_y(fit, point[1])
+    return (point[0] * c, y, point[2] * c)
+
+
+def robot_cells(names):
+    """Energy-cell groups among part names (without SM_PG_): {part name: group}, only groups with core, caps and cage."""
+    found = {}
+    for name in names:
+        match = CELL_PART.match(name)
+        if match:
+            found.setdefault(match.group(1), []).append((name, match.group(2)))
+    groups = {}
+    for group, members in found.items():
+        kinds = {kind.split('_')[0] for _, kind in members}
+        if kinds == {'Core', 'Cap', 'Cage'}:
+            groups.update({name: group for name, _ in members})
+    return groups
+
+
+def robot_cell_map(fit, low_y, high_y):
+    """(life centre, robot centre, slope) of an energy cell spanning life y low..high: its mean slope, at least RIGID_SLOPE."""
+    centre = (low_y + high_y) / 2
+    mean = (robot_y(fit, high_y) - robot_y(fit, low_y)) / (high_y - low_y)
+    return centre, robot_y(fit, centre), max(mean, RIGID_SLOPE)
+
+
+ROBOT = {
+    # CE length in the hand (Docs/EQUIPMENT.md, 0.82): length = Toolgen length x heldScale; stock end at +0.11 m.
+    'assault_rifle': robot_fit(.67, 1.5, [(.359, .11), (-.092, -.09), (-.576, -.56)], (0, -.092, .040), 'MagWell',
+                               ('ReceiverLower', 'ReceiverUpper', 'TopRail'), 'Barrel'),
+    'pulse_rifle': robot_fit(.66, 1.55, [(.342, .11), (-.10, -.09), (-.52, -.55)], (0, -.10, .035), 'Chassis',
+                             ('Chassis',), 'Barrel'),
+    'shotgun': robot_fit(.67, 1.35, [(.389, .11), (-.10, -.09), (-.515, -.56)], (0, -.10, .035), 'Receiver',
+                         ('Receiver',), 'BarrelShroud'),
+    'sniper_rifle': robot_fit(.73, 1.45, [(.434, .11), (-.10, -.09), (-.701, -.62)], (0, -.10, .036), 'Chassis',
+                              ('Receiver', 'Chassis'), 'Barrel'),
+    # SMG: the drum keeps its round side (slope = cross from the trigger guard to the drum's front); its barrel is the shroud
+    'smg': robot_fit(.52, 1.35, [(.211, .11), (-.072, -.072), (-.178, -.215), (-.406, -.41)], (0, -.085, .030), 'Body',
+                     ('Body', 'BodyPlate'), 'Shroud'),
+    # fusion rifle: the sight post (0.6 mm off a rail slot at y -0.12) sits where the map is almost 1:1
+    'fusion_rifle': robot_fit(.67, 1.35, [(.359, .11), (-.11, -.08), (-.135, -.1025), (-.601, -.56)], (0, -.12, .040), 'Handguard',
+                              ('Body', 'BodyDark'), 'Core'),
+    # scout rifle: the handguard 1:1 (its vents and glow strip end 1 mm apart; at 0.82 they flickered in the viewer)
+    'scout_rifle': robot_fit(.69, 1.6, [(.384, .11), (-.065, -.09), (-.385, -.41), (-.661, -.58)], (0, -.065, .036), 'MagWell',
+                             ('Receiver', 'ReceiverTop', 'TopRail'), 'Barrel'),
+    'rocket_launcher': robot_fit(.65, 1.15, [(.2, .11), (-.10, -.09), (-.525, -.54)], (0, -.10, .040), 'Tube',
+                                 ('Tube',), 'Tube'),
+}
+
+
+def robot_spec(key, pivots=None):
+    """The design entry of the robot variant: asset <asset>_Robot, the moved support socket's part, the sight rule's height,
+    the presentation camera on the robot model and, given ``pivots`` (node name -> life y of the Use clip's empties), the
+    clip's travel in robot metres (along the bore the mapped displaced pivot, exact across knots; across it ``cross``)."""
+    spec, fit = DESIGNS[key], ROBOT[key]
+    c = fit['cross']
+    moves = []
+    for move in spec['use_clip']:
+        if move['channel'] == 'location':
+            if pivots is None:
+                raise ValueError('robot_spec needs the pivots to scale a location move')
+            if move['axis'] == 1:
+                rest = pivots[move['node']]
+                keys = [(frame, robot_y(fit, rest + value) - robot_y(fit, rest)) for frame, value in move['keys']]
+            else:
+                keys = [(frame, value * c) for frame, value in move['keys']]
+            move = dict(move, keys=keys)
+        moves.append(move)
+    center = spec['view_center']
+    return dict(spec, asset=spec['asset'] + ROBOT_SUFFIX, support_part=fit['support_part'], use_clip=moves,
+                sight=dict(spec['sight'], above_m=spec['sight']['above_m'] * c), robot=fit,
+                view_center=robot_point(fit, center), view_scale=fit['length_m'] * 1.25)

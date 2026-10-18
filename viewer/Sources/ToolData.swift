@@ -30,6 +30,8 @@ struct ModelInfo: Decodable, Identifiable, Hashable {
         case "arrow": return "Pfeil"
         case "game": return "Spielmodell"
         case "fps_game": return "Ego-Spielmodell"
+        case "robot": return "Roboter-Weltmodell"
+        case "robot_game": return "Roboter-Spielmodell"
         default: return variant
         }
     }

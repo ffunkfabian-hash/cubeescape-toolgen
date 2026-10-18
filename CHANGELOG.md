@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.14.0 – Fieldfit (17.10.2026)
+
+Roboter-Variante der Weltmodelle für die acht Unterhand-Waffen (Entscheidung des Nutzers 17.10.2026, „sehr wichtig“; Bericht: [docs/versions/0.14.md](docs/versions/0.14.md)), Vertrag 4 additiv.
+
+- `<Asset>_Robot` je Gewehr: Verformung des Designs (`weapon_designs.py` › `ROBOT`): Länge = CE-Länge in der Hand, `Socket_SupportHand` 0,09 m vor `Socket_Hand`, Schaft 0,11 m dahinter, Querschnitt × 1,15–1,6; Weltmodell, Ego, Clips und ADS unverändert (GLB bytegleich zu 0.13).
+- Stufen `robot`, `game_robot`, `surface_bake_robot`: `<Asset>_Robot_Game.*`, `unity_contract_robot.json` (Block `robot`), eigene Karten 512²; Budget `game_budget.json` › `robot` 12 000.
+- Prüfung: `tests/test_robot_variant.py`, `verify_output.py`, `scripts/compare_models.py`; Sichtprüfung `scripts/robot_preview.py` (`Previews/robot_variant.png`, `robot_contact.png`); Viewer-Varianten „Roboter-Weltmodell“/„Roboter-Spielmodell“.
+- Mindestversion: der CE-Stand, der `unity_contract_robot.json` liest; ältere Fassung `--contract 3` oder `v0.13.0`.
+
 ## 0.13.0 – Enamel (17.10.2026)
 
 Oberflächen der Waffen 1–9 nach dem Konzeptblatt „Waffen Texturen 1–9“, Stufe A im heutigen Rahmen (Bericht: [docs/versions/0.13.md](docs/versions/0.13.md)), Vertrag 4 additiv.

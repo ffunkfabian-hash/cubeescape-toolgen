@@ -142,8 +142,44 @@ for tool in catalog():
         assert qa["passed"] and all(check["passed"] for check in qa["checks"].values()), (tool["id"], "qa_surface")
         assert ego["surface"]["maps"]["applies_to"][-1].endswith("_Clips.glb"), (tool["id"], "clips file shares the set")
         checks += 2
+    robot_built = bool(tool.get("robot")) and world["format"] >= 4
+    if robot_built:
+        # 0.14 Fieldfit: the robot variant of the world model (same anchors, hold block and clip; own fit, maps and QA)
+        robot = json.loads((package / "unity_contract_robot.json").read_text())
+        assert json.loads((package / "qa_game_robot.json").read_text())["passed"], (tool["id"], "qa_game_robot")
+        fit = json.loads((package / "qa_geometry_robot.json").read_text())["robot"]
+        assert robot["variant"] == "robot" and robot["asset"] == tool["robot"] and robot["model"] == tool["robot"] + "_Game"
+        for name in (tool["robot"], tool["robot"] + "_Game"):
+            for ext in ("blend", "fbx", "glb"):
+                assert name + "." + ext in manifest["files"], (name, ext)
+        assert [a["name"] for a in robot["anchors"]] == [a["name"] for a in world["anchors"]], (tool["id"], "robot anchors")
+        assert robot["hold"] == world["hold"], (tool["id"], "robot hold block")
+        assert [c["name"] for c in robot["clips"]] == [world["clips"][0]["name"]], (tool["id"], "robot clip")
+        assert robot["colliders"] and robot["lods"]["LOD0"]["triangles"] <= robot["budget"]["triangles_limit"]
+        assert all(fit["checks"].values()) and robot["robot"]["measures_m"] == fit["measures"], (tool["id"], "robot fit")
+        measures, limits = fit["measures"], fit["limits"]
+        assert measures["stock_behind_hand_m"] <= limits["stock_behind_m"], (tool["id"], "robot stock")
+        assert 0 < measures["support_ahead_of_hand_m"] <= limits["support_ahead_m"], (tool["id"], "robot support hand")
+        assert measures["barrel_diameter_m"] >= limits["barrel_m"] and measures["body_height_m"] >= limits["body_m"]
+        for variant in ("robot", "robot_game"):
+            scene = json.loads((package / "ViewerData" / variant / "scene.json").read_text())
+            assert scene["clip"] == tool["clip"] and scene["frames"] == 97 and not scene["autoplay"], (tool["id"], variant)
+            assert any(entry["id"] == tool["id"] + "/" + variant for entry in index["models"]), (tool["id"], variant)
+        assert ("surface" in robot) == included, (tool["id"], "robot surface block")
+        if included:
+            block = robot["surface"]
+            assert block["maps"]["resolution"] == surface.MAP_RESOLUTION["robot"] and not block["uv1"]["shared_with_world"]
+            assert block["uv1"]["layout"]["overlap_texels"] == 0 and block["regions"] == surface.REGIONS
+            for kind in ("w0", "w1", "fields", "normal"):
+                name = block["maps"][kind]
+                assert name.startswith(tool["robot"] + "_Game_") and block["maps"]["files"][name] == manifest["files"][name]
+            qa = json.loads((package / "qa_surface_robot.json").read_text())
+            assert qa["passed"] and all(check["passed"] for check in qa["checks"].values()), (tool["id"], "qa_surface_robot")
+        checks += 16
+    else:
+        assert not any(name.startswith("unity_contract_robot") or "_Robot" in name for name in manifest["files"]), tool["id"]
     if manifest["tier"] != "quick":
-        for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else [])]:
+        for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else []), *(["_robot"] if robot_built else [])]:
             roundtrip = json.loads((package / ("qa_roundtrip" + suffix + ".json")).read_text())
             assert all(result["passed"] is True for result in roundtrip["checks"].values())
             checks += len(roundtrip["checks"])

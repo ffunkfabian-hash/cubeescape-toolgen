@@ -38,8 +38,10 @@ Ego-Modell (eigenes Budget, keine Kollision, Viewmodel-Kameradaten in `unity_con
 tragen beide Spielmodelle eine zweite UV-Map (UV1); die Stufe `surface_bake` backt in standard und full die Maskenkarten W0, W1, Fields
 und Normal und schreibt den Block `surface` (`--contract 3` = Layout 0.10 ohne beides). Seit 0.13 tragen die neun Waffen darin
 Relief je Teil (Normal) und Decals (W0/W1) nach `data/surface_recipes.json` und `data/decals.json` sowie den Block `surface.recipe`;
-`scripts/surface_preview.py` zeigt das Ergebnis ohne Unity (`Previews/`). Details und Werte:
-[TECHNIK](docs/TECHNIK.md) › Spiel-Export, › Oberflächenkarten; Einbau-Vorbereitung: [UNITY_EINBAU](docs/UNITY_EINBAU.md).
+`scripts/surface_preview.py` zeigt das Ergebnis ohne Unity (`Previews/`). Seit 0.14 haben die acht Gewehre zusätzlich eine
+Roboter-Variante des Weltmodells für die Hand von Cube Escapes Roboter (`<Asset>_Robot`, Stufen `robot`, `game_robot`,
+`surface_bake_robot`, `unity_contract_robot.json`; Sichtprüfung `scripts/robot_preview.py`). Details und Werte:
+[TECHNIK](docs/TECHNIK.md) › Spiel-Export, › Oberflächenkarten, › Roboter-Variante; Einbau-Vorbereitung: [UNITY_EINBAU](docs/UNITY_EINBAU.md).
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich; der Regler „Sichtfeld“ der Ego-Ansicht (35–75°, Zurücksetzen auf den Datenwert) wirkt

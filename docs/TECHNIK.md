@@ -484,6 +484,72 @@ kennt; Farbe, Werkstoffart, Glätte, Abnutzung, Schmutz, Kratzer, Rauschen und G
   Fields, Normal) und `surface_contact.png`. Das Vorschau-Material ahmt den Masken-Modus nur nach (Palette des Rezepts, Kantenabnutzung aus
   Fields G × Abnutzung, AO, Normalkarte, Glühen; Eevee, nicht bytegleich, kein Vertrag).
 
+## Roboter-Variante der Waffen (0.14.0 Fieldfit)
+
+Cube Escape hält in der Außenansicht das **Weltmodell** in der Roboterhand (`HeldToolModels`) und skaliert es seit CE 0.82 je
+Waffe (`heldScale`). Skalieren löst zwei Befunde nicht (CE `Docs/versions/0.82.md` › Befunde): Die Stützhand erreicht bei den
+acht Unterhand-Waffen `Socket_SupportHand` nicht (0,30–0,43 m daneben; erreichbar ist höchstens etwa 0,10 m vor `Socket_Hand`), und
+die Gewehre wirken neben dem rundlichen Roboter schlank. Deshalb gibt es je Gewehr ein **zusätzliches** Weltmodell `<Asset>_Robot`
+(`tools.json` › `robot`); Ego-Modell, Clips, ADS und das bisherige Weltmodell bleiben unverändert, die Pistole hat keine Variante.
+
+**Erzeugung als Verformung des Designs** (`weapon_designs.py` › `ROBOT`, `robot_fit`, `robot_point`; `weapon_kit.apply_robot_fit`).
+Das Weltmodell wird wie immer gebaut und danach in einem Schritt verformt; Teile, Namen, Anker, Visierregel, Use-Clip, Decals und
+Rezepte sind dieselben, spätere Änderungen eines Designs (Lenswork-Visiere, Enamel-Rezepte) kommen ohne Zusatzarbeit in beiden
+Fassungen an. Je Waffe:
+
+- **Querschnitt** `cross`: x und z wachsen um diesen Faktor um `Socket_Hand` (Lauf ≥ 3 cm, Gehäuse ≥ 8 cm hoch, helle Flächen größer).
+- **Bohrungsachse** `knots`: y läuft stückweise linear durch Stützpunkte (Lebensgröße → Roboter). Die Griffzone ±0,04 m behält genau
+  die Steigung `cross`, so bleibt die Griffneigung (`hold.grip_tilt_degrees`) exakt; der Schaft wird an den Griff gedrückt (Ende
+  0,11 m hinter `Socket_Hand`), die Länge ist die CE-„Länge in der Hand“ (danach `heldScale` 1,0). Die Abbildung ist monoton:
+  Teile, die getrennt waren, bleiben getrennt.
+- **Stützhand** `support`/`support_part`: `Socket_SupportHand` rückt vor der Verformung an Magazinschacht, Gehäusefront oder
+  Rohrunterseite und liegt danach 0,09 m vor `Socket_Hand`, etwa auf Griffhöhe.
+- **Energiezellen** (Kern, Kappen, Käfig einer `energy_cell`) werden längs um ihre gemeinsame Mitte höchstens auf
+  `RIGID_SLOPE` 0,35 gestaucht: ihre 2–3-mm-Stufen blieben sonst im Schaft unter 0,5 mm und flackerten (Viewer-Determinismus,
+  Spurgewehr 1,4–1,6 px). Beim Fusionsgewehr liegt die Knickstelle so, dass der Visierpfosten (0,6 mm vor einer Schienenkerbe) fast
+  1:1 bleibt; beim Spurgewehr bleibt der Handschutz 1:1 (Lüftungsschlitz und Leuchtstreifen enden 1 mm auseinander, bei Steigung
+  0,82 flackerte die Kante weiter, 2 von 15 Bildern), Lauf und Mündung tragen die Stauchung (0,62). `CoplanarRobotTests` prüft die
+  Dekor-Regel (≥ 0,5 mm) auf den verformten Flächen; der Viewer-Determinismus ist die zweite Hälfte der Prüfung.
+- Use-Clip: Wege längs der Achse über die abgebildete verschobene Lage des Drehpunkts (exakt über Knickstellen), quer mit `cross`;
+  Drehungen unverändert.
+  Visierlinie: `above_m` × `cross`. Wurzel-Properties `ce_variant = robot`, `ce_held_scale = 1.0`.
+
+| Waffe | Länge (m) | `cross` | Stützhand an | vor / Abstand (m) | Schaft hinter (m) | Lauf (cm) | Gehäuse (cm) | Dreiecke Quelle → LOD0 / LOD1 | Boxen |
+|---|---|---|---|---|---|---|---|---|---|
+| Sturmgewehr | 0,67 | 1,50 | `MagWell` | 0,090 / 0,108 | 0,11 | 3,3 (`Barrel`) | 12,6 | 17 240 → 11 998 / 3 598 | 8 |
+| Impulsgewehr | 0,66 | 1,55 | `Chassis` | 0,090 / 0,105 | 0,11 | 3,1 (`Barrel`) | 23,6 | 12 748 → 11 998 / 3 596 | 7 |
+| Schrotflinte | 0,67 | 1,35 | `Receiver` | 0,090 / 0,102 | 0,11 | 8,5 (`BarrelShroud`) | 8,4 | 14 920 → 11 998 / 3 595 | 4 |
+| Scharfschützengewehr | 0,73 | 1,45 | `Chassis` | 0,090 / 0,104 | 0,11 | 3,0 (`Barrel`) | 8,3 | 20 860 → 11 998 / 3 598 | 8 |
+| Maschinenpistole | 0,52 | 1,35 | `Body` | 0,090 / 0,098 | 0,11 | 7,6 (`Shroud`) | 8,2 | 12 900 → 11 998 / 3 598 | 7 |
+| Fusionsgewehr | 0,67 | 1,35 | `Handguard` | 0,089 / 0,104 | 0,11 | 5,9 (`Core`) | 8,5 | 13 864 → 11 996 / 3 594 | 10 |
+| Spurgewehr | 0,69 | 1,60 | `MagWell` | 0,090 / 0,107 | 0,11 | 3,0 (`Barrel`) | 9,1 | 17 028 → 11 998 / 3 598 | 8 |
+| Raketenwerfer | 0,65 | 1,15 | `Tube` | 0,090 / 0,101 | 0,11 | 14,3 (`Tube`) | 14,3 | 15 352 → 11 998 / 3 596 | 4 |
+
+Die Maschinenpistole führt ihre Trommel mit der Steigung `cross` (bleibt rund); ihr „Lauf“ ist die Laufhülle `Shroud` (der kurze
+Laufstummel davor misst 2,4 cm). Das Gehäuse des Impulsgewehrs ist das ganze Bullpup-Chassis.
+
+**Stufen** (am Ende von `STAGES`, nur Vertrag 4, `when: robot`; keine frühere Stufe liest Roboterdateien): `robot` (Weltskript mit
+`--variant robot`: Bau, Verformung, Use-Clip, Export, `qa_geometry_robot.json` mit Block `robot` (Maße, Grenzen, Stützpunkte,
+Lebensgröße-Grenzen), `qa_animation_robot.json`, Bilder `robot_*.png`), `game_robot` (`game_export.py --robot`: `<Asset>_Robot_Game.*`,
+`unity_contract_robot.json`, `qa_game_robot.json`, `preview_game_robot.png`; Budget `game_budget.json` › `robot`, 12 000) und
+`surface_bake_robot` (standard/full, `heavy_lock`: eigene Karten 512², eigenes UV1-Atlas, `qa_surface_robot.json`; Relief folgt den
+verformten Teilen, Muster in Millimetern wie am Weltmodell). **Decals** (`decals.refit_rect`, `surface_bake.robot_refit`): die
+Rechtecke der Designs sind Bruchteile der Teil-Box und kämen verzerrt an; für die Variante folgt die Mitte der Verformung, die Größe
+wächst gleichmäßig um `cross` (Seitenverhältnis in mm bleibt), in gestauchten Zonen rückt das Decal erst nach innen und schrumpft dann.
+Liegt es auf einer UV-Naht des eigenen Atlas, gelten der Reihe nach kleinere Vergrößerung und feste kleine Verschiebungen
+(`ROBOT_DECAL_SHIFTS`); der erste bestehende Kandidat zählt (`qa_surface_robot.json` › `decals[].candidate`, `rect`; Vertrag
+`surface.recipe.decals[].rect`). Gemessen 17.10.: 14 von 15 Decals mit voller Vergrößerung, die Warnstreifen der Schrotflinte ohne
+Vergrößerung (Kandidat 2, Naht des eigenen Atlas); Kartensatz je Variante 0,70–0,74 MB. Viewer-Varianten „Roboter-Weltmodell“ (`robot`) und
+„Roboter-Spielmodell“ (`robot_game`); Reimport-Prüfung `roundtrip_robot` (standard/full).
+
+**Prüfung.** `weapon_kit.robot_report` bricht den Bau ab, wenn eine Grenze verletzt ist (`ROBOT_LIMITS`: Länge ± 5 mm, Stützhand
+höchstens 0,10 m vor, Schaft höchstens 0,12 m hinter, Lauf ≥ 3 cm, Gehäuse ≥ 8 cm, `Socket_Muzzle` vorn); `tests/test_robot_variant.py`
+rechnet dieselben Maße aus den Primitiven nach und prüft Griffneigung, Stufen und Namen; `verify_output.py` prüft Vertrag, Anker, Hold,
+Clip, Kollision, Budget und Karten; `scripts/compare_models.py <alt> <neu>` belegt, dass die bestehenden Modelle (GLB, Viewer-Daten)
+bytegleich bleiben. Sichtprüfung: `blender -b --factory-startup --python scripts/robot_preview.py -- <Ausgabe>` →
+`Previews/robot_variant.png` (Variante neben einer Roboter-Referenz: Schulter 0,82 m, Brustfront, Arm 0,42 m, Fäuste 0,09 m; Haltung nur
+fürs Bild) und `robot_contact.png` (altes Weltmodell mit CE-`heldScale` gegen die Variante, Seite/oben/hinten, ein Maßstab).
+
 ## Visier und Zielen (0.12.0 Sightline)
 
 Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:
@@ -620,6 +686,12 @@ entfernt die Hände). Grund nicht festgehalten. Anker unter anderem Socket_Hand,
 Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket_Grab. Ältere Contract-Zielnamen
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.
+Roboter-Variante (0.14): die Passung am echten Roboter (Handfläche zu `Socket_SupportHand`, Schaft an der Schulter) prüft erst Cube
+Escape (`HeldWeaponReelTests`); die Roboter-Referenz in `Previews/robot_variant.png` ist eine angenommene Haltung. Die Verformung
+staucht den Schaft (Steigung 0,13–0,4) samt seiner Kleinteile (Zellenfenster, Okular der Zielfernrohre) zu einer Schulterplatte und
+den Bereich zwischen Abzug und Stützhand (0,45–0,6); Rundteile quer zur Achse werden dort oval. Der `hold`-Block ist absichtlich
+derselbe wie im Weltmodell; sein Satz „`Socket_SupportHand` in der Mitte des Handschutzes“ gilt für die Variante nicht (Block `robot`).
+FBX und .blend tragen Exportzeit und den absoluten Pfad des Bauordners, Bytegleichheit gilt nur für GLB und Viewer-Daten.
 Der Spiel-Export (Renderer, LODGroup, Kollision, Clip, Materialien) und die Ego-Kamera sind in Blender, GLB und FBX geprüft,
 aber noch nicht in Unity abgenommen. Die Spielmodelle kommen erst später in Cube Escape; dann entstehen dort die `_Matte`-Varianten
 und `M_GlowWarm` aus den Palettenwerten (`ce_status` im Vertrag).
@@ -631,3 +703,40 @@ Die Pipeline erfasst die ASTs der Funktionen, die bestimmen, was eine Stufe schr
 Paketzusammenstellung (`PIPELINE_CACHE_FUNCTIONS`). Render-/Autoren-/Exporterquellen werden vollständig über die
 Quellen-Closure erfasst; reine Berichts- und Orchestrierungsänderungen lösen keinen Modell-Neubau aus. Neue Helfer, die
 Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalten ist mit Cache-Regressionsfällen geprüft.
+
+## Erfahrungen
+
+Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
+
+- 17.10.2026 · Waffe in der Roboterhand – Ein gleichmäßiger Maßstab löst Griff- und Stützhandlage nicht: Die Stützhand des
+  Roboters (Arm 0,42 m, Schultern 0,56 m auseinander) erreicht nur etwa 0,10 m vor `Socket_Hand`, ein Gewehr mit Handschutz
+  hat sie 0,18–0,28 m davor. Nötig ist eine eigene Form: Stützanker an Magazinschacht oder Gehäusefront, Schaft an den Griff,
+  Querschnitt kräftiger. Beleg: CE `Docs/versions/0.82.md` › Befunde, `qa_geometry_robot.json` (0,09 m bei allen acht). Gilt auch
+  für: jedes Werkzeug, das ein anders proportionierter Körper hält.
+- 17.10.2026 · Umformen statt neu modellieren – Eine monotone, achsweise Abbildung (Querschnittsfaktor, stückweise lineare
+  Längsachse) über dem fertigen Design hält Teile, Namen, Anker, Clips, Decals und Rezepte gültig und erzeugt keine neuen
+  Durchdringungen; die Griffzone braucht dieselbe Steigung längs und quer, sonst ändert sich die Griffneigung (Vertragswert).
+  Beleg: `weapon_designs.py` › `ROBOT`, `tests/test_robot_variant.py`; Robogen `docs/TECHNIK.md` › 15 (gleicher Weg für Körper).
+  Gilt auch für: weitere Körper- oder Größenvarianten.
+- 17.10.2026 · Wege im Clip über Knickstellen – Clip-Wege mit der Steigung am Ruhepunkt zu skalieren ist falsch, sobald der Weg eine
+  Knickstelle der Abbildung überquert (Schrotflinten-Verschluss 94,5 statt 58,8 mm); die verschobene Position selbst abbilden.
+  Beleg: Codex-Prüfung `sol` 17.10.2026, Test `test_bolt_travel_follows_the_map_across_the_grip_zone`. Gilt auch für: Anker,
+  Drehpunkte und Grenzen, die nach einer nichtlinearen Verformung gebraucht werden.
+- 17.10.2026 · Decals auf verformten Teilen – Rechtecke als Bruchteile der Teil-Box verzerren unter nicht gleichmäßiger Verformung
+  (Seitenverhältnis 0,36–0,54 daneben, im gestauchten Schaft 4 Texel); die Mitte abbilden, die Größe gleichmäßig skalieren, am Rand
+  erst verschieben, dann schrumpfen. Ein eigenes UV1-Atlas hat eigene Nähte: Ausweich-Kandidaten fest und der Reihe nach prüfen.
+  Beleg: `decals.refit_rect`, `qa_surface_robot.json`. Gilt auch für: Decals auf jeder Größen- oder Formvariante.
+- 17.10.2026 · Stauchen erzeugt Z-Fighting – Eine Verformung, die längs auf 0,13–0,4 staucht, schrumpft auch die
+  0,5-mm-Abstände der Dekore: die Koplanar-Regel muss auf den verformten Flächen gelten, nicht nur am Design. Kleine Baugruppen
+  (Energiezellen) mit Mindeststeigung um ihre Mitte abbilden, Knickstellen nicht unter Dekore legen. Beleg: Viewer-Determinismus
+  `scout_rifle/robot` 1,4–1,6 px vor, Test `CoplanarRobotTests`. Auch 0,8 mm statt 1 mm an einer Kante flackerte noch (2 von 15
+  Bildern): Zonen mit feinen Dekoren 1:1 lassen, die Stauchung in schlichte Teile (Lauf, Schaft) legen; nach jeder Achsenänderung
+  `viewer/test_determinism.py --model <tool>/robot --runs 16`. Gilt auch für: jede nicht gleichmäßige Skalierung.
+- 17.10.2026 · Bytegleichheit belegen – GLB und Viewer-Daten sind zwischen Läufen bytegleich, FBX und .blend nicht (Exportzeit und
+  absoluter Pfad des Bauordners, Länge je Worktree verschieden); Ego-Spiel-GLB bleibt die bekannte Ausnahme aus 0.13. Beleg:
+  `scripts/compare_models.py` gegen die 0.13-Ausgabe (205 Dateien gleich). Gilt auch für: jede Zusatzvariante, die bestehende
+  Modelle nicht ändern darf.
+- 17.10.2026 · Neue Stufen ans Ende – Stufen lesen standardmäßig alle bisher erzeugten Dateien; neue Zusatzstufen gehören ans Ende
+  von `STAGES`, sonst hängen bestehende Schlüssel an den neuen Dateien. Jede Änderung an `tools.json` (neuer Schlüssel) baut die
+  betroffenen Werkzeuge ganz neu, ebenso `version.py` alle Spielstufen: Version vor dem ersten großen Lauf heben. Beleg: dieser
+  Auftrag (zwei abgebrochene standard-Läufe). Gilt auch für: Lenswork und spätere Varianten.

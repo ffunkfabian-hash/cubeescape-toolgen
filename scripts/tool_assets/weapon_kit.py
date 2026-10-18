@@ -130,7 +130,7 @@ def parse_args():
     parser.add_argument('--output', type=Path, default=Path(sys.argv[0]).resolve().parent)
     parser.add_argument('--no-render', action='store_true')
     parser.add_argument('--no-preview', action='store_true')
-    parser.add_argument('--variant', choices=('world', 'fps'), default='world')
+    parser.add_argument('--variant', choices=('world', 'fps', 'robot'), default='world')
     return parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 
 
@@ -150,14 +150,18 @@ def define_materials():
 
 # ----------------------------------------------------------------------------------------------------- world model
 def world(key):
-    """create_weapon.py: the world model (static pose; the Use clip is added by animate_weapon.py)."""
+    """create_weapon.py: the world model (static pose; the Use clip is added by animate_weapon.py). ``--variant robot``
+    builds the robot variant <asset>_Robot instead (weapon_designs.ROBOT, Toolgen 0.14): the same design deformed to the
+    robot's hand, with its Use clip in the same run (qa_geometry_robot.json, qa_animation_robot.json, robot_*.png)."""
+    args = parse_args()
+    robot = args.variant == 'robot'
     spec = design(key)
     tool = tool_entry(key)
-    asset = tool['asset']
-    args = parse_args()
+    asset = tool['asset'] + (weapon_designs.ROBOT_SUFFIX if robot else '')
+    suffix = '_robot' if robot else ''
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    (out / 'build_complete.json').unlink(missing_ok=True)
+    (out / ('build_complete%s.json' % suffix)).unlink(missing_ok=True)
     if bpy.app.version != (5, 2, 2):
         raise RuntimeError('Validated target is Blender 5.2.2 LTS')
     STATE.update(ASSET=asset, OBJECTS=HELPER['validate'].__globals__['OBJECTS'], MATS=STATE['MATS'])
@@ -174,6 +178,9 @@ def world(key):
     root['ce_weapon_class'] = spec['class']
     root['ce_weapon_element'] = spec['element']
     root['ce_grip_tilt_degrees'] = tool['hold']['grip_tilt_degrees']
+    if robot:
+        root['ce_variant'] = 'robot'
+        root['ce_held_scale'] = 1.0
     STATE.update(GEO=geo, ROOT=root)
     define_materials()
     kit = Kit(spec['element'], tool['hold']['grip_tilt_degrees'])
@@ -181,7 +188,12 @@ def world(key):
     for name in ('Socket_Hand', 'Socket_Muzzle', 'Socket_SupportHand', 'Socket_CenterOfMass'):
         if not any(obj.name == name for obj in STATE['OBJECTS']):
             raise RuntimeError('Design %s lacks %s' % (key, name))
-    sight_report = sight_sockets(kit, key)
+    fit_report = None
+    if robot:
+        pivots = {obj.name: obj.matrix_world.translation.y for obj in STATE['OBJECTS'] if obj.name.startswith('Anim_')}
+        spec = weapon_designs.robot_spec(key, pivots)
+        fit_report = apply_robot_fit(spec['robot'])
+    sight_report = sight_sockets(kit, key, spec['sight'])
     qa = HELPER['validate']()
     qa.update(tags=['tool', 'weapon', spec['class'], spec['element'], 'handheld', 'robot-classic', 'white-shell'],
               pivot='asset root = grip centre (Socket_Hand); forward -Y, up +Z',
@@ -190,7 +202,10 @@ def world(key):
                       'grip_tilt_degrees': tool['hold']['grip_tilt_degrees']})
     qa['sockets_checked'] = socket_report(spec)
     qa['sight'] = sight_report
-    (out / 'qa_geometry.json').write_text(json.dumps(qa, indent=2) + '\n')
+    if robot:
+        qa['variant'] = 'robot'
+        qa['robot'] = robot_report(spec, qa, fit_report)
+    (out / ('qa_geometry%s.json' % suffix)).write_text(json.dumps(qa, indent=2) + '\n')
     camera, target = HELPER['presentation'](scene)
     center = Vector(spec['view_center'])
     camera.data.ortho_scale = spec['view_scale']
@@ -203,23 +218,112 @@ def world(key):
                 area.spaces.active.region_3d.view_location = center
                 area.spaces.active.shading.type = 'MATERIAL'
     bpy.ops.wm.save_as_mainfile(filepath=str(out / (asset + '.blend')))
-    HELPER['export'](out)
+    if robot:
+        # the Use clip in the same run (the life-size model gets it from animate_weapon.py)
+        clip = tool['clip']
+        report = use_clip(scene, root, spec, clip)
+        (out / 'qa_animation_robot.json').write_text(json.dumps(report, indent=2) + '\n')
+        export_clip(out, asset, root, clip)
+        scene.frame_set(1)
+        bpy.ops.wm.save_as_mainfile(filepath=str(out / (asset + '.blend')))
+    else:
+        HELPER['export'](out)
     if not args.no_render:
-        render(scene, camera, spec, out / 'preview_white.png', (.62, -.72, .43), 1.0)
-        render(scene, camera, spec, out / 'view_side.png', (1, 0, 0), .98)
-        render(scene, camera, spec, out / 'view_front.png', (0, -1, 0), .55)
-        render(scene, camera, spec, out / 'view_top.png', (0, 0, 1), .98)
+        names = ROBOT_VIEWS if robot else WORLD_VIEWS
+        render(scene, camera, spec, out / names[0], (.62, -.72, .43), 1.0)
+        render(scene, camera, spec, out / names[1], (1, 0, 0), .98)
+        render(scene, camera, spec, out / names[2], (0, -1, 0), .55)
+        render(scene, camera, spec, out / names[3], (0, 0, 1), .98)
     print('WEAPON_BUILD_OK', key, json.dumps({'triangles': qa['triangles'], 'dimensions_m': qa['dimensions_m']}))
+
+
+WORLD_VIEWS = ('preview_white.png', 'view_side.png', 'view_front.png', 'view_top.png')
+ROBOT_VIEWS = ('robot_white.png', 'robot_side.png', 'robot_front.png', 'robot_top.png')
+
+
+def apply_robot_fit(fit):
+    """Deform the built weapon into its robot variant (weapon_designs.ROBOT): every vertex, empty and socket goes through
+    robot_point in root space (meshes keep their rotation, the vertices are rewritten), Socket_SupportHand first moves
+    to the fit's support point. Returns the life-size bounds and sockets for the report."""
+    bpy.context.view_layer.update()
+    root = STATE['ROOT']
+    support = next(obj for obj in STATE['OBJECTS'] if obj.name == 'Socket_SupportHand')
+    support.location = fit['support']
+    bpy.context.view_layer.update()
+    objects = [obj for obj in STATE['OBJECTS'] if obj != root]
+    before = {obj: obj.matrix_world.copy() for obj in objects}
+    life = [before[obj] @ vertex.co for obj in objects if obj.type == 'MESH' for vertex in obj.data.vertices]
+    # energy cells keep a minimum slope about their centre (weapon_designs.RIGID_SLOPE)
+    meshes = {obj.name.removeprefix('SM_PG_'): obj for obj in objects if obj.type == 'MESH'}
+    groups = weapon_designs.robot_cells(meshes)
+    spans = {}
+    for name, group in groups.items():
+        ys = [(before[meshes[name]] @ vertex.co).y for vertex in meshes[name].data.vertices]
+        low, high = spans.get(group, (min(ys), max(ys)))
+        spans[group] = (min(low, *ys), max(high, *ys))
+    cells = {group: weapon_designs.robot_cell_map(fit, *span) for group, span in spans.items()}
+    cell_of = {meshes[name]: cells[group] for name, group in groups.items()}
+    points = {obj: [weapon_designs.robot_point(fit, before[obj] @ vertex.co, cell_of.get(obj)) for vertex in obj.data.vertices]
+              for obj in objects if obj.type == 'MESH'}
+    for obj in sorted(objects, key=depth):
+        location, rotation, _scale = before[obj].decompose()
+        obj.matrix_world = Matrix.LocRotScale(Vector(weapon_designs.robot_point(fit, location, cell_of.get(obj))), rotation,
+                                              Vector((1, 1, 1)))
+        bpy.context.view_layer.update()
+    for obj, found in points.items():
+        inverse = obj.matrix_world.inverted()
+        for vertex, point in zip(obj.data.vertices, found):
+            vertex.co = inverse @ Vector(point)
+        obj.data.update()
+    bpy.context.view_layer.update()
+    return {'cells': {group: [round(v, 6) for v in cell] for group, cell in sorted(cells.items())},
+            'life_bounds_m': [[round(min(p[i] for p in life), 6) for i in range(3)],
+                              [round(max(p[i] for p in life), 6) for i in range(3)]],
+            'life_sockets_m': {obj.name: [round(v, 6) for v in before[obj].translation]
+                               for obj in objects if obj.name.startswith('Socket_')}}
+
+
+def robot_report(spec, qa, fit_report):
+    """Robot measures of qa_geometry_robot.json (tests/test_weapons.py and verify_output.py hold them against the limits)."""
+    fit, limits = spec['robot'], weapon_designs.ROBOT_LIMITS
+    low, high = qa['bounds_m']
+    sockets = {obj.name: obj.matrix_world.translation.copy() for obj in STATE['OBJECTS'] if obj.name.startswith('Socket_')}
+    hand, support = sockets['Socket_Hand'], sockets['Socket_SupportHand']
+
+    def extent(names, axis):
+        found = [obj for obj in STATE['OBJECTS'] if obj.type == 'MESH' and obj.name.removeprefix('SM_PG_') in names]
+        values = [(obj.matrix_world @ vertex.co)[axis] for obj in found for vertex in obj.data.vertices]
+        return max(values) - min(values)
+
+    barrel = min(extent((fit['barrel'],), 0), extent((fit['barrel'],), 2))
+    measures = {'length_m': high[1] - low[1], 'stock_behind_hand_m': high[1] - hand.y,
+                'support_ahead_of_hand_m': hand.y - support.y, 'support_distance_m': (support - hand).length,
+                'support_height_m': support.z - hand.z, 'barrel_diameter_m': barrel,
+                'body_height_m': extent(fit['body'], 2), 'muzzle_ahead_m': hand.y - sockets['Socket_Muzzle'].y}
+    measures = {name: round(value, 6) for name, value in measures.items()}
+    checks = {'length': abs(measures['length_m'] - fit['length_m']) <= limits['length_tolerance_m'],
+              'stock': measures['stock_behind_hand_m'] <= limits['stock_behind_m'],
+              'support': 0 < measures['support_ahead_of_hand_m'] <= limits['support_ahead_m'],
+              'barrel': measures['barrel_diameter_m'] >= limits['barrel_m'],
+              'body': measures['body_height_m'] >= limits['body_m'],
+              'muzzle_front': abs(low[1] - sockets['Socket_Muzzle'].y) <= .015}
+    if not all(checks.values()):
+        raise RuntimeError('Robot variant out of its limits: %s %s' % ([k for k, v in checks.items() if not v], measures))
+    return {'fit': {key: value for key, value in fit.items()}, 'knots': weapon_designs.robot_knots(fit),
+            'limits': limits, 'measures': measures, 'checks': checks, 'held_scale': 1.0,
+            'support_part': fit['support_part'], **fit_report,
+            'robot_reference_m': {'height': 1.5, 'shoulder_height': .82, 'shoulder_spacing': .56, 'arm': .42, 'fist': .09,
+                                  'chest_front': .18, 'source': 'Cube Escape 0.82 HeldWeaponReelTests sizes.txt'}}
 
 
 def render(scene, camera, spec, path, offset, factor):
     HELPER['render'](scene, camera, Vector(spec['view_center']), path, offset, spec['view_scale'] * factor)
 
 
-def sight_sockets(kit, key):
+def sight_sockets(kit, key, rule=None):
     """Socket_Sight on the line of sight of the AimIdle pose (sight.py, DESIGNS sight), Socket_Eye behind it for scopes;
-    rotation identity (Unity +Z = view along the bore, +Y = up)."""
-    rule = design(key)['sight']
+    rotation identity (Unity +Z = view along the bore, +Y = up). ``rule``: the robot variant's rule (scaled height)."""
+    rule = rule or design(key)['sight']
     bpy.context.view_layer.update()
     graph = bpy.context.evaluated_depsgraph_get()
     bounds = {}
@@ -492,20 +596,7 @@ def animate(key):
         bpy.ops.wm.open_mainfile(filepath=str(out / (name + '.blend')))
         scene = bpy.context.scene
         root = scene.objects[name]
-        scene.frame_set(1)
-        for move in spec['use_clip']:
-            animate_object(owned(scene, move['node']), move, clip)
-        scene.frame_start, scene.frame_end = 1, LAST_FRAME
-        scene.render.fps = FPS
-        # Event marker of the shot (contract clips[0].events, Cube Escape's game sync): the recoil frame of the Ego profile.
-        for marker in [marker for marker in scene.timeline_markers if marker.name == FIRE_MARKER]:
-            scene.timeline_markers.remove(marker)
-        scene.timeline_markers.new(FIRE_MARKER, frame=spec['fire_frame'])
-        root['ce_action_clip'] = clip
-        root['ce_autoplay'] = False
-        root['ce_loop'] = False
-        root['ce_trigger'] = spec['trigger']
-        report = motion_qa(scene, root, spec, clip)
+        report = use_clip(scene, root, spec, clip)
         (out / ('qa_animation' + ('_fps' if suffix else '') + '.json')).write_text(json.dumps(report, indent=2) + '\n')
         export_clip(out, name, root, clip)
         scene.frame_set(1)
@@ -520,6 +611,25 @@ def animate(key):
                 'runtime': 'Play once on the explicit trigger; the clip animates only child nodes of the root and '
                            'ends in the rest pose. Cube Escape keeps the weapon logic (no ammunition, no rules here).'}
     (out / 'action_contract.json').write_text(json.dumps(contract, indent=2) + '\n')
+
+
+def use_clip(scene, root, spec, clip):
+    """Key the one-shot Use clip of ``spec`` on the open model, set the Fire marker and the root's clip properties; returns
+    the motion QA."""
+    scene.frame_set(1)
+    for move in spec['use_clip']:
+        animate_object(owned(scene, move['node']), move, clip)
+    scene.frame_start, scene.frame_end = 1, LAST_FRAME
+    scene.render.fps = FPS
+    # Event marker of the shot (contract clips[0].events, Cube Escape's game sync): the recoil frame of the Ego profile.
+    for marker in [marker for marker in scene.timeline_markers if marker.name == FIRE_MARKER]:
+        scene.timeline_markers.remove(marker)
+    scene.timeline_markers.new(FIRE_MARKER, frame=spec['fire_frame'])
+    root['ce_action_clip'] = clip
+    root['ce_autoplay'] = False
+    root['ce_loop'] = False
+    root['ce_trigger'] = spec['trigger']
+    return motion_qa(scene, root, spec, clip)
 
 
 def motion_qa(scene, root, spec, clip):
@@ -581,8 +691,8 @@ def verify(key):
     tool = tool_entry(key)
     args = parse_args()
     out = Path(sys.argv[0]).resolve().parent
-    suffix = '_fps' if args.variant == 'fps' else ''
-    name = tool['asset'] + ('_FPS' if args.variant == 'fps' else '')
+    suffix = {'world': '', 'fps': '_fps', 'robot': '_robot'}[args.variant]
+    name = tool['asset'] + {'world': '', 'fps': '_FPS', 'robot': weapon_designs.ROBOT_SUFFIX}[args.variant]
     expected = json.loads((out / ('qa_geometry' + suffix + '.json')).read_text())
     report = {'blender': bpy.app.version_string, 'checks': {}}
 
@@ -619,8 +729,8 @@ def verify(key):
         check(scene, ext)
     (out / ('qa_roundtrip' + suffix + '.json')).write_text(json.dumps(report, indent=2) + '\n')
     files = [name + '.blend', name + '.glb', name + '.fbx', 'qa_geometry' + suffix + '.json', 'qa_roundtrip' + suffix + '.json']
-    files += ['preview_first_person.png', 'preview_large.png'] if args.variant == 'fps' else [
-        'preview_white.png', 'view_side.png', 'view_front.png', 'view_top.png']
+    files += ['preview_first_person.png', 'preview_large.png'] if args.variant == 'fps' else list(
+        ROBOT_VIEWS if args.variant == 'robot' else WORLD_VIEWS)
     records = []
     for filename in files:
         path = out / filename

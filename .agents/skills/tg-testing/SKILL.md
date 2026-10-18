@@ -48,6 +48,10 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    Fields einzeln) und die unabhängige Abnahme laufen lassen: `blender -b --factory-startup --python scripts/verify_surface.py -- <Ausgabe>`
    (`--determinism --tool <id>` backt mit 1 und 8 Threads neu und vergleicht bitgleich; schwer, wartet auf `heavy_lock`). Reine numpy-Tests:
    `/Applications/Blender.app/Contents/Resources/5.2/python/bin/python3.13 -m unittest tests.test_surface tests.test_verify_surface`.
+   Roboter-Variante (0.14, acht Gewehre): `qa_geometry_robot.json` › `robot.checks`, `qa_game_robot.json`, ab standard `qa_surface_robot.json`;
+   Sichtprüfung `blender -b --factory-startup --python scripts/robot_preview.py -- <Ausgabe>` → `Previews/robot_variant.png` (Roboter-Referenz)
+   und `robot_contact.png` (alt gegen Variante) verkleinert ansehen. Bestehende Modelle unverändert: `python3 scripts/compare_models.py
+   <Ausgabe des Vorgängers> <Ausgabe>` (gleiche Stufe; GLB und Viewer-Daten bytegleich, FBX/.blend nur Information).
 8. Regeln/Profile: `python3 scripts/check_rules.py --shared <ce-agent-tools>`; jeder Hook hat treffende und nicht
    treffende Fälle, Profile erlauben Prüfungen/Doku und sperren Code-Änderungen des Testläufers.
 

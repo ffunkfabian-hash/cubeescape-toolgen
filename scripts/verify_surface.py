@@ -322,6 +322,8 @@ def determinism(folder, tool):
                        "--python-exit-code", "1", "--python", str(ROOT / "toolgen/run_asset.py"), "--",
                        "--script", str(ROOT / "toolgen/surface_bake.py"), "--directory", str(work), "--tool", tool]
             subprocess.run(command, cwd=ROOT, env=env, check=True)
+            if (work / "unity_contract_robot.json").exists():      # the robot variant's maps (Toolgen 0.14)
+                subprocess.run([*command, "--robot"], cwd=ROOT, env=env, check=True)
             hashes.append({p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in work.glob("*_W*.png")}
                           | {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in work.glob("*_Fields.png")}
                           | {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in work.glob("*_Normal.png")})
@@ -356,7 +358,8 @@ def golden_check(output, tools, update=False):
                 errors.append(f"{tool}/{path.name}: sha256 differs from the golden (confirm a deliberate change with "
                               "--update-golden)")
     if update:
-        manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel, baked on the Mac, standard tier): sha256 "
+        manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* "
+                            "maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 "
                             "of every map, no reference images. Rewrite with verify_surface.py "
                             "--update-golden after a deliberate change.")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -384,7 +387,10 @@ def main():
         if not manifest.get("surface", {}).get("included"):
             continue
         item = {"tool": folder.name, "models": [], "errors": []}
-        for contract_name in ("unity_contract.json", "unity_contract_fps.json"):
+        contracts = ["unity_contract.json", "unity_contract_fps.json"]
+        if (folder / "unity_contract_robot.json").exists():
+            contracts.append("unity_contract_robot.json")             # robot variant (Toolgen 0.14)
+        for contract_name in contracts:
             model = verify_model(folder, folder / contract_name)
             checks += 1
             item["models"].append(model)

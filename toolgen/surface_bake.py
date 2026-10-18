@@ -21,6 +21,10 @@ and ``qa_surface.json`` (exit code 1 when a check fails).
 Every LOD0 triangle learns its source part (``part_labels``): the nearest triangle of the same channel among the SM_PG_*
 meshes of ``<asset>.blend`` / ``<asset>_FPS.blend`` (BVH), both in the tool frame of Socket_Hand at rest.
 
+``--robot`` (Toolgen 0.14): the same for the robot variant only (``<robot>_Game.blend``, ``unity_contract_robot.json``,
+world resolution and samples, its own UV1 atlas and its own QA ``qa_surface_robot.json``; decal rectangles and relief
+patterns follow its deformed parts, the patterns keep their millimetres).
+
 All bakes run on the CPU with a fixed seed and fixed samples per variant (never the tier's render samples), so standard and
 full give the same files; the hands are removed before baking (no occlusion from them) and moving parts bake at rest.
 """
@@ -50,10 +54,13 @@ VIEWMODELS_PATH = ROOT / "data/viewmodels.json"
 BAKE_SCHEMA = 2                  # raise when the baked content changes without any key part changing (2: relief, decals)
 VARIANTS = (("world", "", "unity_contract.json", "qa_game.json"),
             ("viewmodel", "_FPS", "unity_contract_fps.json", "qa_game_fps.json"))
+ROBOT_VARIANTS = (("robot", None, "unity_contract_robot.json", "qa_game_robot.json"),)   # asset: the tools.json "robot"
 RELIEF_ATTRIBUTE = "ce_relief"   # face attribute of the bake meshes: relief entry (-1 none)
 RELIEF_SAMPLES = 16              # Cycles samples of the NORMAL bake with relief (fine patterns average inside a texel)
 PART_MATCH_MM = 1.5              # a LOD0 triangle farther than this from every source triangle of its channel stays unlabelled
 FRAME_SOCKET = "Socket_Hand"
+# Robot variant (0.14): fixed moves (u, v as shares of the part's box) tried in order when a decal lies on a UV seam
+ROBOT_DECAL_SHIFTS = ((0.0, 0.0), (.06, 0.0), (-.06, 0.0), (0.0, .08), (0.0, -.08), (.12, 0.0), (0.0, .16))
 
 
 def renderers_at_rest(asset):
@@ -282,8 +289,9 @@ def to_bytes(values):
     return np.clip(np.rint(values * 255.0), 0, 255).astype(np.uint8)
 
 
-def apply_decals(anchors, catalog, table, triangles, raster, names, islands, command):
-    """Writes the decals into the channel raster (in place) and returns their QA entries."""
+def apply_decals(anchors, catalog, table, triangles, raster, names, islands, command, refit=None):
+    """Writes the decals into the channel raster (in place) and returns their QA entries. ``refit(anchor, box)``: candidate
+    anchors on a deformed part (robot variant), the first one that passes the QA is placed (the entry carries its ``rect``)."""
     texels = decals.texel_positions(triangles, table["uv"], table["corners"])
     normals = decals.face_normals(table["corners"])
     part_ids = {name: index for index, name in enumerate(sorted({name for name in names if name}))}
@@ -301,22 +309,27 @@ def apply_decals(anchors, catalog, table, triangles, raster, names, islands, com
         corners = table["corners"][own].reshape(-1, 3)
         box = (corners.min(axis=0), corners.max(axis=0))
         mask = decals.mask_array(decals.render(anchor["image"], catalog, command))
-        hit = decals.project(anchor, mask, texels, triangle_parts, normals, part_ids[anchor["part"]], box)
-        touched = sorted(set(island_of_texel[hit].tolist()))
-        island_texels = int(np.isin(island_of_texel, touched).sum()) if touched else 0
-        share = float(hit.sum()) / island_texels if island_texels else 0.0
-        foreign = int(np.count_nonzero(triangle_parts[tris[hit]] != part_ids[anchor["part"]]))
-        aspect = decals.rect_aspect_error(anchor, box, mask.shape)
+        for index, candidate in enumerate(refit(anchor, box) if refit else [anchor]):
+            hit = decals.project(candidate, mask, texels, triangle_parts, normals, part_ids[anchor["part"]], box)
+            touched = sorted(set(island_of_texel[hit].tolist()))
+            island_texels = int(np.isin(island_of_texel, touched).sum()) if touched else 0
+            share = float(hit.sum()) / island_texels if island_texels else 0.0
+            foreign = int(np.count_nonzero(triangle_parts[tris[hit]] != part_ids[anchor["part"]]))
+            aspect = decals.rect_aspect_error(candidate, box, mask.shape)
+            errors = []
+            if not decals.AREA_SHARE[0] <= share <= decals.AREA_SHARE[1]:
+                errors.append(f"area share {share:.4f} outside {decals.AREA_SHARE}")
+            if len(touched) != 1:
+                errors.append(f"decal lies on {len(touched)} UV islands (seam)")
+            if foreign:
+                errors.append(f"{foreign} decal texels outside the target part")
+            if aspect > decals.ASPECT_TOLERANCE:
+                errors.append(f"rect aspect differs {aspect:.2f} from the image")
+            if not errors:
+                break
         raster[ys[hit], xs[hit]] = surface.CHANNELS.index(anchor["channel"])
-        errors = []
-        if not decals.AREA_SHARE[0] <= share <= decals.AREA_SHARE[1]:
-            errors.append(f"area share {share:.4f} outside {decals.AREA_SHARE}")
-        if len(touched) != 1:
-            errors.append(f"decal lies on {len(touched)} UV islands (seam)")
-        if foreign:
-            errors.append(f"{foreign} decal texels outside the target part")
-        if aspect > decals.ASPECT_TOLERANCE:
-            errors.append(f"rect aspect differs {aspect:.2f} from the image")
+        if refit:
+            entry.update(rect=[round(float(v), 6) for v in candidate["rect"]], candidate=index)
         entry.update(passed=not errors, errors=errors, texels=int(hit.sum()), islands=len(touched),
                      island_share=round(share, 4), foreign_texels=foreign, aspect_error=round(aspect, 3),
                      box_mm=[round(float(v) * 1000, 2) for v in (*box[0], *box[1])])
@@ -376,7 +389,7 @@ def bake_model(work, model, asset, variant, palette, design):
         set_relief_attribute(lod0, table, relief_ids)
         if design["anchors"]:
             design_qa["decals"] = apply_decals(design["anchors"], design["catalog"], table, triangles, raster, names,
-                                               triangle_islands(table), design["command"])
+                                               triangle_islands(table), design["command"], design.get("refit"))
     maps, _ = surface.weight_maps(raster)
     slots = sorted({material.name for obj in lod0 for material in obj.data.materials})
     targets = strip_unpainted(lod0)
@@ -438,6 +451,8 @@ def bake_model(work, model, asset, variant, palette, design):
                               "normal_samples": normal_samples, "part_match_mm": PART_MATCH_MM,
                               "pattern_scale": design["scale"][variant],
                               "decals": design["anchors"], "decal_images": surface.digest(design["catalog"]),
+                              **({"decal_rects": [entry.get("rect") for entry in design_qa.get("decals", [])]}
+                                 if design.get("refit") else {}),
                               "imagemagick": design["magick"]}
     return maps, raster, channels, slots, key_parts, settings, layout, timings, design_qa
 
@@ -477,13 +492,30 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
     }
 
 
+def robot_refit(fit):
+    """Candidate decal anchors on the robot variant (weapon_designs.ROBOT): the deformation moves the decal's centre, the decal
+    grows by the fit's cross factor like the silhouette (then by less, then not) and keeps its aspect (decals.refit_rect)."""
+    def to_life(axis, value):
+        return weapon_designs.robot_life_y(fit, value) if axis == 1 else value / fit["cross"]
+
+    def to_model(axis, value):
+        return weapon_designs.robot_y(fit, value) if axis == 1 else value * fit["cross"]
+
+    # grow like the silhouette; where the variant's own UV atlas puts a seam under it: smaller, then moved a little
+    scales = (fit["cross"], (1 + fit["cross"]) / 2, 1.0)
+    return lambda anchor, box: [decals.refit_rect(anchor, box, to_life, to_model, scale, shift=shift)
+                                for shift in ROBOT_DECAL_SHIFTS for scale in scales]
+
+
 def main():
     started = time.perf_counter()
     parser = argparse.ArgumentParser(description="Bake the contract 4 surface maps of both game models")
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--tool", required=True)
+    parser.add_argument("--robot", action="store_true", help="bake the robot variant's maps only (Toolgen 0.14)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     work = args.directory.resolve()
+    variants = ROBOT_VARIANTS if args.robot else VARIANTS
     # run_asset.py sets the tier's render samples and device on render_init; the bake keeps its own fixed settings.
     bpy.app.handlers.render_init.clear()
     report = {"tool": args.tool, "passed": False, "checks": {}}
@@ -508,16 +540,22 @@ def main():
                 raise RuntimeError("; ".join(errors))
             tool_scale = json.loads(VIEWMODELS_PATH.read_text())["tools"].get(args.tool, {}).get("tool_scale", 1)
             design = {"recipe": recipe or {}, "limits": recipes["limits"], "anchors": anchors, "catalog": catalog,
-                      "scale": {"world": 1.0, "viewmodel": float(tool_scale)},
+                      "scale": {"world": 1.0, "viewmodel": float(tool_scale), "robot": 1.0},
                       "command": command, "magick": decals.magick_version(command) if command else None}
-        qa = {variant: json.loads((work / qa_name).read_text()) for variant, _, _, qa_name in VARIANTS}
-        world_uv1, ego_uv1 = qa["world"]["checks"]["uv1_source"], qa["viewmodel"]["checks"]["uv1_source"]
-        shared = bool(ego_uv1.get("shared_with_world")) and ego_uv1.get("world_sha256") == world_uv1.get("sha256")
-        report["checks"]["uv1_shared"] = {"passed": shared == bool(ego_uv1.get("shared_with_world")), "shared_with_world": shared,
-                                          "world_sha256": world_uv1.get("sha256"), "ego_world_sha256": ego_uv1.get("world_sha256")}
-        for variant, suffix, contract_name, _ in VARIANTS:
+            if args.robot:
+                design["refit"] = robot_refit(weapon_designs.ROBOT[args.tool])
+        qa = {variant: json.loads((work / qa_name).read_text()) for variant, _, _, qa_name in variants}
+        if args.robot:
+            shared = False               # the robot variant has its own UV1 atlas (own parts, own decimation)
+        else:
+            world_uv1, ego_uv1 = qa["world"]["checks"]["uv1_source"], qa["viewmodel"]["checks"]["uv1_source"]
+            shared = bool(ego_uv1.get("shared_with_world")) and ego_uv1.get("world_sha256") == world_uv1.get("sha256")
+            report["checks"]["uv1_shared"] = {"passed": shared == bool(ego_uv1.get("shared_with_world")),
+                                              "shared_with_world": shared, "world_sha256": world_uv1.get("sha256"),
+                                              "ego_world_sha256": ego_uv1.get("world_sha256")}
+        for variant, suffix, contract_name, _ in variants:
             phase = time.perf_counter()
-            asset = tool["asset"] + suffix
+            asset = tool["robot"] if suffix is None else tool["asset"] + suffix
             model = asset + "_Game"
             maps, raster, channels, slots, key_parts, settings, layout, timings, design_qa = bake_model(
                 work, model, asset, variant, palette, design)
@@ -538,7 +576,7 @@ def main():
             contract["surface"] = surface_block(model, variant, palette, slots, settings, files, set_bytes, key, layout,
                                                 shared, "Cube Escape 0.71 (mask mode of the PAINT recipe)", clips)
             if recipe:
-                placed = [{**anchor, "rect": list(anchor["rect"]), "texels": entry.get("texels", 0)}
+                placed = [{**anchor, "rect": list(entry.get("rect", anchor["rect"])), "texels": entry.get("texels", 0)}
                           for anchor, entry in zip(anchors, design_qa.get("decals", [{}] * len(anchors)))]
                 contract["surface"]["recipe"] = surface_relief.recipe_block(
                     args.tool, recipe, recipes["limits"], placed, weapon_designs.DESIGNS[args.tool]["element"])
@@ -558,7 +596,7 @@ def main():
         report["checks"]["surface_bake"] = {"passed": False, "error": f"{type(error).__name__}: {error}"}
     report["passed"] = bool(report["checks"]) and all(check["passed"] for check in report["checks"].values())
     report["seconds"] = round(time.perf_counter() - started, 3)
-    (work / "qa_surface.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    (work / ("qa_surface_robot.json" if args.robot else "qa_surface.json")).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     failed = [name for name, check in report["checks"].items() if not check["passed"]]
     if failed:
         print(f"SURFACE_BAKE_FAILED {args.tool}: {', '.join(failed)}", flush=True)
