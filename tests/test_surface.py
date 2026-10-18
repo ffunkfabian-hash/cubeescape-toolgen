@@ -65,8 +65,8 @@ class ChannelTableTests(unittest.TestCase):
 
     def test_constants_meet_the_contract(self):
         self.assertGreaterEqual(surface.PACK_MARGIN * surface.CHECK_RESOLUTION, surface.MARGIN_PX)
-        self.assertEqual({"world": 512, "viewmodel": 1024}, surface.MAP_RESOLUTION)
-        self.assertEqual({"world": 16, "viewmodel": 32}, surface.AO_SAMPLES)
+        self.assertEqual({"world": 512, "viewmodel": 1024, "robot": 512}, surface.MAP_RESOLUTION)   # robot: 0.14, a world model
+        self.assertEqual({"world": 16, "viewmodel": 32, "robot": 16}, surface.AO_SAMPLES)
         # the unpainted point (0, 0) stays out of reach of the dilation at both resolutions
         for resolution in surface.MAP_RESOLUTION.values():
             first_island_px = (surface.RESERVED_LOW + surface.PACK_MARGIN * (1 - surface.RESERVED_LOW)) * resolution
@@ -204,7 +204,7 @@ class StageTests(unittest.TestCase):
     def test_optional_fields_keep_the_old_stage_declarations(self):
         for stage in STAGES:
             entry = declaration(stage)
-            if stage.name != "surface_bake":
+            if stage.name not in ("surface_bake", "robot", "game_robot", "surface_bake_robot"):   # robot stages: 0.14
                 self.assertNotIn("heavy", entry)
                 self.assertNotIn("min_contract", entry)
         self.assertTrue(declaration(self.stage())["heavy"])

@@ -29,6 +29,10 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   has a twin there (``shared_with_world``). The glTF files carry TANGENT computed on UV1 (MikkTSpace); the FBX files carry
   no tangents (Unity's FBX import reads only UV0 tangents, measured in Cube Escape 0.71: the game computes them from UV1).
   The maps and the ``surface`` block come from the stage ``surface_bake`` (toolgen/surface_bake.py).
+* ``--robot`` (Toolgen 0.14, contract 4): the same as the world export for the robot variant ``<robot>`` of the tools.json
+  entry (``<asset>_Robot``, scripts/tool_assets/weapon_designs.py ROBOT): ``<robot>_Game.*``, ``unity_contract_robot.json``
+  with the block ``robot`` (measures of ``qa_geometry_robot.json``), ``qa_game_robot.json``, ``preview_game_robot.png``.
+  Same anchors, same hold block and the world triangle budget.
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -239,14 +243,25 @@ def equipment_block(palette, used):
                                "M_* as in Toolgen 0.7"}
 
 
-def budget_errors(budget, tools):
-    """Errors of data/game_budget.json: every tool has a positive LOD0 triangle budget for both variants."""
+ROBOT_BUDGET_LIMIT = 12000     # world cap decided by the user (17.10.2026, CE FrameBudgetEnvelopeTests follows)
+
+
+def budget_errors(budget, tools, robots=()):
+    """Errors of data/game_budget.json: every tool has a positive LOD0 triangle budget for both variants, every robot
+    variant (Toolgen 0.14) one in the section "robot", at most the world cap."""
     errors = []
     for variant in ("world", "viewmodel"):
         for tool in tools:
             value = budget.get(variant, {}).get(tool)
             if not isinstance(value, int) or value < 1000:
                 errors.append(f"{variant}/{tool}: triangle budget missing or below 1000")
+    for tool in robots:
+        value = budget.get("robot", {}).get(tool)
+        if not isinstance(value, int) or not 1000 <= value <= ROBOT_BUDGET_LIMIT:
+            errors.append(f"robot/{tool}: triangle budget missing or outside 1000-{ROBOT_BUDGET_LIMIT}")
+    for tool in budget.get("robot", {}):
+        if tool not in robots:
+            errors.append(f"robot/{tool}: budget for a tool without a robot variant")
     return errors
 
 
@@ -1594,8 +1609,25 @@ def render_preview(work, asset, out, contract_name="unity_contract.json", viewmo
 
 
 # --------------------------------------------------------------------------------------------- main
-def contract_name(viewmodel):
-    return "unity_contract_fps.json" if viewmodel else "unity_contract.json"
+def contract_name(viewmodel, robot=False):
+    return "unity_contract_fps.json" if viewmodel else "unity_contract_robot.json" if robot else "unity_contract.json"
+
+
+def qa_name(viewmodel, robot=False):
+    return "qa_game_fps.json" if viewmodel else "qa_game_robot.json" if robot else "qa_game.json"
+
+
+def robot_block(work, tool):
+    """Contract block of the robot variant: which world model it stands in for, its measures and the robot it fits."""
+    qa = json.loads((work / "qa_geometry_robot.json").read_text())["robot"]
+    return {"replaces_in_hand": tool["asset"], "life_model": tool["asset"] + "_Game", "held_scale": qa["held_scale"],
+            "measures_m": qa["measures"], "limits_m": qa["limits"], "robot_reference_m": qa["robot_reference_m"],
+            "support_part": qa["support_part"],
+            "note": "The world model in the robot's hand (Cube Escape HeldToolModels) at heldScale 1.0: the support socket "
+                    "lies at most support_ahead_m ahead of Socket_Hand (magazine well or front of the housing), the stock "
+                    "ends at most stock_behind_m behind it, length = the CE length in the hand. The same design as the "
+                    "life-size model, deformed (weapon_designs.py ROBOT): anchors, hold block, part and clip names are the "
+                    "same; the first-person model and the donor holograms keep the life-size model."}
 
 
 def keep_only(scene, root):
@@ -1634,9 +1666,14 @@ def make_uv1(root, captured=None):
     return info
 
 
-def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMAT):
+def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMAT, robot=False):
     """Game export of the world model, or of the first-person model (``viewmodel``: root ``<asset>_FPS``, no collision,
-    its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract)."""
+    its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract), or of the robot variant
+    (``robot``: root ``<robot>``, like the world model plus the block ``robot``)."""
+    robot_info = None
+    if robot:
+        robot_info = robot_block(work, tool)
+        tool = dict(tool, asset=tool["robot"])
     if viewmodel:
         tool = dict(tool, asset=tool["asset"] + "_FPS", clip=tool.get("fps_clip") or tool.get("clip"))
     asset, clip_name = tool["asset"], tool.get("clip")
@@ -1694,7 +1731,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     set_frame(scene, scene.frame_start)
     renderers = [merge_group(group, collection) for group in groups]
     merged_triangles = sum(triangles(obj.data) for obj in renderers)
-    limit = budget["viewmodel" if viewmodel else "world"][tool["id"]]
+    limit = budget["viewmodel" if viewmodel else "robot" if robot else "world"][tool["id"]]
     renderers, kept = reduce_to_budget(renderers, limit, collection)
     lods = build_lods(renderers, collection)
     if uv1_info:
@@ -1753,7 +1790,10 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
         ego_infos, ego_block = ego_contract(ego, game, ego_take_name(clip_name), source["fps"], animated_nodes)
     document = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
                               camera, surface, contract, ego_infos, ego_block)
-    (work / contract_name(viewmodel)).write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
+    if robot_info:
+        document["variant"] = "robot"
+        document["robot"] = robot_info
+    (work / contract_name(viewmodel, robot)).write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
     expected = {"root": asset, "renderers": [obj.name for obj in renderers], "lods": [obj.name for obj in lods],
                 "groups": [{"name": group.name, "renderer": group.name + "_LOD0"} for group in groups],
                 "materials": {obj.name: [m.name for m in obj.data.materials] for obj in [*renderers, *lods]},
@@ -1779,6 +1819,8 @@ def main():
     parser.add_argument("--tool", required=True)
     parser.add_argument("--viewmodel", action="store_true",
                         help="export the first-person model <asset>_FPS (no collision, own budget, camera data)")
+    parser.add_argument("--robot", action="store_true",
+                        help="export the robot variant <robot> of the tools.json entry (contract 4, Toolgen 0.14)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
     parser.add_argument("--contract", type=int, choices=CONTRACT_FORMATS, default=CONTRACT_FORMAT,
                         help="contract format: 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 layout, "
@@ -1788,14 +1830,17 @@ def main():
     work = args.directory.resolve()
     checks = Checks()
     timings = {}
-    report = {"tool": args.tool, "variant": "viewmodel" if args.viewmodel else "world", "passed": False}
+    report = {"tool": args.tool, "variant": "viewmodel" if args.viewmodel else "robot" if args.robot else "world",
+              "passed": False}
     try:
         tools = {tool["id"]: tool for tool in json.loads(TOOLS_PATH.read_text())["tools"]}
         tool = tools[args.tool]
-        report["asset"] = tool["asset"] + ("_FPS" if args.viewmodel else "")
+        if args.robot and (args.viewmodel or "robot" not in tool or args.contract < SURFACE_CONTRACT):
+            raise RuntimeError("--robot needs a tool with a robot variant, contract 4 and no --viewmodel")
+        report["asset"] = tool["robot"] if args.robot else tool["asset"] + ("_FPS" if args.viewmodel else "")
         palette = json.loads(PALETTE_PATH.read_text())
         budget = json.loads(BUDGET_PATH.read_text())
-        errors = validate_palette(palette) + budget_errors(budget, list(tools))
+        errors = validate_palette(palette) + budget_errors(budget, list(tools), [key for key, t in tools.items() if t.get("robot")])
         checks.add("palette", not errors, errors=errors)
         if errors:
             raise RuntimeError("; ".join(errors))
@@ -1803,7 +1848,7 @@ def main():
         palette = tool_palette(palette, tool, args.contract)
         report["contract_format"] = args.contract
         report["material_convention"] = palette["convention"]
-        source, contract, expected, files = export(work, tool, palette, budget, args.viewmodel, args.contract)
+        source, contract, expected, files = export(work, tool, palette, budget, args.viewmodel, args.contract, args.robot)
         timings["export"] = time.perf_counter() - phase
         phase = time.perf_counter()
         check_blend(checks, files["blend"], source, expected, palette)
@@ -1845,8 +1890,9 @@ def main():
         if args.preview:
             phase = time.perf_counter()
             report["preview"] = render_preview(
-                work, report["asset"], work / ("preview_game_fps.png" if args.viewmodel else "preview_game.png"),
-                contract_name(args.viewmodel), args.viewmodel).name
+                work, report["asset"], work / ("preview_game_fps.png" if args.viewmodel else
+                                               "preview_game_robot.png" if args.robot else "preview_game.png"),
+                contract_name(args.viewmodel, args.robot), args.viewmodel).name
             timings["preview"] = time.perf_counter() - phase
     except Exception as error:  # noqa: BLE001 - reported as a failed QA with exit code 1
         traceback.print_exc()
@@ -1855,7 +1901,7 @@ def main():
                    "seconds": round(time.perf_counter() - started, 3),
                    "timings_seconds": {key: round(value, 3) for key, value in timings.items()}})
     work.mkdir(parents=True, exist_ok=True)
-    (work / ("qa_game_fps.json" if args.viewmodel else "qa_game.json")).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    (work / qa_name(args.viewmodel, args.robot)).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     failed = [name for name, result in checks.results.items() if not result["passed"]]
     if failed:
         print(f"GAME_EXPORT_FAILED {args.tool}: {', '.join(failed)}", flush=True)

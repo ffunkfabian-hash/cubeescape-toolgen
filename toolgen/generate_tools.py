@@ -151,6 +151,22 @@ STAGES = (
                  "unity_contract_fps.json", "qa_game.json", "qa_game_fps.json", "{asset}.blend", "{asset}_FPS.blend"),
           sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface.json",), programs=("magick",),
           heavy=True, min_contract=4),
+    # 0.14 Fieldfit: the robot variant <robot> (= <asset>_Robot) of the eight rifles, an additional world model that fits
+    # Cube Escape's robot hand (scripts/tool_assets/weapon_designs.py ROBOT). Contract 4 only, at the end of the chain so no
+    # earlier stage reads its files: the build with its Use clip (the world script with --variant robot), its game export
+    # (<robot>_Game, unity_contract_robot.json) and its maps.
+    Stage("robot", "{world}", args=("--variant", "robot"), when="robot", reads=(), renders=True, min_contract=4,
+          variants=(Variant("robot", "{robot}", clip=("clip",), roundtrip=True),)),
+    Stage("game_robot", "toolgen/game_export.py",
+          args=("--directory", "{work}", "--tool", "{id}", "--robot", "--contract", "{game_contract}"), when="robot",
+          reads=("{robot}.blend", "qa_geometry_robot.json"),
+          sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
+          render_args=("--preview",), qa=("qa_game_robot.json",), min_contract=4,
+          variants=(Variant("robot_game", "{robot}_Game", clip=("clip",), node="{robot}"),)),
+    Stage("surface_bake_robot", "toolgen/surface_bake.py", args=("--directory", "{work}", "--tool", "{id}", "--robot"),
+          when="robot", reads=("{robot}_Game.blend", "unity_contract_robot.json", "qa_game_robot.json", "{robot}.blend"),
+          sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface_robot.json",), programs=("magick",),
+          heavy=True, min_contract=4),
 )
 # Serialises the heavy stage builds of this process' workers (the shared lock marks its holder in os.environ).
 HEAVY_STAGES = threading.Lock()
@@ -209,7 +225,7 @@ def variant_clip(variant, tool):
 def variants(tool, stages=None):
     found = [variant for variant in BASE_VARIANTS if not variant.when or tool.get(variant.when)]
     for stage in STAGES if stages is None else stages:
-        if not stage.when or tool.get(stage.when):
+        if (not stage.when or tool.get(stage.when)) and game_contract(tool) >= stage.min_contract:
             found += [variant for variant in stage.variants if not variant.when or tool.get(variant.when)]
     return found
 

@@ -15,6 +15,8 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
 - `data/game_palette.json` bildet die Generator-Materialien auf Cube-Escape-Materialnamen ab (Spiel-Export); die Abbildung bleibt
   vollständig, Namen und Ergebnisdateien (`*_Game.*`, `unity_contract*.json`) sind Vertrag mit dem Spiel;
   Dreiecksbudgets stehen in `data/game_budget.json` (nicht im Generator verstecken).
+- Roboter-Variante der acht Gewehre (`<Asset>_Robot`, 0.14): Verformung des Designs (`weapon_designs.py` › `ROBOT`), nie ein zweites
+  Modellset; sie ändert Weltmodell, Ego-Modell und Clips nicht (Beleg `scripts/compare_models.py`).
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips (Use, Fire, Draw …) laufen einmal und kehren in die Ruhepose zurück; Loop ist
   eine Viewer-Prüfoption. Ausnahme (Nutzer, 16.10.2026): Ego-Zustandsclips Idle, Walk, Sprint, AimIdle (0.9.0), FusionRifle_Charge (0.11.0, und was später

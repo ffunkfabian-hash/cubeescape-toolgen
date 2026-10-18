@@ -12,6 +12,7 @@ verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-
 | Ego-Modell (Hände, Arme, Werkzeug) | `<Asset>_FPS_Game.fbx/.glb/.blend` | `unity_contract_fps.json` (Renderer, LOD, Clip, `viewmodel`) |
 | Viewmodel-Kamera | `viewmodel_camera.json` | vertikales FOV, Near Clip, geprüfte Werte |
 | Maskenkarten (Vertrag 4, standard/full) | `<Asset>_Game_{W0,W1,Fields,Normal}.png`, `<Asset>_FPS_Game_*.png` | Block `surface` in beiden Verträgen |
+| Weltmodell in der Roboterhand (0.14, acht Gewehre, Vertrag 4) | `<Asset>_Robot_Game.fbx/.glb/.blend`, `<Asset>_Robot_Game_*.png` | `unity_contract_robot.json` (wie `unity_contract.json`, dazu Block `robot`) |
 
 Materialien: nur die Palettenmaterialien aus `data/game_palette.json` (je Weltmodell höchstens 6, je Ego-Modell höchstens 7);
 die neun Waffen tragen ab Vertrag 2 stattdessen die Ausrüstungs-Slots `MT_<Kanal>` (siehe „Ausrüstungs-Slots“ unten).
@@ -120,6 +121,31 @@ beim Fusionsgewehr `ChargeFireAction` mit dem Schuss bei Bild 46).
 **Neue Materialien:** `M_GlowVoid` (violett), `M_GlowArc` (blau), `M_GlowKinetic` (kühl weiß), je beim Import aus den Palettenwerten
 anlegen; ENERGY und SOLAR benutzen das vorhandene `M_GlowCyan` bzw. `M_GlowOrange`. Das Element steht im Vertrag (`hold.element`) und
 als Wurzeleigenschaft `ce_weapon_element`.
+
+## Roboter-Variante in der Hand (0.14.0 Fieldfit, Vertrag 4 additiv)
+
+Für Sturmgewehr, Impulsgewehr, Schrotflinte, Scharfschützengewehr, Maschinenpistole, Fusionsgewehr, Spurgewehr und Raketenwerfer
+gibt es ein **zusätzliches Weltmodell für die Roboterhand** (`HeldToolModels`). Es wird mit **`heldScale` 1,0** gehalten; das
+bisherige Weltmodell (liegend, Spender, Anzeige), das Ego-Modell und ADS bleiben unverändert. Die Pistole hat keine Variante
+(Becher-Griff sitzt bei `heldScale` 1,1). Technik und Maße: [TECHNIK](TECHNIK.md) › Roboter-Variante der Waffen.
+
+**Namen (dauerhafte IDs):** Datenschlüssel `tools.json` › `robot` = `<Asset>_Robot`; Spielmodell `<Asset>_Robot_Game.fbx/.glb/.blend`
+mit dem Wurzelknoten `<Asset>_Robot` (Properties `ce_variant` `robot`, `ce_held_scale` `1.0`); Karten `<Asset>_Robot_Game_W0/W1/Fields/
+Normal.png` (512², eigenes UV1-Atlas, `surface.uv1.shared_with_world` false); Vertrag `unity_contract_robot.json` (`variant` `robot`);
+QA `qa_game_robot.json`, `qa_geometry_robot.json`, `qa_surface_robot.json`. Anker-, Teil- und Clipnamen sind die des Weltmodells
+(`Socket_Hand`, `Socket_SupportHand`, `Socket_Muzzle`, `Socket_Sight`, bei Zielfernrohren `Socket_Eye`, `Socket_CenterOfMass`; Clip
+`<Name>_Use` mit Marker `Fire`); der Block `hold` ist identisch.
+
+**Block `robot`** im Vertrag: `replaces_in_hand` (das Weltmodell, das die Variante in der Hand ersetzt), `held_scale` 1,0,
+`measures_m` (Länge, Schaft hinter und Stützhand vor `Socket_Hand`, Abstand und Höhe der Stützhand, Laufdurchmesser, Gehäusehöhe,
+Mündung vor der Hand), `limits_m`, `robot_reference_m` (Roboter aus CE 0.82) und `support_part`. Abweichend vom Satz im `hold`-Block
+liegt `Socket_SupportHand` hier nicht am Handschutz, sondern 0,09 m vor `Socket_Hand` am Magazinschacht bzw. an der Gehäusefront
+(Raketenwerfer: Rohrunterseite), etwa auf Griffhöhe; der Schaft endet 0,11 m hinter `Socket_Hand`.
+
+**Mindestversion des Abnehmers:** der Cube-Escape-Stand der Equipment-Linie, der `unity_contract_robot.json` liest; ältere Stände
+ignorieren die zusätzlichen Dateien. Fassung ohne Variante: `python3 toolgen/generate_tools.py --tier standard --contract 3` (keine
+Roboterdateien) oder Toolgen ≤ 0.13 (`v0.13.0`). Dreiecke: `game_budget.json` › `robot` 12 000 je Variante (die vom Nutzer
+entschiedene Weltgrenze; CE zieht `FrameBudgetEnvelopeTests` nach).
 
 ## Handgelenk im Ego-Modell (0.8.0)
 

@@ -82,6 +82,7 @@
       "fps_clip": "AssaultRifle_Use",
       "element": "arc",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_AssaultRifle_Robot",
       "hold": {
         "grip_tilt_degrees": 16,
         "two_handed": true,
@@ -103,6 +104,7 @@
       "fps_clip": "PulseRifle_Use",
       "element": "void",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_PulseRifle_Robot",
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
@@ -124,6 +126,7 @@
       "fps_clip": "Shotgun_Use",
       "element": "solar",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_Shotgun_Robot",
       "hold": {
         "grip_tilt_degrees": 15,
         "two_handed": true,
@@ -145,6 +148,7 @@
       "fps_clip": "SniperRifle_Use",
       "element": "energy",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_SniperRifle_Robot",
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,
@@ -167,6 +171,7 @@
       "fps_clip": "SubmachineGun_Use",
       "element": "energy",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_SubmachineGun_Robot",
       "hold": {
         "grip_tilt_degrees": 18,
         "two_handed": true,
@@ -188,6 +193,7 @@
       "fps_clip": "FusionRifle_Use",
       "element": "void",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_FusionRifle_Robot",
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,
@@ -209,6 +215,7 @@
       "fps_clip": "ScoutRifle_Use",
       "element": "arc",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_ScoutRifle_Robot",
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,
@@ -231,6 +238,7 @@
       "fps_clip": "RocketLauncher_Use",
       "element": "solar",
       "materials": "equipment_channels",
+      "robot": "CubeEscape_RocketLauncher_Robot",
       "hold": {
         "grip_tilt_degrees": 14,
         "two_handed": true,

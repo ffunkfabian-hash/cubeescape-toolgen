@@ -559,7 +559,12 @@ class SmallHelperTests(unittest.TestCase):
         self.assertTrue(ge.MIN_COLLIDER_SIZE_M < ge.MIN_PART_SIZE_M)
 
     def test_triangle_budgets_cover_every_tool(self):
-        self.assertEqual([], ge.budget_errors(BUDGET, list(TOOLS)))
+        robots = [key for key, tool in TOOLS.items() if tool.get("robot")]
+        self.assertEqual([], ge.budget_errors(BUDGET, list(TOOLS), robots))
+        # 0.14: every robot variant has its own budget, at most the world cap; no budget without a variant
+        self.assertTrue(ge.budget_errors(BUDGET, list(TOOLS)))
+        self.assertTrue(ge.budget_errors(dict(BUDGET, robot=dict(BUDGET["robot"], smg=12001)), list(TOOLS), robots))
+        self.assertTrue(ge.budget_errors(dict(BUDGET, robot={}), list(TOOLS), robots))
         self.assertTrue(ge.budget_errors({"world": {}, "viewmodel": {}}, ["bow"]))
         self.assertTrue(ge.budget_errors({"world": {"bow": 500}, "viewmodel": {"bow": 9000}}, ["bow"]))
         for tool_id in TOOLS:

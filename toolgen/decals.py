@@ -281,6 +281,35 @@ def project(anchor, mask, texels, triangle_parts, normals, part_index, part_box)
     return hit
 
 
+def refit_rect(anchor, box, to_life, to_model, scale, margin=.02, shift=(0.0, 0.0)):
+    """The anchor on a deformed part (Toolgen 0.14 robot variant): ``box`` is the deformed part's box, ``to_life(axis, value)``
+    and ``to_model(axis, value)`` map one coordinate between the life-size design and the deformed model, ``scale`` is the
+    decal's uniform growth. The decal keeps its aspect in millimetres and its centre on the same spot of the part; where the
+    part got too short for it (a squashed stock), it first moves inward and only then shrinks, so it stays inside the box
+    with ``margin`` (share of the box) on every side. ``shift`` (u, v as shares of the box, seen from outside) moves it off a
+    UV seam. Returns the new anchor."""
+    _, _, u_axis, u_sign, v_axis, v_sign = FACES[anchor["face"]]
+    low, high = [float(v) for v in box[0]], [float(v) for v in box[1]]
+    u0, v0, u1, v1 = anchor["rect"]
+    sides = []
+    for axis, sign, f0, f1, move in ((u_axis, u_sign, u0, u1, shift[0]), (v_axis, v_sign, v0, v1, shift[1])):
+        life_low, life_high = to_life(axis, low[axis]), to_life(axis, high[axis])
+        ends = sorted(life_low + (f if sign > 0 else 1 - f) * (life_high - life_low) for f in (f0, f1))
+        centre = to_model(axis, (ends[0] + ends[1]) / 2) + sign * move * (high[axis] - low[axis])
+        sides.append((axis, sign, centre, (ends[1] - ends[0]) / 2 * scale))
+    factor = 1.0
+    for axis, _, _, half in sides:
+        room = (high[axis] - low[axis]) * (.5 - margin)
+        factor = min(factor, room / half) if half > 0 else factor
+    rect = []
+    for axis, sign, centre, half in sides:
+        span, half = high[axis] - low[axis], half * factor
+        centre = min(max(centre, low[axis] + margin * span + half), high[axis] - margin * span - half)
+        a, b = (centre - half - low[axis]) / span, (centre + half - low[axis]) / span
+        rect.append((a, b) if sign > 0 else (1 - b, 1 - a))
+    return dict(anchor, rect=(rect[0][0], rect[1][0], rect[0][1], rect[1][1]))
+
+
 def rect_aspect_error(anchor, part_box, mask_shape):
     """Relative difference of the rect's aspect (mm on the part) and the image's aspect (after the rotation)."""
     _, _, u_axis, _, v_axis, _ = FACES[anchor["face"]]
