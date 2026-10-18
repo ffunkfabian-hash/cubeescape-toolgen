@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.15.1 – Toolgrip (18.10.2026)
+
+Golden der Oberflächenkarten mit belegten Ausweich-Hashes (Bericht: [docs/versions/0.15.md](docs/versions/0.15.md) › 0.15.1); keine Modell- oder Kartenänderung.
+
+- Befund: Der Cycles-Normal-Bake der Roboter-Varianten von Spur- und Scharfschützengewehr kippt bei gleicher Eingabe und gleichen Einstellungen je einen Texel um eine Stufe (Blaukanal 253/254, 1 von 3 Läufen, jede Thread-Zahl); `verify_surface.py` war deshalb je nach Lauf rot.
+- `tests/golden/surface/manifest.json` › `alternates`: je Karte die belegten anderen sha256 (nur diese zwei Karten); `verify_surface.py` akzeptiert Hauptwert oder Ausweichwert, `--update-golden` behält sie nur, wenn die Karte zwischen bekannten Werten kippt.
+- Tests: `tests/test_verify_surface.py` › `GoldenAlternatesTests` (unter Blenders Python).
+
 ## 0.15.0 – Toolgrip (18.10.2026)
 
 Ego-Werkzeuge wie die Waffen: Wunsch aus Cube Escape 0.85 „Quickdraw“ Phase 4 (Bericht: [docs/versions/0.15.md](docs/versions/0.15.md)), Vertrag 4 unverändert.
