@@ -106,6 +106,20 @@ for tool in catalog():
         assert game_qa["checks"]["sight_anchors"]["passed"] and game_qa["checks"]["ads_target_pose"]["passed"], tool["id"]
         assert game_qa["ads"]["eye_distance_range_m"], (tool["id"], "no eye distance keeps the ADS framing")
         checks += 5
+    event = PROFILES[tool["id"]].get("use_event")
+    if event:
+        # 0.15.0 Toolgrip (Cube Escape 0.85 phase 4): the ego tools' wrists at most 55 degrees in every frame of every clip,
+        # their Use event (Fire, Grab, Switch), Inspect_B and a lowered pose with Socket_Hand at least 6 mm lower than rest
+        assert ego["clips"][0]["events"] == [{"name": event["name"], "frame": event["frame"],
+                                              "seconds": (event["frame"] - 1) / ego["clips"][0]["fps"]}], (tool["id"], "Use event")
+        rig = json.loads((package / "qa_viewmodel.json").read_text())
+        assert set(rig["wrist_bend"]) == set(rig["hand_sides"]), (tool["id"], "wrist limit on every arm")
+        assert all(value["limit_degrees"] <= 55 for value in rig["wrist_bend"].values()), tool["id"]
+        assert all(set(clip["wrist_bend_max_degrees"]) == set(rig["hand_sides"])
+                   and max(clip["wrist_bend_max_degrees"].values()) <= 55 for clip in rig["ego_clips"]["clips"]), tool["id"]
+        assert any(clip["name"].endswith("_Inspect_B") for clip in rig["ego_clips"]["clips"]), (tool["id"], "Inspect_B")
+        assert rig["ego_clips"]["lowered"]["hand_drop_m"] >= .006, (tool["id"], "Draw/Holster lowered", rig["ego_clips"]["lowered"])
+        checks += 6
     checks += 5
     # contract 4: surface block and maps in standard/full (manifest "surface"), never in quick or older contracts
     world = json.loads((package / "unity_contract.json").read_text())

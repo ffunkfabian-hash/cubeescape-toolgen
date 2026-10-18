@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.15.0 – Toolgrip (18.10.2026)
+
+Ego-Werkzeuge wie die Waffen: Wunsch aus Cube Escape 0.85 „Quickdraw“ Phase 4 (Bericht: [docs/versions/0.15.md](docs/versions/0.15.md)), Vertrag 4 unverändert.
+
+- Portalwerfer, Magnetgreifer, Taschenlampe: `arm_pose` je Arm, Handgelenk in jedem Clipbild ≤ 55° (Ruhe 45,6°/48,7°/46,7° statt 82°/84°/89°).
+- Use-Ereignis `Fire`/`Grab`/`Switch`, neuer Clip `<Name>_Inspect_B`, `lowered` in Draw/Holster 14–17 mm tiefer (vorher ≈ 2 mm); Waffen, Bogen und alle Weltmodelle bytegleich.
+- Prüfung: `tests/test_ego_clips.py` (EgoToolTests), `verify_output.py`, `qa_viewmodel.json` › `ego_clips.lowered`; Bewegungsbeleg `scripts/ego_video.py` (MP4, Kontaktbogen).
+- Mindestversion: keine (Namen und Knoten bleiben); `Inspect_B` und die Ereignisse nutzt der CE-Stand mit Phase 4; ältere Fassung: `main` bei `8abf588` (0.14.0, ohne Tag).
+
 ## 0.14.0 – Fieldfit (17.10.2026)
 
 Roboter-Variante der Weltmodelle für die acht Unterhand-Waffen (Entscheidung des Nutzers 17.10.2026, „sehr wichtig“; Bericht: [docs/versions/0.14.md](docs/versions/0.14.md)), Vertrag 4 additiv.

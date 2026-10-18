@@ -98,8 +98,9 @@ Wurzel in den Eigenschaften `ce_viewmodel_vertical_fov_degrees`, `ce_viewmodel_h
 
 Das Ego-Modell ist nicht an das Spieler-FOV gebunden: Es liegt im Kameraraum und wird mit einer eigenen Kamera gezeichnet. Den
 Wert nennt `viewmodel_camera.json` zusammen mit `player_fov_dependency: "none"`, `aspect_policy`, `camera_offset_m`,
-`validated_vertical_fov_degrees` (für das gestaltete Ego-Modell; Werte, bei denen der Bildausschnitt für alle geprüften Seitenverhältnisse hält: Portalkanone und
-Magnetgreifer 46,69/50,69°, Taschenlampe 42,69–54,69°, Bogen nur 46,69°) und einem `runtime`-Hinweis; derselbe Block steht als
+`validated_vertical_fov_degrees` (für das gestaltete Ego-Modell; Werte, bei denen der Bildausschnitt für alle geprüften Seitenverhältnisse hält: Portalkanone,
+Magnetgreifer, Bogen und Waffen nur 46,69°, Taschenlampe 46,69/50,69°; vor 0.15 Portalkanone und Magnetgreifer 46,69/50,69°, Taschenlampe
+bis 54,69° – der schräg nach vorn steigende Griffunterarm aus `arm_pose` kommt bei weiterem Sichtfeld ins Bild) und einem `runtime`-Hinweis; derselbe Block steht als
 `viewmodel` in `unity_contract_fps.json` (dort `authored_model_validated_vertical_fov_degrees` und `game_model_validated_vertical_fov_degrees`). Das reduzierte Spielmodell ist nur beim Datenwert geprüft (`qa_game_fps.json` › `viewmodel_framing`: Bildschirmausdehnung je Renderer gegen das gestaltete Modell in jedem Clipbild für 16:9 und 16:10 innerhalb 0,3 % der Bildgröße, Fadenkreuz frei – vertexbasiert); eine Viewmodel-FOV-Einstellung des Spiels braucht für das Spielmodell eine neue Prüfung. Einbau:
 [UNITY_EINBAU](UNITY_EINBAU.md).
 
@@ -125,7 +126,9 @@ Griffkontakt bleibt dabei erhalten. Dadurch wird ein nur an der Sehne bewegter, 
 Minimum-Jerk-Kurven (Quintik mit verschwindender Anfangs-/Endgeschwindigkeit)
 und endliches Nachfedern stehen in `motion_profiles.py`. Greifer-Kurven verwenden geklemmte Bézier-Handles.
 Die bestehenden Clipnamen, 97 Frames und Abschuss-/Sichtbarkeitsereignisse bleiben erhalten.
-Portal-/Lampen-Egomodelle bieten eigene Anwendungsvorschauen; daraus entstehen keine Gameplay-Ereignisse.
+Die Use-Clips der Ego-Werkzeuge tragen seit 0.15 ein Ereignis wie `Fire` der Waffen (`use_event` in `data/viewmodels.json`, Marker in
+`first_person.py`): Portalwerfer `Fire` und Taschenlampe `Switch` bei Bild 14 (Stoß der Anwendungsbewegung), Magnetgreifer `Grab` bei
+Bild 13 (Backen geschlossen, `animate_magnet_gripper.py`).
 
 Der Viewer blendet pro Zeitposition zwischen zwei gebackenen Frames: linear für Position/Skalierung/Morphs, Slerp
 für Quaternionen. Diskrete Skalierung (Pfeilsichtbarkeit) bleibt durch `stepScale` im Knoten ein Ereignis;
@@ -142,6 +145,11 @@ als 960×540-PNG-Folge für Bewegungsabnahmen. Daraus entsteht mit FFmpeg ein te
 output/ToolGenViewer.app/Contents/MacOS/ToolGenViewer --data output --sequence output/QA/Bogen-Frames --model bow/fps --rate 60
 ffmpeg -framerate 60 -i output/QA/Bogen-Frames/frame-%04d.png -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart output/QA/Bogen.mp4
 ```
+
+Die Ego-Clips (ab Bild 101) spielt der Viewer nicht ab; ihren Bewegungsbeleg rendert `scripts/ego_video.py <Ausgabe> <Videoordner>
+[--tool …]` (0.15.0) aus dem gestalteten `<Asset>_FPS.blend` durch dessen Viewmodel-Kamera: Eevee, 1280×720, 24 fps, Clipname und
+Bild im Stempel, unter `heavy_lock`; dazu `<tool>_contact.png` mit Anfang, Mitte und Ende jedes Clips. Ablage außerhalb des Repos
+(`~/Library/Caches/CubeEscapeToolgen/videos/<Version>/`).
 
 Neue Vorschauen immer mit `--data` auf den frisch geprüften Katalog richten. Eine ältere App kann sonst ihre
 gebündelten alten Modelle rendern. Nach einem fehlgeschlagenen Bau ist das vorherige Paket weiterhin intakt,
@@ -350,6 +358,14 @@ senkrecht unter dem Griff (Handgelenk ≈ 105° abgeknickt), links lag die Hand 
   Gemessen (`output/_standard`): rechts 45,7–52,1° (Pistole 52,1, MP 52,0, Sturmgewehr 50,7, Scharfschützen-/Spurgewehr 45,9/45,7),
   links 30,3–30,6°; vorher 105°/160°. Rechts liegt über dem Ziel, weil die Griffneigung (12–18°) die Knöchel nach unten kippt und der
   Unterarm für den Bildausschnitt ≈ 27° steigen muss; flacher ginge nur mit flacheren Griffen (Vertrag `hold.grip_axis`).
+- Ego-Werkzeuge (0.15.0, Wunsch Cube Escape 0.85: in CE gemessen 82°/84°/89° in Ruhe, CE kann flache Knoten unter `Viewmodel_Motion`
+  nicht nachstellen): Griffarm mit `forearm` absolut, ≈ 35–40° steigend und zur Knöchelrichtung gedreht (Portalwerfer
+  [0,454, −0,617, 0,643], Magnetgreifer [0,4, −0,653, 0,643], Taschenlampe [0,436, −0,693, 0,574], `upper` wie die Waffen); die Stützarme
+  von Portalwerfer und Magnetgreifer haben nur `max_wrist_bend_degrees` (eine `arm_pose` ohne Unterarmangabe behält Schulter und
+  Ellbogenebene aus `arm` und setzt nur die Grenze; ihr Winkel lag schon bei 41/46°). Gemessen über alle Bilder: Portalwerfer 45,6/45,2°,
+  Magnetgreifer 48,7/50,0°, Taschenlampe 46,7° (rechts/links). Gewählt aus einer Abtastung der Unterarmrichtungen (Winkel ≤ 45° in Ruhe,
+  Ellbogen auf der Handflächenseite mit Abstand, proximale Hälfte bei 1,7× unter dem Bildrand), mit der kleinsten Abweichung von der alten
+  Richtung. Mit dem Unterarm ändert sich die Achse von `twist` (vorher fast senkrecht = Gieren, jetzt nach vorn = Kanten wie bei den Waffen).
 - Bildausschnitt auch bei 1,7× um `Socket_Hand` (`GAME_ENLARGEMENT_MAX`, so vergrößert Cube Escape 0.65 die Waffen), verbindlich:
   `proximal_forearm_max_screen_y_enlarged` < 0.
 
@@ -408,6 +424,11 @@ Tabelle: [EGO_CLIPS](EGO_CLIPS.md).
 - Pistole beidhändig (0.10.0): `support_grip` `cup` in `data/viewmodels.json` – die linke Hand nimmt die Drehung des Griffankers
   (plus `hand_rotation_degrees.L`) und `support_radius` [0,017, 0,036] legt ihre Finger ohne Überschneidung vor die der rechten Hand; `arm_pose.L` relativ
   (Anstieg 18°, seitlich 10°). Die Pistolen-Clips nutzen kleinere Drehungen um den Unterarm (die linke Hand liegt nah am unteren Bildrand).
+- Ego-Werkzeuge (0.15.0): `Inspect_B` (kantet entgegen `Inspect_A`, `except_tools` nimmt den Bogen aus), Klassen `portal_emitter`,
+  `magnet_gripper`, `flashlight` mit kleineren Drehungen (Inspect 18°/−14°, Sprint des Portalwerfers 10° und 1,5 cm statt 14° und 3 cm:
+  sonst verdeckt `SM_PG_UpperArmSpine` das Fadenkreuz) und deutlichem `lowered` (1 cm tiefer, 5° Mündung hoch, 12° Kanten). Gemessen
+  `qa_viewmodel.json` › `ego_clips.lowered`: `Socket_Hand` sinkt 14,0/14,0/17,2 mm (vorher ≈ 2 mm; Waffen 1–4 mm in derselben Messung),
+  Weg 21–25 mm. Prüfung `verify_output.py`: Senkung ≥ 6 mm, Handgelenk ≤ 55° je Clip und Arm, Use-Ereignis, Inspect_B.
 - Spiel-Export (`game_export.py`, Vertrag 3): Clips-Datei `<Asset>_FPS_Game_Clips.fbx/.glb` (Szenenbereich und manuelle Aktionsbereiche
   vorübergehend auf die Ego-Zeitleiste). Teile, die die Clips nicht selbst stellen (Mechanik, Leuchten), bekommen in Fire/AimFire die Werte des Use-Clips ab dem Schuss (Schlitten, Verschluss, Pumpe; `fire_end_frame` verlängert Fire bis zur Ruhe), sonst Ruhekeys an jedem Clipende (`clip_keys`); ohne Keys im Clipbereich ließe glTF sie
   fallen. Reimport beider Clips-Dateien an Clipenden, -mitten und Events; Bildausschnitt des reduzierten Modells an denselben Frames.
@@ -682,7 +703,8 @@ Vertrag (FBX: Blender-Achsen bleiben im Import, Befund Cube Escape 0.75); Achsen
 kann das nicht prüfen (er macht die Achsenumrechnung rückgängig), nur Cube Escapes Anker-Test in Unity.
 `*_FPS_Game.glb` ist zwischen zwei Läufen derselben Quellen nicht immer bytegleich (gemessen 0.13: eine Tangente um 1e-4, gegenüber dem
 0.12-Lauf die Handnetze in anderer Reihenfolge); Werkzeug-UV1, Geometrie-QA und die Maskenkarten sind davon nicht betroffen (der Bake
-entfernt die Hände). Grund nicht festgehalten. Anker unter anderem Socket_Hand,
+entfernt die Hände). Grund nicht festgehalten. Ebenso `*_Robot_Game.glb` (gemessen 0.15: je Waffe zwei Werte um 1e-4 verschieden, wenn in
+einem anderen Ordner gebaut, im selben Ordner gleich; JSON-Teil gleich). `compare_models.py` führt beide getrennt. Anker unter anderem Socket_Hand,
 Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket_Grab. Ältere Contract-Zielnamen
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.

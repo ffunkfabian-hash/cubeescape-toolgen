@@ -38,8 +38,8 @@
      "reticle_free": true, "interruptible": false, "events": [{"name": "Holstered", "at": 1.0}]},
     {"suffix": "Inspect_A", "motion": "inspect_a", "length": 96, "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon", "tool"],
      "reticle_free": false, "interruptible": true, "events": []},
-    {"suffix": "Inspect_B", "motion": "inspect_b", "length": 96, "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon"],
-     "reticle_free": false, "interruptible": true, "events": []},
+    {"suffix": "Inspect_B", "motion": "inspect_b", "length": 96, "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon", "tool"],
+     "except_tools": ["bow"], "reticle_free": false, "interruptible": true, "events": []},
     {"suffix": "Reload", "motion": "reload", "length": "reload_frames", "loop": false, "from": "rest", "to": "rest", "kinds": ["weapon"],
      "reticle_free": false, "interruptible": true, "events": [{"name": "MagOut", "at": "reload.out_at"}, {"name": "MagIn", "at": "reload.in_at"}, {"name": "Ready", "at": 1.0}]},
     {"suffix": "Charge", "motion": "charge", "length": "charge.frames", "loop": true, "from": "rest", "to": "rest", "kinds": ["weapon"],
@@ -195,7 +195,18 @@
       "lowered": {"twist_deg": 6.25, "pitch_deg": 1, "right_m": -0.02}
     },
     "portal_emitter": {
-      "walk": {"up_m": 0.0015, "right_m": -0.003, "twist_deg": 0.6}
+      "walk": {"up_m": 0.0015, "right_m": -0.003, "twist_deg": 0.6},
+      "sprint": {"twist_deg": 10, "right_m": -0.015},
+      "lowered": {"twist_deg": 12, "pitch_deg": 5, "right_m": -0.02, "up_m": -0.01},
+      "inspect": {"a": {"twist_deg": 18}, "b": {"twist_deg": -14}}
+    },
+    "magnet_gripper": {
+      "lowered": {"twist_deg": 12, "pitch_deg": 5, "right_m": -0.02, "up_m": -0.01},
+      "inspect": {"a": {"twist_deg": 18}, "b": {"twist_deg": -14}}
+    },
+    "flashlight": {
+      "lowered": {"twist_deg": 12, "pitch_deg": 5, "right_m": -0.02, "up_m": -0.01},
+      "inspect": {"a": {"twist_deg": 18}, "b": {"twist_deg": -14}}
     }
   }
 }

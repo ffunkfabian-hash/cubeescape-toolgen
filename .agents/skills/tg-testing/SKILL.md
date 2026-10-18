@@ -39,6 +39,8 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    Werkzeugabstand ableiten. Nach einem fehlgeschlagenen Bau keine alte Vorschau als neue Prüfung ausgeben.
    Screenshots/Movies mit `--data <frische Ausgabe>` erzeugen, damit kein altes App-Bundle verwendet wird;
    Movie-Export und FFmpeg-Aufruf stehen im Systemdoc. Handgrößen/Haltungen sind Daten in `data/viewmodels.json`, Bewegungsprofile in `motion_profiles.py`.
+   Ego-Clips (Viewer spielt sie nicht): `python3 scripts/ego_video.py <Ausgabe> ~/Library/Caches/CubeEscapeToolgen/videos/<Version> --tool <id>`
+   → MP4 und Kontaktbogen; Handgelenk, Senkung (`ego_clips.lowered`) und Use-Ereignis prüft `verify_output.py`.
 7. Spiel-Export (Stufe `game`): `<Werkzeug>/qa_game.json` muss `passed: true` sein, jede Prüfung (Palette, Renderer,
    Materialien, Maße, Anker, Clip bei animierten Werkzeugen, LOD1, Kollision, GLB-/FBX-Reimport) einzeln lesen; `preview_game.png` (ab Standard) ansehen:
    Weltmodell, LOD0, LOD1, Kollisionsboxen. Kollision gegen das tatsächliche Modell, Öffnungen frei. Viewer-Varianten

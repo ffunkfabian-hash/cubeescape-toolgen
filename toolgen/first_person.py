@@ -263,7 +263,11 @@ def aim_arm(rig, spec, sign):
     """Arm pose as data (``arm_pose`` in the Ego profile, camera frame: right = -X, forward = -Y, up = +Z): ``forearm`` is the
     direction elbow -> wrist (or ``forearm_rise_degrees`` / ``forearm_yaw_degrees`` relative to the knuckle heading),
     ``upper`` the direction elbow -> shoulder. Shoulder and elbow plane follow from the rest pose,
-    so the rigid two-link chain reproduces that elbow and keeps following the hand through the clip."""
+    so the rigid two-link chain reproduces that elbow and keeps following the hand through the clip. A spec with only
+    ``max_wrist_bend_degrees`` keeps the default shoulder and elbow pole (``arm`` in data/viewmodels.json) and adds the limit."""
+    rig["arm_limits"] = {"max_wrist_bend_degrees": spec["max_wrist_bend_degrees"], "palm_side": sign}
+    if "forearm" not in spec and "forearm_rise_degrees" not in spec:
+        return
     bpy.context.view_layer.update()
     wrist = rig["hand"].matrix_world @ rig["wrist"]
     upper, lower = rig["lengths"]
@@ -284,7 +288,6 @@ def aim_arm(rig, spec, sign):
     shoulder = elbow + Vector(spec["upper"]).normalized() * upper
     rig["shoulder"] = shoulder
     rig["pole"] = elbow - shoulder
-    rig["arm_limits"] = {"max_wrist_bend_degrees": spec["max_wrist_bend_degrees"], "palm_side": sign}
     pose_arm(rig, bake=False)
 
 
@@ -578,7 +581,7 @@ def build(directory, spec, profile):
                 "pivot": socket.matrix_world.translation.copy() if tool != "bow" else None}
     arm_view["rest_top"] = {rig["hand"].name: proximal_top(rig, rig["hand"].matrix_world @ rig["wrist"] - forearm * rig["lengths"][1],
                                                            forearm, arm_view) for rig, (forearm, _) in zip(arms, rest_arms)}
-    # Arms without arm_pose (the tools) have no wrist limit; their clips only keep the rest bend plus the allowance.
+    # Arms without arm_pose (the bow) have no wrist limit; their clips only keep the rest bend plus the allowance.
     bend_targets = {rig["hand"].name: min(rig["arm_limits"]["max_wrist_bend_degrees"] - wrist["limit_margin_degrees"]
                                           if "arm_limits" in rig else 180.0,
                                           max(wrist["target_degrees"], arm_bend(rig, rig["shoulder"], rig["pole"])
@@ -633,6 +636,13 @@ def build(directory, spec, profile):
     previous_euler = Euler((0, 0, 0), "XYZ")
     clip = spec.get("fps_clip") or spec["clip"]
     root["ce_action_clip"] = clip; root["ce_autoplay"] = False; root["ce_loop"] = False
+    # Event of a tool's Use clip (use_event in data/viewmodels.json: Fire, Grab, Switch), a timeline marker like the weapons'
+    # Fire; the game export writes the markers of this scene into the contract's Use clip events.
+    event = profile.get("use_event")
+    if event:
+        for marker in [marker for marker in scene.timeline_markers if marker.name == event["name"]]:
+            scene.timeline_markers.remove(marker)
+        scene.timeline_markers.new(event["name"], frame=event["frame"])
     # Every clip of the model (T3): the Use clip, then the ego clips in timeline order (JSON list; ce_action_clip stays).
     root["ce_action_clips"] = json.dumps([clip, *(entry["name"] for entry in clips)])
     # Finger nodes (T5): the grip hand's index finger lifts off the trigger after the shot (Fire, AimFire), the support
@@ -1114,11 +1124,24 @@ def ego_clip_report(scene, root, clips, records, aim, aim_frames, settings, part
                                  and mat.node_tree.animation_data.action)
     if animated_materials:
         failures.append(f"materials animated: {animated_materials}")
+    # Draw/Holster (0.15.0): travel of Socket_Hand from the rest pose to the lowered pose, camera axes; drop = downwards.
+    holster = next((clip for clip in clips if clip["to"] == "lowered"), None)
+    lowered = None
+    if holster:
+        socket = scene.objects["Socket_Hand"]
+        points = []
+        for frame in (1, holster["frame_end"]):
+            scene.frame_set(frame); bpy.context.view_layer.update()
+            points.append(socket.matrix_world.translation.copy())
+        scene.frame_set(1); bpy.context.view_layer.update()
+        lowered = {"clip": holster["name"], "hand_drop_m": round(points[0].z - points[1].z, 5),
+                   "hand_travel_m": round((points[1] - points[0]).length, 5)}
     return {"clips": [{"name": clip["name"], "frame_start": clip["frame_start"], "frame_end": clip["frame_end"],
                        "length": clip["length"], "loop": clip["loop"], "from": clip["from"], "to": clip["to"],
                        **records[clip["name"]]} for clip in clips],
             "frames": sum(clip["length"] + 1 for clip in clips), "aim_frames": len(aim_frames), "ads": ads,
-            "reload_part": part.name if part is not None else None, "failures": failures, "warnings": warnings}
+            "reload_part": part.name if part is not None else None, "lowered": lowered, "failures": failures,
+            "warnings": warnings}
 
 
 def configure_camera(scene, settings):

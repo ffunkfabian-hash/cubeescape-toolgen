@@ -15,6 +15,7 @@ DATA = ego_clips.load()
 TOOLS = {tool["id"]: tool for tool in json.loads((ROOT / "data/tools.json").read_text())["tools"]}
 PROFILES = json.loads((ROOT / "data/viewmodels.json").read_text())["tools"]
 WEAPONS = [tool_id for tool_id, tool in TOOLS.items() if tool.get("hold")]
+EGO_TOOLS = ("portal_emitter", "magnet_gripper", "flashlight")   # 0.15.0 Toolgrip: arm_pose, Use event, Inspect_B
 
 
 def clips_of(tool_id, tool=None):
@@ -27,7 +28,8 @@ class ClipListTests(unittest.TestCase):
         for tool_id in TOOLS:
             clips, _ = clips_of(tool_id)
             suffixes = [clip["suffix"] for clip in clips]
-            self.assertEqual((16 if tool_id == "fusion_rifle" else 15) if tool_id in WEAPONS else 8, len(clips), tool_id)
+            self.assertEqual((16 if tool_id == "fusion_rifle" else 15) if tool_id in WEAPONS else 9 if tool_id in EGO_TOOLS else 8,
+                             len(clips), tool_id)
             self.assertEqual(len(set(suffixes)), len(suffixes), tool_id)
             for wanted in ("Idle", "Walk", "Sprint", "Draw", "Holster", "Inspect_A"):
                 self.assertIn(wanted, suffixes, tool_id)
@@ -116,6 +118,63 @@ class ClipListTests(unittest.TestCase):
         for tool_id in WEAPONS:
             plain = {key: value for key, value in TOOLS[tool_id].items() if key not in ("materials", "element")}
             self.assertEqual(clips_of(tool_id), clips_of(tool_id, plain))
+
+
+class EgoToolTests(unittest.TestCase):
+    """Toolgen 0.15.0 Toolgrip (Cube Escape 0.85 phase 4): the three ego tools as the weapons since 0.9-0.13."""
+
+    def test_ego_tools_are_the_tools_with_a_use_event(self):
+        self.assertEqual(set(EGO_TOOLS), {tool_id for tool_id, profile in PROFILES.items() if profile.get("use_event")})
+        self.assertEqual({"portal_emitter": "Fire", "magnet_gripper": "Grab", "flashlight": "Switch"},
+                         {tool_id: PROFILES[tool_id]["use_event"]["name"] for tool_id in EGO_TOOLS})
+        for tool_id in EGO_TOOLS:
+            self.assertTrue(1 < PROFILES[tool_id]["use_event"]["frame"] < 97, tool_id)
+
+    def test_every_ego_tool_arm_has_the_wrist_limit(self):
+        for tool_id in EGO_TOOLS:
+            profile = PROFILES[tool_id]
+            arms = {"R", "L"} if profile["support"] else {"R"}
+            self.assertEqual(arms, set(profile["arm_pose"]), tool_id)
+            for side in arms:
+                self.assertEqual(55, profile["arm_pose"][side]["max_wrist_bend_degrees"], (tool_id, side))
+            self.assertIn("forearm", profile["arm_pose"]["R"], tool_id)     # the grip forearm is aimed, not the default
+        self.assertNotIn("arm_pose", PROFILES["bow"])                       # the bow keeps its rig
+
+    def test_inspect_b_for_the_ego_tools_only(self):
+        for tool_id in TOOLS:
+            clips, params = clips_of(tool_id)
+            inspect_b = [clip for clip in clips if clip["suffix"] == "Inspect_B"]
+            self.assertEqual(tool_id != "bow", bool(inspect_b), tool_id)
+            if tool_id in EGO_TOOLS:
+                clip = inspect_b[0]
+                self.assertIs(clips[-1], clip, "after every earlier clip, so their frame ranges stay")
+                self.assertEqual(("rest", "rest", False), (clip["from"], clip["to"], clip["loop"]))
+                middle = ego_clips.pose_at(clip, clip["frame_start"] + clip["length"] // 2, params)
+                inspect_a = next(entry for entry in clips if entry["suffix"] == "Inspect_A")
+                other = ego_clips.pose_at(inspect_a, inspect_a["frame_start"] + inspect_a["length"] // 2, params)
+                self.assertLess(middle["twist"] * other["twist"], 0, "Inspect_B cants the other way")
+
+    def test_ego_tool_lowered_pose_drops(self):
+        """Draw starts and Holster ends lower than the weapons' cant only (measured at Socket_Hand: qa_viewmodel.json)."""
+        for tool_id in EGO_TOOLS:
+            clips, params = clips_of(tool_id)
+            lowered = ego_clips.named_pose("lowered", params)
+            self.assertLessEqual(lowered["up"], -.008, tool_id)
+            for suffix, frame in (("Draw", "frame_start"), ("Holster", "frame_end")):
+                clip = next(entry for entry in clips if entry["suffix"] == suffix)
+                self.assertLess(ego_clips.pose_error(ego_clips.pose_at(clip, clip[frame], params), lowered), 1e-9)
+
+    def test_weapon_clips_unchanged_by_the_tool_entries(self):
+        """The tool entries (Inspect_B for tools, tool classes) do not reach a weapon's clip list or parameters. Not a proof that
+        the weapons are unchanged against 0.14 (defaults and weapon classes are not compared): that is compare_models.py."""
+        data = json.loads(json.dumps(DATA))
+        entry = next(entry for entry in data["clips"] if entry["suffix"] == "Inspect_B")
+        entry["kinds"] = ["weapon"]
+        del entry["except_tools"]
+        for tool_id in EGO_TOOLS:
+            data["classes"].pop(tool_id, None)
+        for tool_id in WEAPONS:
+            self.assertEqual(clips_of(tool_id), ego_clips.clip_list(data, TOOLS[tool_id], PROFILES[tool_id]["motion"]), tool_id)
 
 
 class PoseTests(unittest.TestCase):

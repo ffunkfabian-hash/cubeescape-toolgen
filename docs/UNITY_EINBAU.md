@@ -175,7 +175,7 @@ Ego-Modell; die Roboterhände des Ego-Modells behalten ihre Palettenmaterialien 
 
 ## Ego-Clips (0.9.0, Vertrag 3)
 
-Jedes Ego-Modell bekommt Zustandsclips (Waffen 15, übrige Werkzeuge 8); Tabelle mit Längen, Loops, Posen, Events und
+Jedes Ego-Modell bekommt Zustandsclips (Waffen 15, Fusionsgewehr 16, Portalwerfer/Magnetgreifer/Taschenlampe 9 seit 0.15, Bogen 8); Tabelle mit Längen, Loops, Posen, Events und
 Übergängen: [EGO_CLIPS.md](EGO_CLIPS.md) (erzeugt aus `data/ego_clips.json`, `python3 scripts/ego_clip_table.py --json <pfad>` liefert
 dieselben Daten maschinenlesbar).
 
@@ -198,6 +198,11 @@ dieselben Daten maschinenlesbar).
   (`roundtrip_clips_fbx/glb` in `qa_game_fps.json`). Farbe und Material gehen in keinen Clip ein.
 - Fire/AimFire: Schuss bei Frame 0, Rückstoß in den ersten ≈ 0,1 s, Länge höchstens die Abklingzeit der Waffe in Cube Escape
   (`fire_cooldown_s`, Werte aus CE `Items/Weapons.cs`: der nächste Schuss startet den Clip neu); das Fusionsgewehr feuert ohne Aufladen.
+- **Ego-Werkzeuge (0.15.0):** `clips[0].events` des Use-Clips nennt `Fire` (Portalwerfer, Bild 14), `Grab` (Magnetgreifer, Bild 13, Backen
+  geschlossen) bzw. `Switch` (Taschenlampe, Bild 14); neuer letzter Clip `<Name>_Inspect_B` (Frames 389–485, rest → rest, frühere Clips
+  behalten ihre Frames); `lowered` (Anfang von Draw, Ende von Holster) liegt deutlich tiefer (`Socket_Hand` 14–17 mm statt ≈ 2 mm). Arme in
+  neuer Ruhehaltung (Handgelenk ≤ 55° in jedem Bild), dadurch geänderte Bewegung in allen Clips; Hand- und Werkzeugknoten, Anker und
+  Clipnamen bleiben. `viewmodel.authored_model_validated_vertical_fov_degrees` nur noch 46,69 (Taschenlampe 46,69/50,69).
 - **Mindestversion des Abnehmers:** keine für den bisherigen Einbau: Cube Escape ab 0.64 liest `clips[0]` und ignoriert die neuen
   Einträge. Die Ego-Clips nutzt erst der Cube-Escape-Stand mit Ego-Zustandslogik (Sitzung „Ego-Waffenhaltung“). Ältere Fassung ohne
   Clips-Datei: `python3 toolgen/generate_tools.py --tier standard --contract 2` (Layout 0.8).

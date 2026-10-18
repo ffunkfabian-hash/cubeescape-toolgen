@@ -27,9 +27,14 @@ def resolved():
     result = {}
     for tool_id in (*WEAPON_ORDER, *TOOL_ORDER):
         tool = by_id[tool_id]
-        motion = viewmodels.get("tools", {}).get(tool_id, {}).get("motion")
+        profile = viewmodels.get("tools", {}).get(tool_id, {})
+        motion = profile.get("motion")
         clips, _ = ego_clips.clip_list(data, tool, motion)
-        result[tool_id] = {"tool": tool, "clips": clips, "transitions": ego_clips.transitions(clips)}
+        # Use clip event (timeline marker): the weapons' Fire on the shot, the ego tools' use_event (0.15.0); None where the
+        # markers come from the model's own animation script (the bow: Idle_Loaded, Drawn, Release, ...), see its contract
+        use = ({"name": "Fire", "frame": motion["fire_frame"]} if motion else profile.get("use_event"))
+        result[tool_id] = {"tool": tool, "clips": clips, "transitions": ego_clips.transitions(clips),
+                           "use_events": [use] if use else None}
     return data, result
 
 
@@ -51,6 +56,8 @@ def json_data(data, result):
                     "events": [{"name": e["name"], "frame": e["frame"] - c["frame_start"]} for e in c["events"]],
                 } for c in item["clips"]],
                 "transitions": item["transitions"],
+                "use_events": None if item["use_events"] is None else
+                              [{"name": e["name"], "frame": e["frame"] - 1} for e in item["use_events"]],
             } for tool_id, item in result.items()
         },
     }
@@ -98,7 +105,10 @@ def render_markdown(data, result):
         exemplar = next((by_suffix[x][suffix] for x in (*WEAPON_ORDER, *TOOL_ORDER) if suffix in by_suffix[x]), None)
         if suffix == "Use":
             vals = ["97"] * len(WEAPON_ORDER) + ["97"]
-            meta = ["Nein", "rest → rest", "Ja", "Ja", "—"]
+            names = []
+            for tool_id in (*WEAPON_ORDER, *TOOL_ORDER):
+                names += [e["name"] for e in result[tool_id]["use_events"] or [] if e["name"] not in names]
+            meta = ["Nein", "rest → rest", "Ja", "Ja", ", ".join(names) + "; Bogen: eigene Marker"]
         else:
             vals = [str(by_suffix[x][suffix]["length"]) if suffix in by_suffix[x] else "—" for x in WEAPON_ORDER]
             tool_vals = [str(by_suffix[x][suffix]["length"]) if suffix in by_suffix[x] else "—" for x in TOOL_ORDER]
@@ -117,7 +127,9 @@ def render_markdown(data, result):
                   "| Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |", "|---|---:|---:|---|"]
         # Use is the fixed opening range; generated clips are placed by clip_list.
         use_name = tool.get("fps_clip") or tool["clip"]
-        lines.append(f"| `{use_name}` | 1–97 | {seconds(96, fps)} | — |")
+        use_events = ("Marker des Modells, `clips[0].events` im Vertrag" if item["use_events"] is None else
+                      ", ".join(f"{e['name']} {e['frame'] - 1}" for e in item["use_events"]) or "—")
+        lines.append(f"| `{use_name}` | 1–97 | {seconds(96, fps)} | {use_events} |")
         for c in item["clips"]:
             events = ", ".join(f"{e['name']} {e['frame'] - c['frame_start']}" for e in c["events"]) or "—"
             lines.append(f"| `{c['name']}` | {c['frame_start']}–{c['frame_end']} | {seconds(c['length'], fps)} | {events} |")
