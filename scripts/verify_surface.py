@@ -196,7 +196,11 @@ def glb_layout_map(document, binary, block, model):
     return layout, errors, raster, counts, channels, tri_values, unpainted
 
 
-def map_validate(folder, block, raster, counts, labels):
+REACH_EPSILON = 1e-5   # edge tolerance of the re-rasterisation that bounds the dilation: the GLB holds float32 UV1 (measured 0.16: 1e-7 misses
+                       # one edge texel the bake covers at 2048, 1e-5 covers it and adds only a few texels)
+
+
+def map_validate(folder, block, raster, counts, labels, reach_raster=None):
     maps_info = block["maps"]
     decoded, hashes, total_bytes, errors = {}, {}, 0, []
     for key in ("w0", "w1", "fields", "normal"):
@@ -260,7 +264,7 @@ def map_validate(folder, block, raster, counts, labels):
     if ratio > .001:
         errors.append(f"one-hot raster mismatches {mismatch_count}/{denominator} ({ratio:.4%}) > 0.1%")
     values = surface.map_checks(decoded, raster, sorted({surface.CHANNELS[i] for i in set(labels.tolist()) if i >= 0}),
-                                total_bytes, maps_info.get("dilation_px"))
+                                total_bytes, maps_info.get("dilation_px"), reach_raster)
     errors.extend(surface.map_errors(values))
     return {"bytes": total_bytes, "unique_texels": denominator, "mismatches": mismatch_count, "decal_texels": decal_texels,
             "decal_texels_declared": declared,
@@ -287,10 +291,12 @@ def verify_model(folder, contract_path, clip=False):
     tangent = tangent_check(doc, binary, glb_path.name)
     errors = list(tangent["errors"])
     if not clip:
-        layout, layout_errors, raster, counts, labels, _, unpainted_mask = glb_layout_map(doc, binary, block, model)
+        layout, layout_errors, raster, counts, labels, tri_values, unpainted_mask = glb_layout_map(doc, binary, block, model)
         errors.extend(layout_errors)
         painted = labels[~unpainted_mask]
-        maps = map_validate(folder, block, raster, counts, painted)
+        use = ~unpainted_mask & (labels >= 0)
+        loose = surface.rasterize(tri_values[use], labels[use], int(block["maps"]["resolution"]), epsilon=REACH_EPSILON)
+        maps = map_validate(folder, block, raster, counts, painted, loose)
         errors.extend(maps["errors"])
     else:
         layout, maps = None, None

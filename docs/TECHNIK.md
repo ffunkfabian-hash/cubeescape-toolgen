@@ -458,7 +458,8 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
   12 × (1 − Bevel-Normale · Schattierungsnormale), Bevel 4 mm, mal Konvexität aus lokalem AO (16 mm; unter 0,35 Falte = 0, über 0,7 voll).
   `render_init`-Handler von `run_asset.py` werden geleert, damit Samples und Gerät der Teststufe nicht greifen (standard = full).
   PNG-Schreiber eigen (`png_encode`: Filter None/Sub/Up, zlib 9, nur IHDR/IDAT/IEND). Laufzeit Pistole bei Ego 1024²: Welt 5 s, Ego 42 s (AO 31 s), 4 Threads;
-  bei Ego 2048² (0.16) viermal so viele Texel, erwartet Ego ≈ 3 min je Waffe (Mac-Messung offen).
+  bei Ego 2048² (0.16) viermal so viele Texel: Stufe `surface_bake` 100–460 s je Werkzeug (Pistole 332 s; Mac 18.10.2026, zwei Worker gleichzeitig, andere Sitzungen liefen,
+  kein Zeitband).
 - QA `qa_surface.json`: `channel_map`, `uv1_shared` (Hash der Welt-UV1 in beiden Exporten gleich), je Modell `uv1_<variant>` (Layout wie oben)
   und `maps_<variant>`: Gewichte one-hot 255 in den Inseln, nichts jenseits der Dilatation, jeder vorkommende Kanal hat Texel, AO-Mittel
   0,3–0,95, Kantenanteil (G > 0,5) 2–25 %, Satz ≤ 2,5 MB (512²) bzw. ≤ 10 MB (2048², `set_bytes_limit`). Unabhängige Abnahme aus GLB und PNG:
@@ -470,8 +471,8 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
 - **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.94
   streamt die volle Größe nur für das gehaltene Gerät). Der UV1-Atlas ist für alle Auflösungen derselbe, deshalb sind alle Abstände UV-Größen:
   Randregel 4/1024 (`margin_px_at`: 2 px bei 512, 8 px bei 2048), Packabstand 8/1024, freier Rand 16/1024, Dilatation 8 px bei 512 und 16 px bei 2048
-  (= 8/1024 wie bisher bei 1024, damit die Mip-Stufen den Rand genauso spät verlieren; `CORNER_DILATION_PX` 16 prüft die freie Ecke mit der weitesten
-  UV-Dilatation). Bei 2048 berühren sich die Dilatationen benachbarter Inseln nicht mehr (Abstand 16 px gepackt, 16 px Dilatation je Seite überlappen
+  (= 8/1024 wie bisher bei 1024, damit die Mip-Stufen den Rand genauso spät verlieren; `CORNER_CHECKS` prüft die freie Ecke je Karte: die Dilatation (in UV-Raum) darf das Eck-Texel
+  der Karte nicht erreichen, 16 px bei 1024 für Welt/Roboter, 8 px für Ego; Band 16 + Packabstand 8 = 24 px trägt genau das, mehr bräuchte ein breiteres `RESERVED_LOW`, also ein neues UV1-Layout). Bei 2048 berühren sich die Dilatationen benachbarter Inseln nicht mehr (Abstand 16 px gepackt, 16 px Dilatation je Seite überlappen
   sich nur im Gleichstand), bei 1024 lagen 8 + 8 px Dilatation in 8 px Abstand. Bake-Schlüssel enthält `resolution` und `dilation_px` – Welt und
   Roboter bleiben bytegleich, nur die Ego-Sätze werden neu gebacken.
 

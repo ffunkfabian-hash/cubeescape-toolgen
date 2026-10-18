@@ -76,8 +76,12 @@ def margin_px_at(resolution):
     return MARGIN_PX * int(resolution) / CHECK_RESOLUTION
 
 
-# the reserved corner must stay clear of the widest dilation in UV space, measured at CHECK_RESOLUTION
-CORNER_DILATION_PX = max(int(round(dilation_at(r) * CHECK_RESOLUTION / r)) for r in set(MAP_RESOLUTION.values()))
+# unpainted faces sit at (0, 0) and sample the corner texel of every map: the dilation of each map (in UV space, measured at
+# CHECK_RESOLUTION) must not reach that texel, whose size is CHECK_RESOLUTION / resolution check pixels. The band of RESERVED_LOW plus
+# the packing margin (24 px at 1024) is what lets the 8 px (512, world) and 8/1024 (2048) dilations stay away; a wider reach than the band
+# plus margin would need a wider RESERVED_LOW, i.e. a new UV1 layout.
+CORNER_CHECKS = tuple(sorted({(int(round(dilation_at(r) * CHECK_RESOLUTION / r)), max(1, -(-CHECK_RESOLUTION // r)))
+                              for r in set(MAP_RESOLUTION.values())}))
 
 
 # --------------------------------------------------------------------------------------------- channel table
@@ -227,15 +231,15 @@ def _edges(triangle):
     return a, b, c, area
 
 
-def rasterize(triangles, labels, resolution, strict=False, image=None, counts=None):
+def rasterize(triangles, labels, resolution, strict=False, image=None, counts=None, epsilon=1e-12):
     """Texel-centre raster of UV triangles (N x 3 x 2, 0..1, v up: row 0 = v near 0).
 
     Writes labels[i] into ``image`` (int32, -1 = empty) where the first triangle covers a texel centre (inclusive edges,
     earlier triangles win: deterministic). With ``counts`` it also counts the triangles strictly containing each centre
-    (shared edges never count twice, so counts > 1 is real overlap). Degenerate triangles are skipped."""
+    (shared edges never count twice, so counts > 1 is real overlap). Degenerate triangles are skipped. ``epsilon``: edge
+    tolerance relative to the triangle area (the independent re-check of a model that went through float32 uses 1e-5)."""
     if image is None:
         image = np.full((resolution, resolution), -1, dtype=np.int32)
-    epsilon = 1e-12
     for triangle, label in zip(triangles, labels):
         a, b, c, area = _edges(triangle)
         if abs(area) < 1e-14:
@@ -323,15 +327,17 @@ def weight_maps(channel_raster, steps=None):
     return maps, filled
 
 
-def map_checks(maps, channel_raster, expected_channels, set_bytes, dilation=None):
+def map_checks(maps, channel_raster, expected_channels, set_bytes, dilation=None, reach_raster=None):
     """Acceptance values of one map set: weight sums inside the islands, nothing beyond the dilation (``dilation`` texels,
     default dilation_at of the raster's resolution), every channel of the channel map painted, AO mean and edge share inside
-    the islands, set size."""
+    the islands, set size. ``reach_raster``: the raster whose dilation bounds the weights when the check re-rasterises from float32
+    data (an edge texel the bake covered may fall outside the strict raster); defaults to ``channel_raster``."""
     w0, w1 = maps["W0"].astype(np.int32), maps["W1"].astype(np.int32)
     total = w0.sum(axis=2) + w1[..., :3].sum(axis=2)
     inside = channel_raster >= 0
     resolution = channel_raster.shape[0]
-    reach = dilate(channel_raster, dilation_at(resolution) if dilation is None else dilation) >= 0
+    reach = dilate(channel_raster if reach_raster is None else reach_raster,
+                   dilation_at(resolution) if dilation is None else dilation) >= 0
     painted = {channel: int(np.count_nonzero(maps[TARGETS[channel][0]][..., TARGETS[channel][1]]))
                for channel in CHANNELS}
     fields = maps["Fields"].astype(np.float64) / 255
@@ -407,8 +413,7 @@ def layout_report(triangles, islands, unpainted):
     rasterize(tris, np.zeros(len(tris), dtype=np.int32), OVERLAP_RESOLUTION, counts=counts)
     raster = rasterize(tris, np.asarray(islands)[painted].astype(np.int32), CHECK_RESOLUTION)
     gap = min_gap_px(raster, 8)
-    reserved = int(RESERVED_LOW * CHECK_RESOLUTION)
-    corner_clear = bool(np.all(dilate(raster, CORNER_DILATION_PX)[:reserved, :reserved] < 0))
+    corner_clear = all(bool(np.all(dilate(raster, steps)[:block, :block] < 0)) for steps, block in CORNER_CHECKS)
     return {"triangles": int(len(triangles)), "unpainted_triangles": int(unpainted.sum()),
             "zero_area_triangles": int(np.count_nonzero(np.abs(signed_areas(tris)) < 1e-14)),
             "unpainted_at_origin": bool(np.all(triangles[unpainted] == 0)),

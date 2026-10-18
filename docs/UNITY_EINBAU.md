@@ -238,8 +238,7 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
   Gewichte one-hot 255 je Dreieck nach dem Kanal seines Slots, auf Nähten hart, jede Insel nach außen fortgesetzt (`maps.dilation_px`: 8 px auf 512²,
   16 px auf 2048² – dieselben 8/1024 des Atlas wie die 1024²-Karten; nächster Texel, feste Reihenfolge bei Gleichstand); außerhalb 0. Import: sRGB aus, `alphaIsTransparency` aus, kein Premultiply (W0.a trägt Emission), `wrapMode` Clamp (der Punkt (0, 0) der Hände soll
   nicht über den Rand filtern).
-  Satz je Modell ≤ 2,5 MB bei 512² und ≤ 10 MB bei 2048² (`maps.set_bytes_limit`; gemessen Pistole 0.13: Welt 0,7 MB, Ego 1024² 1,9 MB; erwartet Ego 2048²
-  ≈ 7,5–8 MB, Mac-Messung offen). Rauschen/Detail kommt nicht von Toolgen.
+  Satz je Modell ≤ 2,5 MB bei 512² und ≤ 10 MB bei 2048² (`maps.set_bytes_limit`; gemessen: Welt 0,6–0,8 MB; Ego 1024² (0.13, Pistole) 1,9 MB, Ego 2048² (0.16) 4,5–5,9 MB je Satz). Rauschen/Detail kommt nicht von Toolgen.
 - **`channel_map`** (Block `surface`): Slot → Kanal für jeden Slot des Modells. `MT_<Kanal>` folgt aus dem Namen; die Palettennamen aus
   `data/game_palette.json` › `channel_map`: `M_RobotBody_Matte` Primary, `M_RobotDark_Matte` Secondary, `M_HazardOrange_Matte` Accent,
   `M_Metal_Matte` Metal, `M_GlowOrange` Emission, alle übrigen Glühmaterialien Energy (wie die Definitionen in CE `Docs/EQUIPMENT.md`).
