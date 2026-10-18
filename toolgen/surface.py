@@ -1,7 +1,8 @@
 """Surface data of game contract 4 (Cube Escape 0.71 "Maskwork"): UV1, the channel weight maps, fields and normals.
 
 * ``add_uv1`` (game_export.py, contract 4, before the merge): a second UV map ``UV1`` per tool part - smart projection,
-  islands scaled to the same texel density, packed without rotation into one atlas per model, 8 px gaps at 1024.
+  islands scaled to the same texel density, packed without rotation into one atlas per model, 8 px gaps at 1024 (the
+  margin rule is stated in UV space at 1024: 2 px at 512, 8 px at 2048).
   Faces of the first-person hands and arms (source materials ``FPS_*``) get no island: their UV1 is the point (0, 0) in a
   reserved band at the left and bottom edge that no island and no dilation reaches (weights 0 there, neutral fields).
   Collapse decimation and LOD1 keep the map (decimated meshes are checked like LOD0, see ``uv1_report``).
@@ -32,7 +33,9 @@ RESERVED_LOW = 16 / 1024         # band at u < 16/1024 and v < 16/1024 kept free
 CHECK_RESOLUTION = 1024          # the margin rule is stated at 1024
 MARGIN_PX = 4                    # contract: at least 4 px between islands at 1024
 OVERLAP_RESOLUTION = 2048        # overlap raster
-MAP_RESOLUTION = {"world": 512, "viewmodel": 1024, "robot": 512}   # robot: the robot variant (0.14), a world model
+# 0.16 Finegrain: first-person maps 2048 (user, 18.10.2026; Cube Escape 0.94 streams them for the held tool only); world and
+# robot variant (0.14, a world model) stay 512. The UV1 atlas is the same at every resolution.
+MAP_RESOLUTION = {"world": 512, "viewmodel": 2048, "robot": 512}
 AO_SAMPLES = {"world": 16, "viewmodel": 32, "robot": 16}
 EDGE_SAMPLES = 16               # rays of the bevel and local AO nodes per shading sample
 DETAIL_SAMPLES = 4              # Cycles samples of the EMIT and NORMAL bakes
@@ -40,8 +43,10 @@ AO_DISTANCE_M = .08
 BEVEL_RADIUS_M = .004
 EDGE_GAIN = 12.0                 # edge = gain x (1 - bevel normal . shading normal), times the convexity factor
 EDGE_CONVEX = (.35, .7)          # local AO below .35: concave crease (edge 0); above .7: open (convex edge counts fully)
-DILATION_PX = 8                  # every island continues 8 px outward (nearest texel, fixed neighbour order on ties)
-MAX_SET_BYTES = 2_500_000        # four PNGs of one model
+# every island continues outward by the dilation (nearest texel, fixed neighbour order on ties): 8 px at 512 (0.11), 16 px at
+# 2048 (0.16) - the same 8/1024 of the atlas the 1024 maps had, so mips lose the border at the same level as before
+DILATION_PX = {512: 8, 1024: 8, 2048: 16}
+MAX_SET_BYTES = {512: 2_500_000, 1024: 2_500_000, 2048: 10_000_000}   # four PNGs of one model (2048: measured 1024 x 4 + reserve)
 AO_MEAN_RANGE = (.3, .95)
 EDGE_SHARE_RANGE = (.02, .25)
 EDGE_THRESHOLD = .5
@@ -54,6 +59,25 @@ REGIONS = {"W0.r": "Primary", "W0.g": "Secondary", "W0.b": "Accent", "W0.a": "Em
 TARGETS = {channel: (key.split(".")[0], "rgba".index(key.split(".")[1])) for key, channel in REGIONS.items()}
 MAP_KINDS = ("W0", "W1", "Fields", "Normal")
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def dilation_at(resolution):
+    """Dilation in texels of a map of ``resolution`` (contract ``maps.dilation_px``); other sizes (tests) follow the 2048 rule."""
+    return DILATION_PX.get(int(resolution), 16 if resolution >= 2048 else 8)
+
+
+def set_bytes_limit(resolution):
+    """Largest allowed map set (four PNGs) of a model at ``resolution``."""
+    return MAX_SET_BYTES.get(int(resolution), 10_000_000 if resolution >= 2048 else 2_500_000)
+
+
+def margin_px_at(resolution):
+    """The island margin rule (MARGIN_PX at CHECK_RESOLUTION, a UV distance) in texels of a map of ``resolution``."""
+    return MARGIN_PX * int(resolution) / CHECK_RESOLUTION
+
+
+# the reserved corner must stay clear of the widest dilation in UV space, measured at CHECK_RESOLUTION
+CORNER_DILATION_PX = max(int(round(dilation_at(r) * CHECK_RESOLUTION / r)) for r in set(MAP_RESOLUTION.values()))
 
 
 # --------------------------------------------------------------------------------------------- channel table
@@ -286,11 +310,11 @@ def min_gap_px(islands, limit):
     return best
 
 
-def weight_maps(channel_raster, steps=DILATION_PX):
+def weight_maps(channel_raster, steps=None):
     """W0, W1 (resolution x resolution x 4 uint8, row 0 = v near 0) of a channel-index raster (index into CHANNELS,
-    -1 = no paint): one-hot 255 inside the islands and the dilated border, 0 elsewhere."""
-    filled = dilate(channel_raster, steps)
+    -1 = no paint): one-hot 255 inside the islands and the dilated border (``steps``, default the raster's dilation_at), 0 elsewhere."""
     resolution = channel_raster.shape[0]
+    filled = dilate(channel_raster, dilation_at(resolution) if steps is None else steps)
     maps = {"W0": np.zeros((resolution, resolution, 4), dtype=np.uint8),
             "W1": np.zeros((resolution, resolution, 4), dtype=np.uint8)}
     for index, channel in enumerate(CHANNELS):
@@ -299,13 +323,15 @@ def weight_maps(channel_raster, steps=DILATION_PX):
     return maps, filled
 
 
-def map_checks(maps, channel_raster, expected_channels, set_bytes):
-    """Acceptance values of one map set: weight sums inside the islands, nothing beyond the dilation, every channel of
-    the channel map painted, AO mean and edge share inside the islands, set size."""
+def map_checks(maps, channel_raster, expected_channels, set_bytes, dilation=None):
+    """Acceptance values of one map set: weight sums inside the islands, nothing beyond the dilation (``dilation`` texels,
+    default dilation_at of the raster's resolution), every channel of the channel map painted, AO mean and edge share inside
+    the islands, set size."""
     w0, w1 = maps["W0"].astype(np.int32), maps["W1"].astype(np.int32)
     total = w0.sum(axis=2) + w1[..., :3].sum(axis=2)
     inside = channel_raster >= 0
-    reach = dilate(channel_raster, DILATION_PX) >= 0
+    resolution = channel_raster.shape[0]
+    reach = dilate(channel_raster, dilation_at(resolution) if dilation is None else dilation) >= 0
     painted = {channel: int(np.count_nonzero(maps[TARGETS[channel][0]][..., TARGETS[channel][1]]))
                for channel in CHANNELS}
     fields = maps["Fields"].astype(np.float64) / 255
@@ -320,11 +346,13 @@ def map_checks(maps, channel_raster, expected_channels, set_bytes):
         "texels_per_channel": painted,
         "missing_channels": sorted(channel for channel in expected_channels if painted[channel] == 0),
         "ao_mean": round(ao_mean, 4), "edge_share": round(edge_share, 4), "set_bytes": int(set_bytes),
+        "resolution": int(resolution), "set_bytes_limit": set_bytes_limit(resolution),
     }
 
 
 def map_errors(values):
     errors = []
+    limit = values.get("set_bytes_limit", set_bytes_limit(values.get("resolution", 512)))
     if values["texels_inside"] == 0:
         errors.append("no painted texel")
     if values["min_weight_sum_inside"] < WEIGHT_SUM_MIN or not values["one_hot_inside"]:
@@ -337,8 +365,8 @@ def map_errors(values):
         errors.append(f"AO mean {values['ao_mean']} outside {AO_MEAN_RANGE}")
     if not EDGE_SHARE_RANGE[0] <= values["edge_share"] <= EDGE_SHARE_RANGE[1]:
         errors.append(f"edge share {values['edge_share']} outside {EDGE_SHARE_RANGE}")
-    if values["set_bytes"] > MAX_SET_BYTES:
-        errors.append(f"map set {values['set_bytes']} bytes > {MAX_SET_BYTES}")
+    if values["set_bytes"] > limit:
+        errors.append(f"map set {values['set_bytes']} bytes > {limit}")
     return errors
 
 
@@ -380,13 +408,14 @@ def layout_report(triangles, islands, unpainted):
     raster = rasterize(tris, np.asarray(islands)[painted].astype(np.int32), CHECK_RESOLUTION)
     gap = min_gap_px(raster, 8)
     reserved = int(RESERVED_LOW * CHECK_RESOLUTION)
-    corner_clear = bool(np.all(dilate(raster, DILATION_PX)[:reserved, :reserved] < 0))
+    corner_clear = bool(np.all(dilate(raster, CORNER_DILATION_PX)[:reserved, :reserved] < 0))
     return {"triangles": int(len(triangles)), "unpainted_triangles": int(unpainted.sum()),
             "zero_area_triangles": int(np.count_nonzero(np.abs(signed_areas(tris)) < 1e-14)),
             "unpainted_at_origin": bool(np.all(triangles[unpainted] == 0)),
             "islands": int(len(set(np.asarray(islands)[painted].tolist()))), "in_range": in_range,
             "overlap_texels": int(np.count_nonzero(counts > 1)), "overlap_resolution": OVERLAP_RESOLUTION,
             "min_gap_px": round(gap, 3), "margin_px": MARGIN_PX, "check_resolution": CHECK_RESOLUTION,
+            "margin_px_at": {str(r): margin_px_at(r) for r in sorted(set(MAP_RESOLUTION.values()))},
             "reserved_corner_clear": corner_clear,
             "used_share": round(float(np.count_nonzero(raster >= 0)) / CHECK_RESOLUTION ** 2, 4)}
 

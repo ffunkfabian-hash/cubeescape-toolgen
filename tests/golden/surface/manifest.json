@@ -136,5 +136,64 @@
       "CubeEscape_SniperRifle_Robot_Game_W1.png": "fbb6e59297dd2963d38cba964384a3c2bd6b7beac9cda25e156e0721524a10a6"
     }
   },
-  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 of every map, no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change."
+  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 of every map, no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change.",
+  "stale": {
+    "maps": {
+      "assault_rifle": [
+        "CubeEscape_AssaultRifle_FPS_Game_Fields.png",
+        "CubeEscape_AssaultRifle_FPS_Game_Normal.png",
+        "CubeEscape_AssaultRifle_FPS_Game_W0.png",
+        "CubeEscape_AssaultRifle_FPS_Game_W1.png"
+      ],
+      "fusion_rifle": [
+        "CubeEscape_FusionRifle_FPS_Game_Fields.png",
+        "CubeEscape_FusionRifle_FPS_Game_Normal.png",
+        "CubeEscape_FusionRifle_FPS_Game_W0.png",
+        "CubeEscape_FusionRifle_FPS_Game_W1.png"
+      ],
+      "pistol": [
+        "CubeEscape_Pistol_FPS_Game_Fields.png",
+        "CubeEscape_Pistol_FPS_Game_Normal.png",
+        "CubeEscape_Pistol_FPS_Game_W0.png",
+        "CubeEscape_Pistol_FPS_Game_W1.png"
+      ],
+      "pulse_rifle": [
+        "CubeEscape_PulseRifle_FPS_Game_Fields.png",
+        "CubeEscape_PulseRifle_FPS_Game_Normal.png",
+        "CubeEscape_PulseRifle_FPS_Game_W0.png",
+        "CubeEscape_PulseRifle_FPS_Game_W1.png"
+      ],
+      "rocket_launcher": [
+        "CubeEscape_RocketLauncher_FPS_Game_Fields.png",
+        "CubeEscape_RocketLauncher_FPS_Game_Normal.png",
+        "CubeEscape_RocketLauncher_FPS_Game_W0.png",
+        "CubeEscape_RocketLauncher_FPS_Game_W1.png"
+      ],
+      "scout_rifle": [
+        "CubeEscape_ScoutRifle_FPS_Game_Fields.png",
+        "CubeEscape_ScoutRifle_FPS_Game_Normal.png",
+        "CubeEscape_ScoutRifle_FPS_Game_W0.png",
+        "CubeEscape_ScoutRifle_FPS_Game_W1.png"
+      ],
+      "shotgun": [
+        "CubeEscape_Shotgun_FPS_Game_Fields.png",
+        "CubeEscape_Shotgun_FPS_Game_Normal.png",
+        "CubeEscape_Shotgun_FPS_Game_W0.png",
+        "CubeEscape_Shotgun_FPS_Game_W1.png"
+      ],
+      "smg": [
+        "CubeEscape_SubmachineGun_FPS_Game_Fields.png",
+        "CubeEscape_SubmachineGun_FPS_Game_Normal.png",
+        "CubeEscape_SubmachineGun_FPS_Game_W0.png",
+        "CubeEscape_SubmachineGun_FPS_Game_W1.png"
+      ],
+      "sniper_rifle": [
+        "CubeEscape_SniperRifle_FPS_Game_Fields.png",
+        "CubeEscape_SniperRifle_FPS_Game_Normal.png",
+        "CubeEscape_SniperRifle_FPS_Game_W0.png",
+        "CubeEscape_SniperRifle_FPS_Game_W1.png"
+      ]
+    },
+    "note": "Toolgen 0.16 Finegrain: the first-person maps are baked at 2048 (user, 18.10.2026); these hashes are the 1024 maps of 0.13-0.15 and wait for the Mac bake (verify_surface.py --update-golden on output/_standard). World and robot maps are unchanged."
+  }
 }

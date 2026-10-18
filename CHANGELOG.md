@@ -1,5 +1,18 @@
 # Änderungen
 
+## 0.16.0 – Finegrain (18.10.2026, ungeprüft: Mac-Bake offen)
+
+Ego-Karten in 2048² (Entscheidung des Nutzers 18.10.2026, ersetzt „Ego 2048² nein“ vom 17.10.; Wunsch der Equipment-Linie, cubeescape-rules#3),
+Vertrag 4 additiv (Bericht: [docs/versions/0.16.md](docs/versions/0.16.md)). In einer Cloud-Sitzung ohne Bake gebaut.
+
+- `surface.MAP_RESOLUTION['viewmodel']` 1024 → 2048 für alle zwölf Ego-Modelle; Welt und Roboter-Variante bleiben 512². `surface.maps.resolution` der
+  Ego-Verträge 2048, Dateinamen unverändert.
+- Dilatation je Auflösung (`dilation_px`: 512 → 8 px, 2048 → 16 px = dieselben 8/1024 des Atlas wie bei 1024), Satzgrenze je Auflösung (2048 → 10 MB,
+  erwartet ≈ 7,5–8 MB je Ego-Satz), Randregel als UV-Abstand ausgewiesen (`uv1.margin_px_at_map`: 2 px bei 512, 8 px bei 2048; `qa_game*.json` › `margin_px_at`).
+- Golden `tests/golden/surface/manifest.json` › `stale`: die 36 Ego-Karten der Waffen sind als „Mac-Bake offen“ markiert; `verify_surface.py` meldet sie
+  rot, bis `--update-golden` sie auf dem Mac neu schreibt (Tests in `test_verify_surface.py`).
+- Mindestversion des Abnehmers: Cube Escape 0.94 liest `maps.resolution`; ältere Fassung mit 1024²: `v0.15.1`.
+
 ## 0.15.1 – Toolgrip (18.10.2026)
 
 Golden der Oberflächenkarten mit belegten Ausweich-Hashes (Bericht: [docs/versions/0.15.md](docs/versions/0.15.md) › 0.15.1); keine Modell- oder Kartenänderung.

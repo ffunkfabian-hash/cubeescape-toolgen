@@ -148,7 +148,9 @@ for tool in catalog():
                 (maps["resolution"], maps["resolution"], 8, 6), (tool["id"], name, "8-bit RGBA")
             assert info["chunks"] == ["IHDR", "IDAT", "IEND"], (tool["id"], name, "no colour chunks")
             total += len(data)
-        assert total == maps["set_bytes"] <= surface.MAX_SET_BYTES, (tool["id"], variant, "set size")
+        assert total == maps["set_bytes"] <= surface.set_bytes_limit(maps["resolution"]), (tool["id"], variant, "set size")
+        assert maps["dilation_px"] == surface.dilation_at(maps["resolution"]), (tool["id"], variant, "dilation")
+        assert block["uv1"]["margin_px_at_map"] == surface.margin_px_at(maps["resolution"]), (tool["id"], variant, "margin at map")
         assert block["bake"]["stage"] == "surface_bake" and len(block["bake"]["key"]) == 64
         checks += 12
     if included:

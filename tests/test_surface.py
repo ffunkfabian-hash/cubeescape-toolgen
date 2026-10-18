@@ -65,13 +65,20 @@ class ChannelTableTests(unittest.TestCase):
 
     def test_constants_meet_the_contract(self):
         self.assertGreaterEqual(surface.PACK_MARGIN * surface.CHECK_RESOLUTION, surface.MARGIN_PX)
-        self.assertEqual({"world": 512, "viewmodel": 1024, "robot": 512}, surface.MAP_RESOLUTION)   # robot: 0.14, a world model
+        # 0.16 Finegrain: first-person maps 2048 (user, 18.10.2026), world and robot variant (0.14, a world model) 512
+        self.assertEqual({"world": 512, "viewmodel": 2048, "robot": 512}, surface.MAP_RESOLUTION)
         self.assertEqual({"world": 16, "viewmodel": 32, "robot": 16}, surface.AO_SAMPLES)
-        # the unpainted point (0, 0) stays out of reach of the dilation at both resolutions
+        # the dilation keeps the 1024 maps' UV extent at 2048 (8/1024 of the atlas) and the world's 8 px
+        self.assertEqual((8, 8, 16), (surface.dilation_at(512), surface.dilation_at(1024), surface.dilation_at(2048)))
+        self.assertEqual(16, surface.CORNER_DILATION_PX)
+        # the margin rule is a UV distance: 4 px at 1024 means 2 px at 512 and 8 px at 2048, wider than one dilation step needs
+        self.assertEqual((2.0, 4.0, 8.0), (surface.margin_px_at(512), surface.margin_px_at(1024), surface.margin_px_at(2048)))
+        self.assertGreaterEqual(surface.PACK_MARGIN * 2048, surface.dilation_at(2048))
+        # the unpainted point (0, 0) stays out of reach of the dilation at every resolution
         for resolution in surface.MAP_RESOLUTION.values():
             first_island_px = (surface.RESERVED_LOW + surface.PACK_MARGIN * (1 - surface.RESERVED_LOW)) * resolution
-            self.assertGreater(first_island_px - surface.DILATION_PX, 1)
-        self.assertEqual(2_500_000, surface.MAX_SET_BYTES)
+            self.assertGreater(first_island_px - surface.dilation_at(resolution), 1)
+        self.assertEqual((2_500_000, 10_000_000), (surface.set_bytes_limit(512), surface.set_bytes_limit(2048)))
 
 
 class PngTests(unittest.TestCase):

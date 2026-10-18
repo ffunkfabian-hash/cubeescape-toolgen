@@ -1,2 +1,2 @@
-VERSION = "0.15.1"
-CODENAME = "Toolgrip"
+VERSION = "0.16.0"
+CODENAME = "Finegrain"

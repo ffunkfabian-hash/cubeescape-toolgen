@@ -5,7 +5,7 @@
 
 Reads ``<asset>_Game.blend`` and ``<asset>_FPS_Game.blend`` (with UV1 from game_export.py), the two contracts and their
 QA files, and writes per model ``<model>_W0.png``, ``_W1.png``, ``_Fields.png``, ``_Normal.png`` (8 bit RGBA, linear, no
-colour chunks; world 512, first-person 1024), the block ``surface`` in ``unity_contract.json`` / ``unity_contract_fps.json``
+colour chunks; world 512, first-person 2048 since 0.16), the block ``surface`` in ``unity_contract.json`` / ``unity_contract_fps.json``
 and ``qa_surface.json`` (exit code 1 when a check fails).
 
 * W0/W1: per LOD0 triangle the channel of its material slot (toolgen/surface.py ``channel_of``) rasterised on UV1, one-hot
@@ -271,12 +271,13 @@ def bake_material(z_range):
 
 
 def bake_pass(kind, image_node, resolution, fill, samples, **options):
+    dilation = surface.dilation_at(resolution)
     image = bpy.data.images.new(f"Bake_{kind}", resolution, resolution, alpha=True, float_buffer=True)
     image.colorspace_settings.name = "Non-Color"
     image.generated_color = fill
     image_node.image = image
     bpy.context.scene.cycles.samples = samples
-    result = bpy.ops.object.bake(type=kind, uv_layer=surface.UV1_NAME, margin=surface.DILATION_PX, margin_type="EXTEND",
+    result = bpy.ops.object.bake(type=kind, uv_layer=surface.UV1_NAME, margin=dilation, margin_type="EXTEND",
                                  use_clear=False, target="IMAGE_TEXTURES", **options)
     if "FINISHED" not in result:
         raise RuntimeError(f"bake {kind} failed")
@@ -443,7 +444,7 @@ def bake_model(work, model, asset, variant, palette, design):
     settings = {"schema": BAKE_SCHEMA, "resolution": resolution, "ao_samples": samples, "edge_samples": surface.EDGE_SAMPLES,
                 "detail_samples": surface.DETAIL_SAMPLES,
                 "ao_distance_m": surface.AO_DISTANCE_M, "bevel_radius_m": surface.BEVEL_RADIUS_M, "edge_gain": surface.EDGE_GAIN,
-                "edge_convex": surface.EDGE_CONVEX, "dilation_px": surface.DILATION_PX, "device": "CPU", "seed": 0,
+                "edge_convex": surface.EDGE_CONVEX, "dilation_px": surface.dilation_at(resolution), "device": "CPU", "seed": 0,
                 "height_range_m": [round(z, 6) for z in z_range]}
     if design:
         # relief_order: the digest sorts dict keys, but the selector order decides (first match wins)
@@ -461,7 +462,8 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
     return {
         "version": surface.SURFACE_VERSION,
         "uv1": {"attribute": "TEXCOORD_1", "uv_map": surface.UV1_NAME, "fbx_uv_set": 1, "resolution": surface.CHECK_RESOLUTION,
-                "margin_px": surface.MARGIN_PX, "islands_rotated": False, "shared_with_world": shared,
+                "margin_px": surface.MARGIN_PX, "margin_px_at_map": surface.margin_px_at(settings["resolution"]),
+                "islands_rotated": False, "shared_with_world": shared,
                 "layout": {key_: layout[key_] for key_ in ("islands", "used_share", "min_gap_px", "overlap_texels")},
                 "unpainted": {"uv": [0.0, 0.0], "faces": "first-person hands and arms (source materials FPS_*)",
                               "weights": 0, "reserved_band": surface.RESERVED_LOW,
@@ -477,7 +479,7 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
         "unmapped_slots": sorted(slot for slot in slots if not surface.channel_of(slot, palette)),
         "maps": {"resolution": settings["resolution"], **surface.map_names(model), "format": "PNG RGBA, 8 bit",
                  "color_space": "linear (import with sRGB off)", "rows": "PNG top row = v 1 (Unity texture orientation)",
-                 "dilation_px": surface.DILATION_PX, "set_bytes": set_bytes,
+                 "dilation_px": settings["dilation_px"], "set_bytes": set_bytes, "set_bytes_limit": surface.set_bytes_limit(settings["resolution"]),
                  "import": "sRGB off, alphaIsTransparency off, no premultiply (W0.a carries Emission), wrapMode Clamp (the "
                            "unpainted point (0, 0) must not filter across to the opposite edge); Normal: OpenGL (Y+), flat 128,128,255",
                  "applies_to": [model + ".fbx", model + ".glb", *clips],
@@ -573,8 +575,11 @@ def main():
             clips = [model + "_Clips.fbx", model + "_Clips.glb"] if (work / (model + "_Clips.fbx")).exists() else []
             contract_path = work / contract_name
             contract = json.loads(contract_path.read_text())
+            minimum = ("Cube Escape 0.71 (mask mode of the PAINT recipe); 2048 first-person maps (Toolgen 0.16): Cube Escape 0.94 reads "
+                       "maps.resolution and streams the held tool's set, older imports take the files at their importer limit"
+                       if variant == "viewmodel" else "Cube Escape 0.71 (mask mode of the PAINT recipe)")
             contract["surface"] = surface_block(model, variant, palette, slots, settings, files, set_bytes, key, layout,
-                                                shared, "Cube Escape 0.71 (mask mode of the PAINT recipe)", clips)
+                                                shared, minimum, clips)
             if recipe:
                 placed = [{**anchor, "rect": list(entry.get("rect", anchor["rect"])), "texels": entry.get("texels", 0)}
                           for anchor, entry in zip(anchors, design_qa.get("decals", [{}] * len(anchors)))]

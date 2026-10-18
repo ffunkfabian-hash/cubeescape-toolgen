@@ -210,8 +210,11 @@ def map_validate(folder, block, raster, counts, labels):
         decoded[key.upper() if key in ("w0", "w1") else key.title()] = surface.png_array(data)[::-1].copy()
     if total_bytes != maps_info.get("set_bytes"):
         errors.append(f"map set bytes {total_bytes} != contract {maps_info.get('set_bytes')}")
-    if total_bytes > surface.MAX_SET_BYTES:
-        errors.append(f"map set {total_bytes} > {surface.MAX_SET_BYTES}")
+    limit = surface.set_bytes_limit(maps_info["resolution"])
+    if total_bytes > limit:
+        errors.append(f"map set {total_bytes} > {limit}")
+    if maps_info.get("dilation_px") != surface.dilation_at(maps_info["resolution"]):
+        errors.append(f"dilation_px {maps_info.get('dilation_px')} != {surface.dilation_at(maps_info['resolution'])} at {maps_info['resolution']}")
     expected_files = maps_info.get("files", {})
     for name, digest in hashes.items():
         if expected_files.get(name) != digest:
@@ -257,7 +260,7 @@ def map_validate(folder, block, raster, counts, labels):
     if ratio > .001:
         errors.append(f"one-hot raster mismatches {mismatch_count}/{denominator} ({ratio:.4%}) > 0.1%")
     values = surface.map_checks(decoded, raster, sorted({surface.CHANNELS[i] for i in set(labels.tolist()) if i >= 0}),
-                                total_bytes)
+                                total_bytes, maps_info.get("dilation_px"))
     errors.extend(surface.map_errors(values))
     return {"bytes": total_bytes, "unique_texels": denominator, "mismatches": mismatch_count, "decal_texels": decal_texels,
             "decal_texels_declared": declared,
@@ -334,6 +337,12 @@ def determinism(folder, tool):
                 "matches_each_other": hashes[0] == hashes[1]}
 
 
+def golden_stale(manifest, tool, name):
+    """Is the golden hash of the map marked stale (``manifest["stale"]["maps"]``: known to be outdated, e.g. Toolgen 0.16 first-person
+    maps at 2048 until the Mac bake confirms them)? A stale map fails until ``--update-golden`` rewrites it."""
+    return name in manifest.get("stale", {}).get("maps", {}).get(tool, [])
+
+
 def golden_accepts(manifest, tool, name, digest):
     """Is ``digest`` a golden hash of the map: the primary one or a confirmed alternate (``manifest["alternates"]``)?"""
     return digest == manifest["maps"].get(tool, {}).get(name) or digest in manifest.get("alternates", {}).get(tool, {}).get(name, [])
@@ -358,6 +367,15 @@ def golden_update(manifest, tool, digests):
         alternates[tool] = kept
     else:
         alternates.pop(tool, None)
+    stale = manifest.get("stale", {}).get("maps", {})
+    if tool in stale:
+        remaining = [name for name in stale[tool] if name not in digests]
+        if remaining:
+            stale[tool] = remaining
+        else:
+            stale.pop(tool)
+        if not stale:
+            manifest.pop("stale", None)
 
 
 def golden_check(output, tools, update=False):
@@ -380,7 +398,10 @@ def golden_check(output, tools, update=False):
         for path in files:
             compared += 1
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if not golden_accepts(manifest, tool, path.name, digest):
+            if golden_stale(manifest, tool, path.name):
+                errors.append(f"{tool}/{path.name}: golden is stale ({manifest['stale'].get('note', 'rebake pending')}); confirm "
+                              "the new bake with --update-golden")
+            elif not golden_accepts(manifest, tool, path.name, digest):
                 errors.append(f"{tool}/{path.name}: sha256 differs from the golden (confirm a deliberate change with "
                               "--update-golden)")
             elif digest != manifest["maps"][tool].get(path.name):
@@ -396,7 +417,8 @@ def golden_check(output, tools, update=False):
                                        "seen in a bake of unchanged inputs belong here; a map with new content drops them.")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    return {"compared": compared, "errors": errors, "alternate_matches": alternate}
+    stale = sum(len(names) for names in manifest.get("stale", {}).get("maps", {}).values())
+    return {"compared": compared, "errors": errors, "alternate_matches": alternate, "stale": stale}
 
 
 def main():
@@ -454,7 +476,7 @@ def main():
         report["passed"] = False
         report["tools"].append({"tool": "golden", "errors": golden["errors"]})
     print(f"{'PASS' if not golden['errors'] else 'FAIL'} golden maps compared={golden['compared']} "
-          f"alternates={len(golden['alternate_matches'])}"
+          f"alternates={len(golden['alternate_matches'])} stale={golden['stale']}"
           f"{' (updated)' if args.update_golden else ''}")
     if args.report:
         args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
