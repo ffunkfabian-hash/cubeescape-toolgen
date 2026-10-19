@@ -455,9 +455,9 @@ def fusion_rifle(k):
     k.socket('Socket_CenterOfMass', (0, -.08, .06))
 
 
-# ------------------------------------------------------------------------------------------------ 8 scout rifle
-def scout_rifle(k):
-    """Scout rifle: slim long-range rifle, thin handguard, slender barrel, small scope, bolt knob on the side."""
+# ------------------------------------------------------------------------------------------------ 8 trace rifle
+def trace_rifle(k):
+    """Trace rifle: slim long-range rifle, thin handguard, slender barrel, small scope, bolt knob on the side."""
     zb = .072
     grip(k, .095, .034, .044, ribs=3)
     k.box('Receiver', (0, -.03, .060), (.040, .24, .040), 'Primary', .007)
@@ -483,7 +483,7 @@ def scout_rifle(k):
     bolt = k.pivot('Anim_Bolt', (0, 0, .066))
     k.box('BoltCover', (.0215, -.04, .066), (.006, .075, .020), 'Metal', .003, parent=bolt)
     k.cyl('BoltKnob', (.027, -.005, .068), .007, .010, 'Secondary', axis='x', n=12, bevel=.001, parent=bolt)
-    scout_rifle_modules(k)
+    trace_rifle_modules(k)
     k.socket('Socket_Hand', (0, 0, 0))
     k.socket('Socket_Muzzle', (0, -.662, zb))
     k.socket('Socket_SupportHand', (0, -.19, zb))
@@ -634,8 +634,8 @@ def fusion_rifle_modules(k, fins, cell):
     panel(k, 'BodyPlate', (.0290, -.090, .080), (.0025, .07, .018))
 
 
-def scout_rifle_modules(k):
-    """Scout rifle: scope readout, receiver panels, handguard fins, stock cell, muzzle accent ring, barrel spine."""
+def trace_rifle_modules(k):
+    """Trace rifle: scope readout, receiver panels, handguard fins, stock cell, muzzle accent ring, barrel spine."""
     display(k, 'ScopeDisplay', (.0168, -.005, .125), (.0016, .030, .010), 'x', bars=3)
     for side in (-1, 1):
         panel(k, 'ReceiverPanel_%d' % side, (side * .0212, .040, .060), (.0025, .060, .022))
@@ -731,10 +731,10 @@ DESIGNS = {
                      {'node': 'Anim_FinR', 'channel': 'rotation', 'axis': 2, 'keys': slide_keys((10, 0), (44, -9), (47, 0))},
                      {'node': 'Anim_Coil', 'channel': 'rotation', 'axis': 1, 'keys': slide_keys((10, 0), (46, 720))}],
     },
-    'scout_rifle': {
-        'asset': 'CubeEscape_ScoutRifle', 'clip': 'ScoutRifle_Use', 'class': 'scout_rifle', 'element': 'arc',
+    'trace_rifle': {
+        'asset': 'CubeEscape_TraceRifle', 'clip': 'TraceRifle_Use', 'class': 'trace_rifle', 'element': 'arc',
         'grip_tilt_degrees': 12, 'grip_part': 'Grip', 'support_part': 'Handguard',
-        'view_center': (0, -.14, .05), 'view_scale': 1.35, 'trigger': 'FireAction', 'build': scout_rifle,
+        'view_center': (0, -.14, .05), 'view_scale': 1.35, 'trigger': 'FireAction', 'build': trace_rifle,
         'fire_frame': 14, 'sight': sight_rule('scope', ('ScopeTube',), 'center', .648),
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (16, .045), (24, .005), (30, 0))}],
@@ -772,7 +772,7 @@ DECALS = {
             decal('DrumCap_1', '+x', (.41, .41, .59, .59), 'arrow_triangle', 'Secondary')],
     'fusion_rifle': [decal('Body', '+x', (.577, .217, .654, .55), 'research', 'Emission'),
                      decal('Handguard', '+x', (.25, .37, .5, .63), 'fusion_px7', 'Secondary')],
-    'scout_rifle': [decal('Handguard', '+x', (.077, .34, .231, .66), 'tech_lines', 'Energy')],
+    'trace_rifle': [decal('Handguard', '+x', (.077, .34, .231, .66), 'tech_lines', 'Energy')],
     'rocket_launcher': [decal('Tube', '+x', (.70, .3, .783, .7), 'warning_triangle', 'Accent'),
                         decal('Tube', '+x', (.033, .41, .133, .59), 'hazard_stripes', 'Accent')],
 }
@@ -799,7 +799,7 @@ ROBOT_LIMITS = {'support_ahead_m': .10, 'stock_behind_m': .12, 'barrel_m': .03, 
 GRIP_ZONE = .04        # life metres around Socket_Hand that keep the slope ``cross`` (grip, tail and cap)
 # Energy cells (energy_cell: <name>Core, <name>Cap_<i>, <name>Cage_<i>) are pressed along the bore at most to this slope, about
 # their common centre: in a squashed stock their 2-3 mm steps between core, caps and cage would shrink below 0.5 mm and
-# z-fight (viewer determinism, scout rifle 0.14).
+# z-fight (viewer determinism, trace rifle 0.14).
 RIGID_SLOPE = .35
 CELL_PART = re.compile(r'^(.+?)(Core|Cap_-?\d+|Cage_\d+)$')
 
@@ -885,8 +885,8 @@ ROBOT = {
     # fusion rifle: the sight post (0.6 mm off a rail slot at y -0.12) sits where the map is almost 1:1
     'fusion_rifle': robot_fit(.67, 1.35, [(.359, .11), (-.11, -.08), (-.135, -.1025), (-.601, -.56)], (0, -.12, .040), 'Handguard',
                               ('Body', 'BodyDark'), 'Core'),
-    # scout rifle: the handguard 1:1 (its vents and glow strip end 1 mm apart; at 0.82 they flickered in the viewer)
-    'scout_rifle': robot_fit(.69, 1.6, [(.384, .11), (-.065, -.09), (-.385, -.41), (-.661, -.58)], (0, -.065, .036), 'MagWell',
+    # trace rifle: the handguard 1:1 (its vents and glow strip end 1 mm apart; at 0.82 they flickered in the viewer)
+    'trace_rifle': robot_fit(.69, 1.6, [(.384, .11), (-.065, -.09), (-.385, -.41), (-.661, -.58)], (0, -.065, .036), 'MagWell',
                              ('Receiver', 'ReceiverTop', 'TopRail'), 'Barrel'),
     'rocket_launcher': robot_fit(.65, 1.15, [(.2, .11), (-.10, -.09), (-.525, -.54)], (0, -.10, .040), 'Tube',
                                  ('Tube',), 'Tube'),

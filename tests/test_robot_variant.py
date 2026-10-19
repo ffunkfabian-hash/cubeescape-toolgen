@@ -25,7 +25,7 @@ from test_ego_weapon_motions import RecordingKit  # noqa: E402
 TOOLS = {tool["id"]: tool for tool in catalog()}
 # Cube Escape 0.82 "Sidearm" (Docs/EQUIPMENT.md, length in the hand = Toolgen length x heldScale): the robot variant is this
 # long and is held at heldScale 1.0. The pistol keeps its model (scale 1.1, the cup grip fits).
-CE_LENGTH = {"smg": .52, "assault_rifle": .67, "pulse_rifle": .66, "shotgun": .67, "fusion_rifle": .67, "scout_rifle": .69,
+CE_LENGTH = {"smg": .52, "assault_rifle": .67, "pulse_rifle": .66, "shotgun": .67, "fusion_rifle": .67, "trace_rifle": .69,
              "sniper_rifle": .73, "rocket_launcher": .65}
 ROBOT_STAGES = ("robot", "game_robot", "surface_bake_robot")
 
@@ -194,7 +194,7 @@ class SpecTests(unittest.TestCase):
 
 class CoplanarRobotTests(unittest.TestCase):
     """The decor rule of CoplanarDecorTests (>= 0.5 mm proud) on the deformed faces: steps along the bore shrink with the map's
-    slope (stock 0.13-0.4), which brought z-fighting into the viewer (scout rifle stock cell, 0.14). Energy cells keep at least
+    slope (stock 0.13-0.4), which brought z-fighting into the viewer (trace rifle stock cell, 0.14). Energy cells keep at least
     weapon_designs.RIGID_SLOPE about their centre, the same mapping as weapon_kit.apply_robot_fit."""
 
     def test_deformed_decors_are_not_coplanar(self):

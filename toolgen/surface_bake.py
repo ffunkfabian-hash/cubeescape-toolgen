@@ -575,8 +575,7 @@ def main():
             clips = [model + "_Clips.fbx", model + "_Clips.glb"] if (work / (model + "_Clips.fbx")).exists() else []
             contract_path = work / contract_name
             contract = json.loads(contract_path.read_text())
-            minimum = ("Cube Escape 0.71 (mask mode of the PAINT recipe); 2048 first-person maps (Toolgen 0.16): Cube Escape 0.94 reads "
-                       "maps.resolution and streams the held tool's set, older imports take the files at their importer limit"
+            minimum = ("Cube Escape 0.71 (mask mode of the PAINT recipe); " + surface.EGO_MAPS_CONSUMER
                        if variant == "viewmodel" else "Cube Escape 0.71 (mask mode of the PAINT recipe)")
             contract["surface"] = surface_block(model, variant, palette, slots, settings, files, set_bytes, key, layout,
                                                 shared, minimum, clips)

@@ -29,7 +29,7 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 import decals  # noqa: E402 - ImageMagick lookup shared with the decal pipeline
 
 # Cube Escape 0.82 "Sidearm" Docs/EQUIPMENT.md: heldScale of the life-size world models in the robot's hand.
-CE_HELD_SCALE = {"smg": .85, "assault_rifle": .72, "pulse_rifle": .76, "shotgun": .74, "fusion_rifle": .70, "scout_rifle": .66,
+CE_HELD_SCALE = {"smg": .85, "assault_rifle": .72, "pulse_rifle": .76, "shotgun": .74, "fusion_rifle": .70, "trace_rifle": .66,
                  "sniper_rifle": .64, "rocket_launcher": .90}
 SHOULDER_Z, CHEST_FRONT, ARM, FIST = .82, -.18, .42, .09
 BORE_BELOW_SHOULDER, STOCK_INTO_CHEST = .06, .06

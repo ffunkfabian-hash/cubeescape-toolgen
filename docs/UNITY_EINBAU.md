@@ -38,6 +38,19 @@ nicht vorgedreht. Der Vertrag nennt den Wert als `axes.fbx.export_yaw_degrees` (
 Wer den FBX anders einbaut: genau einmal anwenden, nie doppelt. GLB (X-Spiegelung des Unity-glTF-Importers) wurde nicht gemessen; der
 Wert gilt für FBX. Der Generator bleibt bewusst unverändert, damit bereits eingebaute Modelle nicht doppelt korrigiert werden.
 
+### Umbenannte Werkzeuge (0.17.0 Retrace, jedes Vertragsformat additiv)
+
+Das Spurgewehr heißt ab Toolgen 0.17.0 `trace_rifle` (bis 0.16 `scout_rifle`): Ordner `trace_rifle/`, Dateien `CubeEscape_TraceRifle_*`,
+Clips `TraceRifle_*`, Roboter `CubeEscape_TraceRifle_Robot_*`, Wurzeleigenschaft `ce_weapon_class` `trace_rifle`. Modell, Anker, Clips und
+Karten sind sonst gleich. Jeder Vertrag des Werkzeugs trägt den Block `renamed_from` (`tool`, `asset`, `robot`, `clip_stem`, `since`,
+`map` alt → neu): Der Abnehmer ersetzt jeden Schlüssel von `map` durch seinen Wert in Ordner-, Datei-, Prefab- und Clipnamen und verschiebt
+die Dateien samt `.meta` (GUIDs bleiben, Verweise in Szenen und Assets halten). Spielstände und Kataloge, die die alte ID speichern, bilden
+`scout_rifle` → `trace_rifle` ab, solange es kein anderes Werkzeug `scout_rifle` gibt; danach gehört die ID dem Scout-Gewehr (KG11).
+**Mindestversionen des Pakets ab 0.17.0, getrennt** (jeder Vertrag, Block `minimum_consumer`): `first_person_maps_2048` – Ego-Karten 2048²
+brauchen **Cube Escape 0.96 „Pinpoint“**; `renamed_tool_ids` – die neuen Namen brauchen **die CE-Version mit der Migration scout_rifle →
+trace_rifle (Nummer folgt, Briefkasten cubeescape-rules#3)**. **Cube Escape 0.96 und älter lesen das 0.17-Paket nicht** (Ordner und Prefabs
+`scout_rifle` fehlen darin); für sie gilt die ältere Fassung: `git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard`.
+
 ## Ego-Modell und Viewmodel-Kamera
 
 Das Ego-Modell liegt im Kameraraum (`Socket_Camera` ist die Identität, Blick −Y in Blender, +Z in Unity) und ist **nicht
@@ -248,7 +261,7 @@ UV0, Anker, Slots, Clips und alle Felder aus Vertrag 3 bleiben gleich.
   Einstellungen), `minimum_consumer`, `older_consumers`.
 - **Stufen:** Karten und Block entstehen in `standard` und `full` (Stufe `surface_bake`, gleiche Dateien in beiden); `quick` lässt sie weg und sagt
   das im `manifest.json` (`"surface": {"included": false, ...}`). UV1 und die GLB-Tangenten gibt es in jeder Stufe.
-- **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. **Ego-Karten 2048² (0.16): Cube Escape 0.94** liest
+- **Mindestversion des Abnehmers: Cube Escape 0.71.** Ältere Stände ignorieren UV1 und den Block. **Ego-Karten 2048² (0.16): Cube Escape 0.96 „Pinpoint“** (eingebaut in 0.96, nicht 0.94; cubeescape-rules#3) liest
   `maps.resolution` und streamt die volle Größe nur für das gehaltene Gerät (Mip-Streaming); ältere Stände importieren die PNG mit ihrer Importer-Grenze
   (nicht geprüft). Ältere Fassung mit Ego 1024²: Tag `v0.15.1` (`git checkout v0.15.1 && python3 toolgen/generate_tools.py --tier standard`). Ältere Fassung ohne UV1 und Karten
   (Layout 0.10): `python3 toolgen/generate_tools.py --tier standard --contract 3 --output output/_contract3`.

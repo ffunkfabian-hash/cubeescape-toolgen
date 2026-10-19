@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.17.0 – Retrace (19.10.2026)
+
+Spurgewehr umbenannt: `scout_rifle` → `trace_rifle` (Entscheidung des Nutzers 19.10.2026; `scout_rifle` wird frei für das Scout-Gewehr KG11 aus
+cubeescape-design), Vertrag 4 additiv (Bericht: [docs/versions/0.17.md](docs/versions/0.17.md)).
+
+- ID, Asset und Clips: `trace_rifle`, `CubeEscape_TraceRifle` (Roboter `CubeEscape_TraceRifle_Robot`), `TraceRifle_*`; Ordner `Spurgewehr/`, Label und
+  Geometrie gleich; Daten, Golden-Manifest, Tests und Doku nachgezogen.
+- Übergang: `tools.json` › `renamed_from`; jeder Vertrag des Werkzeugs trägt `renamed_from` mit `map` alt → neu; `generate_tools.py --tool scout_rifle`
+  baut mit Warnung `trace_rifle`, bis ein Werkzeug die ID wieder trägt (`tests/test_rename.py`).
+- Golden: belegter Ausweichwert für die SMG-Roboter-Normalkarte (ein Texel, ausgelöst schon von der Versionszeichenkette; Gegenprobe mit `v0.16.0`).
+- Mindestversionen getrennt in jedem Vertrag (`minimum_consumer`): Ego-Karten 2048² → Cube Escape 0.96 „Pinpoint“ (bisher irrtümlich 0.94);
+  umbenannte IDs → CE-Version mit der Migration scout_rifle → trace_rifle (Nummer folgt, cubeescape-rules#3). Cube Escape 0.96 und älter lesen das
+  0.17-Paket nicht; für sie `git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard`.
+
 ## 0.16.0 – Finegrain (18.10.2026)
 
 Ego-Karten in 2048² (Entscheidung des Nutzers 18.10.2026, ersetzt „Ego 2048² nein“ vom 17.10.; Wunsch der Equipment-Linie, cubeescape-rules#3),

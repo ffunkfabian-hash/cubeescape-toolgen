@@ -1,4 +1,4 @@
-"""Spurgewehr (scout_rifle): launcher into the weapon GIF module (scripts/tool_assets/weapon_gif.py)."""
+"""Spurgewehr (trace_rifle): launcher into the weapon GIF module (scripts/tool_assets/weapon_gif.py)."""
 from pathlib import Path
 import sys
 

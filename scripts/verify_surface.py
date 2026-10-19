@@ -418,9 +418,11 @@ def golden_check(output, tools, update=False):
                             "of every map, no reference images. Rewrite with verify_surface.py "
                             "--update-golden after a deliberate change.")
         manifest["alternates_note"] = ("Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot "
-                                       "variants of the scout and sniper rifle flips one texel by one step between runs (same "
-                                       "input and settings, any thread count; measured 18.10.2026: 1 of 3 runs). Only flips "
-                                       "seen in a bake of unchanged inputs belong here; a map with new content drops them.")
+                                       "variants flips one texel by one step (trace and sniper rifle between runs of the same "
+                                       "input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string "
+                                       "alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three "
+                                       "runs). Only flips seen in a bake of unchanged geometry belong here; a map with new "
+                                       "content drops them.")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     stale = sum(len(names) for names in manifest.get("stale", {}).get("maps", {}).values())

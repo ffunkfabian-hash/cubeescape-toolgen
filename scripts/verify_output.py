@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips  # noqa: E402
+import game_export  # noqa: E402 - pure helpers, no bpy at import
 import surface  # noqa: E402
 from generate_tools import catalog, valid_package  # noqa: E402
 
@@ -123,6 +124,15 @@ for tool in catalog():
     checks += 5
     # contract 4: surface block and maps in standard/full (manifest "surface"), never in quick or older contracts
     world = json.loads((package / "unity_contract.json").read_text())
+    # 0.17 Retrace: every contract names both consumer requirements apart; a renamed tool carries its former names
+    for path in sorted(package.glob("unity_contract*.json")):
+        document = json.loads(path.read_text())
+        assert document["minimum_consumer"] == game_export.consumer_block(), (tool["id"], path.name, "minimum_consumer")
+        assert document.get("renamed_from") == (game_export.renamed_block(tool) if tool.get("renamed_from") else None), \
+            (tool["id"], path.name, "renamed_from")
+        if "surface" in document and path.name == "unity_contract_fps.json":
+            assert surface.EGO_MAPS_CONSUMER in document["surface"]["minimum_consumer"], (tool["id"], "ego maps consumer")
+        checks += 2
     included = manifest["surface"]["included"]
     assert included == (manifest["tier"] != "quick" and world["format"] >= 4), (tool["id"], "surface in the package")
     for contract, variant in ((world, "world"), (ego, "viewmodel")):

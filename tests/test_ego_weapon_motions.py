@@ -211,7 +211,7 @@ REST_GEOMETRY = {
     'sniper_rifle': '5f741e3dfbbea47ac37bbd07f024625968ac5a1c88cf1a926b3713e62ebc725a',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
     'smg': '07483640e905bf3b6463b7a903b4642ef6479b4680b3bb630e277326b8fd42bc',
     'fusion_rifle': 'c916097c33cf27457430636e8b6e0ac3675be2ead2e1ec5c729b118c9ad27f06',
-    'scout_rifle': '69a7fd1966b6fad42c12f65c42cfe3db097e00d07d86ddc467b235f1d0ca3da1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
+    'trace_rifle': '69a7fd1966b6fad42c12f65c42cfe3db097e00d07d86ddc467b235f1d0ca3da1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
     'rocket_launcher': 'ba6f02a8ad6c993dee3fbe1f5ba24beae0285e562be1da1a89208f47370d8675',
 }
 
@@ -229,7 +229,7 @@ class ReloadGeometryTests(unittest.TestCase):
     def test_reload_pivot_has_visible_parts_and_keeps_use_nodes(self):
         expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazine", "pulse_rifle": "EnergyCell",
                     "shotgun": "ForeEnd", "sniper_rifle": "MagBox", "smg": "Drum",
-                    "fusion_rifle": "PowerCellCore", "scout_rifle": "Magazine", "rocket_launcher": "Hatch"}
+                    "fusion_rifle": "PowerCellCore", "trace_rifle": "Magazine", "rocket_launcher": "Hatch"}
         for tool, spec in designs.DESIGNS.items():
             kit = RecordingKit(spec)
             spec["build"](kit)

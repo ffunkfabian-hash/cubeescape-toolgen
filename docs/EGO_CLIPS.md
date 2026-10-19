@@ -108,26 +108,26 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `AssaultRifle_Inspect_B` | 515–611 | 4.00 | — |
 | `AssaultRifle_Reload` | 615–671 | 2.33 | MagOut 17, MagIn 37, Ready 56 |
 
-### Spurgewehr (`scout_rifle`)
+### Spurgewehr (`trace_rifle`)
 
 | Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
 |---|---:|---:|---|
-| `ScoutRifle_Use` | 1–97 | 4.00 | Fire 13 |
-| `ScoutRifle_Idle` | 101–173 | 3.00 | — |
-| `ScoutRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
-| `ScoutRifle_SprintIn` | 213–221 | 0.33 | — |
-| `ScoutRifle_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
-| `ScoutRifle_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `ScoutRifle_Fire` | 261–280 | 0.79 | Shot 0, Fire 0 |
-| `ScoutRifle_AimIn` | 284–293 | 0.38 | Aimed 9 |
-| `ScoutRifle_AimIdle` | 297–369 | 3.00 | — |
-| `ScoutRifle_AimFire` | 373–392 | 0.79 | Shot 0, Fire 0 |
-| `ScoutRifle_AimOut` | 396–405 | 0.38 | — |
-| `ScoutRifle_Draw` | 409–421 | 0.50 | Ready 12 |
-| `ScoutRifle_Holster` | 425–433 | 0.33 | Holstered 8 |
-| `ScoutRifle_Inspect_A` | 437–533 | 4.00 | — |
-| `ScoutRifle_Inspect_B` | 537–633 | 4.00 | — |
-| `ScoutRifle_Reload` | 637–693 | 2.33 | MagOut 18, MagIn 38, Ready 56 |
+| `TraceRifle_Use` | 1–97 | 4.00 | Fire 13 |
+| `TraceRifle_Idle` | 101–173 | 3.00 | — |
+| `TraceRifle_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
+| `TraceRifle_SprintIn` | 213–221 | 0.33 | — |
+| `TraceRifle_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
+| `TraceRifle_SprintOut` | 249–257 | 0.33 | Ready 8 |
+| `TraceRifle_Fire` | 261–280 | 0.79 | Shot 0, Fire 0 |
+| `TraceRifle_AimIn` | 284–293 | 0.38 | Aimed 9 |
+| `TraceRifle_AimIdle` | 297–369 | 3.00 | — |
+| `TraceRifle_AimFire` | 373–392 | 0.79 | Shot 0, Fire 0 |
+| `TraceRifle_AimOut` | 396–405 | 0.38 | — |
+| `TraceRifle_Draw` | 409–421 | 0.50 | Ready 12 |
+| `TraceRifle_Holster` | 425–433 | 0.33 | Holstered 8 |
+| `TraceRifle_Inspect_A` | 437–533 | 4.00 | — |
+| `TraceRifle_Inspect_B` | 537–633 | 4.00 | — |
+| `TraceRifle_Reload` | 637–693 | 2.33 | MagOut 18, MagIn 38, Ready 56 |
 
 ### Impulsgewehr (`pulse_rifle`)
 

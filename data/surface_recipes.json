@@ -192,7 +192,7 @@
         "@Metal": {"type": "brushed", "size_mm": 0.5, "direction": "y", "strength": 0.2}
       }
     },
-    "scout_rifle": {
+    "trace_rifle": {
       "sheet": 8, "title": "Spurgewehr / Trace Rifle",
       "palette": ["#E3E5E8", "#4A4F57", "#2E8CF0", "#1F5FD0"],
       "glow": {"color": "#2F7BFF", "element": "arc"},

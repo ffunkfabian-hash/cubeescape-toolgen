@@ -254,6 +254,18 @@ enthält kein `data/`; Asset, Clip, Element und Griffneigung stehen deshalb in `
 (`tests/test_weapons.py`) hält beide gleich. Eine zehnte Waffe ist ein Eintrag in `DESIGNS`, in `tools.json`, `viewmodels.json` und
 `game_budget.json` plus ein Ordner mit den fünf Startern.
 
+**Umbenennen (0.17.0 Retrace).** Werkzeug-IDs sind dauerhaft; ein Umbenennen ist eine Entscheidung des Nutzers
+([ENTSCHEIDUNGEN](ENTSCHEIDUNGEN.md), 19.10.2026: Spurgewehr `scout_rifle` → `trace_rifle`). Der Eintrag behält die alten Namen in
+`renamed_from` (`id`, `asset`, `robot`, `clip_stem`, `since`); `game_export.renamed_block` schreibt sie in jeden Vertrag (Welt, Ego, Roboter,
+jedes Format) samt `map` alt → neu für den Umzug beim Abnehmer, `generate_tools.py --tool <alte ID>` baut mit Warnung das neue Werkzeug.
+Beides endet, sobald ein Werkzeug die alte ID wieder trägt (KG11 Scout-Gewehr): dann `renamed_from` entfernen, `tests/test_rename.py`
+erzwingt es. Jeder Vertrag trägt ab 0.17 den Block `minimum_consumer` mit beiden Paketanforderungen getrennt (`first_person_maps_2048`:
+Cube Escape 0.96; `renamed_tool_ids`: CE-Version mit der Migration, Nummer folgt; Konstanten `surface.EGO_MAPS_CONSUMER`,
+`game_export.RENAMED_CONSUMER`). Pakete in einem Ausgabeordner, die der Katalog nicht mehr nennt (`scout_rifle/` aus älteren Läufen), bleiben liegen;
+`generate_tools.py` nennt sie in einer Warnung (`foreign_packages`). Ordner, Label und Geometrie bleiben; Modell-, Clip- und
+Vertragsdateien ändern nur die Namen; die Kartenpixel bleiben bytegleich bis auf einzelne kippende Texel der Roboter-Normalkarten
+(siehe Erfahrungen).
+
 **Koordinaten und Anker.** Blender: vorn −Y, oben +Z, Meter, Wurzel am Ursprung; der Ursprung ist die Mitte des Pistolengriffs
 (`Socket_Hand`). Jede Waffe hat `Socket_Hand` (Griffmitte), `Socket_SupportHand` (Mitte des Handschutzes bzw. Vorderschafts,
 bei der Pistole am Rahmen), `Socket_Muzzle` und `Socket_CenterOfMass`. Die Anker liegen im jeweiligen Griffteil: `weapon_kit.py`
@@ -468,7 +480,7 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
   Positionen, Topologie, UV0/UV1, Eckennormalen, Slots, `channel_map`, Einstellungen und Blender-Version (Tangenten folgen daraus).
   Neue Stufenfelder (`heavy`, `min_contract`) stehen nur gesetzt in der Deklaration, damit bestehende Stufen ihren Schlüssel behalten.
 - Ältere Abnehmer: `--contract 3` (und 2, 1) erzeugt weder UV1 noch GLB-Tangenten noch die Stufe `surface_bake`.
-- **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.94
+- **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.96
   streamt die volle Größe nur für das gehaltene Gerät). Der UV1-Atlas ist für alle Auflösungen derselbe, deshalb sind alle Abstände UV-Größen:
   Randregel 4/1024 (`margin_px_at`: 2 px bei 512, 8 px bei 2048), Packabstand 8/1024, freier Rand 16/1024, Dilatation 8 px bei 512 und 16 px bei 2048
   (= 8/1024 wie bisher bei 1024, damit die Mip-Stufen den Rand genauso spät verlieren; `CORNER_CHECKS` prüft die freie Ecke je Karte: die Dilatation (in UV-Raum) darf das Eck-Texel
@@ -742,6 +754,16 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
+- 19.10.2026 · Golden und Versionsnummer – Schon die geänderte Versionszeichenkette in `version.py` verschiebt einzelne Tangenten der
+  Spiel-GLB um 1e-4 und kippt im Cycles-Normal-Bake einen Texel einer Roboter-Normalkarte um eine Stufe, reproduzierbar je Zeichenkette.
+  Ein solcher Golden-Fehler bei unveränderter Geometrie ist kein Inhaltsfehler: mit einem frischen Bau des alten Tags gegenprüfen, dann den
+  Hash als `alternates` eintragen, nie das Golden blind neu schreiben. Beleg: 0.17 Retrace (SMG, `docs/versions/0.17.md` › Befunde).
+  Gilt auch für: jede Version, deren Bake-Schlüssel sich ändert.
+- 19.10.2026 · Werkzeug umbenennen – IDs, Asset- und Clipnamen hängen an Daten (`tools.json`, `viewmodels.json`, `ego_clips.json`,
+  `surface_recipes.json`, `game_budget.json`), Golden-Manifest, Tests und Design-Funktionen; der Generator leitet keine Zufallswerte aus
+  Namen ab, deshalb bleiben Kartenpixel gleich. Alte Namen nicht als zweites Werkzeug weiterbauen, sondern im Vertrag als `renamed_from`
+  mitliefern, damit der Abnehmer seine Dateien samt GUID verschieben kann. Beleg: 0.17 Retrace (`tests/test_rename.py`). Gilt auch für:
+  Robogen-/Cubegen-Teile-IDs.
 - 18.10.2026 · Kartenauflösung ändern – Alles, was in Pixeln formuliert ist (Randregel, Packabstand, freier Rand, Dilatation, Satzgrenze), ist in
   Wahrheit eine UV-Größe oder eine Größe je Karte; vor dem Umstellen jede Konstante einer der beiden Klassen zuordnen und je Auflösung ausweisen,
   sonst prüft die QA bei der neuen Größe etwas anderes als bei der alten. Golden-Hashes einer nicht gebackenen Auflösung nie raten: als `stale`
@@ -768,7 +790,7 @@ Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 - 17.10.2026 · Stauchen erzeugt Z-Fighting – Eine Verformung, die längs auf 0,13–0,4 staucht, schrumpft auch die
   0,5-mm-Abstände der Dekore: die Koplanar-Regel muss auf den verformten Flächen gelten, nicht nur am Design. Kleine Baugruppen
   (Energiezellen) mit Mindeststeigung um ihre Mitte abbilden, Knickstellen nicht unter Dekore legen. Beleg: Viewer-Determinismus
-  `scout_rifle/robot` 1,4–1,6 px vor, Test `CoplanarRobotTests`. Auch 0,8 mm statt 1 mm an einer Kante flackerte noch (2 von 15
+  `trace_rifle/robot` 1,4–1,6 px vor, Test `CoplanarRobotTests`. Auch 0,8 mm statt 1 mm an einer Kante flackerte noch (2 von 15
   Bildern): Zonen mit feinen Dekoren 1:1 lassen, die Stauchung in schlichte Teile (Lauf, Schaft) legen; nach jeder Achsenänderung
   `viewer/test_determinism.py --model <tool>/robot --runs 16`. Gilt auch für: jede nicht gleichmäßige Skalierung.
 - 18.10.2026 · Golden als sha256 und Bake-Rauschen – Ein einziger Texel auf der Rundungsgrenze macht eine Karte zwischen Läufen
