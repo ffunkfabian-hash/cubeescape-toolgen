@@ -1,17 +1,22 @@
 {
   "alternates": {
-    "scout_rifle": {
-      "CubeEscape_ScoutRifle_Robot_Game_Normal.png": [
-        "74150ca02f78f620da977ebeaa50f3865ae6d7e46c46e8eea0f657b620f1971e"
+    "smg": {
+      "CubeEscape_SubmachineGun_Robot_Game_Normal.png": [
+        "59cd3b1397820f8cecacb5f7a5d7ef52b2cee83b2d23d8ff9d8d63f01762f815"
       ]
     },
     "sniper_rifle": {
       "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
         "8a7311229be4ab616858e89223e4e968974490ec69f0f4e6dbc31f7bf222c0de"
       ]
+    },
+    "trace_rifle": {
+      "CubeEscape_TraceRifle_Robot_Game_Normal.png": [
+        "74150ca02f78f620da977ebeaa50f3865ae6d7e46c46e8eea0f657b620f1971e"
+      ]
     }
   },
-  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants of the scout and sniper rifle flips one texel by one step between runs (same input and settings, any thread count; measured 18.10.2026: 1 of 3 runs). Only flips seen in a bake of unchanged inputs belong here; a map with new content drops them.",
+  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them.",
   "maps": {
     "assault_rifle": {
       "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "200ee5adf809ab3b761af27a0c41899b5a21ca8ab4cdc59cbe0c1357a99e3e66",
@@ -79,20 +84,6 @@
       "CubeEscape_RocketLauncher_Robot_Game_W0.png": "2b8f54867d6963eb99a8a0daba65f9adb5b44650ce14bc9512369189cfcdec32",
       "CubeEscape_RocketLauncher_Robot_Game_W1.png": "c4f20d03988f36b047c6b7a9d3d487f144907f29e4690bf37939635e79bd7c3c"
     },
-    "scout_rifle": {
-      "CubeEscape_ScoutRifle_FPS_Game_Fields.png": "0a754f211939070ba7b5293d8641fd5215a9be020397c10d405547c036f453d1",
-      "CubeEscape_ScoutRifle_FPS_Game_Normal.png": "f0571da210d248ee30a462c6706805e1c09e53e46ca243b9ad733fce96baf0a5",
-      "CubeEscape_ScoutRifle_FPS_Game_W0.png": "7e8e80836e029d8f5f005efceab696e04df20f6e2fce497f523a470506dbc5fe",
-      "CubeEscape_ScoutRifle_FPS_Game_W1.png": "0743c52fba90a0a2c1e486ca0fb3bc0f4ce92b32b3f70cf7277a7a1a624ea494",
-      "CubeEscape_ScoutRifle_Game_Fields.png": "44743493e46cafe4f9f82184b617e8a4ca6bf31b405fbc8a69d2d2f3acac505d",
-      "CubeEscape_ScoutRifle_Game_Normal.png": "7b826dfb12184f8f6521d534ff895b943d8c6eccfa283e4042e3e61a49e10605",
-      "CubeEscape_ScoutRifle_Game_W0.png": "bf1ef75b2d37e83813b3f3cdb9b990cd5f14e94f52e09f5e1a018ed189bf2204",
-      "CubeEscape_ScoutRifle_Game_W1.png": "c0bb66209df20ea0eea7d24f95c293e87705550975026e2efe529c8564ac89ba",
-      "CubeEscape_ScoutRifle_Robot_Game_Fields.png": "468bc3f5034536247e0465ce9babd26d681e7d135839d76e2f007c3bdab5c9d5",
-      "CubeEscape_ScoutRifle_Robot_Game_Normal.png": "c0f7050a9945a7dc9c0da3d58e02c9d8d9a63234b7c562bf57a4ab3b53d15b4d",
-      "CubeEscape_ScoutRifle_Robot_Game_W0.png": "4c8321a34673e01c637e70ed71b90a9a44150af15bad503cf156a977b7314192",
-      "CubeEscape_ScoutRifle_Robot_Game_W1.png": "d78e57f1471e1ee58fe3e19a46bb906063818842b51680ed863d4df4f7bef7fa"
-    },
     "shotgun": {
       "CubeEscape_Shotgun_FPS_Game_Fields.png": "a530690dc0fa4bd4d1771a33173a3bfa9fd142f7708fb48536a7fbbe45b28beb",
       "CubeEscape_Shotgun_FPS_Game_Normal.png": "41a24a3a0ced60358b0e0a084dfff827a2f12130529f4226626f0380c724ab6a",
@@ -134,6 +125,20 @@
       "CubeEscape_SniperRifle_Robot_Game_Normal.png": "b00c1811fdfb10d026d243a5c8857f109a903cd4709edd366c568171ea06ba01",
       "CubeEscape_SniperRifle_Robot_Game_W0.png": "cc87e590efd4b0946204d10030cb3c768c6e41fd3fac13d8abe5b3efa359aab3",
       "CubeEscape_SniperRifle_Robot_Game_W1.png": "fbb6e59297dd2963d38cba964384a3c2bd6b7beac9cda25e156e0721524a10a6"
+    },
+    "trace_rifle": {
+      "CubeEscape_TraceRifle_FPS_Game_Fields.png": "0a754f211939070ba7b5293d8641fd5215a9be020397c10d405547c036f453d1",
+      "CubeEscape_TraceRifle_FPS_Game_Normal.png": "f0571da210d248ee30a462c6706805e1c09e53e46ca243b9ad733fce96baf0a5",
+      "CubeEscape_TraceRifle_FPS_Game_W0.png": "7e8e80836e029d8f5f005efceab696e04df20f6e2fce497f523a470506dbc5fe",
+      "CubeEscape_TraceRifle_FPS_Game_W1.png": "0743c52fba90a0a2c1e486ca0fb3bc0f4ce92b32b3f70cf7277a7a1a624ea494",
+      "CubeEscape_TraceRifle_Game_Fields.png": "44743493e46cafe4f9f82184b617e8a4ca6bf31b405fbc8a69d2d2f3acac505d",
+      "CubeEscape_TraceRifle_Game_Normal.png": "7b826dfb12184f8f6521d534ff895b943d8c6eccfa283e4042e3e61a49e10605",
+      "CubeEscape_TraceRifle_Game_W0.png": "bf1ef75b2d37e83813b3f3cdb9b990cd5f14e94f52e09f5e1a018ed189bf2204",
+      "CubeEscape_TraceRifle_Game_W1.png": "c0bb66209df20ea0eea7d24f95c293e87705550975026e2efe529c8564ac89ba",
+      "CubeEscape_TraceRifle_Robot_Game_Fields.png": "468bc3f5034536247e0465ce9babd26d681e7d135839d76e2f007c3bdab5c9d5",
+      "CubeEscape_TraceRifle_Robot_Game_Normal.png": "c0f7050a9945a7dc9c0da3d58e02c9d8d9a63234b7c562bf57a4ab3b53d15b4d",
+      "CubeEscape_TraceRifle_Robot_Game_W0.png": "4c8321a34673e01c637e70ed71b90a9a44150af15bad503cf156a977b7314192",
+      "CubeEscape_TraceRifle_Robot_Game_W1.png": "d78e57f1471e1ee58fe3e19a46bb906063818842b51680ed863d4df4f7bef7fa"
     }
   },
   "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 of every map, no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change."

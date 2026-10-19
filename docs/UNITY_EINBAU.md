@@ -38,6 +38,17 @@ nicht vorgedreht. Der Vertrag nennt den Wert als `axes.fbx.export_yaw_degrees` (
 Wer den FBX anders einbaut: genau einmal anwenden, nie doppelt. GLB (X-Spiegelung des Unity-glTF-Importers) wurde nicht gemessen; der
 Wert gilt für FBX. Der Generator bleibt bewusst unverändert, damit bereits eingebaute Modelle nicht doppelt korrigiert werden.
 
+### Umbenannte Werkzeuge (0.17.0 Retrace, jedes Vertragsformat additiv)
+
+Das Spurgewehr heißt ab Toolgen 0.17.0 `trace_rifle` (bis 0.16 `scout_rifle`): Ordner `trace_rifle/`, Dateien `CubeEscape_TraceRifle_*`,
+Clips `TraceRifle_*`, Roboter `CubeEscape_TraceRifle_Robot_*`, Wurzeleigenschaft `ce_weapon_class` `trace_rifle`. Modell, Anker, Clips und
+Karten sind sonst gleich. Jeder Vertrag des Werkzeugs trägt den Block `renamed_from` (`tool`, `asset`, `robot`, `clip_stem`, `since`,
+`map` alt → neu): Der Abnehmer ersetzt jeden Schlüssel von `map` durch seinen Wert in Ordner-, Datei-, Prefab- und Clipnamen und verschiebt
+die Dateien samt `.meta` (GUIDs bleiben, Verweise in Szenen und Assets halten). Spielstände und Kataloge, die die alte ID speichern, bilden
+`scout_rifle` → `trace_rifle` ab, solange es kein anderes Werkzeug `scout_rifle` gibt; danach gehört die ID dem Scout-Gewehr (KG11).
+Die neuen Namen liefert Toolgen ab 0.17.0; Cube Escape liest sie ab der Version, die den Umzug macht (eigene CE-Version, noch offen), und
+baut bis dahin mit Toolgen `v0.16.0` (alte Namen).
+
 ## Ego-Modell und Viewmodel-Kamera
 
 Das Ego-Modell liegt im Kameraraum (`Socket_Camera` ist die Identität, Blick −Y in Blender, +Z in Unity) und ist **nicht

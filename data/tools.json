@@ -203,19 +203,26 @@
       }
     },
     {
-      "id": "scout_rifle",
+      "id": "trace_rifle",
       "label": "Spurgewehr",
       "folder": "Spurgewehr",
-      "asset": "CubeEscape_ScoutRifle",
+      "asset": "CubeEscape_TraceRifle",
       "world": "create_weapon.py",
       "fps": "create_weapon_fps.py",
       "verify": "verify_weapon.py",
       "animation": "animate_weapon.py",
-      "clip": "ScoutRifle_Use",
-      "fps_clip": "ScoutRifle_Use",
+      "clip": "TraceRifle_Use",
+      "fps_clip": "TraceRifle_Use",
       "element": "arc",
       "materials": "equipment_channels",
-      "robot": "CubeEscape_ScoutRifle_Robot",
+      "robot": "CubeEscape_TraceRifle_Robot",
+      "renamed_from": {
+        "id": "scout_rifle",
+        "asset": "CubeEscape_ScoutRifle",
+        "robot": "CubeEscape_ScoutRifle_Robot",
+        "clip_stem": "ScoutRifle",
+        "since": "0.17.0"
+      },
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,

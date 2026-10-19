@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips
 
 
-WEAPON_ORDER = ("pistol", "smg", "assault_rifle", "scout_rifle", "pulse_rifle",
+WEAPON_ORDER = ("pistol", "smg", "assault_rifle", "trace_rifle", "pulse_rifle",
                 "shotgun", "fusion_rifle", "sniper_rifle", "rocket_launcher")
 TOOL_ORDER = ("portal_emitter", "magnet_gripper", "flashlight", "bow")
 

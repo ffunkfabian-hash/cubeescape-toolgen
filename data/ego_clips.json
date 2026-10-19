@@ -102,7 +102,7 @@
       "sprint": {"twist_deg": 12.0, "pitch_deg": 1, "right_m": -0.025, "bob_up_m": 0.002, "bob_right_m": 0.004, "bob_twist_deg": 1.2},
       "lowered": {"twist_deg": 10.0, "pitch_deg": 1, "right_m": -0.02}
     },
-    "scout_rifle": {
+    "trace_rifle": {
       "fire_cooldown_s": 0.8,
       "weight": 1.0,
       "ads_frames": 9,

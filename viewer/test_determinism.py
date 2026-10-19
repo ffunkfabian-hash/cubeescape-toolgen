@@ -20,7 +20,7 @@ from pathlib import Path
 RUNS = 8
 LIMIT_PX = 1.0
 # Known unstable models (largest differing pixels, Mac 16.10.2026). Reported as "expected", never skipped; remove an entry
-# once the run prints KNOWN_NOW_STABLE. The muzzle faces of assault/sniper/scout rifle and SMG (2-30 px) and the fusion
+# once the run prints KNOWN_NOW_STABLE. The muzzle faces of assault/sniper/trace rifle and SMG (2-30 px) and the fusion
 # rifle (2.2 px) are fixed in 2ce69db and not listed: if they still flip, the check fails.
 KNOWN_UNSTABLE = {"portal_emitter/world": 1.7}   # 3 of 11 at 1.6-1.7 px (Mac, 3396e1f), cause not found, borderline
 

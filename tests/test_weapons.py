@@ -53,7 +53,7 @@ def build_calls(key):
 class CatalogTests(unittest.TestCase):
     def test_nine_weapons_without_the_bow(self):
         self.assertEqual({"pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle",
-                          "scout_rifle", "rocket_launcher"}, set(WEAPONS))
+                          "trace_rifle", "rocket_launcher"}, set(WEAPONS))
         self.assertEqual(set(WEAPONS), set(designs.DESIGNS))
         self.assertNotIn("bow", WEAPONS)
 
@@ -374,13 +374,13 @@ class HoldContractTests(unittest.TestCase):
 class SightTests(unittest.TestCase):
     """T1 (Cube Escape 0.72 Sightline): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
     KINDS = {"pistol": "iron", "assault_rifle": "reflex", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
-             "smg": "reflex", "fusion_rifle": "energy", "scout_rifle": "scope", "rocket_launcher": "iron"}
+             "smg": "reflex", "fusion_rifle": "energy", "trace_rifle": "scope", "rocket_launcher": "iron"}
     # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
-    # heavy 0.30, scout rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
+    # heavy 0.30, trace rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
     # Cube Escape 0.75 aims with these distances (CE ads.eye_distance_m / hip.scale, table in CE Docs/versions/0.75.md;
     # Toolgen 0.13 adopted them so the ADS QA checks the real pose).
     EYE = {"pistol": .40, "assault_rifle": .379, "pulse_rifle": .357, "shotgun": .65, "sniper_rifle": .221, "smg": .421,
-           "fusion_rifle": .40, "scout_rifle": .221, "rocket_launcher": .453}
+           "fusion_rifle": .40, "trace_rifle": .221, "rocket_launcher": .453}
 
     def test_sight_kinds_and_eye_distances(self):
         for key, tool in WEAPONS.items():
@@ -404,7 +404,7 @@ class SightTests(unittest.TestCase):
                 if rule["mode"] == "top":
                     self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * scale, places=12)
                 if rule["kind"] == "scope":       # eye lens inside the open eyepiece, radius in first-person metres
-                    radius = {"sniper_rifle": .020, "scout_rifle": .015}[key] * designs.EYE_LENS * scale
+                    radius = {"sniper_rifle": .020, "trace_rifle": .015}[key] * designs.EYE_LENS * scale
                     self.assertAlmostEqual(radius, tool["hold"]["eye_radius_m"], places=6)
                     self.assertEqual("center", rule["mode"])
                 else:

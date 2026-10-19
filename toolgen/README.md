@@ -1,7 +1,8 @@
 # Gemeinsame Toolgen-Pipeline
 
 `python3 toolgen/generate_tools.py --tier quick|standard|full` erzeugt alle dreizehn ausgearbeiteten Werkzeuge (Portalkanone, Magnetgreifer, Taschenlampe, Bogen und die neun Waffen).
-`--tool portal_emitter|magnet_gripper|flashlight|bow|pistol|assault_rifle|pulse_rifle|shotgun|sniper_rifle|smg|fusion_rifle|scout_rifle|rocket_launcher` ist wiederholbar; `--output` wählt den Ordner, `--blender` ein Programm.
+`--tool portal_emitter|magnet_gripper|flashlight|bow|pistol|assault_rifle|pulse_rifle|shotgun|sniper_rifle|smg|fusion_rifle|trace_rifle|rocket_launcher` ist wiederholbar; `--output` wählt den Ordner, `--blender` ein Programm.
+Frühere IDs (`tools.json` › `renamed_from`, 0.17: `scout_rifle` → `trace_rifle`) nimmt `--tool` mit Warnung an, bis ein Werkzeug sie wieder trägt.
 `build_toolset.py --tool <ID> [--output ...] [--force]` bleibt als Kompatibilitätseinstieg für Quick.
 Der frühere einfache Portal-Worker und die zweite Viewer-Implementierung sind entfernt.
 

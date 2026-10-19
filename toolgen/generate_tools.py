@@ -200,6 +200,27 @@ def catalog():
     return json.loads((ROOT / "data/tools.json").read_text())["tools"]
 
 
+def former_ids(tools=None):
+    """Former ids --tool still accepts (tools.json ``renamed_from``, 0.17: scout_rifle -> trace_rifle), as long as no tool
+    carries the id again (it is reserved for another tool later, then the alias ends)."""
+    tools = catalog() if tools is None else tools
+    current = {tool["id"] for tool in tools}
+    return {tool["renamed_from"]["id"]: tool["id"] for tool in tools
+            if tool.get("renamed_from") and tool["renamed_from"]["id"] not in current}
+
+
+def resolve_tool_ids(requested, tools=None):
+    """--tool values with former ids replaced by the current ones (a warning on stderr names the new id)."""
+    aliases = former_ids(tools)
+    resolved = []
+    for tool_id in requested or []:
+        if tool_id in aliases:
+            print(f"warning: --tool {tool_id} is the former id of {aliases[tool_id]} (renamed in Toolgen 0.17); "
+                  f"use --tool {aliases[tool_id]}", file=sys.stderr, flush=True)
+        resolved.append(aliases.get(tool_id, tool_id))
+    return resolved
+
+
 def hash_file(path):
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
@@ -715,7 +736,19 @@ def output_lock(root):
         shutil.rmtree(lock)
 
 
+def foreign_packages(output, tools=None):
+    """Tool packages in the output that the catalogue no longer names (e.g. scout_rifle/ after the 0.17 rename): left in
+    place (never deleted), named in a warning so nobody copies them on."""
+    ids = {tool["id"] for tool in (catalog() if tools is None else tools)}
+    return sorted(path.name for path in output.iterdir()
+                  if path.is_dir() and path.name not in ids and (path / "manifest.json").is_file())
+
+
 def write_catalog(output):
+    stray = foreign_packages(output)
+    if stray:
+        print(f"warning: {output} holds packages of tools not in data/tools.json (not in catalog.json, not rebuilt): "
+              f"{', '.join(stray)}", file=sys.stderr, flush=True)
     models = []
     for tool in catalog():
         package = output / tool["id"]
@@ -781,7 +814,7 @@ def render_device(blender, requested):
 def main():
     parser = argparse.ArgumentParser(description="Generate the authored Cube Escape tools and native viewer data")
     parser.add_argument("--tier", choices=TIERS, default="quick")
-    parser.add_argument("--tool", action="append", choices=[tool["id"] for tool in catalog()])
+    parser.add_argument("--tool", action="append", choices=[tool["id"] for tool in catalog()] + sorted(former_ids()))
     parser.add_argument("--output", type=Path)
     parser.add_argument("--blender")
     parser.add_argument("--workers", type=int)
@@ -793,6 +826,7 @@ def main():
                              "layout, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout for Cube "
                              "Escape before 0.64)")
     args = parser.parse_args()
+    args.tool = resolve_tool_ids(args.tool)
     lock = None
     try:
         workers, threads = worker_budget(args.workers, args.threads)

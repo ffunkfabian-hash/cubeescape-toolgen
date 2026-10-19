@@ -33,6 +33,8 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   entry (``<asset>_Robot``, scripts/tool_assets/weapon_designs.py ROBOT): ``<robot>_Game.*``, ``unity_contract_robot.json``
   with the block ``robot`` (measures of ``qa_geometry_robot.json``), ``qa_game_robot.json``, ``preview_game_robot.png``.
   Same anchors, same hold block and the world triangle budget.
+* ``renamed_from`` (Toolgen 0.17, every format, additive): a renamed tool (tools.json ``renamed_from``; trace_rifle, until
+  0.16 scout_rifle) names its former id, asset, robot and clip stem and the old-to-new ``map`` for the consumer's move.
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -100,7 +102,7 @@ OPENING_PROBES = {
             ("Socket_Nock", None, 0.0, (0.0, -.05, .235)), ("Socket_Nock", None, 0.0, (0.0, -.05, -.365))],
 }
 # The nine weapons: the line of fire in front of the muzzle stays free of colliders.
-for _weapon in ("pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle", "scout_rifle",
+for _weapon in ("pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle", "trace_rifle",
                 "rocket_launcher"):
     OPENING_PROBES[_weapon] = [("Socket_Muzzle", None, 0.0, (0.0, -.03, 0.0)), ("Socket_Muzzle", None, 0.0, (0.0, -.10, 0.0))]
 # Element glow source of the weapon kit (scripts/tool_assets/weapon_kit.py, Kit.glow_material) per element.
@@ -1007,6 +1009,21 @@ def ego_contract(ego, game, take, fps, animated_nodes):
 
 
 # --------------------------------------------------------------------------------------------- contract
+def renamed_block(tool):
+    """Former names of a renamed tool (tools.json ``renamed_from``, Toolgen 0.17: scout_rifle -> trace_rifle), additive in
+    every contract format: the consumer moves its folder, files, prefabs and clips from the old to the new names."""
+    old = tool["renamed_from"]
+    stem = ego_clips.clip_stem(tool)
+    return {"tool": old["id"], "asset": old["asset"], **({"robot": old["robot"]} if old.get("robot") else {}),
+            "clip_stem": old["clip_stem"], "since": old["since"],
+            "map": {old["id"]: tool["id"], old["asset"]: tool["asset"], old["clip_stem"] + "_": stem + "_",
+                    **({old["robot"]: tool["robot"]} if old.get("robot") else {})},
+            "consumer": "Same model, anchors, clips and maps as before under the new names: replace each key of map by its "
+                        "value in folder, file, prefab and clip names (move the files with their .meta so GUIDs stay). The "
+                        "old tool id may name another tool later; never map it back once a tool carries it.",
+            "older_consumers": "Toolgen v0.16.0 (git checkout v0.16.0, toolgen/generate_tools.py) writes the old names."}
+
+
 def hold_block(tool):
     """How the weapon sits in a hand (tools.json ``hold``): sockets, grip axis (bottom to top of the grip, leaning forward by
     the grip tilt), muzzle axis and the angle between them. Vectors are in root space like the anchors (Blender and Unity);
@@ -1085,7 +1102,7 @@ def socket_surface_distances(root):
 
 
 def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT, ego_infos=(), ego_block=None):
+                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT, ego_infos=(), ego_block=None, renamed=None):
     def renderer_entry(obj):
         mesh = obj.data
         return {"name": obj.name, "parent": obj.parent.name, "role": obj["ce_role"], "lod": obj["ce_lod"],
@@ -1142,6 +1159,7 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
         "budget": budget_info,
         "colliders": colliders,
         **({"hold": hold_block(tool)} if tool.get("hold") else {}),
+        **({"renamed_from": renamed} if renamed else {}),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
         "clips": ([clip_info] if clip_info else []) + list(ego_infos),
@@ -1671,6 +1689,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     its own triangle budget and the camera data of ``viewmodel_camera.json`` in the contract), or of the robot variant
     (``robot``: root ``<robot>``, like the world model plus the block ``robot``)."""
     robot_info = None
+    renamed = renamed_block(tool) if tool.get("renamed_from") else None    # catalogue names, before the variant renames
     if robot:
         robot_info = robot_block(work, tool)
         tool = dict(tool, asset=tool["robot"])
@@ -1789,7 +1808,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     if ego:
         ego_infos, ego_block = ego_contract(ego, game, ego_take_name(clip_name), source["fps"], animated_nodes)
     document = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                              camera, surface, contract, ego_infos, ego_block)
+                              camera, surface, contract, ego_infos, ego_block, renamed)
     if robot_info:
         document["variant"] = "robot"
         document["robot"] = robot_info

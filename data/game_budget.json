@@ -13,7 +13,7 @@
     "sniper_rifle": 8000,
     "smg": 6000,
     "fusion_rifle": 8000,
-    "scout_rifle": 7000,
+    "trace_rifle": 7000,
     "rocket_launcher": 8000
   },
   "robot": {
@@ -23,7 +23,7 @@
     "sniper_rifle": 12000,
     "smg": 12000,
     "fusion_rifle": 12000,
-    "scout_rifle": 12000,
+    "trace_rifle": 12000,
     "rocket_launcher": 12000
   },
   "viewmodel": {
@@ -38,7 +38,7 @@
     "sniper_rifle": 16000,
     "smg": 15000,
     "fusion_rifle": 16000,
-    "scout_rifle": 16000,
+    "trace_rifle": 16000,
     "rocket_launcher": 16000
   }
 }
