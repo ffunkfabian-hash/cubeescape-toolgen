@@ -1012,7 +1012,7 @@ def ego_contract(ego, game, take, fps, animated_nodes):
 
 # --------------------------------------------------------------------------------------------- contract
 # Toolgen 0.17: the package names trace_rifle (until 0.16 scout_rifle); a consumer without the migration misses its folder.
-RENAMED_CONSUMER = ("Cube Escape version with the scout_rifle -> trace_rifle migration (number follows, cubeescape-rules#3). "
+RENAMED_CONSUMER = ("Cube Escape 0.98 „Recast“ (scout_rifle -> trace_rifle migration, cubeescape-rules#3). "
                     "Cube Escape 0.96 and older do NOT read this package: their folder and prefabs scout_rifle are missing from "
                     "it. Older package for them: git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard")
 

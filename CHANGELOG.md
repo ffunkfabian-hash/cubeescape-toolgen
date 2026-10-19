@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.17.1 – Retrace (19.10.2026)
+
+Nachtrag zur Mindestversion des Abnehmers: die Migration `scout_rifle` → `trace_rifle` kommt mit Cube Escape 0.98 „Recast“.
+Der Vertrag nennt jetzt diese Version; die älteren Paketgrenzen und der Rückweg zu Toolgen 0.16.0 bleiben unverändert.
+
 ## 0.17.0 – Retrace (19.10.2026)
 
 Spurgewehr umbenannt: `scout_rifle` → `trace_rifle` (Entscheidung des Nutzers 19.10.2026; `scout_rifle` wird frei für das Scout-Gewehr KG11 aus
