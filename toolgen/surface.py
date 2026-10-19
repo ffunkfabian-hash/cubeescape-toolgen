@@ -33,9 +33,14 @@ RESERVED_LOW = 16 / 1024         # band at u < 16/1024 and v < 16/1024 kept free
 CHECK_RESOLUTION = 1024          # the margin rule is stated at 1024
 MARGIN_PX = 4                    # contract: at least 4 px between islands at 1024
 OVERLAP_RESOLUTION = 2048        # overlap raster
-# 0.16 Finegrain: first-person maps 2048 (user, 18.10.2026; Cube Escape 0.94 streams them for the held tool only); world and
+# 0.16 Finegrain: first-person maps 2048 (user, 18.10.2026; Cube Escape 0.96 streams them for the held tool only); world and
 # robot variant (0.14, a world model) stay 512. The UV1 atlas is the same at every resolution.
 MAP_RESOLUTION = {"world": 512, "viewmodel": 2048, "robot": 512}
+# Consumer of the 2048 first-person maps (Toolgen 0.16; built into Cube Escape 0.96 "Pinpoint", not 0.94, cubeescape-rules#3).
+EGO_MAPS_CONSUMER = ("Cube Escape 0.96 Pinpoint for the 2048 first-person maps (Toolgen 0.16: maps.resolution, dilation_px, "
+                     "set_bytes_limit, uv1.margin_px_at_map), streamed for the held tool only; older Cube Escape imports them at "
+                     "its importer limit (not checked); first-person maps 1024: git checkout v0.15.1 && python3 "
+                     "toolgen/generate_tools.py --tier standard")
 AO_SAMPLES = {"world": 16, "viewmodel": 32, "robot": 16}
 EDGE_SAMPLES = 16               # rays of the bevel and local AO nodes per shading sample
 DETAIL_SAMPLES = 4              # Cycles samples of the EMIT and NORMAL bakes

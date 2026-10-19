@@ -259,7 +259,9 @@ enthält kein `data/`; Asset, Clip, Element und Griffneigung stehen deshalb in `
 `renamed_from` (`id`, `asset`, `robot`, `clip_stem`, `since`); `game_export.renamed_block` schreibt sie in jeden Vertrag (Welt, Ego, Roboter,
 jedes Format) samt `map` alt → neu für den Umzug beim Abnehmer, `generate_tools.py --tool <alte ID>` baut mit Warnung das neue Werkzeug.
 Beides endet, sobald ein Werkzeug die alte ID wieder trägt (KG11 Scout-Gewehr): dann `renamed_from` entfernen, `tests/test_rename.py`
-erzwingt es. Pakete in einem Ausgabeordner, die der Katalog nicht mehr nennt (`scout_rifle/` aus älteren Läufen), bleiben liegen;
+erzwingt es. Jeder Vertrag trägt ab 0.17 den Block `minimum_consumer` mit beiden Paketanforderungen getrennt (`first_person_maps_2048`:
+Cube Escape 0.96; `renamed_tool_ids`: CE-Version mit der Migration, Nummer folgt; Konstanten `surface.EGO_MAPS_CONSUMER`,
+`game_export.RENAMED_CONSUMER`). Pakete in einem Ausgabeordner, die der Katalog nicht mehr nennt (`scout_rifle/` aus älteren Läufen), bleiben liegen;
 `generate_tools.py` nennt sie in einer Warnung (`foreign_packages`). Ordner, Label und Geometrie bleiben; Modell-, Clip- und
 Vertragsdateien ändern nur die Namen; die Kartenpixel bleiben bytegleich bis auf einzelne kippende Texel der Roboter-Normalkarten
 (siehe Erfahrungen).
@@ -478,7 +480,7 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
   Positionen, Topologie, UV0/UV1, Eckennormalen, Slots, `channel_map`, Einstellungen und Blender-Version (Tangenten folgen daraus).
   Neue Stufenfelder (`heavy`, `min_contract`) stehen nur gesetzt in der Deklaration, damit bestehende Stufen ihren Schlüssel behalten.
 - Ältere Abnehmer: `--contract 3` (und 2, 1) erzeugt weder UV1 noch GLB-Tangenten noch die Stufe `surface_bake`.
-- **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.94
+- **Auflösungen (0.16 Finegrain):** `MAP_RESOLUTION` Welt 512², Roboter-Variante 512², Ego **2048²** (Entscheidung des Nutzers 18.10.2026; Cube Escape 0.96
   streamt die volle Größe nur für das gehaltene Gerät). Der UV1-Atlas ist für alle Auflösungen derselbe, deshalb sind alle Abstände UV-Größen:
   Randregel 4/1024 (`margin_px_at`: 2 px bei 512, 8 px bei 2048), Packabstand 8/1024, freier Rand 16/1024, Dilatation 8 px bei 512 und 16 px bei 2048
   (= 8/1024 wie bisher bei 1024, damit die Mip-Stufen den Rand genauso spät verlieren; `CORNER_CHECKS` prüft die freie Ecke je Karte: die Dilatation (in UV-Raum) darf das Eck-Texel

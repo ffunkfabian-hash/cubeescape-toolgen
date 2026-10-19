@@ -35,6 +35,8 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   Same anchors, same hold block and the world triangle budget.
 * ``renamed_from`` (Toolgen 0.17, every format, additive): a renamed tool (tools.json ``renamed_from``; trace_rifle, until
   0.16 scout_rifle) names its former id, asset, robot and clip stem and the old-to-new ``map`` for the consumer's move.
+* ``minimum_consumer`` (Toolgen 0.17, every contract): the package's two consumer requirements apart, the 2048 first-person
+  maps (Cube Escape 0.96) and the renamed tool ids (the Cube Escape version with the trace_rifle migration).
 
 The pure helpers (axes, palette validation, box clustering) import without Blender for the unit tests.
 """
@@ -1009,6 +1011,17 @@ def ego_contract(ego, game, take, fps, animated_nodes):
 
 
 # --------------------------------------------------------------------------------------------- contract
+# Toolgen 0.17: the package names trace_rifle (until 0.16 scout_rifle); a consumer without the migration misses its folder.
+RENAMED_CONSUMER = ("Cube Escape version with the scout_rifle -> trace_rifle migration (number follows, cubeescape-rules#3). "
+                    "Cube Escape 0.96 and older do NOT read this package: their folder and prefabs scout_rifle are missing from "
+                    "it. Older package for them: git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard")
+
+
+def consumer_block():
+    """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the two requirements of this package, kept apart."""
+    return {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER}
+
+
 def renamed_block(tool):
     """Former names of a renamed tool (tools.json ``renamed_from``, Toolgen 0.17: scout_rifle -> trace_rifle), additive in
     every contract format: the consumer moves its folder, files, prefabs and clips from the old to the new names."""
@@ -1021,6 +1034,7 @@ def renamed_block(tool):
             "consumer": "Same model, anchors, clips and maps as before under the new names: replace each key of map by its "
                         "value in folder, file, prefab and clip names (move the files with their .meta so GUIDs stay). The "
                         "old tool id may name another tool later; never map it back once a tool carries it.",
+            "minimum_consumer": RENAMED_CONSUMER,
             "older_consumers": "Toolgen v0.16.0 (git checkout v0.16.0, toolgen/generate_tools.py) writes the old names."}
 
 
@@ -1160,6 +1174,7 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
         "colliders": colliders,
         **({"hold": hold_block(tool)} if tool.get("hold") else {}),
         **({"renamed_from": renamed} if renamed else {}),
+        "minimum_consumer": consumer_block(),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
         "clips": ([clip_info] if clip_info else []) + list(ego_infos),
