@@ -260,7 +260,7 @@ enthält kein `data/`; Asset, Clip, Element und Griffneigung stehen deshalb in `
 jedes Format) samt `map` alt → neu für den Umzug beim Abnehmer, `generate_tools.py --tool <alte ID>` baut mit Warnung das neue Werkzeug.
 Beides endet, sobald ein Werkzeug die alte ID wieder trägt (KG11 Scout-Gewehr): dann `renamed_from` entfernen, `tests/test_rename.py`
 erzwingt es. Jeder Vertrag trägt ab 0.17 den Block `minimum_consumer` mit beiden Paketanforderungen getrennt (`first_person_maps_2048`:
-Cube Escape 0.96; `renamed_tool_ids`: CE-Version mit der Migration, Nummer folgt; Konstanten `surface.EGO_MAPS_CONSUMER`,
+Cube Escape 0.96; `renamed_tool_ids`: Cube Escape 0.98 „Recast“ mit der Migration; Konstanten `surface.EGO_MAPS_CONSUMER`,
 `game_export.RENAMED_CONSUMER`). Pakete in einem Ausgabeordner, die der Katalog nicht mehr nennt (`scout_rifle/` aus älteren Läufen), bleiben liegen;
 `generate_tools.py` nennt sie in einer Warnung (`foreign_packages`). Ordner, Label und Geometrie bleiben; Modell-, Clip- und
 Vertragsdateien ändern nur die Namen; die Kartenpixel bleiben bytegleich bis auf einzelne kippende Texel der Roboter-Normalkarten

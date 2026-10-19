@@ -47,8 +47,8 @@ Karten sind sonst gleich. Jeder Vertrag des Werkzeugs trägt den Block `renamed_
 die Dateien samt `.meta` (GUIDs bleiben, Verweise in Szenen und Assets halten). Spielstände und Kataloge, die die alte ID speichern, bilden
 `scout_rifle` → `trace_rifle` ab, solange es kein anderes Werkzeug `scout_rifle` gibt; danach gehört die ID dem Scout-Gewehr (KG11).
 **Mindestversionen des Pakets ab 0.17.0, getrennt** (jeder Vertrag, Block `minimum_consumer`): `first_person_maps_2048` – Ego-Karten 2048²
-brauchen **Cube Escape 0.96 „Pinpoint“**; `renamed_tool_ids` – die neuen Namen brauchen **die CE-Version mit der Migration scout_rifle →
-trace_rifle (Nummer folgt, Briefkasten cubeescape-rules#3)**. **Cube Escape 0.96 und älter lesen das 0.17-Paket nicht** (Ordner und Prefabs
+brauchen **Cube Escape 0.96 „Pinpoint“**; `renamed_tool_ids` – die neuen Namen brauchen **Cube Escape 0.98 „Recast“** mit der Migration
+`scout_rifle` → `trace_rifle` (Briefkasten cubeescape-rules#3). **Cube Escape 0.96 und älter lesen das 0.17-Paket nicht** (Ordner und Prefabs
 `scout_rifle` fehlen darin); für sie gilt die ältere Fassung: `git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard`.
 
 ## Ego-Modell und Viewmodel-Kamera

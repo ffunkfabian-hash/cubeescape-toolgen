@@ -72,12 +72,12 @@ class RenamedFromTests(unittest.TestCase):
 
     def test_minimum_consumer_keeps_both_requirements_apart(self):
         """Every contract names the 2048 first-person maps (Cube Escape 0.96) and the renamed ids (the CE version with the
-        migration, number follows) separately, and says that Cube Escape 0.96 does not read this package."""
+        migration version separately, and says that Cube Escape 0.96 does not read this package."""
         block = ge.consumer_block()
         self.assertEqual({"first_person_maps_2048", "renamed_tool_ids"}, set(block))
         self.assertIn("Cube Escape 0.96", block["first_person_maps_2048"])
         self.assertNotIn("0.94", block["first_person_maps_2048"])
-        self.assertIn("number follows", block["renamed_tool_ids"])
+        self.assertIn("Cube Escape 0.98 „Recast“", block["renamed_tool_ids"])
         self.assertIn("0.96 and older do NOT read this package", block["renamed_tool_ids"])
         self.assertIn("git checkout v0.16.0", block["renamed_tool_ids"])
         self.assertEqual(block["renamed_tool_ids"], ge.renamed_block(TOOLS["trace_rifle"])["minimum_consumer"])
