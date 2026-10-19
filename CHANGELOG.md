@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.17.2 – Retrace (19.10.2026)
+
+Golden: belegter Ausweichwert für die Raketenwerfer-Roboter-Normalkarte (ein Texel, Cycles-Bake-Kipp zwischen Läufen derselben Quellen; kein Inhalt geändert).
+
 ## 0.17.1 – Retrace (19.10.2026)
 
 Nachtrag zur Mindestversion des Abnehmers: die Migration `scout_rifle` → `trace_rifle` kommt mit Cube Escape 0.98 „Recast“.
