@@ -5,6 +5,11 @@
         "59cd3b1397820f8cecacb5f7a5d7ef52b2cee83b2d23d8ff9d8d63f01762f815"
       ]
     },
+    "rocket_launcher": {
+      "CubeEscape_RocketLauncher_Robot_Game_Normal.png": [
+        "d8a09010da2124ec9bea35401a1c7665ad6fa2004d9184ec581e79f72b4a0154"
+      ]
+    },
     "sniper_rifle": {
       "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
         "8a7311229be4ab616858e89223e4e968974490ec69f0f4e6dbc31f7bf222c0de"
@@ -16,7 +21,7 @@
       ]
     }
   },
-  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them.",
+  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; rocket launcher 0.17.2: 1 of 3 runs of unchanged 0.17.1 sources, one texel R 127->128, 0.17.0 2 of 2 golden; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them.",
   "maps": {
     "assault_rifle": {
       "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "200ee5adf809ab3b761af27a0c41899b5a21ca8ab4cdc59cbe0c1357a99e3e66",
