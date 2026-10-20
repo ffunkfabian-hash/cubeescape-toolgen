@@ -119,7 +119,7 @@ Claude-Code-Plugins sind nicht automatisch Codex-Werkzeuge; alle Agenten befolge
 | `code-review` | vor Release/Merge; keine Veröffentlichung ohne Nutzerauftrag |
 | `github` / `gh` | Repository, Pull Requests und Releases; Actions lokal zuerst, keine Workflows ohne Auftrag |
 | `engineering` / `design` | Fehlerursachen, Tests, Doku, Prüfung von Oberfläche und Vorschauen |
-| Blender-MCP | optionaler Prüfstand in eigener Szene, nichts im geöffneten Nutzerprojekt speichern |
+| Blender-MCP | **ausdrücklich erwünscht** (Nutzer, 19./20.10.2026; globale Regel › Blender-MCP): ohne Nachfrage, wenn Blender läuft – Modelle, UV, Material, Posen/Clips, Handkontakte, Probe-Bakes prüfen; eigene Szene, nie im Nutzerprojekt; Befunde in der Pipeline beheben, nie `output/` von Hand; Speichern nur über `wm.save_as_mainfile` |
 | Unity / Unity-Perf | erst beim Einbau ins Spiel; dortige Skills und Testkopien verwenden |
 
 Subagent-Definitionen: `.claude/agents/tg-test-runner.md` (prüft, schreibt keinen Code), `tg-doc-keeper.md` (nur Markdown).
