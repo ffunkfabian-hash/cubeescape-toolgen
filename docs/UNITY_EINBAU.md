@@ -430,7 +430,7 @@ im Builder).
   Aktionsvertrag an den Markern, nie aus der Cliplänge.
 - Ablauf wie Destiny (Form; Zeiten sind CE-Gestaltung nach dem benannten Beispiel Chroma Rush, cubeescape-reference `docs/destiny2.md`
   `#z-chroma-rush`: heraus +0,25 s, ein +0,93 s, Ladegriff +1,05 s, Hüfte +1,58 s): rechte Hand bleibt am Griff, die Waffe kippt (Oberseite
-  nach rechts, Mündung hoch), die linke Hand greift das Magazin, zieht es nach unten aus dem Bild, kommt mit ihm zurück, setzt ein
+  nach rechts, Mündung hoch – Entscheidung des Nutzers 20.10.2026, der Entwurf nannte links), die linke Hand greift das Magazin, zieht es nach unten aus dem Bild, kommt mit ihm zurück, setzt ein
   (kurzer Stoß), bei `ReloadEmpty` zum Ladehebel (`pinch`) und zieht ihn mit `Anim_Bolt` 5 cm zurück, dann zurück an den Handschutz.
 - Portalkanone: die linke Hand umgreift das Gehäuse in allen Clips (kein `HandOff`/`HandOn`).
 
