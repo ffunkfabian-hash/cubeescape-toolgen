@@ -8,6 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import concept_spec  # noqa: E402
 import ego_clips as ego  # noqa: E402
 import ego_weapon_motions as motions  # noqa: E402
 import weapon_designs as designs  # noqa: E402
@@ -190,6 +191,18 @@ class RecordingKit:
         self.pivots[name] = (location, parent)
         return name
 
+    def concept(self, file, clip_nodes):
+        """Toolgen 0.18: a concept sheet's meshes as 'mesh' records (bounds and material), pivots and sockets."""
+        found = concept_spec.layout(file, clip_nodes)
+        for name, location in found["pivots"].items():
+            self.pivot(name, location)
+        for mesh in found["meshes"]:
+            low, high = concept_spec.bounds(mesh["vertices"])
+            self.record('mesh', mesh["name"].removeprefix("SM_PG_"), (low, high, mesh["material"] or self.glow_material),
+                        mesh["node"])
+        for name, position in found["kit_sockets"].items():
+            self.socket(name, tuple(position))
+
     def socket(self, name, location):
         self.sockets[name] = location
 
@@ -205,7 +218,7 @@ class RecordingKit:
 # the geometry digest with the old element is unchanged (checked when the digests were updated).
 REST_GEOMETRY = {
     'pistol': '068ac572f7c3c781168955d0aa0b036ad1673bfef4f9ae78fb218083b5b56f86',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
-    'assault_rifle': '29378d3a5d8183aa0d6ebba6a33b070fa1fe25c1594d07f3f7783788a9d788a1',   # 0.12.0: stock cell frame raised off the inset (z-fighting)
+    'assault_rifle': '3c0902cc5ea557e84be6543a8d60d87d7e372eedd4456b17af41882507d7b1c5',   # 0.18.0: concept KG02 claude-v0.15 (mesh bounds incl. lever p32, Socket_Reticle)
     'pulse_rifle': 'e6278e3e0c567ef6f0a74d1ae826c7141497ad5f1490c45e5c3f9410b481a702',
     'shotgun': 'cf77d8ee2ffe99348fb8234929c40d1e81bb96e63e7602fe4fd0f89ae81c2746',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
     'sniper_rifle': '5f741e3dfbbea47ac37bbd07f024625968ac5a1c88cf1a926b3713e62ebc725a',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
@@ -224,10 +237,12 @@ class ReloadGeometryTests(unittest.TestCase):
             with self.subTest(tool=tool):
                 self.assertEqual(REST_GEOMETRY[tool], kit.geometry_digest())
                 self.assertEqual((0, 0, 0), kit.sockets["Socket_Hand"])
-                self.assertEqual({"Socket_Hand", "Socket_SupportHand", "Socket_Muzzle", "Socket_CenterOfMass"}, set(kit.sockets))
+                concept = {"Socket_Reticle"} if spec.get("concept") else set()     # 0.18: the open window's centre
+                self.assertEqual({"Socket_Hand", "Socket_SupportHand", "Socket_Muzzle", "Socket_CenterOfMass"} | concept,
+                                 set(kit.sockets))
 
     def test_reload_pivot_has_visible_parts_and_keeps_use_nodes(self):
-        expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazine", "pulse_rifle": "EnergyCell",
+        expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazin_p07", "pulse_rifle": "EnergyCell",
                     "shotgun": "ForeEnd", "sniper_rifle": "MagBox", "smg": "Drum",
                     "fusion_rifle": "PowerCellCore", "trace_rifle": "Magazine", "rocket_launcher": "Hatch"}
         for tool, spec in designs.DESIGNS.items():

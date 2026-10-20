@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import concept_spec  # noqa: E402
 import decals  # noqa: E402
 import surface  # noqa: E402
 import surface_relief  # noqa: E402
@@ -65,6 +66,11 @@ class RecordingKit:
     def bolts(self, name, positions, radius=.0035, axis="x", parent=None, depth=.004):
         for index, position in enumerate(positions):
             self.cyl("%s_%d" % (name, index), position, radius, depth, axis=axis)
+
+    def concept(self, file, clip_nodes):
+        """Toolgen 0.18: the parts of a concept sheet (concept_spec.layout) with their bounds."""
+        for mesh in concept_spec.layout(file, clip_nodes)["meshes"]:
+            self._add(mesh["name"].removeprefix("SM_PG_"), *concept_spec.bounds(mesh["vertices"]))
 
     def __getattr__(self, name):            # socket, pivot and helpers that create no named part here
         return lambda *args, **kwargs: args[0] if args else None

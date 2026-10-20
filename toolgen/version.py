@@ -1,2 +1,2 @@
-VERSION = "0.17.2"
-CODENAME = "Retrace"
+VERSION = "0.18.0"
+CODENAME = "Bedrock"

@@ -316,27 +316,27 @@
     },
     "assault_rifle": {
       "hand": [
-        -0.22,
-        -0.55,
-        -0.17
+        -0.21,
+        -0.537,
+        -0.176
       ],
       "roll_degrees": 5,
       "support": true,
       "support_socket": "Socket_SupportHand",
       "support_grip": "underhand",
       "support_radius": [
-        0.03,
-        0.03
+        0.0447,
+        0.0252
       ],
       "support_roll_degrees": 35,
       "grip_radius": [
         0.021,
-        0.023
+        0.0355
       ],
       "tool_scale": 0.72,
       "hand_rotation_degrees": {
         "R": [
-          16,
+          10.27,
           0,
           0
         ]
@@ -344,13 +344,10 @@
       "head": {
         "anchor": "Socket_Muzzle",
         "parts": [
-          "SM_PG_MuzzleBrake",
-          "SM_PG_MuzzleGlow",
-          "SM_PG_MuzzleRing",
-          "SM_PG_Barrel",
-          "SM_PG_GasBlock",
-          "SM_PG_FrontSight",
-          "SM_PG_Handguard"
+          "SM_PG_Muendung_p14",
+          "SM_PG_Lauf_p13",
+          "SM_PG_Part_p12",
+          "SM_PG_Handschutz_p11"
         ]
       },
       "aim_target_m": [
@@ -378,14 +375,14 @@
         },
         "L": {
           "forearm": [
-            -0.4,
-            -0.4,
-            0.82
+            -0.3,
+            -0.2,
+            0.93
           ],
           "upper": [
             0.3,
             0.95,
-            0.15
+            0.05
           ],
           "max_wrist_bend_degrees": 55
         }

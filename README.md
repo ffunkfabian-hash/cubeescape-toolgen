@@ -95,6 +95,8 @@ Magnetgreifer-C#-Player enthält historische Kompilierungsnachweise, keine Unity
 - `data/tools.json`: Katalog; `scripts/tool_assets/`: Autoren-Generatoren und gemeinsame Designprofile.
 - `data/viewmodels.json`: Ego-Haltungen, Handgrößen, Viewmodel-Sichtfeld und Herkunft des Robogen-Mitt-Vertrags.
 - `data/game_palette.json`: matte Spielpalette mit Cube-Escape-Materialnamen; `data/game_budget.json`: LOD0-Dreiecksbudgets.
+- `data/concepts/`: Konzeptblätter von cubeescape-formgen (geometry-spec 1) mit Herkunft (`provenance.json`) und benannten
+  Toolgen-Korrekturen (`corrections.json`); Import nur mit `scripts/import_concepts.py`, Pilot Sturmgewehr = KG02 (0.18).
 - `toolgen/`: gemeinsame Pipeline (`generate_tools.py`, Stufenliste `STAGES`), Stufen-Cache (`toolcache.py`), Spiel-Export
   (`game_export.py`) und Binärexport; [CLI-Details](toolgen/README.md).
 - `scripts/`: `testplan.py` (Prüfweg aus dem Diff), `heavy_lock.py` (gemeinsame Sperre), `check_output.sh`, `check_docs.py`.

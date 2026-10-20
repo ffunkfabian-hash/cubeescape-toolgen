@@ -32,6 +32,8 @@ ROBOT_STAGES = ("robot", "game_robot", "surface_bake_robot")
 
 def primitive_bounds(kind, values):
     """Axis-aligned (low, high) of one recorded primitive in the weapon frame (life metres)."""
+    if kind == "mesh":                     # Toolgen 0.18 concept mesh: its recorded bounds
+        return list(values[0]), list(values[1])
     if kind == "box":
         center, size, _, _, rot = values
         corners = [(sx * size[0] / 2, sy * size[1] / 2, sz * size[2] / 2) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)]

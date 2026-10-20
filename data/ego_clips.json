@@ -95,7 +95,7 @@
       "fire_cooldown_s": 0.4,
       "weight": 1.0,
       "reload": {"drop_m": [0, -0.13, 0.02]},
-      "ads": {"sight_parts": ["Optic", "OpticGlow", "OpticHood"], "sight_mode": "top", "eye_above_m": 0.004},
+      "ads": {"sight_parts": ["Rahmen_p24"], "sight_mode": "center"},
       "inspect": {"b": {"twist_deg": -11}},
       "idle": {"up_m": 0.0015, "pitch_deg": 0.25, "roll_deg": 0.15},
       "walk": {"up_m": 0.0015, "right_m": 0.004, "twist_deg": 1.0, "pitch_deg": 0.35},

@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ASSETS))
 sys.path.insert(0, str(ROOT / "tests"))
 
+import concept_spec  # noqa: E402
 import ego_clips  # noqa: E402
 import game_export as ge  # noqa: E402
 import sight  # noqa: E402
@@ -36,6 +37,12 @@ HELPERS = ("panel", "display", "energy_cell", "heat_sink", "accent", "side_armor
 def build_calls(key):
     """(method name, first string argument) of every ``k.<method>('Name', ...)`` call of the design's build function and
     of its ``<name>_modules`` function; the shared module helpers (panel, display ...) count as ``box`` with their name."""
+    spec = designs.DESIGNS[key]
+    if spec.get("concept"):
+        # Toolgen 0.18: a concept weapon builds the sheet's meshes, the pivots of its nodes and the spec's sockets
+        found = concept_spec.layout(spec["concept"], sorted({move["node"] for move in spec["use_clip"]}))
+        return ([("box", mesh["name"].removeprefix("SM_PG_")) for mesh in found["meshes"]]
+                + [("pivot", node) for node in found["pivots"]] + [("socket", name) for name in found["kit_sockets"]])
     tree = ast.parse((ASSETS / "weapon_designs.py").read_text())
     name = designs.DESIGNS[key]["build"].__name__
     functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in (name, name + "_modules")]
@@ -183,7 +190,8 @@ class ViewmodelProfileTests(unittest.TestCase):
                 self.assertTrue(profile["support"])
                 self.assertEqual("Socket_SupportHand", profile["support_socket"])
                 self.assertEqual(2, len(profile["support_radius"]))
-                self.assertTrue(all(.015 <= value <= .04 for value in profile["support_radius"]))
+                # 0.18: the concept KG02's handguard is 9 cm tall (spec support.radius_m half height 44.7 mm)
+                self.assertTrue(all(.015 <= value <= .045 for value in profile["support_radius"]))
 
     def test_support_hand_grips_from_below(self):
         """0.8.0: relaxed underhand support (palm under the handguard, thumb on the camera side) on every rifle; 0.10.0: the
@@ -331,7 +339,9 @@ class BudgetTests(unittest.TestCase):
                 self.assertIn(key, BUDGET["world"])
                 self.assertIn(key, BUDGET["viewmodel"])
                 self.assertLess(BUDGET["world"][key], BUDGET["viewmodel"][key])
-                self.assertLessEqual(BUDGET["world"][key], 8000, "Cube Escape measured 12k world / 25k ego as unproblematic")
+                # 0.18: +25 % (user decision 20.10.2026), still below what Cube Escape measured as unproblematic
+                self.assertLessEqual(BUDGET["world"][key], 10000, "Cube Escape measured 12k world / 25k ego as unproblematic")
+                self.assertLessEqual(BUDGET["viewmodel"][key], 20000)
 
 
 class HoldContractTests(unittest.TestCase):
@@ -373,7 +383,8 @@ class HoldContractTests(unittest.TestCase):
 
 class SightTests(unittest.TestCase):
     """T1 (Cube Escape 0.72 Sightline): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
-    KINDS = {"pistol": "iron", "assault_rifle": "reflex", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
+    # 0.18: the assault rifle carries the holo sight VS02 of its concept KG02 (formgen sight_kind; was reflex)
+    KINDS = {"pistol": "iron", "assault_rifle": "holo", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
              "smg": "reflex", "fusion_rifle": "energy", "trace_rifle": "scope", "rocket_launcher": "iron"}
     # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
     # heavy 0.30, trace rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
@@ -407,6 +418,17 @@ class SightTests(unittest.TestCase):
                     radius = {"sniper_rifle": .020, "trace_rifle": .015}[key] * designs.EYE_LENS * scale
                     self.assertAlmostEqual(radius, tool["hold"]["eye_radius_m"], places=6)
                     self.assertEqual("center", rule["mode"])
+                elif designs.DESIGNS[key].get("concept"):
+                    # 0.18: a concept sight has an open window (no glass, user decision 20.10.2026): the line runs
+                    # through the centre of the window frame, which holds Socket_Reticle
+                    self.assertNotIn("eye_radius_m", tool["hold"])
+                    self.assertEqual("center", rule["mode"])
+                    found = concept_spec.layout(designs.DESIGNS[key]["concept"], [])
+                    reticle = found["sockets"]["Socket_Reticle"]
+                    for mesh in found["meshes"]:
+                        if mesh["name"].removeprefix("SM_PG_") in rule["parts"]:
+                            low, high = concept_spec.bounds(mesh["vertices"])
+                            self.assertTrue(all(low[i] <= reticle[i] <= high[i] for i in range(3)))
                 else:
                     self.assertNotIn("eye_radius_m", tool["hold"])
                     # Cube Escape 0.72: iron, reflex and holo lines run over the top of the housing (free centre)

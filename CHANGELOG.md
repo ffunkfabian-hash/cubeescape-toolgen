@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.18.0 – Bedrock (20.10.2026)
+
+Konzeptgeometrie von cubeescape-formgen (geometry-spec 1) als Bauquelle: `data/concepts/` mit Herkunft (Release, Zip- und Datei-sha256),
+`scripts/import_concepts.py`, Lader `concept_spec.py`/`concept_kit.py`. Pilot: Sturmgewehr = KG02 aus claude-v0.15 (Variante G, holo, Griffneigung 10,27°, Ladehebel p32 im Use-Clip,
+offenes Visierfenster ohne Glas, neuer Anker `Socket_Reticle`, benannte Stützhand-Korrektur). Vertrag 4 additiv
+(`minimum_consumer.concept_models`: CE-Version „offen“). Alle Dreiecksbudgets +25 % (Entscheidung des Nutzers 20.10.2026: Welt
+4 500–8 000 → 6 000–10 000, Roboter 12 000 → 15 000, Ego 12 000–16 000 → 15 000–20 000; CE muss `FrameBudgetEnvelopeTests` anheben,
+`minimum_consumer.triangle_budgets` „offen“). Bericht: [docs/versions/0.18.md](docs/versions/0.18.md).
+
 ## 0.17.2 – Retrace (19.10.2026)
 
 Golden: belegter Ausweichwert für die Raketenwerfer-Roboter-Normalkarte (ein Texel, Cycles-Bake-Kipp zwischen Läufen derselben Quellen; kein Inhalt geändert).

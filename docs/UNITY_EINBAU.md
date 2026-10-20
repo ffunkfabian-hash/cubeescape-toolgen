@@ -173,7 +173,7 @@ Die neun Waffen benennen ihre Material-Slots nach der Ausrüstungskonvention von
 `Assets/Scripts/Equipment/ColorChannels.cs`): `MT_Primary` (Hauptschale), `MT_Secondary` (Rahmen, Verkleidung), `MT_Accent`
 (Akzente, Markierungen), `MT_Metal` (Lauf, Mechanik), `MT_Energy` (Energiezellen, Spulen, Elementleuchten), `MT_Emission`
 (Anzeigen, Visier, Statuslichter) und `MT_Detail` (Gummi, Glas, kleine dunkle Teile). Jede Waffe nutzt alle sieben im Welt- und
-Ego-Modell; die Roboterhände des Ego-Modells behalten ihre Palettenmaterialien (`M_*`), damit das Bemalen der Waffe sie nicht färbt.
+Ego-Modell (Konzeptwaffen ab 0.18: die Kanäle ihres Blatts, KG02 ohne `MT_Energy`; `equipment.channels` nennt sie); die Roboterhände des Ego-Modells behalten ihre Palettenmaterialien (`M_*`), damit das Bemalen der Waffe sie nicht färbt.
 
 - Vertrag: `format` 2, `material_convention` (`equipment_channels` bei den Waffen, `palette` bei den übrigen Werkzeugen) und Block
   `equipment`: je Kanal `slot`, Standardfarbe (`color_srgb`), `metallic`, `roughness`, `emission`, `material_kind` (Materialart von
@@ -332,6 +332,36 @@ Gemessen mit Toolgen 0.12.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:
   animierten Modell; ohne den Anker nutzt es das Ersatz-Visier (`ads.sight_back_m`, `sight_up_m`, `sight_offset_m`); die neuen Felder und
   Anker sind zusätzlich. `--contract 3` (ohne UV1/Karten), `2` und `1` enthalten die Anker und Felder ebenfalls (Zusatzdaten, die ältere
   Stände nicht lesen).
+
+## Konzeptwaffen (0.18.0 Bedrock, Vertrag 4 additiv)
+
+Das Sturmgewehr (`assault_rifle`) ist ab Toolgen 0.18.0 das Konzeptmodell KG02 „Kantenläufer“ (Variante G) aus cubeescape-formgen
+(Technik: [TECHNIK](TECHNIK.md) › Konzeptmodelle). ID, Asset, Clipnamen, Knoten (`Anim_Bolt`, `Anim_Magazine`) und die vier bisherigen
+Anker bleiben; neu oder geändert:
+
+- **Teilnamen** wie im Blatt: `SM_PG_<Bezeichnung>_<id>` (z. B. `SM_PG_Griff_p03`, `SM_PG_Handschutz_p11`, `SM_PG_Gehaeuse_p09`,
+  `SM_PG_Magazin_p07` unter `Anim_Magazine`, Visierrahmen `SM_PG_Rahmen_p24`). Wer Teile beim Namen sucht, sucht neu.
+- **`hold`:** `grip_tilt_degrees` 10,27 (bisher 16), `sight_kind` `holo` (bisher `reflex`), neu `reticle_socket` (`Socket_Reticle`) mit
+  `reticle_note`. `ads_eye_distance_m` bleibt 0,379 (Wert von Cube Escape).
+- **Visier:** offenes Holo-Fenster ohne Glas (Entscheidung des Nutzers 20.10.2026). Die Visierlinie läuft durch die Fenstermitte, nicht
+  über das Gehäuse; `Socket_Sight` liegt am hinteren Fensterrand auf der Linie, **`Socket_Reticle` (neu)** in der Fenstermitte – dort
+  zeichnet der Abnehmer Tönung und Absehen. Der Rahmen hat keinen Kollider, das Fenster bleibt frei (Öffnungsprobe im Spiel-Export).
+- **`Socket_SupportHand`** liegt 10 cm hinter der Handschutzmitte des Blatts (benannte Korrektur, Ego-Bildregel; Entscheidung des Nutzers).
+- **`Anim_Bolt`** trägt den Ladehebel `SM_PG_Ladehebel_p32` (formgen claude-v0.15, +X-Seite des Gehäuses); der Use-Clip schiebt ihn wie
+  bisher 50 mm nach hinten (Bild 14–28) und zurück.
+- **Kanäle:** KG02 nutzt sechs der sieben Ausrüstungs-Slots; `MT_Energy` fehlt, das Leuchten des Blatts (Emitter) ist `MT_Emission`
+  (Orange). `equipment.channels` und die Maskenkarten nennen nur diese sechs; das Element (`arc`) bleibt Wurzeleigenschaft.
+- **Block `concept`** (nur Konzeptwaffen): Blatt, Variante, Format, Repository, Release, Commit, Zip- und Datei-sha256, `sight_window`.
+- **Befund für Cube Escape:** beim hohen Holovisier hält der Bildausschnitt der Zielpose erst ab etwa 0,475 m Augenabstand
+  (`qa_game_fps.json` › `ads.eye_distance_range_m`); beim Profilabstand 0,379 m fehlen die Finger der Griffhand. Das ist kein Abbruch
+  (wie in der Tabelle oben), aber ein Wert für die Übernahme.
+- **Dreiecksbudgets (alle Werkzeuge, 0.18):** +25 % (Welt bis 10 000, Ego bis 20 000, Roboter 15 000 LOD0-Dreiecke; Werte in
+  `data/game_budget.json`, je Vertrag `budget`). `minimum_consumer.triangle_budgets`: die CE-Version, die `FrameBudgetEnvelopeTests`
+  (bisher 16 000 Ego, 8 000 Welt) anhebt – „offen“.
+- **Mindestversion des Abnehmers:** `minimum_consumer.concept_models` – die Cube-Escape-Version, die das Konzeptmodell zuerst übernimmt
+  (CE-A „Refit“, **noch nicht reserviert: „offen“**). Cube Escape ab 0.98 liest das Paket (gleiche IDs, Anker, Clips), ist aber auf das alte
+  Modell abgestimmt (Griffneigung, Handpose, Visierart). Das alte Sturmgewehr: `git checkout v0.17.2 && python3 toolgen/generate_tools.py
+  --tier standard`.
 
 ## Prüfen
 

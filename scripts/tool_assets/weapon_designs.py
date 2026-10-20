@@ -11,6 +11,10 @@ move {node, channel location|rotation, axis 0..2, keys [(frame, offset m | degre
 Socket_Sight / Socket_Eye, equal to the AimIdle line of data/ego_clips.json), ``trigger`` and ``build(kit)``.
 Every weapon needs the sockets Socket_Hand, Socket_Muzzle, Socket_SupportHand and Socket_CenterOfMass; the kit adds
 Socket_Sight (and Socket_Eye for scopes).
+
+``concept`` (Toolgen 0.18, TG-A): the geometry comes from a formgen concept sheet in data/concepts/ (concept_spec.py,
+concept_kit.py) instead of ``build``; part names are those of the spec (``SM_PG_<Label>_<id>``), the sockets come from the
+spec and Socket_Reticle is added. ``DESIGN_PICK`` lists the weapons that use a concept.
 """
 import math
 import re
@@ -223,42 +227,16 @@ def pistol(k):
 
 
 # ----------------------------------------------------------------------------------------------- 2 assault rifle
+def concept_build(k, key):
+    """A weapon from its formgen concept sheet (Toolgen 0.18, TG-A): the kit builds the sheet's meshes, pivots (the Use
+    clip's nodes; nodes without a part stay empty) and sockets."""
+    spec = DESIGNS[key]
+    return k.concept(spec['concept'], sorted({move['node'] for move in spec['use_clip']}))
+
+
 def assault_rifle(k):
-    """Assault rifle: long receiver with top rail and optic, curved magazine, stock, handguard with glow strips."""
-    zb = .085
-    grip(k, .100, .036, .046, ribs=3)
-    k.box('ReceiverLower', (0, 0, .058), (.046, .19, .040), 'Primary', .008)
-    k.box('ReceiverUpper', (0, -.03, .092), (.050, .30, .040), 'Primary', .008)
-    rail(k, 'TopRail', -.17, .11, .117)
-    k.box('MagWell', (0, -.092, .040), (.040, .070, .020), 'Secondary', .005)
-    mag = k.pivot('Anim_Magazine', (0, -.095, .038))
-    magazine(k, 'Magazine', [(-.115, .038), (-.072, .038), (-.070, -.030), (-.082, -.095), (-.122, -.100), (-.118, -.030)], .032, parent=mag)
-    for side in (-1, 1):
-        k.glow('MagWindow_%d' % side, (side * .0165, -.095, -.040), (.002, .018, .050), parent=mag)
-    trigger_group(k, -.066, -.008, .010, .040)
-    stock(k, 'Stock', [(.095, .093), (.27, .103), (.345, .098), (.345, -.045), (.31, -.05), (.205, .008), (.095, .040)],
-          .040, 'Detail', (.044, .014, .148), .352, .028)
-    k.box('StockCore', (0, .161, .052), (.030, .13, .030), 'Secondary', .006)   # 0.12.0: front face 1 mm off the stock's (z-fighting)
-    k.box('Handguard', (0, -.235, zb), (.058, .21, .054), 'Primary', .010)
-    k.box('HandguardRail', (0, -.235, zb - .031), (.024, .20, .008), 'Secondary', .002)
-    side_vents(k, 'HandguardVent', -.175, .028, 5, zb + .004, .0295)
-    for side in (-1, 1):
-        k.glow('HandguardGlow_%d' % side, (side * .0295, -.235, zb - .016), (.002, .15, .006))
-    k.cyl('Barrel', (0, -.43, zb), .011, .17, 'Metal', n=20)
-    k.cyl('GasBlock', (0, -.37, zb), .016, .035, 'Secondary', n=20)
-    k.box('FrontSight', (0, -.37, zb + .032), (.010, .012, .030), 'Metal', .002)
-    muzzle_device(k, -.54, zb, .019, .07)
-    k.box('Optic', (0, -.025, .138), (.034, .085, .038), 'Secondary', .007)
-    k.glow('OpticGlow', (0, -.025, .1585), (.012, .05, .002))
-    k.box('OpticLensFrame', (0, -.0675, .138), (.028, .004, .030), 'Detail', .002)
-    bolt = k.pivot('Anim_Bolt', (0, 0, .095))
-    k.box('BoltCover', (.0275, -.02, .095), (.007, .085, .026), 'Metal', .003, parent=bolt)
-    k.cyl('BoltKnob', (.034, .02, .098), .008, .012, 'Secondary', axis='x', n=14, bevel=.001, parent=bolt)
-    assault_rifle_modules(k, mag)
-    k.socket('Socket_Hand', (0, 0, 0))
-    k.socket('Socket_Muzzle', (0, -.578, zb))
-    k.socket('Socket_SupportHand', (0, -.235, zb))
-    k.socket('Socket_CenterOfMass', (0, -.06, .06))
+    """Assault rifle (0.18): concept KG02 "Kantenläufer", variant G (data/concepts/KG02.geo.json), holo sight VS02 open."""
+    concept_build(k, 'assault_rifle')
 
 
 # ------------------------------------------------------------------------------------------------ 3 pulse rifle
@@ -545,27 +523,6 @@ def pistol_modules(k, slide, mag):
     accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r, parent=mag)
 
 
-def assault_rifle_modules(k, mag):
-    """Assault rifle: ammo readouts (side, optic back), receiver panels, stock cell window, handguard fins, accent cap."""
-    side_armor(k, 'UpperArmor', [(-.178, .077), (-.088, .077), (-.074, .097), (-.090, .108), (-.165, .108), (-.178, .097)], .025)
-    side_armor(k, 'LowerArmor', [(-.093, .043), (-.052, .043), (-.040, .074), (-.093, .074)], .023, .0025, 'Metal')
-    for side in (-1, 1):
-        panel(k, 'ReceiverPanel_%d' % side, (side * .0262, .075, .092), (.0025, .058, .024))
-    display(k, 'AmmoDisplay', (.0236, .042, .058), (.0016, .036, .018), 'x', bars=4)
-    display(k, 'OpticDisplay', (0, .0184, .138), (.024, .0016, .016), 'y', bars=3)
-    k.box('OpticHood', (0, -.060, .1595), (.038, .020, .007), 'Primary', .002)
-    # 0.12.0: frame and window 0.8 mm proud of the stock inset (its face lies at x = .0215; coplanar faces z-fought)
-    k.box('StockCellFrame', (.0213, .245, .050), (.002, .070, .026), 'Secondary', .0006)
-    k.glow('StockCellWindow', (.0226, .245, .050), (.0012, .056, .014))
-    k.bolts('StockBolt', [(.0215, .200, .050), (.0215, .290, .050)], radius=.0026, depth=.003)
-    heat_sink(k, 'HandguardFin', (0, -.175, .1145), 5, .03, (.042, .006, .005))
-    accent(k, 'HandguardCap', (0, -.3425, .085), (.060, .005, .056))
-    accent(k, 'MagazineBase', (0, -.102, -.101), (.034, .044, .007), parent=mag)
-    for side in (-1, 1):
-        k.box('MuzzleFin_%d' % side, (side * .022, -.55, .085), (.006, .04, .014), 'Metal', .0015)
-    k.cyl('ChargingConduit', (.026, -.110, .070), .0035, .075, 'Detail', n=10, bevel=.0005)
-
-
 def pulse_rifle_modules(k):
     """Pulse rifle: side burst readout, twin rear energy cells, chassis heat sink, accent stripes, shroud cap."""
     side_armor(k, 'NoseArmor', [(-.195, .036), (-.135, .036), (-.124, .062), (-.140, .098), (-.190, .098)], .026)
@@ -682,9 +639,12 @@ DESIGNS = {
     },
     'assault_rifle': {
         'asset': 'CubeEscape_AssaultRifle', 'clip': 'AssaultRifle_Use', 'class': 'assault_rifle', 'element': 'arc',
-        'grip_tilt_degrees': 16, 'grip_part': 'Grip', 'support_part': 'Handguard',
-        'view_center': (0, -.12, .05), 'view_scale': 1.15, 'trigger': 'FireAction', 'build': assault_rifle,
-        'fire_frame': 14, 'sight': sight_rule('reflex', ('Optic', 'OpticGlow', 'OpticHood'), 'top', .72, .004),
+        'concept': 'KG02.geo.json', 'grip_tilt_degrees': 10.27, 'grip_part': 'Griff_p03', 'support_part': 'Handschutz_p11',
+        'view_center': (0, -.15, .08), 'view_scale': 1.15, 'trigger': 'FireAction', 'build': assault_rifle,
+        # holo sight with an open window (user decision 20.10.2026, glass way A): the line runs through the window frame
+        'fire_frame': 14, 'sight': sight_rule('holo', ('Rahmen_p24',), 'center', .72),
+        # Anim_Bolt: KG02 draws no bolt (formgen moving_parts parts null, question in cubeescape-rules#1); the node stays
+        # (contract), an empty pivot until formgen names a part
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
                       'keys': slide_keys((14, 0), (16, .05), (22, .006), (28, 0))}],
     },
@@ -749,6 +709,10 @@ DESIGNS = {
 }
 
 
+# Weapons built from a formgen concept sheet (Toolgen 0.18, TG-A; formgen plan decision 1: variant G): tool id -> sheet.
+DESIGN_PICK = {key: spec['concept'].removesuffix('.geo.json') for key, spec in DESIGNS.items() if spec.get('concept')}
+
+
 def decal(part, face, rect, image, channel, rotation=0):
     """Decal anchor (toolgen/decals.py): ``part`` source part (without SM_PG_), ``face`` the box face it is projected on
     (+x is the side the first-person camera sees), ``rect`` (u0, v0, u1, v1) as fractions of the part's bounding box on that
@@ -761,8 +725,8 @@ def decal(part, face, rect, image, channel, rotation=0):
 DECALS = {
     'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
                decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
-    'assault_rifle': [decal('ReceiverLower', '+x', (.5, .2, .658, .5), 'mil_ar2', 'Secondary'),
-                      decal('Handguard', '+x', (.048, .41, .19, .69), 'tech_bars', 'Accent')],
+    'assault_rifle': [decal('Gehaeuse_p09', '+x', (.30, .18, .44, .40), 'mil_ar2', 'Secondary'),
+                      decal('Handschutz_p11', '+x', (.10, .55, .26, .80), 'tech_bars', 'Accent')],
     'pulse_rifle': [decal('Chassis', '+x', (.735, .53, .803, .767), 'tech_ring', 'Emission'),
                     decal('Shroud', '+x', (.06, .45, .22, .7), 'tech_bars', 'Accent')],
     'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
@@ -804,22 +768,30 @@ RIGID_SLOPE = .35
 CELL_PART = re.compile(r'^(.+?)(Core|Cap_-?\d+|Cage_\d+)$')
 
 
-def robot_fit(length, cross, knots, support, support_part, body, barrel):
+def robot_fit(length, cross, knots, support, support_part, body, barrel, grip_zone=None):
     """The robot variant of one weapon: ``length`` = CE length in the hand (m), ``cross`` = x/z factor, ``knots`` the bore map
-    without the grip zone (which robot_knots adds), ``support`` the support-hand socket (life metres)."""
-    return {'length_m': length, 'cross': cross, 'knots': knots, 'support': support, 'support_part': support_part,
-            'body': body, 'barrel': barrel}
+    without the grip zone (which robot_knots adds), ``support`` the support-hand socket (life metres), ``grip_zone`` the
+    half length of the zone around Socket_Hand with slope ``cross`` when the grip is deeper than GRIP_ZONE (0.18)."""
+    fit = {'length_m': length, 'cross': cross, 'knots': knots, 'support': support, 'support_part': support_part,
+           'body': body, 'barrel': barrel}
+    if grip_zone is not None:
+        fit['grip_zone'] = grip_zone
+    return fit
+
+
+def grip_zone(fit):
+    return fit.get('grip_zone', GRIP_ZONE)
 
 
 def robot_knots(fit):
     """The full bore map: the weapon's knots plus the grip zone (slope ``cross`` around Socket_Hand), sorted by life y."""
-    zone = [(GRIP_ZONE, GRIP_ZONE * fit['cross']), (-GRIP_ZONE, -GRIP_ZONE * fit['cross'])]
+    zone = [(grip_zone(fit), grip_zone(fit) * fit['cross']), (-grip_zone(fit), -grip_zone(fit) * fit['cross'])]
     return sorted(fit['knots'] + zone)
 
 
 def robot_y(fit, y):
     """Robot y of the life y (piecewise linear, the end segments extend beyond the outer knots)."""
-    if -GRIP_ZONE <= y <= GRIP_ZONE:
+    if -grip_zone(fit) <= y <= grip_zone(fit):
         return y * fit['cross']           # exact in the grip zone: Socket_Hand stays at the origin
     knots = robot_knots(fit)
     index = min(max(next((i for i, (a, _) in enumerate(knots) if a > y), len(knots)) - 1, 0), len(knots) - 2)
@@ -871,8 +843,9 @@ def robot_cell_map(fit, low_y, high_y):
 
 ROBOT = {
     # CE length in the hand (Docs/EQUIPMENT.md, 0.82): length = Toolgen length x heldScale; stock end at +0.11 m.
-    'assault_rifle': robot_fit(.67, 1.5, [(.359, .11), (-.092, -.09), (-.576, -.56)], (0, -.092, .040), 'MagWell',
-                               ('ReceiverLower', 'ReceiverUpper', 'TopRail'), 'Barrel'),
+    # 0.18 KG02: the grip is 93 mm deep (zone +-50 mm keeps it unbent), support at the rear bottom of the magazine well p08
+    'assault_rifle': robot_fit(.67, 1.5, [(.3132, .11), (-.14, -.09), (-.6208, -.56)], (0, -.14, .050), 'Part_p08',
+                               ('Gehaeuse_p09',), 'Lauf_p13', grip_zone=.05),
     'pulse_rifle': robot_fit(.66, 1.55, [(.342, .11), (-.10, -.09), (-.52, -.55)], (0, -.10, .035), 'Chassis',
                              ('Chassis',), 'Barrel'),
     'shotgun': robot_fit(.67, 1.35, [(.389, .11), (-.10, -.09), (-.515, -.56)], (0, -.10, .035), 'Receiver',

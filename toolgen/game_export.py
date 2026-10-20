@@ -107,6 +107,8 @@ OPENING_PROBES = {
 for _weapon in ("pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle", "trace_rifle",
                 "rocket_launcher"):
     OPENING_PROBES[_weapon] = [("Socket_Muzzle", None, 0.0, (0.0, -.03, 0.0)), ("Socket_Muzzle", None, 0.0, (0.0, -.10, 0.0))]
+# Toolgen 0.18: the open window of a concept sight (no glass, user decision 20.10.2026) stays free: its centre on the line.
+OPENING_PROBES["assault_rifle"].append(("Socket_Reticle", None, 0.0, (0.0, 0.0, 0.0)))
 # Element glow source of the weapon kit (scripts/tool_assets/weapon_kit.py, Kit.glow_material) per element.
 ELEMENT_SOURCES = {"kinetic": "PG_Kinetic", "energy": "PG_Cyan", "solar": "PG_Amber", "void": "PG_Void", "arc": "PG_Arc"}
 # Blender (Z up, front -Y) -> Unity (Y up, front +Z): FBX axis_forward -Z / axis_up Y imported with Unity's
@@ -247,7 +249,7 @@ def equipment_block(palette, used):
                                "M_* as in Toolgen 0.7"}
 
 
-ROBOT_BUDGET_LIMIT = 12000     # world cap decided by the user (17.10.2026, CE FrameBudgetEnvelopeTests follows)
+ROBOT_BUDGET_LIMIT = 15000     # world cap decided by the user (17.10.2026: 12000; 20.10.2026: all budgets +25 %), CE follows
 
 
 def budget_errors(budget, tools, robots=()):
@@ -663,7 +665,8 @@ def collision_boxes(root, groups, scene):
             points = np.concatenate([mesh_points(obj, depsgraph) for obj in model]) @ inverse[:3, :3].T + inverse[:3, 3]
             limits[space.name] = (points.min(axis=0).tolist(), points.max(axis=0).tolist())
         for obj in group.members:
-            if obj.get("ce_role") == "neon" or visibility_animated(obj, root):
+            # Toolgen 0.18: ce_collision "none" (a concept sight frame around its open window) gets no box either
+            if obj.get("ce_role") == "neon" or obj.get("ce_collision") == "none" or visibility_animated(obj, root):
                 continue
             spaces.setdefault(space.name, []).extend(part_boxes(obj, space, depsgraph, limits[space.name]))
     colliders = []
@@ -891,6 +894,25 @@ def reduce_to_budget(renderers, budget, collection):
     total = sum(triangles(obj.data) for obj in renderers)
     keep = budget_ratio(total, budget)
     if keep >= 1.0:
+        # Toolgen 0.18 (models under their budget: KG02, then every budget +25 %): the collapse decimation used to
+        # triangulate every renderer and reset its UV flags. Without it, n-gons (more than four corners) become triangles
+        # here (glTF tangents on UV1 need tris and quads; shape keys follow), and the UV flags the join into an empty mesh
+        # (merge_group) leaves unset are restored: UVMap renders, UV1 (contract 4) is the active map like after
+        # surface.new_uv1.
+        import bmesh
+        for obj in renderers:
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+            ngons = [face for face in bm.faces if len(face.verts) > 4]
+            if ngons:
+                bmesh.ops.triangulate(bm, faces=ngons, quad_method="BEAUTY", ngon_method="BEAUTY")
+                bm.to_mesh(obj.data)
+                obj.data.update()
+            bm.free()
+            layers = obj.data.uv_layers
+            if len(layers):
+                layers[0].active_render = True
+                layers.active = layers[surface_maps.UV1_NAME] if surface_maps.UV1_NAME in layers else layers[0]
         return renderers, 1.0
     candidates = decimate_set(renderers, keep, collection, lambda obj: obj.name + "_reduced", .04)
     result = []
@@ -1017,9 +1039,47 @@ RENAMED_CONSUMER = ("Cube Escape 0.98 „Recast“ (scout_rifle -> trace_rifle m
                     "it. Older package for them: git checkout v0.16.0 && python3 toolgen/generate_tools.py --tier standard")
 
 
-def consumer_block():
-    """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the two requirements of this package, kept apart."""
-    return {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER}
+# Toolgen 0.18 (TG-A): a weapon built from a formgen concept sheet (tools.json ``concept``) changes part names, hold values
+# (grip tilt, sight kind) and adds Socket_Reticle; the Cube Escape version that first imports it is not reserved yet.
+CONCEPT_CONSUMER = ("Cube Escape „offen“ (CE-A „Refit“, version not reserved yet): the first version that imports a concept "
+                    "model (part names SM_PG_<Label>_<id>, hold.grip_tilt_degrees and hold.sight_kind from the sheet, "
+                    "Socket_Reticle, open sight window without glass). Cube Escape 0.98 and later read the package (same "
+                    "ids, anchors, clips) but are not tuned to it. The model before: git checkout v0.17.2 && python3 "
+                    "toolgen/generate_tools.py --tier standard")
+
+
+# Toolgen 0.18: all triangle budgets +25 % (user decision 20.10.2026); Cube Escape's FrameBudgetEnvelopeTests caps LOD0 at 16000
+# (viewmodel) and 8000 (world) and has to follow before it takes this package.
+BUDGET_CONSUMER = ("Cube Escape „offen“ (the version that raises FrameBudgetEnvelopeTests to the budgets of data/game_budget.json "
+                   "since Toolgen 0.18: world up to 10000, viewmodel up to 20000, robot 15000 LOD0 triangles; was 8000/16000/"
+                   "12000). Older Cube Escape versions fail that test with this package. Budgets before: git checkout v0.17.2 "
+                   "&& python3 toolgen/generate_tools.py --tier standard")
+
+
+def consumer_block(tool=None):
+    """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the package's requirements, kept apart; 0.18 adds
+    ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon)."""
+    block = {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER,
+             "triangle_budgets": BUDGET_CONSUMER}
+    if tool and tool.get("concept"):
+        block["concept_models"] = CONCEPT_CONSUMER
+    return block
+
+
+def concept_block(tool, report):
+    """Toolgen 0.18, additive: where a concept weapon's geometry comes from and what Toolgen decided on top of it. ``report``
+    is the ``concept`` block of the model's qa_geometry*.json (concept_kit.build), so only concept weapons read it and an
+    import of further sheets does not rebuild the other tools' exports."""
+    entry, source = report["provenance"], report["source"]
+    return {"sheet": tool["concept"], "variant": entry["variant"], "format": source["format"],
+            "format_version": source["format_version"], "repository": source["repository"], "release": entry["release"],
+            "commit": source["commit"], "asset": source["asset"], "asset_sha256": source["asset_sha256"],
+            "file_sha256": entry["sha256"],
+            "corrections": [{key: item[key] for key in ("anchor", "spec_m", "toolgen_m", "reason", "decision")}
+                            for item in report.get("corrections", [])],
+            "sight_window": "open: the sight glass is not built (user decision 20.10.2026); tint and reticle are the "
+                            "consumer's overlay at Socket_Reticle",
+            "minimum_consumer": CONCEPT_CONSUMER}
 
 
 def renamed_block(tool):
@@ -1054,6 +1114,11 @@ def hold_block(tool):
             **({"sight_socket": "Socket_Sight", "sight_kind": hold["sight_kind"],
                 "eye_socket": "Socket_Eye" if hold["sight_kind"] == "scope" else None,
                 "eye_radius_m": hold.get("eye_radius_m"),
+                **({"reticle_socket": hold["reticle_socket"],
+                    "reticle_note": "Toolgen 0.18 (concept sights, additive): Socket_Reticle at the centre of the open "
+                                    "sight window on the line of sight; the window carries no glass (user decision "
+                                    "20.10.2026), tint and reticle are the consumer's overlay there."}
+                   if hold.get("reticle_socket") else {}),
                 "ads_eye_distance_m": hold["eye_distance_m"],
                 "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
                               "optic, eyepiece of a scope). Only its position is contract: the empty's own rotation in "
@@ -1116,7 +1181,8 @@ def socket_surface_distances(root):
 
 
 def build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT, ego_infos=(), ego_block=None, renamed=None):
+                   viewmodel=None, surface=None, contract=CONTRACT_FORMAT, ego_infos=(), ego_block=None, renamed=None,
+                   concept=None):
     def renderer_entry(obj):
         mesh = obj.data
         return {"name": obj.name, "parent": obj.parent.name, "role": obj["ce_role"], "lod": obj["ce_lod"],
@@ -1174,7 +1240,8 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
         "colliders": colliders,
         **({"hold": hold_block(tool)} if tool.get("hold") else {}),
         **({"renamed_from": renamed} if renamed else {}),
-        "minimum_consumer": consumer_block(),
+        "minimum_consumer": consumer_block(tool),
+        **({"concept": concept} if concept else {}),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
         "clips": ([clip_info] if clip_info else []) + list(ego_infos),
@@ -1822,8 +1889,12 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
     ego_infos, ego_block = [], None
     if ego:
         ego_infos, ego_block = ego_contract(ego, game, ego_take_name(clip_name), source["fps"], animated_nodes)
+    concept = None
+    if tool.get("concept"):         # 0.18: the world (or robot) build's concept report, see concept_block
+        report = json.loads((work / ("qa_geometry_robot.json" if robot else "qa_geometry.json")).read_text())["concept"]
+        concept = concept_block(tool, report)
     document = build_contract(tool, source_info, root, renderers, lods, colliders, clip_info, palette, files, budget_info,
-                              camera, surface, contract, ego_infos, ego_block, renamed)
+                              camera, surface, contract, ego_infos, ego_block, renamed, concept)
     if robot_info:
         document["variant"] = "robot"
         document["robot"] = robot_info

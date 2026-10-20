@@ -22,6 +22,7 @@ import bmesh
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
+import concept_kit
 import sight
 import weapon_designs
 from weapon_gif import FRAMES
@@ -45,6 +46,7 @@ class Kit:
     def __init__(self, element, grip_tilt):
         self.element = element
         self.grip_tilt = grip_tilt
+        self.concept_report = None
         self.glow_material = {'kinetic': 'Kinetic', 'energy': 'Cyan', 'solar': 'Amber', 'void': 'Void', 'arc': 'Arc'}[element]
 
     @staticmethod
@@ -103,6 +105,11 @@ class Kit:
 
     def socket(self, name, location):
         return HELPER['empty'](name, STATE['GEO'], self.root, location)
+
+    def concept(self, file, clip_nodes):
+        """Toolgen 0.18 (TG-A): the whole geometry, pivots and sockets from a formgen concept sheet (concept_kit.py)."""
+        self.concept_report = concept_kit.build(self, file, clip_nodes, STATE)
+        return self.concept_report
 
     def pivot(self, name, location, parent=None):
         """Empty that the Use clip animates (identity rotation; meshes parented to it keep world coordinates)."""
@@ -185,6 +192,7 @@ def world(key):
     define_materials()
     kit = Kit(spec['element'], tool['hold']['grip_tilt_degrees'])
     spec['build'](kit)
+    concept = kit.concept_report
     for name in ('Socket_Hand', 'Socket_Muzzle', 'Socket_SupportHand', 'Socket_CenterOfMass'):
         if not any(obj.name == name for obj in STATE['OBJECTS']):
             raise RuntimeError('Design %s lacks %s' % (key, name))
@@ -194,6 +202,8 @@ def world(key):
         spec = weapon_designs.robot_spec(key, pivots)
         fit_report = apply_robot_fit(spec['robot'])
     sight_report = sight_sockets(kit, key, spec['sight'])
+    if concept:
+        sight_report['concept'] = concept_sight_check(concept, sight_report, fit_report)
     qa = HELPER['validate']()
     qa.update(tags=['tool', 'weapon', spec['class'], spec['element'], 'handheld', 'robot-classic', 'white-shell'],
               pivot='asset root = grip centre (Socket_Hand); forward -Y, up +Z',
@@ -202,6 +212,8 @@ def world(key):
                       'grip_tilt_degrees': tool['hold']['grip_tilt_degrees']})
     qa['sockets_checked'] = socket_report(spec)
     qa['sight'] = sight_report
+    if concept:
+        qa['concept'] = concept
     if robot:
         qa['variant'] = 'robot'
         qa['robot'] = robot_report(spec, qa, fit_report)
@@ -339,6 +351,23 @@ def sight_sockets(kit, key, rule=None):
         kit.socket('Socket_Eye', found['eye'])
     return {'kind': rule['kind'], 'parts': found['parts'], 'mode': rule['mode'], 'socket_sight_m': list(found['sight']),
             'socket_eye_m': list(found['eye']) if found['eye'] else None}
+
+
+SIGHT_TOLERANCE_M = .0005
+
+
+def concept_sight_check(concept, found, fit_report):
+    """The line of sight of the frame parts (sight.py, the AimIdle line) against the spec's sight point
+    (sight.socket_sight_rear_m): Socket_Sight is set on the line, the two must agree within SIGHT_TOLERANCE_M (life-size
+    model; the robot variant compares the deformed point)."""
+    expected = Vector(concept['sockets']['Socket_Sight'])
+    if fit_report is not None:
+        return {'spec_socket_sight_m': list(expected), 'note': 'robot variant: the line follows the deformed frame'}
+    delta = (Vector(found['socket_sight_m']) - expected).length
+    if delta > SIGHT_TOLERANCE_M:
+        raise RuntimeError('Socket_Sight %.2f mm off the concept sight point' % (delta * 1000))
+    return {'spec_socket_sight_m': list(expected), 'distance_m': round(delta, 7), 'tolerance_m': SIGHT_TOLERANCE_M,
+            'socket_reticle_m': concept['sockets'].get('Socket_Reticle')}
 
 
 def socket_report(spec):

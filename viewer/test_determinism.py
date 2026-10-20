@@ -22,7 +22,10 @@ LIMIT_PX = 1.0
 # Known unstable models (largest differing pixels, Mac 16.10.2026). Reported as "expected", never skipped; remove an entry
 # once the run prints KNOWN_NOW_STABLE. The muzzle faces of assault/sniper/trace rifle and SMG (2-30 px) and the fusion
 # rifle (2.2 px) are fixed in 2ce69db and not listed: if they still flip, the check fails.
-KNOWN_UNSTABLE = {"portal_emitter/world": 1.7}   # 3 of 11 at 1.6-1.7 px (Mac, 3396e1f), cause not found, borderline
+KNOWN_UNSTABLE = {"portal_emitter/world": 1.7,   # 3 of 11 at 1.6-1.7 px (Mac, 3396e1f), cause not found, borderline
+                  # 0.18: 2 of 15 at 1.3 px; identical viewer data in v0.17.2 gave 0 of 15 (0.9 px) and 1 of 15 (1.0 px) on the
+                  # same Mac - borderline before this version, cause not found
+                  "magnet_gripper/world": 1.3}
 
 
 def difference(first, second):

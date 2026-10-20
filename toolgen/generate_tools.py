@@ -64,6 +64,9 @@ GENERATED = ("*", *("!" + pattern for pattern in IMAGE_PATTERNS))
 WITH_IMAGES = ("*", "!ViewerData/*")
 # Not part of the reference closure: data/tools.json is in every key as the tool's own entry (first_person.py reads
 # only its own spec), the pipeline modules as function fingerprints, the version only in the package key.
+# Toolgen 0.18 (TG-A): formgen concept sheets with provenance (scripts/import_concepts.py). In the reference closure like
+# data/*.json (weapon_designs.py names its sheet, concept_spec.py the provenance) and copied into the authoring copy.
+CONCEPTS = "data/concepts"
 POOL_EXCLUDED = {"data/tools.json", "toolgen/generate_tools.py", "toolgen/toolcache.py", "toolgen/build_toolset.py",
                  "toolgen/version.py", "toolgen/tool_contract.py"}
 
@@ -131,14 +134,16 @@ STAGES = (
     # Game export of the world model: merged renderers, matte palette, LOD1, collision, unity_contract.json; adds the
     # viewer model "game" (root <asset>_Game, world clip).
     Stage("game", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--contract", "{game_contract}"),
-          reads=("{asset}.blend",), sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
+          reads=("{asset}.blend", "qa_geometry.json"),    # 0.18: qa_geometry.json carries a concept weapon's provenance
+          sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game.json",),
           variants=(Variant("game", "{asset}_Game", clip=("clip",), node="{asset}"),)),
     # The same for the first-person model (hands, arms, tool): own triangle budget, no collision, camera data in
     # unity_contract_fps.json. Viewer model "fps_game" (root <asset>_FPS_Game, LOD0 only): the Ego view of the reduced model.
     Stage("game_fps", "toolgen/game_export.py",
           args=("--directory", "{work}", "--tool", "{id}", "--viewmodel", "--contract", "{game_contract}"),
-          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend"),   # world model: its UV1 (contract 4)
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend",   # world model: its UV1 (contract 4)
+                 "qa_geometry.json"),                   # 0.18: concept provenance
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game_fps.json",),
           variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),
@@ -296,7 +301,7 @@ class SourceIndex:
         self.root = Path(root)
         self.hashes, self.references = {}, {}
         found = [*(self.root / "scripts/tool_assets").rglob("*"), *(self.root / "toolgen").glob("*.py"),
-                 *(self.root / "data").glob("*.json")]
+                 *(self.root / "data").glob("*.json"), *(self.root / CONCEPTS).glob("*.json")]
         relative = (str(path.relative_to(self.root)) for path in found
                     if path.is_file() and path.suffix in (".py", ".json", ".cs") and "__pycache__" not in path.parts)
         self.pool = sorted(path for path in relative if path not in POOL_EXCLUDED)
@@ -350,11 +355,36 @@ def script_source(run, tool):
     return run.script if run.script.startswith("toolgen/") else f"scripts/tool_assets/{tool['folder']}/{run.script}"
 
 
+CONCEPT_SHARED = ("provenance.json", "corrections.json")
+
+
+def concept_sources(tool):
+    """0.18: the concept files a tool depends on - its own sheet and the shared provenance/correction files - or none."""
+    if not tool.get("concept"):
+        return set()
+    return {f"{CONCEPTS}/{tool['concept']}.geo.json", *(f"{CONCEPTS}/{name}" for name in CONCEPT_SHARED)}
+
+
 def stage_sources(run, tool, index):
     roots = [script_source(run, tool), *run.sources]
     if run.runner == "blender":
         roots.append("toolgen/run_asset.py")
-    return index.closure(roots)
+    # 0.18: weapon_designs.py names every concept sheet, but only the tool built from one depends on it (codex sol finding:
+    # otherwise each further sheet import rebuilt every weapon down to its maps)
+    own = concept_sources(tool)
+    return [path for path in index.closure(roots) if not path.startswith(CONCEPTS + "/") or path in own]
+
+
+def source_digest(relative, tool, index):
+    """Content hash of a source in a stage key. The shared concept files count only with the tool's own entry, so importing
+    or correcting another sheet leaves this tool's keys alone."""
+    if relative.startswith(CONCEPTS + "/") and Path(relative).name in CONCEPT_SHARED:
+        data = json.loads((index.root / relative).read_text())
+        part = {key: value.get(tool["concept"]) for key, value in data.items() if key in ("imported", "sheets")}
+        if "imported" in part and part["imported"]:
+            part["release"] = data["releases"].get(part["imported"]["release"])
+        return hashlib.sha256(json.dumps(part, sort_keys=True).encode()).hexdigest()
+    return index.digest(relative)
 
 
 @functools.lru_cache(maxsize=8)
@@ -389,7 +419,7 @@ def stage_key(run, tool, state, blender_version, index, render=None):
     payload = {
         "schema": STAGE_SCHEMA, "stage": run.name, "declaration": run.declaration, "tool": tool,
         "blender": blender_version, "pipeline": function_fingerprint(STAGE_CACHE_FUNCTIONS),
-        "sources": {relative: index.digest(relative) for relative in stage_sources(run, tool, index)},
+        "sources": {relative: source_digest(relative, tool, index) for relative in stage_sources(run, tool, index)},
         "inputs": {path: digest for path, digest in sorted(state.items()) if matches(path, run.reads)},
         "programs": {name: program_version(name) for name in run.programs}, "render": render,
     }
@@ -595,6 +625,8 @@ class ToolBuild:
         with tempfile.TemporaryDirectory(prefix=f".{self.tool['id']}-", dir=self.output) as temporary:
             authors = Path(temporary) / "authoring"
             shutil.copytree(ROOT / "scripts/tool_assets", authors)
+            if (ROOT / CONCEPTS).is_dir():         # 0.18: concept sheets for concept_spec.py (no network in the build)
+                shutil.copytree(ROOT / CONCEPTS, authors / "concepts")
             work = authors / self.tool["folder"]
             sources = {str(path.relative_to(work)) for path in work.rglob("*") if path.is_file()}
             state, records = {}, []

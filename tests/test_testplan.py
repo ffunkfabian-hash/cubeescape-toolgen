@@ -16,13 +16,15 @@ class TestPlanTests(unittest.TestCase):
     def test_examples_and_minimal_paths(self):
         cases = {"README.md": "docs", "data/tools.json": "data", "scripts/tool_assets/Portalkanone/create.py": "assets",
                  "toolgen/toolcache.py": "cache", "toolgen/generate_tools.py": "pipeline",
-                 "viewer/build.sh": "viewer", "tests/test_pipeline.py": "tests"}
+                 "viewer/build.sh": "viewer", "tests/test_pipeline.py": "tests",
+                 "data/concepts/KG02.geo.json": "concepts", "scripts/import_concepts.py": "concepts"}
         for path, area in cases.items(): self.assertEqual(testplan.area_of(path), area, path)
         self.assertEqual(testplan.make_plan(["README.md"])["steps"], [])
         self.assertEqual(testplan.make_plan(["tests/test_pipeline.py"])["steps"], ["unit"])
         self.assertEqual(testplan.make_plan(["toolgen/toolcache.py"])["steps"],
                          ["unit", "quick1", "quick2 (verify hits)", "standard"])
         self.assertEqual(testplan.make_plan(["viewer/build.sh"])["steps"], ["unit", "viewer"])
+        self.assertEqual(testplan.make_plan(["data/concepts/provenance.json"])["steps"], ["unit", "quick (affected tools)"])
 
     def test_mixed_diff_keeps_pipeline_checks(self):
         steps = testplan.make_plan(["viewer/build.sh", "toolgen/generate_tools.py"])["steps"]

@@ -84,12 +84,14 @@
       "materials": "equipment_channels",
       "robot": "CubeEscape_AssaultRifle_Robot",
       "hold": {
-        "grip_tilt_degrees": 16,
+        "grip_tilt_degrees": 10.27,
         "two_handed": true,
         "support_grip": "underhand",
-        "sight_kind": "reflex",
-        "eye_distance_m": 0.379
-      }
+        "sight_kind": "holo",
+        "eye_distance_m": 0.379,
+        "reticle_socket": "Socket_Reticle"
+      },
+      "concept": "KG02"
     },
     {
       "id": "pulse_rifle",

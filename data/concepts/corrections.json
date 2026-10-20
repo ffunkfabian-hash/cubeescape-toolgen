@@ -1,0 +1,18 @@
+{
+  "format": "toolgen/concept-corrections",
+  "format_version": 1,
+  "note": "Named Toolgen corrections on top of the imported concept sheets (scripts/tool_assets/concept_spec.py applies them). Each entry names the spec value it replaces; when formgen changes that value the loader refuses the correction until it is reviewed again.",
+  "sheets": {
+    "KG02": {
+      "anchors": {
+        "Socket_SupportHand": {
+          "spec_m": [0.0, -0.3509, 0.1161],
+          "toolgen_m": [0.0, -0.25, 0.1161],
+          "reason": "Ego-Bildregel (drei Greiffinger plus Daumen im Bild, höchstens halbe Unterarme): am Spec-Anker (Mitte des Handschutzes p11) hält keine Ego-Haltung; 10 cm weiter hinten auf demselben Handschutz, gleiche Höhe",
+          "decision": "Nutzer 20.10.2026 (cubeescape-rules#1, Sightline): Toolgen-Wert übernehmen, Spielregel vor Blattanker",
+          "since": "0.18.0"
+        }
+      }
+    }
+  }
+}

@@ -74,14 +74,25 @@ class RenamedFromTests(unittest.TestCase):
         """Every contract names the 2048 first-person maps (Cube Escape 0.96) and the renamed ids (the CE version with the
         migration version separately, and says that Cube Escape 0.96 does not read this package."""
         block = ge.consumer_block()
-        self.assertEqual({"first_person_maps_2048", "renamed_tool_ids"}, set(block))
+        self.assertEqual({"first_person_maps_2048", "renamed_tool_ids", "triangle_budgets"}, set(block))   # 0.18: budgets +25 %
+        self.assertIn("FrameBudgetEnvelopeTests", block["triangle_budgets"])
         self.assertIn("Cube Escape 0.96", block["first_person_maps_2048"])
         self.assertNotIn("0.94", block["first_person_maps_2048"])
         self.assertIn("Cube Escape 0.98 „Recast“", block["renamed_tool_ids"])
         self.assertIn("0.96 and older do NOT read this package", block["renamed_tool_ids"])
         self.assertIn("git checkout v0.16.0", block["renamed_tool_ids"])
         self.assertEqual(block["renamed_tool_ids"], ge.renamed_block(TOOLS["trace_rifle"])["minimum_consumer"])
-        self.assertIn('"minimum_consumer": consumer_block()', inspect.getsource(ge.build_contract))
+        self.assertIn('"minimum_consumer": consumer_block(tool)', inspect.getsource(ge.build_contract))
+        # 0.18: a concept weapon adds its own requirement, the others keep exactly the two
+        self.assertEqual({"first_person_maps_2048", "renamed_tool_ids", "triangle_budgets", "concept_models"},
+                         set(ge.consumer_block(TOOLS["assault_rifle"])))
+        self.assertEqual(block, ge.consumer_block(TOOLS["pistol"]))
+        self.assertIn("v0.17.2", ge.consumer_block(TOOLS["assault_rifle"])["concept_models"])
+        report = {"provenance": {"variant": "G", "release": "claude-v0.14", "sha256": "x"},
+                  "source": {"format": "f", "format_version": 1, "repository": "r", "commit": "c", "asset": "a",
+                             "asset_sha256": "z"}, "corrections": []}
+        self.assertEqual("KG02", ge.concept_block(TOOLS["assault_rifle"], report)["sheet"])
+        self.assertNotIn("data/concepts", inspect.getsource(ge), "the export reads the concept from qa_geometry*.json")
 
     def test_foreign_packages_are_named_not_deleted(self):
         with tempfile.TemporaryDirectory() as folder:

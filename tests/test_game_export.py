@@ -563,7 +563,7 @@ class SmallHelperTests(unittest.TestCase):
         self.assertEqual([], ge.budget_errors(BUDGET, list(TOOLS), robots))
         # 0.14: every robot variant has its own budget, at most the world cap; no budget without a variant
         self.assertTrue(ge.budget_errors(BUDGET, list(TOOLS)))
-        self.assertTrue(ge.budget_errors(dict(BUDGET, robot=dict(BUDGET["robot"], smg=12001)), list(TOOLS), robots))
+        self.assertTrue(ge.budget_errors(dict(BUDGET, robot=dict(BUDGET["robot"], smg=ge.ROBOT_BUDGET_LIMIT + 1)), list(TOOLS), robots))
         self.assertTrue(ge.budget_errors(dict(BUDGET, robot={}), list(TOOLS), robots))
         self.assertTrue(ge.budget_errors({"world": {}, "viewmodel": {}}, ["bow"]))
         self.assertTrue(ge.budget_errors({"world": {"bow": 500}, "viewmodel": {"bow": 9000}}, ["bow"]))
@@ -571,7 +571,7 @@ class SmallHelperTests(unittest.TestCase):
             with self.subTest(tool=tool_id):
                 self.assertLess(BUDGET["world"][tool_id], BUDGET["viewmodel"][tool_id],
                                 "the viewmodel adds hands and arms to the same tool")
-                self.assertLessEqual(BUDGET["viewmodel"][tool_id], 16000)
+                self.assertLessEqual(BUDGET["viewmodel"][tool_id], 20000)    # 0.18: +25 % (user decision 20.10.2026)
 
     def test_aspect_ratio_and_framing_tolerance(self):
         self.assertAlmostEqual(16 / 9, ge.aspect_ratio("16:9"))

@@ -51,13 +51,10 @@
       },
       "decals_note": "militärisch, Tech",
       "relief": {
-        "GripShell*": {"type": "knurl", "size_mm": 2.6, "direction": "z", "across": "y", "strength": 0.7},
-        "GripCore": {"type": "knurl", "size_mm": 2.6, "direction": "z", "across": "x", "strength": 0.5},
-        "GripRib*": {"type": "grooves", "size_mm": 1.6, "direction": "x", "strength": 0.6},
-        "Buttpad": {"type": "grooves", "size_mm": 3.0, "direction": "z", "strength": 0.8},
-        "Receiver*": {"type": "seams", "size_mm": 64, "width_mm": 1.0, "direction": "y", "strength": 0.9},
-        "Handguard": {"type": "seams", "size_mm": 72, "width_mm": 1.0, "direction": "y", "strength": 0.9},
-        "Stock": {"type": "seams", "size_mm": 60, "width_mm": 1.0, "direction": "y", "strength": 0.8},
+        "Griff_p03": {"type": "knurl", "size_mm": 2.6, "direction": "z", "across": "y", "strength": 0.7},
+        "Schaft_p00": {"type": "seams", "size_mm": 60, "width_mm": 1.0, "direction": "y", "strength": 0.8},
+        "Gehaeuse_p09": {"type": "seams", "size_mm": 64, "width_mm": 1.0, "direction": "y", "strength": 0.9},
+        "Handschutz_p11": {"type": "seams", "size_mm": 72, "width_mm": 1.0, "direction": "y", "strength": 0.9},
         "@Metal": [{"type": "brushed", "size_mm": 0.9, "direction": "y", "strength": 0.35},
                    {"type": "grain", "size_mm": 1.4, "strength": 0.2}]
       }

@@ -190,8 +190,9 @@ und stehen in `unity_contract.json` › `colliders` im Feldformat des Cubegen-Si
 relativ zum Teil). Leuchtteile, Kleinteile unter 12 mm und der geladene Pfeil (sichtbarkeitsanimiert) bekommen keine Box. Die Öffnungen (Mündung,
 Greifraum, beim Bogen der Raum zwischen Griff und Nocke) werden mit Testpunkten auf Freiheit geprüft; eine Gesamtbox, die sie blockiert, fällt durch.
 
-**Dreiecksbudget.** `data/game_budget.json` nennt je Werkzeug ein LOD0-Budget (Welt: Portalkanone und Magnetgreifer 8 000,
-Bogen 6 000, Taschenlampe 5 000; Ego: 16 000 / 16 000 / 14 000 / 12 000). Nach dem Zusammenführen wird LOD0 mit dem
+**Dreiecksbudget.** `data/game_budget.json` nennt je Werkzeug ein LOD0-Budget (seit 0.18 alle +25 %, Entscheidung des Nutzers
+20.10.2026; Welt: Portalkanone und Magnetgreifer 10 000, Bogen 7 500, Taschenlampe 6 500; Ego: 20 000 / 20 000 / 17 500 / 15 000;
+Waffen und Roboter: [versions/0.18.md](versions/0.18.md)). Ein Modell unter dem Budget wird nicht dezimiert. Nach dem Zusammenführen wird LOD0 mit dem
 Collapse-Decimate-Modifier gleichmäßig auf das Budget verkleinert (Shape Keys des Bogens folgen wie bei LOD1 über das nächste
 Dreieck; Iteration bis auf 4 % genau); LOD1 entsteht danach aus dem reduzierten LOD0. Die Maßprüfung `bounds_lod0` (1 mm gegen das
 Quellmodell in jedem Clipbild) gilt unverändert, `triangle_budget` prüft das Budget. Das Budget ist ein Datenwert: Ändern baut
@@ -593,6 +594,54 @@ bytegleich bleiben. Sichtprüfung: `blender -b --factory-startup --python script
 `Previews/robot_variant.png` (Variante neben einer Roboter-Referenz: Schulter 0,82 m, Brustfront, Arm 0,42 m, Fäuste 0,09 m; Haltung nur
 fürs Bild) und `robot_contact.png` (altes Weltmodell mit CE-`heldScale` gegen die Variante, Seite/oben/hinten, ein Maßstab).
 
+## Konzeptmodelle (0.18.0 Bedrock, TG-A)
+
+Seit 0.18 kann eine Waffe ihre Geometrie aus einem Konzeptblatt von cubeescape-formgen beziehen (geometry-spec 1, `KXnn.geo.json`;
+Format: formgen `claude/docs/geometry-spec.md`). Pilot: Sturmgewehr = KG02 „Kantenläufer“, Variante G (formgen-Plan Entscheidung 1).
+Alles nach der Geometrie (Ego-Kopie, Clips, Ego-Hände, Spiel-Export, Karten, Roboter-Variante) ist der bestehende Waffenweg.
+
+- **Leseweg.** `scripts/import_concepts.py` übernimmt einzelne Blätter aus einer lokalen Kopie des Release-Zips (`gh release download
+  claude-vX -R ffunkfabian-hash/cubeescape-formgen -p 'claude-geo-*.zip'`) nach `data/concepts/` und schreibt `provenance.json`:
+  je Release Repository, Commit, Zip-Name, Zip-sha256 und alle Datei-Hashes aus formgen `claude/tests/golden.json` › `geo`; je importiertem
+  Blatt sein Release, sha256, Bytes, `toolgen_id`, Variante, Datum (Blätter verschiedener Releases nebeneinander, z. B. KG02 aus einem
+  neueren). Geprüft wird vor dem Schreiben, für alle angeforderten Blätter: Zip-sha256, Datei-sha256 gegen die Golden-Liste,
+  `format`/`format_version`. `--check` prüft den Ordner. Der Bau greift nie aufs Netz: `generate_tools.py` kopiert `data/concepts/` als
+  `concepts/` in die Autorenkopie und nimmt die Dateien in die Quellen-Closure (`weapon_designs.py` nennt das Blatt, `concept_spec.py`
+  die Herkunftsdatei) – aber nur beim Werkzeug, das aus dem Blatt gebaut wird (`concept_sources`), und von `provenance.json` und
+  `corrections.json` zählt nur dessen eigener Eintrag (`source_digest`). Ein weiterer Import oder eine Korrektur an einem anderen Blatt
+  ändert also keinen fremden Stufenschlüssel; `.blend`-Dateien sind nicht bytegleich zwischen Bauten, ein unnötiger Weltbau würde sonst
+  bis zum Karten-Bake durchschlagen (Codex-Befund 20.10.2026). Stand: KG02 aus claude-v0.15 (formgen 143e542, mit Ladehebel p32).
+- **Lader** (`scripts/tool_assets/concept_spec.py`, reines Python): verweigert eine Datei, deren sha256 nicht der Herkunft entspricht,
+  oder ein anderes Format; unbekannte Felder werden ignoriert. `plan()` liefert die Netze mit Toolgens Regeln:
+  Visierglas wird nicht gebaut (Entscheidung des Nutzers 20.10.2026, Weg A „offen“; das Glas des Specs ist eine gewollte Doppelfläche).
+  Offene Teile (nicht jede Kante an genau zwei Flächen, z. B. die vier Flächen eines Visierrahmens) werden mit den Teilen gleichen Aussehens
+  (Bezeichnung, Kanal, Material, Leuchten, Visier, Knoten) zu einem geschlossenen Netz verschweißt (Name des ersten Teils, `ids` aller).
+  Koplanare Flächen (Toolgen-Regel: verschiedene Netze, Normalen ≤ 1°, Abstand < 0,5 mm, Überdeckung ≥ 1 mm²) setzt der Lader beim kleineren
+  Netz um 0,5 mm entlang der Normale zurück (KG02: p05 gegen p04, 6 Flächen, wie der Spec-Befund). Fasen nach Teilgröße
+  (3,5 % der kleinsten Ausdehnung, 0,5–2 mm, höchstens 40 % davon; Leuchtteile ohne), 2 Segmente, auf Kanten > 0,7 rad an einer harten Fläche.
+  Ein Visierteil, dessen Hülle die Fenstermitte enthält, bekommt `ce_collision` „none“: seine Kollisionsbox würde das Fenster schließen
+  (Öffnungsprobe an `Socket_Reticle` im Spiel-Export).
+- **Bau** (`concept_kit.py`, Blender): ein Objekt je Netz `SM_PG_<Bezeichnung>_<id>`, Ursprung in der Hüllmitte, Material über den
+  Kanal (`MT_Primary` → Primary … `MT_Emission` → Display, `MT_Energy` → Elementleuchten), Glättung nach `hard`, n-Ecken als Dreiecke
+  (Tangenten auf UV1 brauchen Drei- und Vierecke; ein Modell unter dem Budget wird nicht dezimiert), UV wie die Kit-Primitive.
+  Das Magazin hängt unter `Anim_Magazine` (Nachladeclip), Teile mit `moving.toolgen_node` hängen unter diesem Knoten (KG02:
+  Ladehebel p32 unter `Anim_Bolt`), Use-Clip-Knoten ohne Teil wären leere Knoten (`empty_clip_nodes` in der QA). Die Design-Funktion ruft `k.concept(...)`
+  (`weapon_designs.concept_build`), Ersatz-Kits der Tests bekommen dieselben Teile über `concept_spec.layout()`.
+- **Anker.** `Socket_Hand`, `Socket_Muzzle`, `Socket_CenterOfMass` aus `anchors`; `Socket_Sight` aus `sight.socket_sight_rear_m`
+  (`anchors.Socket_Sight` des Specs ist die Schienenoberkante), gesetzt auf der AimIdle-Linie durch die Mitte des Fensterrahmens
+  (`sight_mode` „center“) und gegen den Spec geprüft (≤ 0,5 mm, `qa_geometry.json` › `sight.concept`); `Socket_Reticle` neu (Fenstermitte,
+  additiv, `hold.reticle_socket`); `Socket_Eye` nur bei Zielfernrohren. `Socket_SupportHand` und alle übrigen: Spec-Anker, außer
+  `data/concepts/corrections.json` nennt eine **benannte Toolgen-Korrektur** (je Blatt und Anker: Spec-Wert, Toolgen-Wert, Grund,
+  Entscheidung). Der Lader wendet sie an und verweigert sie, sobald der Spec einen anderen Wert trägt (erneute Prüfung nötig).
+  KG02: `Socket_SupportHand` 10 cm weiter hinten auf dem Handschutz p11 (y −0,25 statt −0,351, gleiche Höhe), weil am Spec-Anker keine
+  Ego-Haltung die Bildregel erfüllt (Entscheidung des Nutzers 20.10.2026). Wiederholt sich das bei weiteren Gewehren, zieht formgen die
+  Anker gesammelt nach.
+- **Haltung aus dem Blatt.** `hold.grip_tilt_degrees` = `grip.grip_tilt_degrees` (KG02 10,27°), `hold.sight_kind` = Visierart des
+  Specs (holo), `grip_radius` = halbe Breite, halbe Tiefe des Griffquerschnitts, `support_radius` = halbe Höhe, halbe Breite des
+  Handschutzquerschnitts (`concept_spec.hold`, Test gegen `data/viewmodels.json`).
+- **Vertrag** 4 additiv: Block `concept` (Blatt, Release, Hashes, Fenster offen) und `minimum_consumer.concept_models` (CE-Version „offen“,
+  CE-A; älteres Modell: `v0.17.2`).
+
 ## Visier und Zielen (0.12.0 Sightline)
 
 Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals 0.66 „Deadeye“) (`Docs/FIRST_PERSON_EQUIPMENT.md` › 20 im Spielrepo); Einbau:
@@ -608,7 +657,8 @@ Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals
   des Laufs, +Y = oben). Scopes (Scharfschützen- und Spurgewehr) haben ein offenes Okular (`ScopeEyepiece` als Ring) mit der Linse
   `ScopeEyeLens` 8 mm innen (Radius 0,9 × Rohrradius, Material Detail); `Socket_Eye` sitzt in ihrer Mitte auf der Linie, ihr Radius im
   Ego-Modell steht als `hold.eye_radius_m` im Vertrag (Cube Escape zeichnet dort sein Scope-Bild). Visierart: `hold.sight_kind` in
-  `data/tools.json` (Pistole, Schrotflinte, Raketenwerfer `iron`; Sturmgewehr, Maschinenpistole `reflex`; Impulsgewehr `holo`;
+  `data/tools.json` (Pistole, Schrotflinte, Raketenwerfer `iron`; Maschinenpistole `reflex`; Impulsgewehr und seit 0.18 das
+  Sturmgewehr (KG02, Linie durch das offene Fenster, › Konzeptmodelle) `holo`;
   Fusionsgewehr `energy`; Scharfschützen-, Spurgewehr `scope`). Der Autoren-Kopierordner hat kein `data/`: Regel und Schussbild stehen
   deshalb in `DESIGNS`, `tests/test_weapons.py` hält sie gleich mit `tools.json`, `viewmodels.json` und `ego_clips.json`;
   `first_person.py` prüft den gebauten Anker gegen die Visierlinie der AimIdle-Pose (≤ 0,1 mm, `qa_viewmodel.json` ›
@@ -753,6 +803,19 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 ## Erfahrungen
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
+
+- 20.10.2026 · Modell unter dem Dreiecksbudget – Bis 0.17 lag jedes Spielmodell über dem Budget und wurde dezimiert; die Dezimierung hat
+  nebenbei n-Ecken trianguliert und die UV-Markierungen (Render, aktiv) neu gesetzt, die das Zusammenfügen in ein leeres Netz verliert.
+  Das erste Modell darunter (KG02, 5 872 von 7 000) zeigte beides: glTF ohne Tangenten, `uv1_layers` rot; nach dem Anheben aller
+  Budgets um 25 % auch Ego-Hände/-Arme und Roboter-Gehäuse. `reduce_to_budget` trianguliert und setzt die Markierungen jetzt selbst,
+  wenn nichts dezimiert wird. Beleg: 0.18 Bedrock (`reduce_to_budget`, `concept_kit.make`). Gilt auch für: jede Budgetänderung, jede
+  neue Geometriequelle, kleine Werkzeuge.
+- 20.10.2026 · Anker aus einem Konzeptblatt – Ein Anker, der als Teilmitte gemessen ist (Stützhand = Mitte des Handschutzes), ist kein
+  Haltungspunkt: am KG02-Anker (35 cm vor dem Griff, 12 cm hoch) gibt es keine Ego-Haltung mit Griffhand im Bild und Stützarm draußen.
+  Erst die Ego-Prüfung laufen lassen, dann über Lage, Unterarm und Anker entscheiden (Nutzer). Beleg: 0.18, `data/concepts/corrections.json`. Gilt auch für:
+  die übrigen acht Konzeptwaffen.
+- 20.10.2026 · Kollision von Ringen – Eine Hüllbox je Teil schließt jede Öffnung, die das Teil umrahmt (Visierfenster). Öffnungen bekommen
+  eine Probe im Spiel-Export, umrahmende Teile keinen eigenen Kollider. Beleg: 0.18, `OPENING_PROBES`, `ce_collision`.
 
 - 19.10.2026 · Golden und Versionsnummer – Schon die geänderte Versionszeichenkette in `version.py` verschiebt einzelne Tangenten der
   Spiel-GLB um 1e-4 und kippt im Cycles-Normal-Bake einen Texel einer Roboter-Normalkarte um eine Stufe, reproduzierbar je Zeichenkette.

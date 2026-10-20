@@ -14,12 +14,15 @@ RULES = [(".ce-repo.json", "docs"), ("check", "tests"), ("release", "tests"), ("
          (".claude/agent-guard.json", "docs"), (".claude/settings.json", "docs"),
          (".claude/skills", "docs"), (".claude/hooks/*", "tests"), (".gitignore", "docs"),
          ("*.md", "docs"), ("docs/*", "docs"), (".agents/*", "docs"),
+         ("data/concepts/*", "concepts"), ("scripts/import_concepts.py", "concepts"),
          ("data/*", "data"), ("scripts/tool_assets/*", "assets"),
          ("toolgen/toolcache.py", "cache"), ("toolgen/generate_tools.py", "pipeline"),
          ("toolgen/*", "pipeline"), ("scripts/*", "pipeline"), ("viewer/*", "viewer"),
          ("tests/*", "tests")]
 AREAS = {"docs": ("nothing", 0), "data": ("quick for affected tools", 45),
          "assets": ("quick for affected tools", 45), "tests": ("unit tests", 8),
+         # 0.18: formgen concept sheets (data/concepts, provenance) and their import tool: test_concepts + the concept weapons
+         "concepts": ("provenance check + quick for the concept weapons", 50),
          "pipeline": ("quick twice with cache-hit check, then standard", 100),
          "cache": ("quick twice with cache-hit check, then standard", 100),
          "viewer": ("viewer/build.sh + viewer/test_viewer.sh", 35), "unknown": ("quick twice + standard", 100)}

@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import concept_spec  # noqa: E402
 import ego_clips  # noqa: E402
 import game_export  # noqa: E402 - pure helpers, no bpy at import
 import surface  # noqa: E402
@@ -78,7 +79,11 @@ for tool in catalog():
     limit = PALETTE["channels"]["max_materials_per_viewmodel"] if equipment else PALETTE["max_materials_per_viewmodel"]
     assert len(ego["materials"]) <= limit and len(ego["nodes"]) + len(ego["renderers"]) <= 60, (tool["id"], "ego nodes")
     if equipment:
-        assert set(ego["equipment"]["channels"]) == {"Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail"}
+        expected = {"Primary", "Secondary", "Accent", "Metal", "Energy", "Emission", "Detail"}
+        if tool.get("concept"):     # 0.18: a concept weapon carries the channels its sheet uses (KG02: no MT_Energy)
+            sheet = concept_spec.load(tool["concept"] + ".geo.json")
+            expected = {part["channel"].removeprefix("MT_") for part in sheet["parts"] if not part["glass"]}
+        assert set(ego["equipment"]["channels"]) == expected, (tool["id"], sorted(ego["equipment"]["channels"]))
         assert all(name.startswith("M_") for name in ego["equipment"]["untouched_slots"]), tool["id"]
         checks += 2
     game_qa = json.loads((package / "qa_game_fps.json").read_text())
@@ -127,7 +132,7 @@ for tool in catalog():
     # 0.17 Retrace: every contract names both consumer requirements apart; a renamed tool carries its former names
     for path in sorted(package.glob("unity_contract*.json")):
         document = json.loads(path.read_text())
-        assert document["minimum_consumer"] == game_export.consumer_block(), (tool["id"], path.name, "minimum_consumer")
+        assert document["minimum_consumer"] == game_export.consumer_block(tool), (tool["id"], path.name, "minimum_consumer")
         assert document.get("renamed_from") == (game_export.renamed_block(tool) if tool.get("renamed_from") else None), \
             (tool["id"], path.name, "renamed_from")
         if "surface" in document and path.name == "unity_contract_fps.json":
