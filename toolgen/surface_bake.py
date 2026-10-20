@@ -541,6 +541,10 @@ def main():
             if errors:
                 raise RuntimeError("; ".join(errors))
             tool_scale = json.loads(VIEWMODELS_PATH.read_text())["tools"].get(args.tool, {}).get("tool_scale", 1)
+            fps_contract = work / "unity_contract_fps.json"
+            if not args.robot and fps_contract.exists():
+                # contract 5 (0.19): the Ego device carries its own scale (tool_scale x the rig's 1.4), game_export_rig.py
+                tool_scale = json.loads(fps_contract.read_text()).get("device_scale", {}).get("factor", tool_scale)
             design = {"recipe": recipe or {}, "limits": recipes["limits"], "anchors": anchors, "catalog": catalog,
                       "scale": {"world": 1.0, "viewmodel": float(tool_scale), "robot": 1.0},
                       "command": command, "magick": decals.magick_version(command) if command else None}

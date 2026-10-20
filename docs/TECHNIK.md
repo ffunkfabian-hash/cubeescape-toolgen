@@ -768,6 +768,47 @@ Nocke/Carrier/Spitze. LoadedArrowPresence skaliert nach Release auf 0,001 und be
 Der separate Pfeil ist ein Asset, kein simuliertes Projektil. QA prüft Kontakt/Anker/Ruhepose sowie FPS-Near-Clip
 und freie Bildmitte über alle Frames; Reimport vergleicht Anker-Matrizen und Morph-Bounds an Referenzposen.
 
+## Gemeinsames Ego-Arm-Rig (0.19.0 Kinetic, Vertrag 5)
+
+Vertrag: [UNITY_EINBAU](UNITY_EINBAU.md) › Vertrag 5. Daten: `data/ego_arms.json` (`rig`, `devices`) – eigene Datei, damit die Schlüssel und
+Verträge der Vertrag-4-Geräte gleich bleiben (`data/viewmodels.json` und `data/game_budget.json` stehen in jedem Werkzeugschlüssel).
+
+- **Stufen:** `ego_arms` (eigenes Paket `output/<Stufe>/ego_arms`, `toolgen/ego_arms.py`; läuft, sobald ein gewähltes Werkzeug Vertrag 5 hat
+  oder `--tool ego_arms`), `ego_rig` (`toolgen/ego_rig.py`, ersetzt für Vertrag-5-Geräte `first_person` und `viewmodel_roundtrip`) und
+  `game_fps_rig` (`toolgen/game_export_rig.py`, ersetzt `game_fps`). Ersetzen ist das neue Stufenfeld `replaces` (optional, nur in den
+  neuen Deklarationen); `--contract` setzt den Vertrag für alle gewählten Werkzeuge, `--contract 4` entfernt den Eintrag der Piloten (Rückweg)
+  und lässt alle anderen Einträge und Schlüssel unverändert.
+- **Rig:** Leerobjekte mit starren Teilen, ein Renderer je bewegtem Knoten (26). `place_chain` legt die Kette aus Schulter-, Ellbogen- und
+  Handlage: Oberarm mit der Ellbogenachse als X, **Unterarm rollt mit der Hand** (Y des Unterarms = Handrücken projiziert), das Handgelenk
+  beugt nur – der Servo (Gabel am Unterarm, Trommel an der Hand) zeigt die Beugung. Lokale Verschiebungen der Kette bleiben die
+  Ruhelängen; Clips drehen und verschieben nur `Shoulder_<S>`. `rig.hash` über Namen, Eltern und Ruhe-Transformationen.
+- **Gerät an Prop_R:** das Gerät des fps-Schritts wird um `tool_scale × 1,4` skaliert und so umgehängt, dass `Socket_Hand` Ursprung und
+  Achsen der Gerätewurzel ist (`reroot`: statische Kinder einmal, bewegte über den Use-Clip neu gekeyt). Ruhelage = `first_person.py`-Haltung
+  (Profilhand, Mündung aufs Ziel, Rollen). Bewegung je Bild: Use-Clip (Rückstoß/Werkzeugdruck) als um den Griff skalierte Bewegung
+  (`conjugated`: dieselbe Bewegung am 1,4× großen Modell), Ego-Clips mit `first_person.clip_matrix` und 1,4× Verschiebungen; ADS aus dem
+  skalierten Modell (`ads_setup`) mit eigenem Augenabstand (`devices.<tool>.ads`).
+- **Griffe:** je Hand `center`, `palm` (Richtung von der Handfläche ins Gerät), `axis` (Hand-X). Ein Strahl **von außen** entlang `palm` auf
+  `center` findet die Außenfläche (von innen trifft er Innenteile wie das Chassis); die Handfläche (`GripContact`) liegt 1 mm davor. Schneidet
+  die Handfläche trotzdem ins Gerät, weicht die Hand auf dem kürzesten Weg aus (aus der Fläche, entlang des Griffs oder beides).
+- **Finger schließen am Mesh:** alle Glieder einer Kette beugen gemeinsam, die körpernahen Gelenke voraus (`CURL_LEAD` 0,25); ein Glied, das
+  das Gerät berührt (BVH, 0,5 mm Zuwachs), sperrt sich und die Gelenke davor, der Rest beugt weiter. Der Daumen startet, wo er frei ist
+  (schwenkt entlang der Handfläche, bevor er schließt). So stimmen Griffpose und Handkontakt für jedes Gerät ohne Handarbeit.
+- **Unterarm:** Ruherichtung je Gerät (`arm`: `forearm` fest oder `rise`/`yaw` zu den Knöcheln), je Bild mit dem Folgeanteil (`follow`)
+  gedreht, auf das Handgelenkziel begrenzt (45°, Ruhebeugung + 4°, nie über 55° − 1°) und mit **Servo-Nachlauf** (30 % der Richtung zwei
+  Bilder früher; Schleifen schließen über das Clipende). Die Schulter folgt aus Ellbogen + Oberarmrichtung (wandernde Schulter).
+- **Nachladen:** Schlüsselbilder für Waffe (Achsen wie `ego_clips`), linke Hand (Griffnamen, `device_m`-Versatz im Geräteraum,
+  `camera_m` unter den Bildrand) und Fingerstellungen; Glättung `smoothstep`. Das Magazin wechselt die Hand per Sichtbarkeit genau am
+  `MagOut`/`MagIn`-Bild (`HandMag_L` = Kopie unter `<Asset>_FPS_HandL`, die Hand liegt dort im Griff `mag`). `Anim_Bolt` folgt der Hand beim
+  Ladehebel. Ereignisse mit Kanal (`action`/`rig`); Start/End zusätzlich.
+- **QA (`qa_viewmodel.json`, quick):** Handkontakt je Bild (jedes dritte Hand-Vertex gegen die Geräte-BVH im Geräteraum), Handgelenk,
+  Bildausschnitt (16:9/16:10, festes FOV), Fadenkreuz, Ereignisse, Magazintausch; `qa_viewmodel_roundtrip.json`: FBX/GLB der Zusammensetzung.
+  `qa_game_fps.json`: Gerät ohne Arm-Knoten, `Socket_Hand` im Ursprung, Reimport Gerät und Clips (mit UV1/Tangenten), Budget, Selbstkonsistenz der Halbdrehung (Ankerkette aus den Vertragswerten). Neu
+  nach der Zweitprüfung: **jeder Clip beginnt und endet in seiner benannten Pose** (Ruhe = Bild 1 des Use-Clips, für alle Rig-Knoten; Schleife
+  erstes = letztes Bild; der Servo-Nachlauf blendet dafür an beiden Clipenden aus), die Gerätewurzel bleibt `attach`, Wurzel/`Prop_*`/
+  `Socket_Camera`/Gerätewurzel ohne Kurven; Ereignisse streng geordnet und jedes nur einmal.
+- **Sichtprüfung in der Cloud:** `BLENDER_WORKBENCH` rendert im bpy-Modul headless (EGL-Warnungen sind harmlos) in ~0,1 s je Bild – gut für
+  Kontaktbögen beim Gestalten; die Abnahmebilder bleiben Cycles/Eevee auf dem Mac.
+
 ## Grenzen
 
 Blender-Reimport und SceneKit-Bilder belegen keine Unity- oder Gameplay-Abnahme. Die Drehung der Anker-Leerobjekte ist kein
@@ -803,6 +844,16 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 ## Erfahrungen
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
+
+- 20.10.2026 · Griffpunkt per Strahl – Ein Strahl vom Griffmittelpunkt nach außen trifft zuerst Innenteile (Portalkanone: Chassis in der
+  Schale); die Hand lag 2 cm im Gehäuse. Strahlen für Kontaktflächen immer von außen nach innen schießen. Beleg: 0.19 Kinetic
+  (`ego_rig.grip_matrix`). Gilt auch für: Cubegen-Ankerflächen, Robogen-Bodenkontakte.
+- 20.10.2026 · Finger am Mesh schließen – Beugen alle Gelenke gleich schnell, trifft die Fingerspitze zuerst und der Finger bleibt gestreckt
+  vor dem Griff hängen (der „hängende Finger“ der Portalkanone). Körpernahe Gelenke voraus beugen und nur das berührende Glied samt
+  Gelenken davor sperren. Beleg: 0.19 (`ego_rig.close_hand`, `CURL_LEAD`). Gilt auch für: Robogen-Handposen, Bogen-Zughand.
+- 20.10.2026 · Gemeinsame Daten in eigener Datei – Neue Daten für wenige Werkzeuge in `viewmodels.json`/`game_budget.json` ändern die
+  Schlüssel aller Werkzeuge (und `game_budget.json` deren Vertrag über `budget.sha256`). Vertrag-5-Daten stehen deshalb in
+  `data/ego_arms.json`. Beleg: 0.19, `compare_models` gegen 0.18. Gilt auch für: jede Pilotstufe.
 
 - 20.10.2026 · Modell unter dem Dreiecksbudget – Bis 0.17 lag jedes Spielmodell über dem Budget und wurde dezimiert; die Dezimierung hat
   nebenbei n-Ecken trianguliert und die UV-Markierungen (Render, aktiv) neu gesetzt, die das Zusammenfügen in ein leeres Netz verliert.

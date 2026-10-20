@@ -234,7 +234,8 @@ class StageTests(unittest.TestCase):
     def test_optional_fields_keep_the_old_stage_declarations(self):
         for stage in STAGES:
             entry = declaration(stage)
-            if stage.name not in ("surface_bake", "robot", "game_robot", "surface_bake_robot"):   # robot stages: 0.14
+            # robot stages: 0.14; contract 5 stages: 0.19 (new, so their fields are in their first key)
+            if stage.name not in ("surface_bake", "robot", "game_robot", "surface_bake_robot", "ego_rig", "game_fps_rig"):
                 self.assertNotIn("heavy", entry)
                 self.assertNotIn("min_contract", entry)
         self.assertTrue(declaration(self.stage())["heavy"])

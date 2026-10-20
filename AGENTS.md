@@ -17,6 +17,9 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
   Dreiecksbudgets stehen in `data/game_budget.json` (nicht im Generator verstecken).
 - Roboter-Variante der acht Gewehre (`<Asset>_Robot`, 0.14): Verformung des Designs (`weapon_designs.py` › `ROBOT`), nie ein zweites
   Modellset; sie ändert Weltmodell, Ego-Modell und Clips nicht (Beleg `scripts/compare_models.py`).
+- Vertrag 5 (0.19): **ein** gemeinsames Ego-Arm-Rig (`toolgen/ego_arms.py`, Paket `ego_arms`), Geräte mit `tools.json` › `game_contract` 5
+  hängen ohne Arme an `Prop_R` (`ego_rig.py`, `game_export_rig.py`, Daten nur in `data/ego_arms.json`); Rig-Änderung = `rig.version` +1,
+  Rückweg `--contract 4`; `first_person.py` bleibt der Weg für Vertrag 4. Vertrag: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md) › Vertrag 5.
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips (Use, Fire, Draw …) laufen einmal und kehren in die Ruhepose zurück; Loop ist
   eine Viewer-Prüfoption. Ausnahme (Nutzer, 16.10.2026): Ego-Zustandsclips Idle, Walk, Sprint, AimIdle (0.9.0), FusionRifle_Charge (0.11.0, und was später

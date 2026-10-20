@@ -1,2 +1,2 @@
-VERSION = "0.18.0"
-CODENAME = "Bedrock"
+VERSION = "0.19.0"
+CODENAME = "Kinetic"

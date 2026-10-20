@@ -13,6 +13,8 @@ verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-
 | Viewmodel-Kamera | `viewmodel_camera.json` | vertikales FOV, Near Clip, geprüfte Werte |
 | Maskenkarten (Vertrag 4, standard/full) | `<Asset>_Game_{W0,W1,Fields,Normal}.png`, `<Asset>_FPS_Game_*.png` | Block `surface` in beiden Verträgen |
 | Weltmodell in der Roboterhand (0.14, acht Gewehre, Vertrag 4) | `<Asset>_Robot_Game.fbx/.glb/.blend`, `<Asset>_Robot_Game_*.png` | `unity_contract_robot.json` (wie `unity_contract.json`, dazu Block `robot`) |
+| Gemeinsame Ego-Arme (0.19, Vertrag 5, ein Paket je Lauf) | `ego_arms/CubeEscape_EgoArms_Game.fbx/.glb/.blend` | `ego_arms/unity_contract_arms.json` (Rig, Fingerposen, Look) |
+| Ego-Gerät ohne Arme (Vertrag 5: Sturmgewehr, Portalkanone) | `<Asset>_FPS_Game.*` (Gerät), `<Asset>_FPS_Game_Clips.*` (Zusammensetzung, alle Clips) | `unity_contract_fps.json` `format` 5 (unten › Vertrag 5) |
 
 Materialien: nur die Palettenmaterialien aus `data/game_palette.json` (je Weltmodell höchstens 6, je Ego-Modell höchstens 7);
 die neun Waffen tragen ab Vertrag 2 stattdessen die Ausrüstungs-Slots `MT_<Kanal>` (siehe „Ausrüstungs-Slots“ unten).
@@ -362,6 +364,84 @@ Anker bleiben; neu oder geändert:
   (CE-A „Refit“, **noch nicht reserviert: „offen“**). Cube Escape ab 0.98 liest das Paket (gleiche IDs, Anker, Clips), ist aber auf das alte
   Modell abgestimmt (Griffneigung, Handpose, Visierart). Das alte Sturmgewehr: `git checkout v0.17.2 && python3 toolgen/generate_tools.py
   --tier standard`.
+
+## Vertrag 5 – gemeinsames Ego-Arm-Rig (0.19.0 Kinetic)
+
+Endgültiger Text zum Entwurf E0 (rules#1, Kommentar 6293153456, freigegeben 6293286116; Entscheidungen 6292820613). Technik und Lehren:
+[TECHNIK](TECHNIK.md) › Gemeinsames Ego-Arm-Rig. **Ein** Arm- und Hand-Modell für alle Ego-Geräte; ein Gerät auf Vertrag 5 hat keine Arme
+mehr, hängt an `Prop_R` und bewegt sich nur über die rechte Armkette. Vertrag 4 und 5 bestehen nebeneinander: Toolgen wählt je Gerät
+(`tools.json` › `game_contract`; in 0.19 nur `assault_rifle` und `portal_emitter`), Cube Escape liest je Ordner nach `format`.
+
+**Rückweg:** `python3 toolgen/generate_tools.py --contract 4` baut die beiden Pilotgeräte wie 0.18 (gebackene Arme, gleiche Anker, Karten
+und Clipnamen) und lässt die übrigen Geräte unberührt; Cube Escape 0.104 und älter lesen nur diese Fassung.
+
+**Mindestversion:** jeder Vertrag eines Vertrag-5-Geräts (Welt, Roboter, Ego) und der Armvertrag tragen `minimum_consumer.shared_arm_rig`
+= Cube Escape „offen“ (E2 des Arm-Umbaus, noch nicht reserviert). Welt- und Robotervertrag ändern sonst nichts (Format 5, Inhalt wie 4).
+
+### Arm-Paket `ego_arms`
+
+| Feld | Inhalt |
+|---|---|
+| Dateien | `output/<Stufe>/ego_arms/CubeEscape_EgoArms_Game.fbx/.glb/.blend` (Ruhepose, keine Animation), `unity_contract_arms.json`, `qa_arms.json`, `preview_arms.png` (Bildstufen). Ablage in CE: `Assets/Art/ToolgenShared/EgoArms/` (nicht unter `Assets/Art/Toolgen/`) |
+| Knoten | Wurzel `CubeEscape_EgoArms` (Kameraraum), `Socket_Camera`; je Seite `Shoulder_<S>` → `UpperArm_<S>` → `LowerArm_<S>` → `Hand_<S>` → `Wrist_<S>`, `GripContact_<S>`, `Prop_<S>`, `Fingers_<S>_<i>` → `Fingers_<S>_<i>_1` → `Fingers_<S>_<i>_2` (i = 0 Abzugfinger, 1, 2), `Thumb_<S>` → `Thumb_<S>_1`. Leerobjekte, kein Armature, kein Skinning |
+| Achsen | +Z längs jedes Glieds; `LowerArm_<S>` sitzt fest bei (0, 0, `upper_arm`), `Hand_<S>` bei (0, 0, `forearm`) – Clips drehen die Kette und verschieben nur `Shoulder_<S>`. `Hand_<S>`: Ursprung = Handgelenk-Drehpunkt, +Z zu den Knöcheln, +Y Handrücken, +X Daumenseite rechts (links gespiegelt). Finger beugen um lokal +X |
+| Maße | `lengths_m` (Oberarm 0,448, Unterarm 0,42, `hand_scale` 0,91 = Toolgen 0,65 × 1,4): **Faktor 1,4 eingebacken**, CE nutzt für Vertrag-5-Geräte die Rahmengröße 1,0 und ignoriert `hip.scale` |
+| Meshes | je bewegtem Knoten ein Renderer `<Knoten>_Mesh` (26: Unterarm, Hand, 9 Fingerglieder, 2 Daumenglieder je Seite), LOD0 only, keine Kollision; Handgelenk-Servo als Bauteile (`WristServo_<S>` im Unterarm-Mesh, `WristRotor_<S>` im Hand-Mesh, `parts` je Renderer) |
+| Look | genau vier Slots `M_RobotBody_Matte`/`M_RobotDark_Matte`/`M_Metal_Matte`/`M_HazardOrange_Matte` → `armor`/`mech`/`metal`/`lights` (Block `look`); keine `MT_`-Slots, keine UV1 |
+| Budget | 12 000 Dreiecke LOD0 für beide Arme (`data/ego_arms.json` › `rig.budget_triangles`; eigene Datei, damit die Schlüssel und Verträge der Vertrag-4-Geräte gleich bleiben); Gerät + Arme ≤ 32 000 |
+| `rig` | `id` `ego_arms` (ewig), `version` 1, `hash` = sha256 über Name, Eltern und lokale Ruhe-Transformation aller Knoten (Regel `hash_rule`); Meshes und Farben zählen nicht |
+| `finger_poses` | Bibliothek `open`, `grip`, `regrip`, `trigger`, `underhand`, `cup`, `wrap`, `mag_hold`, `pinch` (Namen ewig, nur anhängen; Winkel in Grad je Gelenk, Daumen `[flex, out, tip]`); die Geräte nennen ihre eigenen, am Mesh geschlossenen Winkel |
+| `measures` | Handgelenk = Winkel zwischen `LowerArm_<S>` +Z und `Hand_<S>` +Z (Ziel 45°, Grenze 55°) |
+
+### Gerätepaket ohne Arme (`unity_contract_fps.json`, `format` 5)
+
+| Feld / Datei | Vertrag 5 |
+|---|---|
+| `<Asset>_FPS_Game.*` | **nur das Gerät, ohne Take**: Wurzel `<Asset>_FPS` (Ursprung = `Socket_Hand`, Gerätachsen, unrotiert), Anker, `Anim_*`, Renderer wie Vertrag 4 (Palette/`MT_`, UV1, LOD0/LOD1, Budget `data/game_budget.json` › `viewmodel` jetzt für das Gerät allein); zweite Wurzel **`<Asset>_FPS_HandL`** mit den Teilen der linken Hand (Sturmgewehr: `HandMag_L`, Kopie des Magazins) |
+| `<Asset>_FPS_Game_Clips.*` | **die Zusammensetzung als Knoten ohne Meshes**: `CubeEscape_EgoArms` mit `<Asset>_FPS` unter `Prop_R` und `<Asset>_FPS_HandL` unter `Prop_L`; ein Take `<Stamm>_EgoClips`, `<Stamm>_Use` zuerst (Take-Bild 0–96), danach alle Ego-Clips |
+| `attach` | Lage der Gerätewurzel in `Prop_R` (`blender`, `unity`); in jedem Clip konstant, die Clips-Datei trägt dieselbe Transformation (Prüfwert ≤ 0,1 mm / 0,05°). `attach_left`: Wurzel der Handteile in `Prop_L` (Identität) |
+| `grip` | `R`/`L`: Lage von `Hand_<S>` im Geräteraum (Position und Drehung = Ausrichtung der Handfläche), `mode` (`grip`, `support`; später `free`, `hidden`), `pose`, Toleranzen 8 mm / 5°. Portalkanone: `hold`-frei, Stützhand `wrap` (umgreift das Gehäuse) |
+| `arms_rig` | `id`, `version`, `hash` des Arm-Pakets, mit dem die Clips gebaut sind – CE bricht beim Import mit deutscher Meldung ab, wenn der Hash nicht zum Armvertrag passt |
+| `assembly` | alle Knotenpfade der Zusammensetzung (Pfad relativ zu `CubeEscape_EgoArms`, Name, Eltern): Unity Generic bindet die Clips über diese Pfade |
+| `finger_poses` | die Stellungen des Geräts (rechts z. B. `trigger`, links `underhand`/`wrap`, `mag_hold`, `pinch`) als Gelenkwinkel |
+| `support_ik` | `blend_frames` 3: die Stützhand-IK blendet ab `HandOff` auf 0 und ab `HandOn` auf 1; Ziel `Hand_L` = Gerätewurzel × `grip.L` |
+| `visibility_nodes` | `Anim_Magazine`, `HandMag_L`: Sichtbarkeit über Skalierung 1 / 0,001, Schritt genau am `MagOut`-Bild (Magazin in die Hand) und am `MagIn`-Bild (zurück); gleiche Weltlage ± 2 mm. FBX- und glTF-Export tasten jedes Bild ab und interpolieren linear: zwischen dem Bild davor und dem Schrittbild skaliert Unity über eine Bilddauer (≈ 42 ms); wer exakt schalten will, setzt die Kurven beim Import auf konstant (`AnimationUtility.SetKeyBroken`/`TangentMode.Constant`) |
+| `frame_size` | 1,0 (Faktor eingebacken) |
+| `device_scale` | Gerät gegen sein Weltmodell (`tool_scale` × 1,4); `surface_bake` legt die Decals danach |
+| `hand_parts` | Knoten unter `<Asset>_FPS_HandL` (lokale Lagen, Sichtbarkeitsknoten); in der Gerätedatei steht `HandMag_L` bei Skalierung 0,001 (Bild 0) |
+
+**Halbdrehung genau einmal:** CE dreht die Wurzel der **zusammengesetzten** Hierarchie (Arme + Gerät) einmal um 180° um Y, wie jede
+Prefab-Wurzel; die Gerätewurzel unter `Prop_R` bekommt keine eigene Drehung. Toolgen prüft die **Selbstkonsistenz der Vertragswerte**
+(`qa_game_fps.json` › `anchor_half_turn`): `Prop_R` (Ruhe) × `attach` × Ankerkette (Unity-Werte des Vertrags) ergibt die Unity-Lage des Ankers
+in der Zusammensetzung (Fehler < 0,001 mm) – Arm-Rig und Gerät teilen eine Umrechnung; eine zweite Drehung an der Gerätewurzel würde die Anker
+um 0,56 m (Portalkanone) bzw. 1,25 m (Sturmgewehr) verschieben. Das ist **keine Messung** von Unitys FBX-Import: die misst CE in E2 (Anker-Test
+im Builder).
+
+### Clips und Ereignisse
+
+- Alle Clips bewegen die ganze Kette Bild für Bild (Zwei-Glied-Lösung beim Bau, Unterarm rollt mit der Hand, das Handgelenk beugt nur –
+  der Servo zeigt es), kleiner Servo-Nachlauf des Unterarms (Richtung zu 30 % zwei Bilder zurück), Finger mit Greifstellungen. Nie bewegt:
+  Rig-Wurzel, `Prop_*`, Gerätewurzel, Materialien. Zustandsclips (Idle, Walk, Sprint, AimIdle) sind Schleifen, sonst einmal; nichts startet
+  von selbst. 24 Bilder/s; Ruhe = Bild 0 von `<Stamm>_Use` für alle Knoten.
+- Ereignisse tragen **`channel`**: `action` (Standard, `EquipmentActionEvent`) oder `rig` (`HandOff`, `HandOn`; nur die Stützhand-IK).
+- **`Reload`** (40 Bilder): `Start` 0 · `HandOff` 2 · `MagOut` 8 · `MagIn` 22 · `HandOn` 29 · `Ready` 32 · `End` 40.
+  **`ReloadEmpty`** (neu, ans Ende der Clipliste, 46 Bilder): `Start` 0 · `HandOff` 2 · `MagOut` 8 · `MagIn` 22 · `Chamber` 27 (Ladehebel
+  ganz hinten) · `HandOn` 34 · `Ready` 38 · `End` 46. CE wählt nach dem Magazinstand aus 0.103; Munition und Bereitschaft kommen aus dem
+  Aktionsvertrag an den Markern, nie aus der Cliplänge.
+- Ablauf wie Destiny (Form; Zeiten sind CE-Gestaltung nach dem benannten Beispiel Chroma Rush, cubeescape-reference `docs/destiny2.md`
+  `#z-chroma-rush`: heraus +0,25 s, ein +0,93 s, Ladegriff +1,05 s, Hüfte +1,58 s): rechte Hand bleibt am Griff, die Waffe kippt (Oberseite
+  nach rechts, Mündung hoch), die linke Hand greift das Magazin, zieht es nach unten aus dem Bild, kommt mit ihm zurück, setzt ein
+  (kurzer Stoß), bei `ReloadEmpty` zum Ladehebel (`pinch`) und zieht ihn mit `Anim_Bolt` 5 cm zurück, dann zurück an den Handschutz.
+- Portalkanone: die linke Hand umgreift das Gehäuse in allen Clips (kein `HandOff`/`HandOn`).
+
+### Prüfungen in Toolgen (quick, `qa_viewmodel.json`, `qa_game_fps.json`, `qa_arms.json`)
+
+Reimport FBX/GLB des Arm-Pakets (Namen, Eltern, Ruhe-Matrizen, Slots, Dreiecke), der Zusammensetzung und beider Spieldateien; Gerät ohne
+Arm-Knoten, `Socket_Hand` im Ursprung; Handkontakt ≤ 8 mm rechts in jedem Bild, links außerhalb `[HandOff + 3, HandOn]`; Handgelenk ≤ 55°;
+Bildausschnitt 16:9 und 16:10 beim festen FOV (drei Greiffinger + Daumen jeder haltenden Hand im Bild außer in Ziehen/Wegstecken/Sprint,
+proximale Unterarmhälfte und Ellbogen nie, Fadenkreuz frei in den freien Clips); Ereignisse vollständig und geordnet, genau ein `Ready`;
+Magazintausch an derselben Stelle; Fingerposen ohne Berührung nicht benachbarter Teile. Offen für die Mac-Abnahme: Bildstufen, Viewer,
+Determinismus der Bilder, MP4 (`docs/versions/0.19.md` › Prüfweg).
 
 ## Prüfen
 

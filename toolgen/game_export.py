@@ -67,7 +67,8 @@ PALETTE_PATH = ROOT / "data/game_palette.json"
 BUDGET_PATH = ROOT / "data/game_budget.json"
 TOOLS_PATH = ROOT / "data/tools.json"
 CONTRACT_FORMAT = 4              # 4: UV1, glTF tangents on UV1, surface maps (stage surface_bake); --contract 3 = 0.10 layout
-CONTRACT_FORMATS = (1, 2, 3, 4)  # 3: ego clips (<asset>_FPS_Game_Clips.*); 2: MT_<Channel> slots for equipment tools; 1 = 0.7
+CONTRACT_FORMATS = (1, 2, 3, 4, 5)  # 5: Ego on the shared arm rig (game_export_rig.py; world/robot like 4); 3: ego clips
+                                    # (<asset>_FPS_Game_Clips.*); 2: MT_<Channel> slots for equipment tools; 1 = 0.7
 EGO_CLIPS_CONTRACT = 3
 SURFACE_CONTRACT = surface_maps.SURFACE_CONTRACT
 # Packing may not turn islands (it catches real 90-degree turns of the packer). 0.5, not 0.1: the packer's float noise differs by
@@ -1056,13 +1057,22 @@ BUDGET_CONSUMER = ("Cube Escape „offen“ (the version that raises FrameBudget
                    "&& python3 toolgen/generate_tools.py --tier standard")
 
 
-def consumer_block(tool=None):
+# Toolgen 0.19: a device on contract 5 writes format 5 into all its contracts; the world and robot contracts are contract 4
+# otherwise, the Ego package hangs at the shared arm rig (toolgen/ego_arms.py SHARED_ARM_CONSUMER, game_export_rig.py).
+SHARED_ARM_CONSUMER = ("Cube Escape „offen“ (E2 of the arm rebuild, version not reserved yet): contract 5 - the arm package "
+                       "ego_arms, devices without arms at Prop_R, frame size 1.0, support-hand IK between HandOff/HandOn. "
+                       "Older package for Cube Escape 0.104 and before: python3 toolgen/generate_tools.py --contract 4")
+
+
+def consumer_block(tool=None, contract=CONTRACT_FORMAT):
     """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the package's requirements, kept apart; 0.18 adds
-    ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon)."""
+    ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon), 0.19 ``shared_arm_rig`` (contract 5)."""
     block = {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER,
              "triangle_budgets": BUDGET_CONSUMER}
     if tool and tool.get("concept"):
         block["concept_models"] = CONCEPT_CONSUMER
+    if contract >= 5:
+        block["shared_arm_rig"] = SHARED_ARM_CONSUMER
     return block
 
 
@@ -1240,7 +1250,7 @@ def build_contract(tool, source_info, root, renderers, lods, colliders, clip_inf
         "colliders": colliders,
         **({"hold": hold_block(tool)} if tool.get("hold") else {}),
         **({"renamed_from": renamed} if renamed else {}),
-        "minimum_consumer": consumer_block(tool),
+        "minimum_consumer": consumer_block(tool, contract),
         **({"concept": concept} if concept else {}),
         **({"collision": "none: first-person viewmodel (hands and tool are drawn by their own camera)",
             "viewmodel": viewmodel} if viewmodel else {}),
@@ -1928,7 +1938,8 @@ def main():
                         help="export the robot variant <robot> of the tools.json entry (contract 4, Toolgen 0.14)")
     parser.add_argument("--preview", action="store_true", help="also render preview_game.png (Eevee, 2x2 panels)")
     parser.add_argument("--contract", type=int, choices=CONTRACT_FORMATS, default=CONTRACT_FORMAT,
-                        help="contract format: 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 layout, "
+                        help="contract format: 5 (Toolgen 0.19: world and robot like 4 with format 5; the Ego package of "
+                             "contract 5 is game_export_rig.py), 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 layout, "
                              "ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout, palette names only, "
                              "for Cube Escape before 0.64)")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
@@ -1940,6 +1951,8 @@ def main():
     try:
         tools = {tool["id"]: tool for tool in json.loads(TOOLS_PATH.read_text())["tools"]}
         tool = tools[args.tool]
+        if args.viewmodel and args.contract >= 5:
+            raise RuntimeError("contract 5 first-person models are exported by toolgen/game_export_rig.py (stage game_fps_rig)")
         if args.robot and (args.viewmodel or "robot" not in tool or args.contract < SURFACE_CONTRACT):
             raise RuntimeError("--robot needs a tool with a robot variant, contract 4 and no --viewmodel")
         report["asset"] = tool["robot"] if args.robot else tool["asset"] + ("_FPS" if args.viewmodel else "")

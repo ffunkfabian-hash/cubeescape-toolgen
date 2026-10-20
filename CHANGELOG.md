@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.19.0 – Kinetic (unveröffentlicht; ungeprüft: Mac-Abnahme offen)
+
+E1 des Arm-Umbaus (Entscheidungen des Nutzers 20.10.2026): **Vertrag 5** – ein gemeinsames Ego-Arm-Rig `ego_arms` (Kette Schulter → Oberarm →
+Unterarm → Hand, `Prop_R`/`Prop_L`, drei Greiffinger mit drei Gliedern + Daumen, Handgelenk-Servo, 1,4× eingebacken, 12 000 Dreiecke) statt
+eingebackener Arme je Gerät. Pilot Sturmgewehr (`Reload`/`ReloadEmpty` wie Destiny, Ereigniskanäle `action`/`rig`) und Portalkanone (Stützhand
+umgreift das Gehäuse) auf Vertrag 5; alle übrigen Geräte Vertrag 4 und unverändert, Rückweg `--contract 4`. Cloud-Stand „ungeprüft“
+(Bildstufen, Viewer, MP4 auf dem Mac). Bericht: [docs/versions/0.19.md](docs/versions/0.19.md).
+
 ## 0.18.0 – Bedrock (20.10.2026)
 
 Konzeptgeometrie von cubeescape-formgen (geometry-spec 1) als Bauquelle: `data/concepts/` mit Herkunft (Release, Zip- und Datei-sha256),
