@@ -192,7 +192,8 @@ Greifraum, beim Bogen der Raum zwischen Griff und Nocke) werden mit Testpunkten 
 
 **Dreiecksbudget.** `data/game_budget.json` nennt je Werkzeug ein LOD0-Budget (seit 0.18 alle +25 %, Entscheidung des Nutzers
 20.10.2026; Welt: Portalkanone und Magnetgreifer 10 000, Bogen 7 500, Taschenlampe 6 500; Ego: 20 000 / 20 000 / 17 500 / 15 000;
-Waffen und Roboter: [versions/0.18.md](versions/0.18.md)). Ein Modell unter dem Budget wird nicht dezimiert. Nach dem Zusammenführen wird LOD0 mit dem
+Waffen und Roboter: [versions/0.18.md](versions/0.18.md)). Ein Modell unter dem Budget wird nicht dezimiert; `reduce_to_budget` trianguliert dann nur seine
+n-Ecken, in fester Flächenreihenfolge (`scripts/tool_assets/mesh_order.py`, 0.20, siehe Erfahrungen). Nach dem Zusammenführen wird LOD0 mit dem
 Collapse-Decimate-Modifier gleichmäßig auf das Budget verkleinert (Shape Keys des Bogens folgen wie bei LOD1 über das nächste
 Dreieck; Iteration bis auf 4 % genau); LOD1 entsteht danach aus dem reduzierten LOD0. Die Maßprüfung `bounds_lod0` (1 mm gegen das
 Quellmodell in jedem Clipbild) gilt unverändert, `triangle_budget` prüft das Budget. Das Budget ist ein Datenwert: Ändern baut
@@ -623,7 +624,8 @@ Alles nach der Geometrie (Ego-Kopie, Clips, Ego-Hände, Spiel-Export, Karten, Ro
   (Öffnungsprobe an `Socket_Reticle` im Spiel-Export).
 - **Bau** (`concept_kit.py`, Blender): ein Objekt je Netz `SM_PG_<Bezeichnung>_<id>`, Ursprung in der Hüllmitte, Material über den
   Kanal (`MT_Primary` → Primary … `MT_Emission` → Display, `MT_Energy` → Elementleuchten), Glättung nach `hard`, n-Ecken als Dreiecke
-  (Tangenten auf UV1 brauchen Drei- und Vierecke; ein Modell unter dem Budget wird nicht dezimiert), UV wie die Kit-Primitive.
+  (Tangenten auf UV1 brauchen Drei- und Vierecke; ein Modell unter dem Budget wird nicht dezimiert) in fester Flächenreihenfolge
+  (`mesh_order.triangulate_ngons`, 0.20), UV wie die Kit-Primitive.
   Das Magazin hängt unter `Anim_Magazine` (Nachladeclip), Teile mit `moving.toolgen_node` hängen unter diesem Knoten (KG02:
   Ladehebel p32 unter `Anim_Bolt`), Use-Clip-Knoten ohne Teil wären leere Knoten (`empty_clip_nodes` in der QA). Die Design-Funktion ruft `k.concept(...)`
   (`weapon_designs.concept_build`), Ersatz-Kits der Tests bekommen dieselben Teile über `concept_spec.layout()`.
@@ -804,6 +806,14 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
+- 20.10.2026 · Reihenfolge nach `bmesh.ops.triangulate` – Das bpy-Wheel 5.2.2 unter Linux (BEAUTY) liefert dieselben Dreiecke mit derselben
+  Windung, aber in wechselnder Flächenreihenfolge: zwischen Prozessen und sogar zweimal im selben Prozess, ein fester `PYTHONHASHSEED` hilft
+  nicht; Blender.app 5.2.2 (macOS) war in zwei kalten Bauten stabil (0.19-Mac-Gegenprüfung). Folge unter Linux:
+  gleiche `vertices.bin`, andere `indices.bin` und GLBs bei jedem kalten Bau. Nach dem Triangulieren die Reihenfolge selbst festlegen
+  (`mesh_order.triangulate_ngons`: Platz der Ausgangsfläche, dann Eckindizes) und kalten Determinismus mit zwei `--no-cache`-Läufen belegen –
+  der Cache-Treffer im zweiten quick-Lauf beweist ihn nicht. Die Sortierung macht Mac und Linux gleich, ändert aber einmalig die
+  Mac-Ausgabe (Golden der betroffenen Karten bewusst neu, nach mehrfachem Nachbacken). Beleg: 0.19 Befund 1, 0.20 Lockstep
+  (`tests/test_mesh_order.py` sperrt andere Aufrufer). Gilt auch für: jede bmesh-Operation, die Flächen erzeugt (Bevel war stabil), Robogen/Cubegen.
 - 20.10.2026 · Modell unter dem Dreiecksbudget – Bis 0.17 lag jedes Spielmodell über dem Budget und wurde dezimiert; die Dezimierung hat
   nebenbei n-Ecken trianguliert und die UV-Markierungen (Render, aktiv) neu gesetzt, die das Zusammenfügen in ein leeres Netz verliert.
   Das erste Modell darunter (KG02, 5 872 von 7 000) zeigte beides: glTF ohne Tangenten, `uv1_layers` rot; nach dem Anheben aller

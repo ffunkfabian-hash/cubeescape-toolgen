@@ -62,6 +62,7 @@ except ImportError:  # unit tests import the pure helpers with the system Python
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips  # noqa: E402 - pure Python, needs the tool_assets path
+import mesh_order  # noqa: E402 - same path; bmesh only inside Blender
 import surface as surface_maps  # noqa: E402 - same folder (toolgen/), pure helpers plus the UV1 step
 PALETTE_PATH = ROOT / "data/game_palette.json"
 BUDGET_PATH = ROOT / "data/game_budget.json"
@@ -898,14 +899,12 @@ def reduce_to_budget(renderers, budget, collection):
         # triangulate every renderer and reset its UV flags. Without it, n-gons (more than four corners) become triangles
         # here (glTF tangents on UV1 need tris and quads; shape keys follow), and the UV flags the join into an empty mesh
         # (merge_group) leaves unset are restored: UVMap renders, UV1 (contract 4) is the active map like after
-        # surface.new_uv1.
+        # surface.new_uv1. The triangles come in a fixed face order (mesh_order, 0.20: bmesh's own order varies between runs).
         import bmesh
         for obj in renderers:
             bm = bmesh.new()
             bm.from_mesh(obj.data)
-            ngons = [face for face in bm.faces if len(face.verts) > 4]
-            if ngons:
-                bmesh.ops.triangulate(bm, faces=ngons, quad_method="BEAUTY", ngon_method="BEAUTY")
+            if mesh_order.triangulate_ngons(bm):
                 bm.to_mesh(obj.data)
                 obj.data.update()
             bm.free()
