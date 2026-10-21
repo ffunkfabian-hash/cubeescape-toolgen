@@ -34,10 +34,9 @@ lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überl
 [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
 Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-rules` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
 Links darauf).
-**Erfahrungen** (Techniken, Fallen, Messwerte, Entscheidungen mit Grund) stehen in `docs/TECHNIK.md` und `docs/ENTSCHEIDUNGEN.md`; vor dem
-Bauen, das ein Schwesterprojekt berührt, dessen Stelle lesen (Cube Escape `Docs/QUALITY.md`/`Docs/ARCHITECTURE.md`, Robogen
-`docs/TECHNIK.md`, Cubegen `docs/DEVELOPER.md`, cubeescape-design `docs/`), Regel: `~/.claude/CLAUDE.md` › Erfahrungen festhalten und
-querlesen.
+**Erfahrungen:** [docs/LESSONS.md](docs/LESSONS.md) (≤ 60 Zeilen, eine Zeile je Lehre, Link zur Langform) wird vor Arbeit gelesen und von
+Schwesterprojekten quergelesen (globale Regel › Erfahrungen festhalten und querlesen); Langform in `docs/TECHNIK.md`, `docs/ENTSCHEIDUNGEN.md`.
+Schwesterprojekte: Cube Escape `Docs/LESSONS.md`, Robogen/Cubegen/Design `docs/LESSONS.md`.
 Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
 
 ## Befehle
