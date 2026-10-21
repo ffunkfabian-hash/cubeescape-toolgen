@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 666f296b40dbb8371b2de03642b89a425fe906207cbad1984923b2c198351a3c
+# ce-sha256: 8272fdadf1a090fc8050cc906e38ab24b1d6be68ad69fae962e004dc203ec64c
 """ce_nightly.py [--all | --repo PATH ...] [--dry-run] [install|uninstall|status] - the one nightly run for all repos.
 
 0.5.0: runs `ce_check.py nightly` of every repo in turn (CE_REPOS = ':'-separated paths, else the standard checkouts under
@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 HOME = Path.home()
 DEFAULT_REPOS = ["cubeescape", "cubeescape-toolgen", "cubeescape-robogen", "cubeescape-cubegen", "cubeescape-formgen",
                  "cubeescape-motiongen"]
@@ -98,6 +99,13 @@ def run(args) -> int:
             continue
         state, seconds = run_one(root, log, args.dry_run)
         results.append((root.name, state, seconds))
+    # the search index follows the repos (ce_search.py): a few seconds, never a reason for a red night
+    try:
+        import ce_search
+        summary = ce_search.build([r for r in targets if r.is_dir()], None, log=log)
+        log(f"=== Suchindex: {summary['total_chunks']} Abschnitte, {summary['seconds']} s, Embeddings {'ja' if summary['embeddings'] else 'nein'}")
+    except Exception as error:  # noqa: BLE001
+        log(f"=== Suchindex: übersprungen ({error})")
     log("--- Ergebnis")
     for name, state, seconds in results:
         log(f"{name:24} {state:14} {seconds / 60:5.1f} min")

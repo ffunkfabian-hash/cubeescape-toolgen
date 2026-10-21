@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 20b7bbde90a76114f334c50c3ae11b56beee51e20a02ed2a16052c39a465add5
+# ce-sha256: 7cff19f2881f26f182837584e65526b4b475001b89b38eb1d69e2a71fa7f24c4
 """ce_sync.py [--repo PATH | --all] [--check] - embedded copies of the shared tools in each repo.
 
 The repos must not depend on the plugin at run time (Codex, cloud sessions and worktrees do not have it). So the tools
@@ -30,7 +30,7 @@ import ce_common  # noqa: E402
 
 SYNC_FILES = ["heavy_lock.py", "ce_common.py", "ce_check.py", "ce_lint.py", "ce_release.py", "ce_worktrees.py",
               "ce_sync.py", "ce_docs.py", "ce_nightly.py", "ce_session_name.py", "ce_await_mail.py",
-              "ce_codex_quota.py", "ce_codex_cloud.py", "ce_contract.py"]
+              "ce_codex_quota.py", "ce_codex_cloud.py", "ce_contract.py", "ce_search.py"]
 DATA_DIRS = ["contracts"]  # copied verbatim next to the tools (plugins/ce-shared/contracts -> <tools_dir>/contracts)
 DEFAULT_TOOLS_DIR = "scripts/ce_tools"
 DEFAULT_PLUGIN_TOOLS = Path.home() / ".claude" / "plugins" / "marketplaces" / "ce-agent-tools" / "plugins" / "ce-shared" / "tools"
