@@ -74,8 +74,15 @@ for model in catalog["models"]:
     assert difference(path, shots / (model["tool"] + "-fps.png")) < 1
     check("Ego button renders FPS asset " + model["tool"])
 
+
+def ego_view(model):
+    """Shown through the viewmodel camera: the authored Ego model, and the reduced one up to contract 4 (contract 5: the
+    device alone, inspected in the orbit view)."""
+    return model["variant"] == "fps" or (model["variant"] == "fps_game" and model.get("contract", 4) < 5)
+
+
 for model in catalog["models"]:
-    if model["variant"] not in ("fps", "fps_game"):
+    if not ego_view(model):
         continue
     camera_path = output / model["tool"] / "viewmodel_camera.json"
     assert camera_path.is_file(), (model["id"], "missing viewmodel camera")
@@ -151,6 +158,8 @@ with tempfile.TemporaryDirectory(prefix="toolgen-viewer-tests-") as temporary:
         shot = shots / (ego["id"].replace("/", "-") + "-view.png")
         result = run("--snapshot", shot, "--data", game_library, "--model", ego["id"], "--size", "600x400", "--no-floor")
         assert ego["id"] in result.stdout and ego["triangles"] <= authored["triangles"], (ego["id"], result.stdout)
+        if not ego_view(ego):
+            continue      # contract 5: the device alone in the orbit view ("visible model" above), no Ego framing to keep
         # The reduced model keeps the framing of the authored one: same camera, silhouette within a few percent.
         reference = shots / (authored["id"].replace("/", "-") + ".png")
         pixels = 600 * 400

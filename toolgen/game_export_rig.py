@@ -233,6 +233,7 @@ def build_contract5(tool, work, ego, arms_contract, rig_report, files, base_cont
     entries = clip_entries(dict(ego, use=tool.get("fps_clip") or tool["clip"]), game, take, fps, animated_nodes, use_events)
     document = dict(base_contract)
     data = ego_clips.load()
+    enlargement = float(json.loads((work / "qa_geometry_fps.json").read_text()).get("enlargement", 1.0))
     document.update({
         "format": CONTRACT, "clips": entries,
         "ego_clips": {"format": data["format"], "file": game + "_Clips.fbx", "glb": game + "_Clips.glb", "take": take,
@@ -265,9 +266,12 @@ def build_contract5(tool, work, ego, arms_contract, rig_report, files, base_cont
                        "target": "Hand_L = device root x grip.L (position and rotation)"},
         "frame_size": {"value": 1.0, "note": "contract 5: the factor 1.4 is baked in; hip.scale does not apply"},
         "device_scale": {"factor": rig_report["device_factor"], "tool_scale": rig_report["tool_scale"],
-                         "rig_scale": rig_report["rig_scale"],
-                         "note": "the device in this package against its world model (tool_scale relative to the hand x the "
-                                 "rig's baked 1.4); surface_bake places the decals with it"},
+                         "rig_scale": rig_report["rig_scale"], "fps_enlargement": enlargement,
+                         "world_factor": round(rig_report["device_factor"] * enlargement, 6),
+                         "note": "factor = the scale applied to the fps step's model (tool_scale relative to the hand x the "
+                                 "rig's baked 1.4), as tool_scale in contract 4; surface_bake places the decals with it. "
+                                 "world_factor = the device against its world model (factor x the fps step's own "
+                                 "enlargement, Portalkanone 1.5)"},
         "hand_parts": rig_report["hand_parts"],
         "event_channels": {"action": "EquipmentActionEvent (default when channel is missing)",
                            "rig": "read only by the support-hand IK (HandOff, HandOn)"},
@@ -411,7 +415,7 @@ def main():
                     "sample_frames": [1]}
         ge.check_budget(checks, document)
         checks.add("device_without_arms", not [obj.name for item in roots for obj in tree(item)
-                                               if obj.name.startswith(("UpperArm_", "LowerArm_", "Hand_", "Fingers_",
+                                               if obj.name.startswith(("UpperArm_", "LowerArm_", "WristYoke_", "Hand_", "Fingers_",
                                                                        "Thumb_", "Viewmodel_", "Shoulder_"))],
                    note="contract 5: arms, hands and the viewmodel carrier live in ego_arms")
         socket = next(anchor for anchor in document["anchors"] if anchor["name"] == "Socket_Hand")

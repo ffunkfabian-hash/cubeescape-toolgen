@@ -25,6 +25,9 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(("EXPECTED_UNSTABLE", 30.0, 2), determinism.classify("smg/world", [30.0, 0, 30.0], known=known))
         self.assertEqual(("KNOWN_NOW_STABLE", 0.5, 0), determinism.classify("smg/world", [0.5, 0.0], known=known))
         self.assertEqual([], determinism.failed({"smg/world": ("EXPECTED_UNSTABLE", 30.0, 2)}))
+        # 0.19 (Codex sol): a known entry is no blank cheque - above its value plus the limit the model fails
+        self.assertEqual(("UNSTABLE", 31.5, 1), determinism.classify("smg/world", [31.5, 0.0], known=known))
+        self.assertEqual(("EXPECTED_UNSTABLE", 31.0, 1), determinism.classify("smg/world", [31.0, 0.0], known=known))
 
     def test_defaults(self):
         self.assertEqual((8, 1.0), (determinism.RUNS, determinism.LIMIT_PX))

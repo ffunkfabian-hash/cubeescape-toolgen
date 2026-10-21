@@ -2,7 +2,7 @@
 
 One arm package for every Ego device instead of arms baked into each device's viewmodel: Shoulder -> UpperArm ->
 LowerArm -> Hand per side, Prop_R/Prop_L, three gripping fingers with three links and a two-link thumb, a visible wrist
-servo (WristServo on the forearm, WristRotor on the hand), rigid parts at the nodes (no armature, no skinning). Data:
+cardan joint (rig version 2: WristServo fork on the forearm, WristYoke on its own node, WristFork on the hand), rigid parts at the nodes (no armature, no skinning). Data:
 data/ego_arms.json (rig), data/viewmodels.json (arm: lengths, shoulders, elbow pole, hand scale).
 
 As a stage (runs like the other toolgen steps, in the work folder of the package ``ego_arms``):
@@ -85,7 +85,7 @@ def thumb_sign(side):
 
 def node_names(side):
     """Chain and hand nodes of one side in hierarchy order (the order of the rig hash)."""
-    names = [f"Shoulder_{side}", f"UpperArm_{side}", f"LowerArm_{side}", f"Hand_{side}", f"Wrist_{side}",
+    names = [f"Shoulder_{side}", f"UpperArm_{side}", f"LowerArm_{side}", f"WristYoke_{side}", f"Hand_{side}", f"Wrist_{side}",
              f"GripContact_{side}", f"Prop_{side}"]
     for finger in range(FINGERS):
         names += [finger_node(side, finger, link) for link in range(FINGER_LINKS)]
@@ -107,7 +107,7 @@ def all_nodes(asset):
 
 def moving_nodes(side):
     """Nodes that carry a renderer <node>_Mesh (the upper arm never shows)."""
-    return [f"LowerArm_{side}", f"Hand_{side}",
+    return [f"LowerArm_{side}", f"WristYoke_{side}", f"Hand_{side}",
             *(finger_node(side, finger, link) for finger in range(FINGERS) for link in range(FINGER_LINKS)),
             *(thumb_node(side, link) for link in range(THUMB_LINKS))]
 
@@ -448,7 +448,7 @@ def forearm_mesh(materials, node, side, rig, length):
     for sign in (-1, 1):
         part.cylinder((sign * .039, 0, length * .5), .0086, length, METAL, segments=10)
     part.cylinder((0, 0, length * .955), f["cuff_radius"], .0217, MECH)
-    # WristServo: housing across the wrist with two fork cheeks that carry the hand's rotor axle (hand-local X)
+    # WristServo: housing across the wrist with two fork cheeks that carry the yoke's flex axle (forearm-local X)
     servo_z = length - f["fork_reach"] * .25
     part.cylinder((0, 0, servo_z), f["servo_radius"], f["servo_length"], METAL, axis=(1, 0, 0), segments=16)
     for sign in (-1, 1):
@@ -482,18 +482,41 @@ def hand_mesh(materials, node, side, rig, scale):
             part.box((x * s, (back + .0165) * s, (mid + z) * s), (.007 * s, .004 * s, .007 * s), MECH, bevel=0)
     part.cylinder((0, .002 * s, hand["knuckle_z"] * s), .011 * s, hand["palm_width"] * 1.04 * s, MECH, axis=(1, 0, 0),
                   segments=12)
-    # WristRotor: drum on the hand's flex axis inside the servo fork, white caps and orange hubs that turn with the hand
+    # WristFork (rig version 2, cardan wrist): two cheeks on the cross's second pin (hand-local Y, the sideways bend) and a
+    # narrow bridge into the palm, all outside the cross block, so the hand turns about Y without cutting the yoke
+    cross = rig["wrist_cross"]
+    for y in (-1, 1):
+        part.box((0, y * cross["cheek_y"], (cross["bridge_z"] - .010) / 2), (cross["cheek_x"], cross["cheek_t"],
+                 cross["bridge_z"] + .010), MECH, bevel=.0015)
+    part.box((0, 0, cross["bridge_z"]), (cross["cheek_x"] * 1.15, 2 * cross["cheek_y"] + cross["cheek_t"], .007), MECH,
+             bevel=.002)
+    part.box((0, 0, (cross["bridge_z"] + start * s) / 2 + .002), (hand["palm_width"] * .42 * s, cross["cheek_t"] * 1.6,
+             max(.004, start * s - cross["bridge_z"] + .006)), MECH, bevel=.002)
+    obj = part.finish(node.name + "_Mesh", node)
+    obj["ce_parts"] = json.dumps(["Palm", "Backhand", f"WristFork_{side}"])
+    return obj
+
+
+def yoke_mesh(materials, node, side, rig):
+    """WristYoke (rig version 2): the cross of a cardan joint - flex pin along yoke-local X into the forearm fork (white caps,
+    orange hubs: the servo you see turn) and the second pin along Y into the hand's fork (the sideways bend)."""
     servo = rig["forearm"]
-    part.cylinder((0, 0, 0), servo["servo_radius"] * .78, servo["servo_length"] * .82, MECH, axis=(1, 0, 0), segments=16)
+    cross = rig["wrist_cross"]
+    part = PartMesh(materials)
+    span = servo["servo_length"] / 2 + .008
+    part.cylinder((0, 0, 0), cross["pin_x"], 2 * span, METAL, axis=(1, 0, 0), segments=12)
     for x in (-1, 1):
         part.cylinder((x * (servo["servo_length"] / 2 + .0105), 0, 0), servo["servo_radius"] * .82, .006, ARMOR,
                       axis=(1, 0, 0), segments=16)
         part.cylinder((x * (servo["servo_length"] / 2 + .0145), 0, 0), servo["servo_radius"] * .36, .004, LIGHTS,
                       axis=(1, 0, 0), segments=12)
-    part.box((0, 0, start * .55 * s), (hand["palm_width"] * .55 * s, hand["palm_thickness"] * .55 * s, start * 1.3 * s),
-             MECH, bevel=.003 * s)
+    part.box((0, 0, 0), (cross["block"], cross["block"], cross["block"]), MECH, bevel=.002)
+    reach = cross["cheek_y"] + cross["cheek_t"] / 2 + .002
+    part.cylinder((0, 0, 0), cross["pin_y"], 2 * reach, METAL, axis=(0, 1, 0), segments=12)
+    for y in (-1, 1):
+        part.cylinder((0, y * reach, 0), cross["pin_y"] * 1.5, .003, LIGHTS, axis=(0, 1, 0), segments=12)
     obj = part.finish(node.name + "_Mesh", node)
-    obj["ce_parts"] = json.dumps(["Palm", "Backhand", f"WristRotor_{side}"])
+    obj["ce_parts"] = json.dumps([f"WristYoke_{side}", f"WristRotor_{side}"])
     return obj
 
 
@@ -570,7 +593,13 @@ def place_chain(nodes, side, shoulder, elbow, hand_matrix):
     shoulder_node.rotation_quaternion = Quaternion()
     nodes[f"UpperArm_{side}"].rotation_quaternion = upper_rotation
     nodes[f"LowerArm_{side}"].rotation_quaternion = upper_rotation.inverted() @ forearm_rotation
-    nodes[f"Hand_{side}"].rotation_quaternion = forearm_rotation.inverted() @ hand_rotation
+    # cardan wrist (rig version 2): the forearm rolls with the hand, so the hand's +Y lies in the forearm's YZ plane and the
+    # wrist is exactly R_x(flex) on WristYoke_ times R_y(sideways) on Hand_
+    relative = forearm_rotation.inverted() @ hand_rotation
+    back = relative @ Vector((0, 1, 0))
+    flex = Quaternion((1, 0, 0), math.atan2(back.z, back.y))
+    nodes[f"WristYoke_{side}"].rotation_quaternion = flex
+    nodes[f"Hand_{side}"].rotation_quaternion = flex.inverted() @ relative
 
 
 def solve_chain(nodes, side, shoulder, hand_matrix, lengths, pole):
@@ -614,7 +643,10 @@ def build_rig(collection, rig=None, arm=None, materials=None, meshes=True):
         shoulder = empty(f"Shoulder_{side}", root)
         upper = empty(f"UpperArm_{side}", shoulder)
         lower = empty(f"LowerArm_{side}", upper, (0, 0, size["upper_m"]))
-        joint = empty(f"Hand_{side}", lower, (0, 0, size["forearm_m"]))
+        yoke = empty(f"WristYoke_{side}", lower, (0, 0, size["forearm_m"]))
+        yoke["ce_role"] = "wrist_yoke"
+        yoke["ce_note"] = "cardan cross: turns about its +X (flex, the forearm's fork axle); Hand_ turns about +Y (sideways)"
+        joint = empty(f"Hand_{side}", yoke)
         joint["robogen_joint"] = joint.name
         wrist = empty(f"Wrist_{side}", joint)
         wrist["ce_role"] = "wrist"
@@ -625,7 +657,7 @@ def build_rig(collection, rig=None, arm=None, materials=None, meshes=True):
         prop = empty(f"Prop_{side}", joint, Vector((0, prop_y, prop_z)) * hs)
         prop["ce_role"] = "prop"
         prop["ce_note"] = "grip point inside the curled fingers (Robogen Prop_); devices hang here (attach)"
-        for obj in (shoulder, upper, lower, joint, wrist, contact, prop):
+        for obj in (shoulder, upper, lower, yoke, joint, wrist, contact, prop):
             nodes[obj.name] = obj
         for finger in range(FINGERS):
             parent = joint
@@ -641,6 +673,7 @@ def build_rig(collection, rig=None, arm=None, materials=None, meshes=True):
         nodes[thumb.name], nodes[tip.name] = thumb, tip
         if meshes:
             renderers.append(forearm_mesh(materials, lower, side, rig, size["forearm_m"]))
+            renderers.append(yoke_mesh(materials, yoke, side, rig))
             renderers.append(hand_mesh(materials, joint, side, rig, hs))
             for finger in range(FINGERS):
                 for link in range(FINGER_LINKS):
@@ -730,6 +763,11 @@ def bvh(obj, grow=0.0):
 def pose_contacts(rig_state, side, angles):
     apply_pose(rig_state["nodes"], rig_state["rig"], side, angles)
     bpy.context.view_layer.update()
+    return hand_contacts(rig_state, side)
+
+
+def hand_contacts(rig_state, side):
+    """Pairs of non-adjacent parts of one hand that touch in the current (posed or keyed) state."""
     trees = {}
     touching = []
     for a, b in contact_pairs(rig_state["renderers"], side):
@@ -806,14 +844,18 @@ def contract_document(state, files, report, palette, budget):
         "root": rig["asset"],
         "nodes": [{"name": name, "parent": nodes[name].parent.name if nodes[name].parent else None,
                    "role": nodes[name].get("ce_role"), **unity_local(nodes[name])} for name in order],
-        "chains": {side: [f"Shoulder_{side}", f"UpperArm_{side}", f"LowerArm_{side}", f"Hand_{side}"] for side in SIDES},
+        "chains": {side: [f"Shoulder_{side}", f"UpperArm_{side}", f"LowerArm_{side}", f"WristYoke_{side}", f"Hand_{side}"]
+                   for side in SIDES},
         "fingers": {side: {"fingers": [[finger_node(side, finger, link) for link in range(FINGER_LINKS)]
                                        for finger in range(FINGERS)],
                            "thumb": [thumb_node(side, link) for link in range(THUMB_LINKS)],
                            "trigger_finger": finger_node(side, 0, 0)} for side in SIDES},
         "local_axes": {"chain": "+Z along every link from proximal to distal (Shoulder->elbow, elbow->wrist, wrist->knuckles); "
-                                "local translations of LowerArm_<S> (0, 0, upper_m) and Hand_<S> (0, 0, forearm_m) are "
-                                "constant: clips rotate the chain and may move only Shoulder_<S>",
+                                "local translations of LowerArm_<S> (0, 0, upper_m), WristYoke_<S> (0, 0, forearm_m) and "
+                                "Hand_<S> (0, 0, 0) are constant: clips rotate the chain and may move only Shoulder_<S>",
+                       "wrist": "cardan joint (rig version 2): WristYoke_<S> turns only about its local +X (flex, the axle "
+                                "in the forearm's fork), Hand_<S> only about its local +Y (sideways bend); the forearm rolls "
+                                "with the hand so the two always suffice",
                        "hand": "Hand_<S>: origin = wrist pivot, +Z to the knuckles, +Y back of the hand, -Y palm; +X is the "
                                "thumb side of the right hand, -X of the left (mirrored)",
                        "fingers": "every finger and thumb link bends about its local +X (positive = towards the palm); "
@@ -943,9 +985,11 @@ def main():
         checks["bind_wrist"] = {"passed": all(value <= rig["limits_degrees"]["wrist_limit"] for value in bend.values()),
                                 "degrees": bend}
         checks["rig_hash"] = {"passed": state["hash"] == rig_hash_of(nodes, rig["asset"]), "hash": state["hash"]}
-        expected = {"nodes": order, "renderers": names, "parents": {name: nodes[name].parent.name if nodes[name].parent else None
-                                                                    for name in order},
-                    "matrices": {name: [list(row) for row in nodes[name].matrix_world] for name in order},
+        placed = {**{name: nodes[name] for name in order}, **{obj.name: obj for obj in renderers}}
+        expected = {"nodes": order, "renderers": names,
+                    # renderers too: a mesh on the wrong node or at the wrong place fails with the same names and slots
+                    "parents": {name: obj.parent.name if obj.parent else None for name, obj in placed.items()},
+                    "matrices": {name: [list(row) for row in obj.matrix_world] for name, obj in placed.items()},
                     "slots": {obj.name: sorted({m.name for m in obj.data.materials}) for obj in renderers},
                     "triangles": total}
         scene = bpy.context.scene

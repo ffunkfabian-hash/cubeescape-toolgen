@@ -42,6 +42,7 @@ from motion_profiles import envelope, settle  # noqa: E402
 
 USE_FRAMES = (1, 97)
 TOUCH_LIMIT_M = .008
+CARDAN_TOLERANCE_DEGREES = .5    # rig version 2: the yoke's and the hand's local turn off their single axis (interpolation)
 PENETRATION_STEP_M = .0005
 VISIBLE_FRACTION = .5                # proximal forearm half stays out of the frame
 FOREARM_LAG = (2, .3)                 # servo: the forearm direction keeps this share of its target two frames earlier
@@ -320,6 +321,29 @@ def hand_touch(state, side, device_bvh_local, device_inverse, sample=3):
     return best
 
 
+def live_device_bvh(root, hand_parts, device_inverse):
+    """Device BVH of this frame in the device root's frame: moving parts where the clip has them, hidden parts (visibility
+    scale 0.001) left out, the parts in the left hand (HandMag_L) included."""
+    parts = [*device_meshes(root), *(device_meshes(hand_parts["root"]) if hand_parts else [])]
+    return world_bvh([obj for obj in parts if obj.matrix_world.to_scale().x > .01], device_inverse)
+
+
+def hand_penetration(state, side, device_bvh_local, device_inverse):
+    """Renderers of the hand (palm, fingers, thumb) whose triangles cut the device surface (live_device_bvh, in the frame
+    of device_bvh_local): touching within the contact gap passes, cutting in fails."""
+    fingers, thumb, palm = hand_link_meshes(state, side)
+    return [obj.name for obj in [palm, *thumb, *(link for links in fingers for link in links)]
+            if device_bvh_local.overlap(world_bvh([obj], device_inverse))]
+
+
+def wrist_side_degrees(nodes, side):
+    """Sideways bend of the wrist (degrees): the servo is a hinge about LowerArm X, so Hand +Z should stay in the
+    forearm's YZ plane; this is the angle out of it."""
+    lower = nodes[f"LowerArm_{side}"].matrix_world.to_3x3()
+    knuckles = (nodes[f"Hand_{side}"].matrix_world.to_3x3() @ Vector((0, 0, 1))).normalized()
+    return math.degrees(math.asin(min(1.0, abs(knuckles.dot((lower @ Vector((1, 0, 0))).normalized())))))
+
+
 # --------------------------------------------------------------------------------------------- arm chain
 def forearm_from_spec(spec, hand_matrix):
     """Rest forearm direction (elbow -> wrist, camera axes): ``forearm`` explicit, or rise/yaw relative to the knuckle
@@ -532,7 +556,8 @@ def build(directory, tool_id):
             direction = (target * (1 - weight) + forearms[side][earlier] * weight).normalized()
             knuckles = item["hands"][side].to_3x3() @ Vector((0, 0, 1))
             item.setdefault("forearm", {})[side] = limited_forearm(direction, knuckles, limit - .5)
-    keyed = key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, device)
+    keyed, guarded = key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, device,
+                                finger_poses["L"]["open"])
     # device mechanics in the ego clips (first_person.py clip_keys: Fire replays the Use clip's slides and bolts)
     owners = [root, *root.children_recursive, *(obj.data.shape_keys for obj in root.children_recursive
                                                 if obj.type == "MESH" and obj.data.shape_keys)]
@@ -555,6 +580,8 @@ def build(directory, tool_id):
     report.update({"tool": tool_id, "contract": 5, "rig": {"id": rig["id"], "version": rig["version"], "hash": state["hash"]},
                    "scale": {"device_factor": factor, "tool_scale": device["tool_scale"], "rig_scale": rig["scale"]},
                    "finger_poses": finger_poses, "palm_push_m": pushes,
+                   "finger_guard": {"frames": guarded, "rule": "reload frames: a left-hand chain that would cut the "
+                                                               "device of that frame opens towards open (5 % steps)"},
                    "attach": {"bone": "Prop_R", "node": name, **ego_arms.unity_local(root)},
                    "grips": {side: {"mode": "grip" if side == "R" else device["grip"]["L"].get("mode", "support"),
                                     "pose": device["grip"][side]["pose"],
@@ -672,22 +699,80 @@ def build_hand_parts(scene, root, nodes, device, extra, spec):
     return {"root": holder, "parts": created}
 
 
-def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, device):
-    """Keys every node of the chains, the fingers, the reload part states (bolt, magazine swap)."""
+def set_fingers(nodes, rig, side, fingers, thumb):
+    for finger, values in enumerate(fingers):
+        for link, value in enumerate(values):
+            nodes[ego_arms.finger_node(side, finger, link)].rotation_quaternion = ego_arms.finger_rotation(value)
+    flex, out, tip = thumb
+    nodes[ego_arms.thumb_node(side, 0)].rotation_quaternion = ego_arms.thumb_rotation(rig, side, flex, out)
+    nodes[ego_arms.thumb_node(side, 1)].rotation_quaternion = ego_arms.finger_rotation(tip)
+
+
+def guard_fingers(state, side, fingers, thumb, open_pose, device_bvh):
+    """Reload frames: the left hand travels between grips and its keyed finger stellung was closed on the device at rest;
+    every chain (finger or thumb) that cuts the device of this frame opens towards ``open`` in steps of 5 % until it is
+    free. Returns the new angles and the opened share per chain (empty when nothing cut)."""
+    nodes, rig = state["nodes"], state["rig"]
+    fingers = [list(values) for values in fingers]
+    thumb = list(thumb)
+    links, thumb_links, _ = hand_link_meshes(state, side)
+    opened = {}
+    chains = [*((f"finger {index}", index) for index in range(ego_arms.FINGERS)), ("thumb", None)]
+    for name, index in chains:
+        start = fingers[index] if index is not None else thumb
+        target = open_pose["fingers"][index] if index is not None else open_pose["thumb"]
+        objects = links[index] if index is not None else thumb_links
+        share = 0.0
+        while overlaps(objects, device_bvh, 0.0) and share < 1.0:
+            share = min(1.0, share + .05)
+            values = [(1 - share) * a + share * b for a, b in zip(start, target)]
+            if index is not None:
+                fingers[index] = values
+            else:
+                thumb = values
+            set_fingers(nodes, rig, side, fingers, thumb)
+            bpy.context.view_layer.update()
+        if share:
+            opened[name] = round(share, 2)
+    return fingers, thumb, opened
+
+
+def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, device, open_pose):
+    """Keys every node of the chains, the fingers, the reload part states (bolt, magazine swap). In reload frames the
+    left hand's chains open where they would cut the device of that frame (guard_fingers). Returns the keyed objects and
+    the guarded frames."""
     nodes, rig = state["nodes"], state["rig"]
     upper_m, forearm_m = lengths
     keyed = []
+    guarded = []
     previous = {}
     swap = {}
     for clip in clips:
         if clip["motion"] == "reload5":
             events = device["reload"][clip["choreography"]]["events"]
             swap[clip["name"]] = (clip["frame_start"] + events["MagOut"], clip["frame_start"] + events["MagIn"])
-    magazine = scene.objects.get("Anim_Magazine")
     bolt_specs = {clip["name"]: device["reload"][clip["choreography"]].get("bolt") for clip in clips
                   if clip["motion"] == "reload5"}
-    bolt_rest = {}
+    # rest locations once, before any frame is posed (frame_set would reset the posed values of a frame)
+    scene.frame_set(1)
+    bolt_rest = {spec["node"]: scene.objects[spec["node"]].location.copy() for spec in bolt_specs.values() if spec}
     for frame, item in plan.items():
+        clip = item["clip"]
+        # the frame's device state first (magazine swap, bolt), then the chains, then the guard, then the keys
+        if hand_parts:
+            inside = clip is not None and clip["name"] in swap and swap[clip["name"]][0] <= frame < swap[clip["name"]][1]
+            for entry in hand_parts["parts"].values():
+                entry["node"].scale = (1, 1, 1) if inside else (.001, .001, .001)
+                entry["source"].scale = (.001, .001, .001) if inside else (1, 1, 1)
+        bolt = None
+        if clip is not None and bolt_specs.get(clip["name"]):
+            spec = bolt_specs[clip["name"]]
+            bolt = scene.objects[spec["node"]]
+            u = frame - clip["frame_start"]
+            keys = [[k, {"d": v}] for k, v in spec["keys"]]
+            a, b, t = interpolate(keys, u)
+            offset = (1 - t) * a["d"] + t * b["d"]
+            bolt.location = bolt_rest[bolt.name] + Vector(spec["axis"]) * offset
         for side in ego_arms.SIDES:
             hand_matrix = item["hands"][side]
             forearm = item["forearm"][side]
@@ -696,13 +781,18 @@ def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, d
             upper = item["turn"] @ rest_arm[side]["upper"]
             shoulder = elbow + upper * upper_m
             ego_arms.place_chain(nodes, side, shoulder, elbow, hand_matrix)
-            for finger, values in enumerate(item["fingers"][side]):
-                for link, value in enumerate(values):
-                    nodes[ego_arms.finger_node(side, finger, link)].rotation_quaternion = ego_arms.finger_rotation(value)
-            flex, out, tip = item["thumbs"][side]
-            nodes[ego_arms.thumb_node(side, 0)].rotation_quaternion = ego_arms.thumb_rotation(rig, side, flex, out)
-            nodes[ego_arms.thumb_node(side, 1)].rotation_quaternion = ego_arms.finger_rotation(tip)
-            chain = [nodes[f"Shoulder_{side}"], nodes[f"UpperArm_{side}"], nodes[f"LowerArm_{side}"], nodes[f"Hand_{side}"],
+            set_fingers(nodes, rig, side, item["fingers"][side], item["thumbs"][side])
+        if clip is not None and clip["motion"] == "reload5":
+            bpy.context.view_layer.update()
+            parts = [*device_meshes(root), *(device_meshes(hand_parts["root"]) if hand_parts else [])]
+            live = world_bvh([obj for obj in parts if obj.matrix_world.to_scale().x > .01])
+            fingers, thumb, opened = guard_fingers(state, "L", item["fingers"]["L"], item["thumbs"]["L"], open_pose, live)
+            if opened:
+                item["fingers"]["L"], item["thumbs"]["L"] = fingers, thumb
+                guarded.append({"clip": clip["name"], "frame": frame - clip["frame_start"], "opened": opened})
+        for side in ego_arms.SIDES:
+            chain = [nodes[f"Shoulder_{side}"], nodes[f"UpperArm_{side}"], nodes[f"LowerArm_{side}"],
+                     nodes[f"WristYoke_{side}"], nodes[f"Hand_{side}"],
                      *(nodes[ego_arms.finger_node(side, finger, link)] for finger in range(ego_arms.FINGERS)
                        for link in range(ego_arms.FINGER_LINKS)),
                      *(nodes[ego_arms.thumb_node(side, link)] for link in range(ego_arms.THUMB_LINKS))]
@@ -716,27 +806,13 @@ def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, d
                 if obj.name.startswith("Shoulder_"):
                     obj.keyframe_insert(data_path="location", frame=frame)
             keyed += chain if frame == next(iter(plan)) else []
-        clip = item["clip"]
         if hand_parts:
-            inside = clip is not None and clip["name"] in swap and swap[clip["name"]][0] <= frame < swap[clip["name"]][1]
             for entry in hand_parts["parts"].values():
-                entry["node"].scale = (1, 1, 1) if inside else (.001, .001, .001)
                 entry["node"].keyframe_insert(data_path="scale", frame=frame)
-                entry["source"].scale = (.001, .001, .001) if inside else (1, 1, 1)
                 entry["source"].keyframe_insert(data_path="scale", frame=frame)
-        if clip is not None and bolt_specs.get(clip["name"]):
-            spec = bolt_specs[clip["name"]]
-            bolt = scene.objects[spec["node"]]
-            if bolt.name not in bolt_rest:
-                scene.frame_set(1)
-                bolt_rest[bolt.name] = bolt.location.copy()
-            u = frame - clip["frame_start"]
-            keys = [[k, {"d": v}] for k, v in spec["keys"]]
-            a, b, t = interpolate(keys, u)
-            offset = (1 - t) * a["d"] + t * b["d"]
-            bolt.location = bolt_rest[bolt.name] + Vector(spec["axis"]) * offset
+        if bolt is not None:
             bolt.keyframe_insert(data_path="location", frame=frame)
-    return keyed
+    return keyed, guarded
 
 
 def constant_visibility(hand_parts):
@@ -798,14 +874,21 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
     touch = {"R": 0.0, "L": 0.0}
     touch_frames = {"R": None, "L": None}
     bend = {"R": 0.0, "L": 0.0}
+    side_bend = {"R": 0.0, "L": 0.0}
+    cardan_worst = {"R": 0.0, "L": 0.0}
     proximal_visible, elbow_visible, chains_missing, reticle_hits = [], [], [], []
+    penetrating, self_contacts = [], []
     renderers = {obj.name: obj for obj in state["renderers"]}
     clip_ranges = {clip["name"]: clip for clip in clips}
     per_clip = {clip["name"]: {"hand_touch_max_m": {"R": 0.0, "L": 0.0}, "wrist_bend_max_degrees": {"R": 0.0, "L": 0.0}}
                 for clip in clips}
     per_clip["Use"] = {"hand_touch_max_m": {"R": 0.0, "L": 0.0}, "wrist_bend_max_degrees": {"R": 0.0, "L": 0.0}}
+    # every second frame, the clip borders and events; every frame of the reload clips, where the left hand travels between
+    # grips and the finger guard works (Codex sol 0.19: a cut on a skipped frame passed)
     sample = sorted(set(frames[::2]) | {clip["frame_start"] for clip in clips} | {clip["frame_end"] for clip in clips}
-                    | {event["frame"] for clip in clips for event in clip["events"]})
+                    | {event["frame"] for clip in clips for event in clip["events"]}
+                    | {frame for clip in clips if clip["motion"] == "reload5"
+                       for frame in range(clip["frame_start"], clip["frame_end"] + 1)})
     blend = 3
     for frame in sample:
         scene.frame_set(frame)
@@ -815,6 +898,7 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
         clip = item["clip"]
         key = clip["name"] if clip else "Use"
         device_inverse = root.matrix_world.inverted()
+        live = live_device_bvh(root, hand_parts, device_inverse)
         for side in ego_arms.SIDES:
             lower = nodes[f"LowerArm_{side}"].matrix_world
             hand = nodes[f"Hand_{side}"].matrix_world
@@ -823,6 +907,20 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             per_clip[key]["wrist_bend_max_degrees"][side] = max(per_clip[key]["wrist_bend_max_degrees"][side], round(value, 2))
             if value > limit + 1e-3:
                 failures.append(f"{key} frame {frame}: wrist {side} bent {value:.1f} deg (limit {limit})")
+            side_bend[side] = max(side_bend[side], wrist_side_degrees(nodes, side))
+            # cardan wrist (rig version 2): the yoke turns only about its X, the hand only about its Y
+            yoke_axis = nodes[f"WristYoke_{side}"].matrix_basis.to_3x3() @ Vector((1, 0, 0))
+            hand_axis = nodes[f"Hand_{side}"].matrix_basis.to_3x3() @ Vector((0, 1, 0))
+            residual = max(math.degrees(yoke_axis.angle(Vector((1, 0, 0)))), math.degrees(hand_axis.angle(Vector((0, 1, 0)))))
+            cardan_worst[side] = max(cardan_worst[side], residual)
+            if residual > CARDAN_TOLERANCE_DEGREES:
+                failures.append(f"{key} frame {frame}: wrist {side} is no cardan turn ({residual:.2f} deg off its axes)")
+            cut = hand_penetration(state, side, live, device_inverse)
+            if cut:
+                penetrating.append([key, frame, side, cut[:4]])
+            touching = ego_arms.hand_contacts(state, side)
+            if touching:
+                self_contacts.append([key, frame, side, touching[:2]])
             free = side == "L" and clip is not None and clip["motion"] == "reload5" and in_window(clip, frame, device, blend)
             if not free:
                 distance = hand_touch(state, side, bvh_local, device_inverse)
@@ -845,8 +943,9 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             if side == "R" or not free:
                 fingers, thumb, _ = hand_link_meshes(state, side)
                 for name, links in [*((f"finger {index}", chain) for index, chain in enumerate(fingers)), ("thumb", thumb)]:
-                    shown = any(screen_points(mesh_world(obj, graph)[0], frustum, near)[2].any()
-                                for obj in links for frustum in views.values())
+                    # in every aspect (16:9 and 16:10): a finger only inside the wider frame is missing in 16:10
+                    shown = all(any(screen_points(mesh_world(obj, graph)[0], frustum, near)[2].any() for obj in links)
+                                for frustum in views.values())
                     if not shown and (clip is None or clip["motion"] not in ("draw", "holster", "sprint", "sprint_in",
                                                                              "sprint_out")):
                         chains_missing.append([key, frame, side, name])
@@ -865,6 +964,10 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
         failures.append(f"finger or thumb of a holding hand out of frame: {len(chains_missing)} samples, first {chains_missing[:3]}")
     if reticle_hits:
         failures.append(f"arms on the reticle in reticle-free frames: {reticle_hits[:3]}")
+    if penetrating:
+        failures.append(f"hand cuts into the device: {len(penetrating)} samples, first {penetrating[:3]}")
+    if self_contacts:
+        failures.append(f"fingers of one hand touch each other: {len(self_contacts)} samples, first {self_contacts[:3]}")
     poses = pose_checks(scene, state, root, clips, attach)
     failures += poses["failures"]
     events = event_checks(clips, device)
@@ -884,7 +987,16 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
     return {"passed": not failures, "failures": failures, "sampled_frames": len(sample),
             "hand_touch_limit_m": TOUCH_LIMIT_M, "hand_touch_max_m": {side: round(value, 5) for side, value in touch.items()},
             "hand_touch_worst_frame": touch_frames, "wrist_bend_max_degrees": {side: round(value, 2) for side, value in bend.items()},
-            "wrist_limit_degrees": limit, "framing": {"proximal_forearm_visible": proximal_visible[:20],
+            "wrist_limit_degrees": limit,
+            "wrist_side_max_degrees": {side: round(value, 2) for side, value in side_bend.items()},
+            "wrist_cardan": {"axis_error_max_degrees": {side: round(value, 4) for side, value in cardan_worst.items()},
+                             "limit_degrees": CARDAN_TOLERANCE_DEGREES,
+                             "rule": "WristYoke_<S> turns about its +X only (flex), Hand_<S> about its +Y only (sideways)"},
+            "penetration": {"samples": penetrating[:20], "rule": "no hand renderer cuts the device surface (the device "
+                                                                  "of each frame with its moving and hand-held parts)"},
+            "hand_self_contacts": {"samples": self_contacts[:20], "gap_m": ego_arms.CONTACT_GAP_M,
+                                   "rule": "the keyed grip poses keep the finger_pose_contacts rule of the arm package"},
+            "framing": {"proximal_forearm_visible": proximal_visible[:20],
                                                        "elbow_visible": elbow_visible[:20],
                                                        "chains_missing": chains_missing[:20], "reticle": reticle_hits[:20],
                                                        "rule": "three gripping fingers + thumb of each holding hand in frame "

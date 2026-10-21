@@ -120,11 +120,14 @@ enum Main {
                 try require(model.selected.variant == "fps" && model.viewName == "Front", "FPS inspection selected another asset")
                 checks += 1
             }
+            // tools with an Ego model only: the shared arm package (contract 5, ego_arms/arms) is a part, not a tool
+            let egoTools = Set(model.data.catalog.models.filter(\.isEgo).map(\.tool))
             for info in model.data.catalog.models where !info.isEgo {
                 model.select(info)
                 try require(model.viewName == "Iso", "World/arrow selection did not restore overview")
+                guard egoTools.contains(info.tool) else { checks += 1; continue }
                 model.setView("FPS")
-                for tool in Set(model.data.catalog.models.map(\.tool)) {
+                for tool in egoTools {
                     model.selectTool(tool)
                     try require(model.selected.tool == tool && model.selected.isEgo && model.viewName == "FPS",
                                 "Tool switch lost Ego mode: \(tool)")
@@ -174,7 +177,7 @@ enum Main {
                 model.select(info)
                 try require(model.viewName == "Iso" && model.selected.variantLabel == "Spielmodell", "Game model selection failed")
                 model.setView("FPS")
-                let reducedEgo = model.data.catalog.models.contains { $0.tool == info.tool && $0.variant == "fps_game" }
+                let reducedEgo = model.data.catalog.models.contains { $0.tool == info.tool && $0.variant == "fps_game" && $0.isEgo }
                 try require(model.selected.tool == info.tool && model.selected.variant == (reducedEgo ? "fps_game" : "fps"),
                             "Ego from game model must open the reduced Ego model when it exists")
                 checks += 1
@@ -186,16 +189,24 @@ enum Main {
                     throw ViewerError.invalid("Ego game model without its authored Ego model: \(info.id)")
                 }
                 model.select(info)
-                try require(info.isEgo && model.viewName == "FPS" && model.selected.variantLabel == "Ego-Spielmodell",
-                            "Ego game model selection failed: \(info.id)")
-                try require(info.triangles > 0 && info.triangles <= authored.triangles && info.frames == authored.frames,
+                // contract 5: the game file is the device alone (no take, no arm nodes, inspected in the orbit view); the
+                // clips live in the assembly, the Ego view shows the authored model with the shared arms
+                let deviceOnly = (info.contract ?? 4) >= 5
+                try require(info.isEgo != deviceOnly && model.viewName == (deviceOnly ? "Iso" : "FPS") &&
+                            model.selected.variantLabel == "Ego-Spielmodell", "Ego game model selection failed: \(info.id)")
+                try require(info.triangles > 0 && info.triangles <= authored.triangles &&
+                            (deviceOnly ? info.frames == 1 && info.clip == nil : info.frames == authored.frames),
                             "Ego game model is not a reduced copy of the authored one: \(info.id)")
                 var lower = false
                 model.scene.root.enumerateHierarchy { node, _ in if node.name?.contains("_LOD1") == true { lower = true } }
                 try require(!lower, "Viewer must show LOD0 only: \(info.id)")
-                try require(model.scene.root.childNode(withName: "Viewmodel_Motion", recursively: true) != nil &&
-                            model.scene.root.childNode(withName: "Socket_Camera", recursively: true) != nil,
-                            "Ego game model lost its rig nodes: \(info.id)")
+                let rigNodes = model.scene.root.childNode(withName: "Viewmodel_Motion", recursively: true) != nil ||
+                               model.scene.root.childNode(withName: "Socket_Camera", recursively: true) != nil
+                try require(deviceOnly ? !rigNodes && model.scene.root.childNode(withName: "Socket_Hand", recursively: true) != nil
+                                       : model.scene.root.childNode(withName: "Viewmodel_Motion", recursively: true) != nil &&
+                                         model.scene.root.childNode(withName: "Socket_Camera", recursively: true) != nil,
+                            deviceOnly ? "Contract 5 Ego game model must be the device alone: \(info.id)"
+                                       : "Ego game model lost its rig nodes: \(info.id)")
                 model.setView("Front")
                 try require(model.selected.variant == "fps_game" && model.viewName == "Front", "Inspection left the Ego game model")
                 model.setView("FPS")

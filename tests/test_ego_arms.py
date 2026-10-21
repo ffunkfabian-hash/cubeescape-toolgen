@@ -19,15 +19,17 @@ BUDGET = json.loads((ROOT / "data/game_budget.json").read_text())
 class RigDataTests(unittest.TestCase):
     def test_nodes_are_the_draft_skeleton(self):
         names = ego_arms.node_names("R")
-        self.assertEqual(["Shoulder_R", "UpperArm_R", "LowerArm_R", "Hand_R", "Wrist_R", "GripContact_R", "Prop_R"], names[:7])
+        # rig version 2 (user, 21.10.2026): cardan wrist - WristYoke_ between forearm and hand
+        self.assertEqual(["Shoulder_R", "UpperArm_R", "LowerArm_R", "WristYoke_R", "Hand_R", "Wrist_R", "GripContact_R",
+                          "Prop_R"], names[:8])
         self.assertIn("Fingers_R_0", names)
         self.assertIn("Fingers_R_2_2", names)
         self.assertIn("Thumb_R_1", names)
         self.assertEqual(3, ego_arms.FINGERS)                      # three gripping fingers + thumb (user, 20.10.2026)
-        self.assertEqual(7 + 3 * 3 + 2, len(names))
+        self.assertEqual(8 + 3 * 3 + 2, len(names))
         self.assertEqual(2 + 2 * len(names), len(ego_arms.all_nodes(RIG["asset"])))
         renderers = [node for side in ego_arms.SIDES for node in ego_arms.moving_nodes(side)]
-        self.assertEqual(RIG["max_renderers"], len(renderers))     # 26: no mesh on the upper arm
+        self.assertEqual(RIG["max_renderers"], len(renderers))     # 28: no mesh on the upper arm, one on the yoke
 
     def test_budget_and_scale(self):
         self.assertEqual(12000, RIG["budget_triangles"])
@@ -104,6 +106,26 @@ class DeviceDataTests(unittest.TestCase):
         self.assertLess(empty["MagIn"], empty["Chamber"])
         self.assertLess(empty["Chamber"], empty["HandOn"])
         self.assertNotIn("Chamber", reload["Reload"]["events"])
+
+    def test_reload_paths_go_around_the_rifle(self):
+        # Toolgen 0.19 Mac acceptance: a straight path between two grips (handguard -> magazine, magazine -> charging
+        # handle) ran through the rifle; at least one clearance key (offset from a grip) lies between two grips
+        reload = DEVICES["assault_rifle"]["reload"]
+        for name in ("Reload", "ReloadEmpty"):
+            spec = reload[name]
+            for track in ("left", "fingers"):
+                frames = [frame for frame, _ in spec[track]]
+                self.assertEqual(sorted(set(frames)), frames, f"{name} {track}: keys strictly increasing")
+            grips = [(index, key) for index, (_, key) in enumerate(spec["left"]) if isinstance(key, str)]
+            for (a, grip_a), (b, grip_b) in zip(grips, grips[1:]):
+                if grip_a != grip_b:
+                    self.assertGreater(b - a, 1, f"{name}: no clearance key between {grip_a} and {grip_b}")
+            bolt = spec.get("bolt")
+            if bolt:
+                held = [frame for frame, key in spec["left"]
+                        if key == "bolt" or (isinstance(key, dict) and key["from"] == "bolt")]
+                self.assertLessEqual(min(held), bolt["keys"][0][0])
+                self.assertGreaterEqual(max(held), bolt["keys"][-1][0])
 
     def test_reload_times_cite_a_named_destiny_example(self):
         self.assertIn("Chroma Rush", DATA["devices"]["note"])

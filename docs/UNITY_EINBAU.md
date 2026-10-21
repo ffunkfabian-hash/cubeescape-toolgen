@@ -383,13 +383,13 @@ und Clipnamen) und lässt die übrigen Geräte unberührt; Cube Escape 0.104 und
 | Feld | Inhalt |
 |---|---|
 | Dateien | `output/<Stufe>/ego_arms/CubeEscape_EgoArms_Game.fbx/.glb/.blend` (Ruhepose, keine Animation), `unity_contract_arms.json`, `qa_arms.json`, `preview_arms.png` (Bildstufen). Ablage in CE: `Assets/Art/ToolgenShared/EgoArms/` (nicht unter `Assets/Art/Toolgen/`) |
-| Knoten | Wurzel `CubeEscape_EgoArms` (Kameraraum), `Socket_Camera`; je Seite `Shoulder_<S>` → `UpperArm_<S>` → `LowerArm_<S>` → `Hand_<S>` → `Wrist_<S>`, `GripContact_<S>`, `Prop_<S>`, `Fingers_<S>_<i>` → `Fingers_<S>_<i>_1` → `Fingers_<S>_<i>_2` (i = 0 Abzugfinger, 1, 2), `Thumb_<S>` → `Thumb_<S>_1`. Leerobjekte, kein Armature, kein Skinning |
-| Achsen | +Z längs jedes Glieds; `LowerArm_<S>` sitzt fest bei (0, 0, `upper_arm`), `Hand_<S>` bei (0, 0, `forearm`) – Clips drehen die Kette und verschieben nur `Shoulder_<S>`. `Hand_<S>`: Ursprung = Handgelenk-Drehpunkt, +Z zu den Knöcheln, +Y Handrücken, +X Daumenseite rechts (links gespiegelt). Finger beugen um lokal +X |
+| Knoten | Wurzel `CubeEscape_EgoArms` (Kameraraum), `Socket_Camera`; je Seite `Shoulder_<S>` → `UpperArm_<S>` → `LowerArm_<S>` → `WristYoke_<S>` → `Hand_<S>` → `Wrist_<S>`, `GripContact_<S>`, `Prop_<S>`, `Fingers_<S>_<i>` → `Fingers_<S>_<i>_1` → `Fingers_<S>_<i>_2` (i = 0 Abzugfinger, 1, 2), `Thumb_<S>` → `Thumb_<S>_1`. Leerobjekte, kein Armature, kein Skinning |
+| Achsen | +Z längs jedes Glieds; `LowerArm_<S>` sitzt fest bei (0, 0, `upper_arm`), `WristYoke_<S>` bei (0, 0, `forearm`), `Hand_<S>` im Joch bei (0, 0, 0) – Clips drehen die Kette und verschieben nur `Shoulder_<S>`. **Kardan-Handgelenk** (rig 2): `WristYoke_<S>` dreht nur um lokal +X (Beugen), `Hand_<S>` nur um lokal +Y (seitlich). `Hand_<S>`: Ursprung = Handgelenk-Drehpunkt, +Z zu den Knöcheln, +Y Handrücken, +X Daumenseite rechts (links gespiegelt). Finger beugen um lokal +X |
 | Maße | `lengths_m` (Oberarm 0,448, Unterarm 0,42, `hand_scale` 0,91 = Toolgen 0,65 × 1,4): **Faktor 1,4 eingebacken**, CE nutzt für Vertrag-5-Geräte die Rahmengröße 1,0 und ignoriert `hip.scale` |
-| Meshes | je bewegtem Knoten ein Renderer `<Knoten>_Mesh` (26: Unterarm, Hand, 9 Fingerglieder, 2 Daumenglieder je Seite), LOD0 only, keine Kollision; Handgelenk-Servo als Bauteile (`WristServo_<S>` im Unterarm-Mesh, `WristRotor_<S>` im Hand-Mesh, `parts` je Renderer) |
+| Meshes | je bewegtem Knoten ein Renderer `<Knoten>_Mesh` (28: Unterarm, Joch, Hand, 9 Fingerglieder, 2 Daumenglieder je Seite), LOD0 only, keine Kollision; Handgelenk als Bauteile (`WristServo_<S>` im Unterarm-Mesh, `WristYoke_<S>`/`WristRotor_<S>` im Joch-Mesh, `WristFork_<S>` im Hand-Mesh, `parts` je Renderer) |
 | Look | genau vier Slots `M_RobotBody_Matte`/`M_RobotDark_Matte`/`M_Metal_Matte`/`M_HazardOrange_Matte` → `armor`/`mech`/`metal`/`lights` (Block `look`); keine `MT_`-Slots, keine UV1 |
 | Budget | 12 000 Dreiecke LOD0 für beide Arme (`data/ego_arms.json` › `rig.budget_triangles`; eigene Datei, damit die Schlüssel und Verträge der Vertrag-4-Geräte gleich bleiben); Gerät + Arme ≤ 32 000 |
-| `rig` | `id` `ego_arms` (ewig), `version` 1, `hash` = sha256 über Name, Eltern und lokale Ruhe-Transformation aller Knoten (Regel `hash_rule`); Meshes und Farben zählen nicht |
+| `rig` | `id` `ego_arms` (ewig), `version` 2 (0.19 Mac-Abnahme: Kardan-Handgelenk; Version 1 war nur der unveröffentlichte Cloud-Stand), `hash` = sha256 über Name, Eltern und lokale Ruhe-Transformation aller Knoten (Regel `hash_rule`); Meshes und Farben zählen nicht |
 | `finger_poses` | Bibliothek `open`, `grip`, `regrip`, `trigger`, `underhand`, `cup`, `wrap`, `mag_hold`, `pinch` (Namen ewig, nur anhängen; Winkel in Grad je Gelenk, Daumen `[flex, out, tip]`); die Geräte nennen ihre eigenen, am Mesh geschlossenen Winkel |
 | `measures` | Handgelenk = Winkel zwischen `LowerArm_<S>` +Z und `Hand_<S>` +Z (Ziel 45°, Grenze 55°) |
 
@@ -407,7 +407,7 @@ und Clipnamen) und lässt die übrigen Geräte unberührt; Cube Escape 0.104 und
 | `support_ik` | `blend_frames` 3: die Stützhand-IK blendet ab `HandOff` auf 0 und ab `HandOn` auf 1; Ziel `Hand_L` = Gerätewurzel × `grip.L` |
 | `visibility_nodes` | `Anim_Magazine`, `HandMag_L`: Sichtbarkeit über Skalierung 1 / 0,001, Schritt genau am `MagOut`-Bild (Magazin in die Hand) und am `MagIn`-Bild (zurück); gleiche Weltlage ± 2 mm. FBX- und glTF-Export tasten jedes Bild ab und interpolieren linear: zwischen dem Bild davor und dem Schrittbild skaliert Unity über eine Bilddauer (≈ 42 ms); wer exakt schalten will, setzt die Kurven beim Import auf konstant (`AnimationUtility.SetKeyBroken`/`TangentMode.Constant`) |
 | `frame_size` | 1,0 (Faktor eingebacken) |
-| `device_scale` | Gerät gegen sein Weltmodell (`tool_scale` × 1,4); `surface_bake` legt die Decals danach |
+| `device_scale` | `factor` = Skalierung des Modells aus dem fps-Schritt (`tool_scale` × 1,4, wie `tool_scale` in Vertrag 4); `surface_bake` legt die Decals danach. `world_factor` = Gerät gegen sein Weltmodell (`factor` × `fps_enlargement`, der eigenen Vergrößerung des fps-Schritts: Portalkanone 1,5 → 0,75; Sturmgewehr 1,0 → 1,008) |
 | `hand_parts` | Knoten unter `<Asset>_FPS_HandL` (lokale Lagen, Sichtbarkeitsknoten); in der Gerätedatei steht `HandMag_L` bei Skalierung 0,001 (Bild 0) |
 
 **Halbdrehung genau einmal:** CE dreht die Wurzel der **zusammengesetzten** Hierarchie (Arme + Gerät) einmal um 180° um Y, wie jede
@@ -419,8 +419,8 @@ im Builder).
 
 ### Clips und Ereignisse
 
-- Alle Clips bewegen die ganze Kette Bild für Bild (Zwei-Glied-Lösung beim Bau, Unterarm rollt mit der Hand, das Handgelenk beugt nur –
-  der Servo zeigt es), kleiner Servo-Nachlauf des Unterarms (Richtung zu 30 % zwei Bilder zurück), Finger mit Greifstellungen. Nie bewegt:
+- Alle Clips bewegen die ganze Kette Bild für Bild (Zwei-Glied-Lösung beim Bau, Unterarm rollt mit der Hand, das Handgelenk dreht als
+  Kardan: Joch beugt, Hand neigt seitlich), kleiner Servo-Nachlauf des Unterarms (Richtung zu 30 % zwei Bilder zurück), Finger mit Greifstellungen. Nie bewegt:
   Rig-Wurzel, `Prop_*`, Gerätewurzel, Materialien. Zustandsclips (Idle, Walk, Sprint, AimIdle) sind Schleifen, sonst einmal; nichts startet
   von selbst. 24 Bilder/s; Ruhe = Bild 0 von `<Stamm>_Use` für alle Knoten.
 - Ereignisse tragen **`channel`**: `action` (Standard, `EquipmentActionEvent`) oder `rig` (`HandOff`, `HandOn`; nur die Stützhand-IK).
@@ -440,8 +440,10 @@ Reimport FBX/GLB des Arm-Pakets (Namen, Eltern, Ruhe-Matrizen, Slots, Dreiecke),
 Arm-Knoten, `Socket_Hand` im Ursprung; Handkontakt ≤ 8 mm rechts in jedem Bild, links außerhalb `[HandOff + 3, HandOn]`; Handgelenk ≤ 55°;
 Bildausschnitt 16:9 und 16:10 beim festen FOV (drei Greiffinger + Daumen jeder haltenden Hand im Bild außer in Ziehen/Wegstecken/Sprint,
 proximale Unterarmhälfte und Ellbogen nie, Fadenkreuz frei in den freien Clips); Ereignisse vollständig und geordnet, genau ein `Ready`;
-Magazintausch an derselben Stelle; Fingerposen ohne Berührung nicht benachbarter Teile. Offen für die Mac-Abnahme: Bildstufen, Viewer,
-Determinismus der Bilder, MP4 (`docs/versions/0.19.md` › Prüfweg).
+Magazintausch an derselben Stelle; Fingerposen ohne Berührung nicht benachbarter Teile – in der Bibliothek und in jedem abgetasteten Bild
+(`hand_self_contacts`); **kein Eindringen** der Hand ins Gerät dieses Bilds (`penetration`: bewegte Teile, ausgeblendete Teile weg,
+`HandMag_L` dabei); seitliche Handgelenkneigung gemessen (`wrist_side_max_degrees`, ohne Grenze). Der Arm-Reimport prüft Eltern und Lage
+auch der 26 Renderer. Mac-Abnahme: `docs/versions/0.19.md` › Mac-Abnahme.
 
 ## Prüfen
 

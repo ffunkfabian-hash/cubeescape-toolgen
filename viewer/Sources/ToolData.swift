@@ -18,9 +18,13 @@ struct ModelInfo: Decodable, Identifiable, Hashable {
     let triangles: Int
     let frames: Int
     let qa: String?
+    /// Game contract when it is 5 or later (absent: contract 4 and older). Contract 5: the Ego game model is the device
+    /// alone, without a take and without arm nodes (docs/UNITY_EINBAU.md › Vertrag 5).
+    let contract: Int?
     var variantLabel: String { Self.label(variant) }
-    /// Ego models: the authored first-person model and its reduced game export.
-    var isEgo: Bool { variant == "fps" || variant == "fps_game" }
+    /// Ego models: the authored first-person model and its reduced game export. Contract 5: the game export is the device
+    /// alone at Socket_Hand (no arms, no camera pose), inspected in the orbit view; the Ego view shows the assembly (fps).
+    var isEgo: Bool { variant == "fps" || (variant == "fps_game" && (contract ?? 4) < 5) }
 
     /// Display names of every known variant; `game` comes from the game export and may be absent.
     static func label(_ variant: String) -> String {
@@ -143,9 +147,11 @@ final class ToolData {
 
     /// The Ego model that matches `info`: the reduced game model for the game model, otherwise the authored one.
     func egoPeer(of info: ModelInfo) -> ModelInfo? {
-        let preferred = info.variant == "game" ? "fps_game" : "fps"
-        return catalog.models.first { $0.tool == info.tool && $0.variant == preferred } ??
-               catalog.models.first { $0.tool == info.tool && $0.variant == "fps" }
+        if info.variant == "game",
+           let reduced = catalog.models.first(where: { $0.tool == info.tool && $0.variant == "fps_game" }), reduced.isEgo {
+            return reduced
+        }
+        return catalog.models.first { $0.tool == info.tool && $0.variant == "fps" }
     }
 
     func fieldOfView(tool: String) -> Double {

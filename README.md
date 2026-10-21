@@ -45,7 +45,7 @@ Roboter-Variante des Weltmodells für die Hand von Cube Escapes Roboter (`<Asset
 
 Orbit/Zoom, Iso/Front/Seite/Hinten/Ego, Drehteller, Boden und Anker helfen bei der Prüfung. „Ego“ lädt automatisch
 das passende FPS-Modell, auch im A/B-Vergleich; der Regler „Sichtfeld“ der Ego-Ansicht (35–75°, Zurücksetzen auf den Datenwert) wirkt
-auf Ansicht, A/B und PNG (Kommandozeile `--fov`). Die Varianten „Spielmodell“ und „Ego-Spielmodell“ zeigen den Spiel-Export (nur LOD0, Ego mit derselben Kamera und Animation); die Ego-Taste öffnet aus dem Spielmodell das Ego-Spielmodell, sonst das gestaltete Ego-Modell. Bogen und Magnetgreifer
+auf Ansicht, A/B und PNG (Kommandozeile `--fov`). Die Varianten „Spielmodell“ und „Ego-Spielmodell“ zeigen den Spiel-Export (nur LOD0, Ego mit derselben Kamera und Animation); die Ego-Taste öffnet aus dem Spielmodell das Ego-Spielmodell, sonst das gestaltete Ego-Modell (Vertrag 5: das Ego-Spielmodell ist nur das Gerät und wird in der Orbit-Ansicht gezeigt, die Ego-Ansicht zeigt Arm-Paket + Gerät). Bogen und Magnetgreifer
 spielen ihre Aktion auf Wunsch, mit Reset, Tempo und optionaler Prüfschleife. Materialfinish, Verkleidungsfarbe und
 Leuchtstärke können verändert und als B-Vergleich gemerkt werden. Leertaste startet/pausiert; Cmd+O/Cmd+S laden/speichern
 Looks, Cmd+Shift+S exportiert ein PNG.

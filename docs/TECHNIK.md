@@ -21,6 +21,10 @@ Der Knopf „Ego“ lädt vor dem Kamerawechsel die passende FPS-Variante, auch 
 Varianten im Viewer: `world`, `fps`, `arrow`, `game` („Spielmodell“) und `fps_game` („Ego-Spielmodell“, Datei `<Asset>_FPS_Game`, Wurzel
 `<Asset>_FPS`, nur LOD0, Clip des Ego-Modells). Beide Spielvarianten sind optional; fehlen sie im Katalog, arbeitet der Viewer wie
 zuvor. „Ego“ öffnet aus dem Spielmodell das Ego-Spielmodell (sonst das gestaltete Ego-Modell); Werkzeugwechsel in der Ego-Ansicht behalten die Variante.
+**Vertrag 5 (0.19):** Katalogeinträge tragen `contract` 5; das Ego-Spielmodell ist dort nur das Gerät ohne Take (Ursprung `Socket_Hand`) und
+wird wie das Spielmodell in der Orbit-Ansicht geprüft; die Ego-Ansicht zeigt das gestaltete Modell (Arm-Paket + Gerät, alle Clips). Ein
+Werkzeugwechsel in der Ego-Ansicht fällt dann auf das Ego-Modell des Werkzeugs. Das Arm-Paket `ego_arms/arms` steht im Katalog zuletzt (der
+Viewer öffnet weiter ein Werkzeug zuerst). Eine Ego-Ansicht des reduzierten Geräts mit den Armen setzt der Viewer nicht zusammen.
 Die Viewmodel-Kamera (Sichtfeld, Regler, A/B) gilt für beide Ego-Varianten, sie liest `viewmodel_camera.json` des Werkzeugs.
 Die Ego-Ansicht behält in App, A/B-Vergleich und Screenshot immer 16:9; freie Ränder füllen den restlichen Platz.
 So zeigt ein hohes App-Fenster nicht plötzlich mehr Arm als die geprüfte Vorschau.
@@ -48,7 +52,9 @@ geneigten Schalenfläche und sitzen auf ihr. Die gemeinsamen Kontakt-/Gelenk-IDs
 Hälfte. Oberarme, Ellenbogenräder und Schulterpanzer gehören nicht in das Ego-Mesh. Der Bogen bleibt das
 Hauptmotiv; seine Größe, Neigung und Halteposition werden zusammen mit den Händen abgestimmt. Genau drei
 gegliederte Greiffinger und ein Daumen müssen pro Hand erkennbar sein (`finger_count_per_hand` 4, `gripping_fingers_per_hand` 3,
-`thumb_count_per_hand` 1). Fingerglieder sind keine zusätzlichen Finger. Keine kastenförmige Ersatzhand oder durchgehende
+`thumb_count_per_hand` 1). „Erkennbar“ heißt **im Bild** (Sichtkegel 16:9 und 16:10): beim Greifen darf das eigene Gerät die Finger verdecken
+(Hüfte, ADS, Sprint); erkennbar sein müssen sie, wo die Hand frei arbeitet (Nachladen, Umgreifen, Inspect) – Entscheidung des Nutzers
+21.10.2026 (rules#1 6309735263), Prüfung wie bisher über den Sichtkegel. Fingerglieder sind keine zusätzlichen Finger. Keine kastenförmige Ersatzhand oder durchgehende
 Stange als Arm.
 
 Jeder Arm hat die starren Rig-Knoten `UpperArm_*` → `LowerArm_*`. Ihre Längen und Schulterpositionen sind feste
@@ -147,8 +153,9 @@ ffmpeg -framerate 60 -i output/QA/Bogen-Frames/frame-%04d.png -c:v libx264 -crf 
 ```
 
 Die Ego-Clips (ab Bild 101) spielt der Viewer nicht ab; ihren Bewegungsbeleg rendert `scripts/ego_video.py <Ausgabe> <Videoordner>
-[--tool …]` (0.15.0) aus dem gestalteten `<Asset>_FPS.blend` durch dessen Viewmodel-Kamera: Eevee, 1280×720, 24 fps, Clipname und
-Bild im Stempel, unter `heavy_lock`; dazu `<tool>_contact.png` mit Anfang, Mitte und Ende jedes Clips. Ablage außerhalb des Repos
+[--tool …]` (0.15.0) aus dem gestalteten `<Asset>_FPS.blend` durch dessen Viewmodel-Kamera: Eevee (oder `--engine cycles` auf der
+Metal-GPU, `--samples`), 1280×720, 24 fps, Clipname und Bild im Stempel, unter `heavy_lock`; dazu `<tool><suffix>_contact.png` mit Anfang,
+Mitte, Ende und jedem Ereignis eines Clips; `--clip` wählt Clips aus (0.19: auch Vertrag 5, die Cliptabelle hängt dort an der Gerätewurzel unter `Prop_R`). Ablage außerhalb des Repos
 (`~/Library/Caches/CubeEscapeToolgen/videos/<Version>/`).
 
 Neue Vorschauen immer mit `--data` auf den frisch geprüften Katalog richten. Eine ältere App kann sonst ihre
@@ -778,9 +785,13 @@ Verträge der Vertrag-4-Geräte gleich bleiben (`data/viewmodels.json` und `data
   `game_fps_rig` (`toolgen/game_export_rig.py`, ersetzt `game_fps`). Ersetzen ist das neue Stufenfeld `replaces` (optional, nur in den
   neuen Deklarationen); `--contract` setzt den Vertrag für alle gewählten Werkzeuge, `--contract 4` entfernt den Eintrag der Piloten (Rückweg)
   und lässt alle anderen Einträge und Schlüssel unverändert.
-- **Rig:** Leerobjekte mit starren Teilen, ein Renderer je bewegtem Knoten (26). `place_chain` legt die Kette aus Schulter-, Ellbogen- und
-  Handlage: Oberarm mit der Ellbogenachse als X, **Unterarm rollt mit der Hand** (Y des Unterarms = Handrücken projiziert), das Handgelenk
-  beugt nur – der Servo (Gabel am Unterarm, Trommel an der Hand) zeigt die Beugung. Lokale Verschiebungen der Kette bleiben die
+- **Rig:** Leerobjekte mit starren Teilen, ein Renderer je bewegtem Knoten (28). `place_chain` legt die Kette aus Schulter-, Ellbogen- und
+  Handlage: Oberarm mit der Ellbogenachse als X, **Unterarm rollt mit der Hand** (Y des Unterarms = Handrücken projiziert). **Kardan-Handgelenk**
+  (`rig.version` 2, Entscheidung des Nutzers 21.10.2026): weil die Hand-Y-Achse dadurch immer in der YZ-Ebene des Unterarms liegt, zerfällt
+  das Handgelenk genau in `WristYoke_<S>` = R_x(Beugen, Bolzen in der Unterarmgabel, weiße Kappen und orange Naben) und `Hand_<S>` = R_y
+  (seitlich, Gabelwangen der Hand am Kreuzbolzen); Maße `rig.wrist_cross`. Vorher (Version 1) war die Hand starr am Servo, die Griffhand
+  kippte ≈ 44° seitlich aus der Servoachse (Codex sol, gemessen am Mac). Die Bolzen gehen durch die Gabelwangen (gewollte Überlappung der
+  Renderer, kein QA-Fehler); die Kappen bleiben bei jeder Haltung koaxial in der Gabel. Lokale Verschiebungen der Kette bleiben die
   Ruhelängen; Clips drehen und verschieben nur `Shoulder_<S>`. `rig.hash` über Namen, Eltern und Ruhe-Transformationen.
 - **Gerät an Prop_R:** das Gerät des fps-Schritts wird um `tool_scale × 1,4` skaliert und so umgehängt, dass `Socket_Hand` Ursprung und
   Achsen der Gerätewurzel ist (`reroot`: statische Kinder einmal, bewegte über den Use-Clip neu gekeyt). Ruhelage = `first_person.py`-Haltung
@@ -806,6 +817,14 @@ Verträge der Vertrag-4-Geräte gleich bleiben (`data/viewmodels.json` und `data
   nach der Zweitprüfung: **jeder Clip beginnt und endet in seiner benannten Pose** (Ruhe = Bild 1 des Use-Clips, für alle Rig-Knoten; Schleife
   erstes = letztes Bild; der Servo-Nachlauf blendet dafür an beiden Clipenden aus), die Gerätewurzel bleibt `attach`, Wurzel/`Prop_*`/
   `Socket_Camera`/Gerätewurzel ohne Kurven; Ereignisse streng geordnet und jedes nur einmal.
+  Nach der Mac-Abnahme (Codex sol): **kein Eindringen** je abgetastetem Bild gegen das Gerät *dieses* Bilds (BVH je Bild aus den bewegten
+  Teilen, ausgeblendete weg, `HandMag_L` dabei – ein Ruhe-BVH meldete das Magazin im Schacht nach `MagOut` als Schnitt), keine
+  Selbstberührung der gekeyten Griffposen, Bildausschnitt in **beiden** Formaten (vorher reichte eins), seitliche Handgelenkneigung als Messwert.
+- **Fingerwächter (Nachladen):** die Fingerstellungen der linken Hand sind in Ruhelage am Mesh geschlossen; auf dem Weg zwischen den Griffen
+  (Ladehebelzug 5 cm, Abziehen vom Magazin) liegt eine andere Fläche unter den Fingern. Je Nachladebild öffnet jede Kette, die das Gerät
+  dieses Bilds schneidet, in 5-%-Schritten Richtung `open`, bis sie frei ist (`qa_viewmodel.json` › `finger_guard` nennt Bild und Anteil).
+  Die Bahn der Hand selbst bleibt Daten: Freifahr-Schlüssel (`device_m` vom Griff weg) zwischen zwei Griffen, Finger erst öffnen, dann
+  bewegen – eine gerade Bahn vom Handschutz zum Ladehebel führt durch die Waffe.
 - **Sichtprüfung in der Cloud:** `BLENDER_WORKBENCH` rendert im bpy-Modul headless (EGL-Warnungen sind harmlos) in ~0,1 s je Bild – gut für
   Kontaktbögen beim Gestalten; die Abnahmebilder bleiben Cycles/Eevee auf dem Mac.
 

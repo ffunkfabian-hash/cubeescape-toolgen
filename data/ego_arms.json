@@ -3,11 +3,11 @@
   "note": "Contract 5 (Toolgen 0.19 Kinetic, stage E1 of the arm rebuild, user decisions 20.10.2026): ONE first-person arm and hand rig for every Ego device instead of arms baked into each device. toolgen/ego_arms.py builds the package ego_arms from 'rig'; devices on contract 5 (tools.json game_contract 5) hang at Prop_R and animate the whole chain on this skeleton ('devices'). A separate file so the contract 4 packages keep their stage keys and bytes (data/viewmodels.json and data/game_budget.json feed every tool). Lengths in metres in the game picture: the Toolgen hand of data/viewmodels.json arm.hand_scale times scale (Cube Escape's former hip.scale 1.4 of the rifles, baked in).",
   "rig": {
     "id": "ego_arms",
-    "version": 1,
+    "version": 2,
     "asset": "CubeEscape_EgoArms",
     "scale": 1.4,
     "budget_triangles": 12000,
-    "max_renderers": 26,
+    "max_renderers": 28,
     "hand": {
       "note": "Hand-local units before hand_scale x scale (Robogen Mitt measures): origin = wrist pivot, +Z wrist -> knuckles, +Y back of the hand, -Y palm, +X thumb side of the right hand (-X of the left).",
       "palm_length": 0.082,
@@ -45,6 +45,16 @@
       "servo_radius": 0.026,
       "servo_length": 0.074,
       "fork_reach": 0.034
+    },
+    "wrist_cross": {
+      "note": "Cardan wrist (rig version 2, user decision 21.10.2026, rules#1 6309716998), metres: flex pin (into the forearm fork), cross block, sideways pin, the hand's fork cheeks outside the block and their bridge - bridge_z cos 55 deg - 1.15 cheek_x / 2 sin 55 deg > pin_x, so the hand turns 55 degrees sideways past the flex pin.",
+      "pin_x": 0.0065,
+      "pin_y": 0.005,
+      "block": 0.016,
+      "cheek_y": 0.0125,
+      "cheek_t": 0.005,
+      "cheek_x": 0.014,
+      "bridge_z": 0.0245
     },
     "limits_degrees": {
       "finger": [[0, 95], [0, 100], [0, 100]],
@@ -166,13 +176,18 @@
           "left": [
             [0, "support"],
             [5, "support"],
+            [6, {"from": "support", "device_m": [0.0, 0.0, -0.03]}],
+            [7, {"from": "support", "device_m": [0.0, 0.02, -0.05]}],
             [8, "mag"],
             [12, {"from": "mag", "device_m": [0.03, 0.0, -0.13]}],
             [16, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
             [18, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
             [20, {"from": "mag", "device_m": [0.0, 0.0, -0.045]}],
             [22, "mag"],
-            [25, {"from": "support", "device_m": [0.0, 0.02, -0.04]}],
+            [23, {"from": "mag", "device_m": [0.0, -0.03, -0.03]}],
+            [24, {"from": "mag", "device_m": [0.0, -0.05, -0.07]}],
+            [26, {"from": "support", "device_m": [0.0, 0.0, -0.06]}],
+            [28, {"from": "support", "device_m": [-0.03, 0.0, -0.01]}],
             [29, "support"]
           ],
           "fingers": [
@@ -181,7 +196,8 @@
             [7, "open"],
             [8, "mag_hold"],
             [22, "mag_hold"],
-            [24, "open"],
+            [23, "open"],
+            [28, "open"],
             [29, "underhand"]
           ]
         },
@@ -206,15 +222,21 @@
           "left": [
             [0, "support"],
             [5, "support"],
+            [6, {"from": "support", "device_m": [0.0, 0.0, -0.03]}],
+            [7, {"from": "support", "device_m": [0.0, 0.02, -0.05]}],
             [8, "mag"],
             [12, {"from": "mag", "device_m": [0.03, 0.0, -0.13]}],
             [16, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
             [18, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
             [20, {"from": "mag", "device_m": [0.0, 0.0, -0.045]}],
             [22, "mag"],
-            [24, "bolt"],
+            [23, {"from": "mag", "device_m": [0.0, -0.03, -0.03]}],
+            [24, {"from": "bolt", "device_m": [0.05, 0.0, -0.04]}],
+            [25, "bolt"],
             [27, {"from": "bolt", "device_m": [0.0, 0.05, 0.0]}],
-            [29, {"from": "bolt", "device_m": [0.012, 0.05, 0.0]}],
+            [29, {"from": "bolt", "device_m": [0.025, 0.05, 0.0]}],
+            [31, {"from": "bolt", "device_m": [0.06, 0.05, -0.07]}],
+            [32, {"from": "support", "device_m": [0.03, 0.0, -0.07]}],
             [34, "support"]
           ],
           "fingers": [
@@ -224,14 +246,16 @@
             [8, "mag_hold"],
             [22, "mag_hold"],
             [23, "open"],
-            [24, "pinch"],
+            [24, "open"],
+            [25, "pinch"],
             [28, "pinch"],
-            [30, "open"],
+            [29, "open"],
+            [33, "open"],
             [34, "underhand"]
           ],
           "bolt": {
             "node": "Anim_Bolt",
-            "keys": [[24, 0.0], [27, 0.05], [29, 0.0]],
+            "keys": [[25, 0.0], [27, 0.05], [29, 0.0]],
             "axis": [0.0, 1.0, 0.0]
           }
         }

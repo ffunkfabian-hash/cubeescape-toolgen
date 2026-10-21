@@ -161,7 +161,8 @@ STAGES = (
     # Contract 5: the device alone (<asset>_FPS_Game, no take, hand parts root <asset>_FPS_HandL) and the assembly's nodes
     # with every clip in <asset>_FPS_Game_Clips (toolgen/game_export_rig.py).
     Stage("game_fps_rig", "toolgen/game_export_rig.py", args=("--directory", "{work}", "--tool", "{id}"),
-          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend", "qa_geometry.json"),
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend", "qa_geometry.json",
+                 "qa_geometry_fps.json"),
           sources=("data/game_palette.json", "data/game_budget.json", "data/ego_arms.json", "toolgen/version.py"),
           renders=True, render_args=("--preview",), qa=("qa_game_fps.json",), min_contract=RIG_CONTRACT,
           replaces=("game_fps",), variants=(Variant("fps_game", "{asset}_FPS_Game", node="{asset}_FPS"),)),
@@ -732,7 +733,10 @@ def assemble_package(work, tool, tier, device, runs, records, key):
             models.append({"id": tool["id"] + "/" + variant["name"], "tool": tool["id"], "label": tool["label"],
                            "variant": variant["name"], "path": "ViewerData/" + variant["name"], "asset": variant["root"],
                            "clip": variant["clip"], "triangles": scene["triangles"], "frames": scene["frames"],
-                           "qa": "roundtrip" if TIERS[tier]["roundtrip"] else "geometry"})
+                           "qa": "roundtrip" if TIERS[tier]["roundtrip"] else "geometry",
+                           # contract 5 only (the viewer checks its Ego game model as the device alone): contract 4
+                           # entries stay as they were
+                           **({"contract": game_contract(tool)} if game_contract(tool) >= RIG_CONTRACT else {})})
     cleanup_work(work)
     files = {str(path.relative_to(work)): hash_file(path) for path in sorted(work.rglob("*")) if path.is_file()}
     (work / "manifest.json").write_text(json.dumps({"version": VERSION, "codename": CODENAME,
@@ -854,7 +858,8 @@ def write_catalog(output):
         print(f"warning: {output} holds packages of tools not in data/tools.json (not in catalog.json, not rebuilt): "
               f"{', '.join(stray)}", file=sys.stderr, flush=True)
     models = []
-    for tool in [ARMS, *catalog()]:
+    # the arm package last: the viewer opens the first model (a tool, as before 0.19), the shared part follows the tools
+    for tool in [*catalog(), ARMS]:
         package = output / tool["id"]
         if not valid_package(package):
             continue

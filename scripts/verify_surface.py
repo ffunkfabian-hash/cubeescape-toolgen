@@ -74,8 +74,23 @@ def accessor(document, binary, index):
     return result[:, 0] if width == 1 else result
 
 
-def primitive_rows(document, binary, lod0_only=False):
-    """Yield primitive arrays and material/node names, resolving node mesh names."""
+def meshes_under(document, root_name):
+    """Mesh indices of the nodes below the node named ``root_name`` (glTF children), empty without such a node."""
+    nodes = document.get("nodes", [])
+    stack = [index for index, node in enumerate(nodes) if node.get("name") == root_name]
+    found = set()
+    while stack:
+        node = nodes[stack.pop()]
+        if "mesh" in node:
+            found.add(node["mesh"])
+        stack.extend(node.get("children", []))
+    return found
+
+
+def primitive_rows(document, binary, lod0_only=False, skip_root=None):
+    """Yield primitive arrays and material/node names, resolving node mesh names. ``skip_root``: leave out the meshes below
+    that node (contract 5: the hand-held copies under <Asset>_FPS_HandL share the UV1 texels of their source part)."""
+    skipped = meshes_under(document, skip_root) if skip_root else set()
     mesh_names = [mesh.get("name", f"mesh_{i}") for i, mesh in enumerate(document.get("meshes", []))]
     node_names = {}
     for node in document.get("nodes", []):
@@ -85,7 +100,7 @@ def primitive_rows(document, binary, lod0_only=False):
     for mesh_index, mesh in enumerate(document.get("meshes", [])):
         names = [mesh_names[mesh_index], *node_names.get(mesh_index, [])]
         lod0 = any(name.endswith("_LOD0") for name in names)
-        if lod0_only and not lod0:
+        if (lod0_only and not lod0) or mesh_index in skipped:
             continue
         for primitive in mesh.get("primitives", []):
             attrs = primitive["attributes"]
@@ -157,8 +172,8 @@ def tangent_check(document, binary, name):
     return out
 
 
-def glb_layout_map(document, binary, block, model):
-    rows = list(primitive_rows(document, binary, lod0_only=True))
+def glb_layout_map(document, binary, block, model, skip_root=None):
+    rows = list(primitive_rows(document, binary, lod0_only=True, skip_root=skip_root))
     # glTF splits vertices at UV0 seams, hard normals and material borders: join corners by position over the whole model
     positions = np.concatenate([row["arrays"]["POSITION"] for row in rows]).astype(np.float64)
     _, welded = np.unique(np.round(positions, 6), axis=0, return_inverse=True)
@@ -291,7 +306,8 @@ def verify_model(folder, contract_path, clip=False):
     tangent = tangent_check(doc, binary, glb_path.name)
     errors = list(tangent["errors"])
     if not clip:
-        layout, layout_errors, raster, counts, labels, tri_values, unpainted_mask = glb_layout_map(doc, binary, block, model)
+        layout, layout_errors, raster, counts, labels, tri_values, unpainted_mask = glb_layout_map(
+            doc, binary, block, model, contract.get("hand_parts_root"))
         errors.extend(layout_errors)
         painted = labels[~unpainted_mask]
         use = ~unpainted_mask & (labels >= 0)

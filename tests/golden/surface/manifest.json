@@ -7,18 +7,19 @@
     },
     "sniper_rifle": {
       "CubeEscape_SniperRifle_FPS_Game_Normal.png": [
-        "0d3357396d1424e23d5c5ee08aa9cf3eeb594b2a62fb553f407a8ca29c87beaa"
+        "0d3357396d1424e23d5c5ee08aa9cf3eeb594b2a62fb553f407a8ca29c87beaa",
+        "f55b694f631a9079038d3d6adf7b47a0d48743a0815d5ccb11f5703ccfe19d81"
       ],
       "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
         "89a21136d6b72244a05f9ae9e2918b594a9a75f6b31a469bae3011286568451c"
       ]
     }
   },
-  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates.",
+  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates. 0.19.0 (Mac acceptance 21.10.2026): sniper rifle first-person normal map, one texel one step (PAE 1/255) against the 0.18 Mac bake of the same geometry, new bake key (game_export.py, version string).",
   "maps": {
     "assault_rifle": {
-      "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "ea2caa1697bc176c412e090b9c6dc08ec7f442bbd96757e1ba845e6f945a6311",
-      "CubeEscape_AssaultRifle_FPS_Game_Normal.png": "9741e4c022e27981fa7896d51e6fcfb26256c987f4d5e2337823b07b4d22c577",
+      "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "4f3b1d912f9b1c5d476345a0bb34d83653acea9730fa14c82e070922db6ed3b1",
+      "CubeEscape_AssaultRifle_FPS_Game_Normal.png": "2fb3ccb3eca842063096d5b3c9fa7534b3f3972d0d09f9aafd71aa1118e2daf2",
       "CubeEscape_AssaultRifle_FPS_Game_W0.png": "c376b47e551277c14ce1de996bf9d20061537f591313f22595aca1470c71afc4",
       "CubeEscape_AssaultRifle_FPS_Game_W1.png": "f769dd5796e0d63ebd3020a2fef6f8153968982dacafb592a2849cf721b9a6a6",
       "CubeEscape_AssaultRifle_Game_Fields.png": "bec838162d51524a9d795527b38dbb9cfe4cb3bf5fd6c263a643a860539662d3",
