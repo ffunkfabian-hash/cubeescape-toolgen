@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 RULES = [(".ce-repo.json", "docs"), ("check", "tests"), ("release", "tests"), ("scripts/ce_tools/*", "tests"),
          ("outputs/*", "docs"), ("work/*", "docs"),
          (".claude/agent-guard.json", "docs"), (".claude/settings.json", "docs"),
-         (".claude/skills", "docs"), (".claude/hooks/*", "tests"), (".github/*", "docs"), (".gitignore", "docs"),
+         (".claude/skills", "docs"), (".claude/hooks/*", "tests"), (".github/*", "docs"), (".mcp.json", "docs"), (".gitignore", "docs"),
          ("*.md", "docs"), ("docs/*", "docs"), (".agents/*", "docs"),
          ("data/concepts/*", "concepts"), ("scripts/import_concepts.py", "concepts"),
          ("data/*", "data"), ("scripts/tool_assets/*", "assets"),
