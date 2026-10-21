@@ -483,7 +483,7 @@ def main():
         if args.determinism:
             sys.path.insert(0, str(ROOT / "scripts"))
             import heavy_lock
-            with heavy_lock.held("toolgen verify_surface", str(ROOT)):
+            with heavy_lock.held("toolgen verify_surface", str(ROOT), resource="blender"):
                 item["determinism"] = determinism(folder, folder.name)
             checks += 1
             if not item["determinism"]["matches_original"]:

@@ -1,4 +1,4 @@
-# GENERATED from ce-agent-tools 0.4.0 - do not edit
+# GENERATED from ce-agent-tools 0.5.0 - do not edit
 # ce-sha256: 0ed6cc0c24072f8e67a6e7ced4f3b8df7ae49647ccbc21a8e164a3bbc882ff4a
 """Shared helpers of the ce-shared tools: finding and reading .ce-repo.json, the repo version, small git helpers."""
 from __future__ import annotations

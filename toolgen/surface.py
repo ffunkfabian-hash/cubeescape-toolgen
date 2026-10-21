@@ -51,7 +51,8 @@ EDGE_CONVEX = (.35, .7)          # local AO below .35: concave crease (edge 0); 
 # every island continues outward by the dilation (nearest texel, fixed neighbour order on ties): 8 px at 512 (0.11), 16 px at
 # 2048 (0.16) - the same 8/1024 of the atlas the 1024 maps had, so mips lose the border at the same level as before
 DILATION_PX = {512: 8, 1024: 8, 2048: 16}
-MAX_SET_BYTES = {512: 2_500_000, 1024: 2_500_000, 2048: 10_000_000}   # four PNGs of one model (2048: measured 1024 x 4 + reserve)
+MAX_SET_BYTES = {512: 2_500_000, 1024: 5_000_000, 2048: 10_000_000}   # four PNGs of one model (2048: measured 1024 x 4 + reserve; 1024: half of it, 0.20)
+MIN_BAKE_RESOLUTION = 512
 AO_MEAN_RANGE = (.3, .95)
 EDGE_SHARE_RANGE = (.02, .25)
 EDGE_THRESHOLD = .5
@@ -64,6 +65,18 @@ REGIONS = {"W0.r": "Primary", "W0.g": "Secondary", "W0.b": "Accent", "W0.a": "Em
 TARGETS = {channel: (key.split(".")[0], "rgba".index(key.split(".")[1])) for key, channel in REGIONS.items()}
 MAP_KINDS = ("W0", "W1", "Fields", "Normal")
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def bake_resolution(variant, scale=None):
+    """The map resolution of ``variant`` for this run: MAP_RESOLUTION divided by TOOLGEN_BAKE_SCALE (standard tier 2: viewmodel
+    2048 -> 1024 as a preview; world and robot never drop under MIN_BAKE_RESOLUTION). full and quick pass 1."""
+    import os
+    if scale is None:
+        try:
+            scale = int(os.environ.get("TOOLGEN_BAKE_SCALE", "1"))
+        except ValueError:
+            scale = 1
+    return max(MIN_BAKE_RESOLUTION, MAP_RESOLUTION[variant] // max(1, scale))
 
 
 def dilation_at(resolution):

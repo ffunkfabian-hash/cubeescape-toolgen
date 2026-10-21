@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# GENERATED from ce-agent-tools 0.4.0 - do not edit
+# GENERATED from ce-agent-tools 0.5.0 - do not edit
 # ce-sha256: ba4cc06f5cfc05581a812d0f10bb79d749add881c1f5a273cdda635aabab9318
 """ce_lint.py [--repo PATH] [--strict] - checks the repo against the shared standards (.ce-repo.json).
 

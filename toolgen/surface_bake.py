@@ -25,6 +25,9 @@ meshes of ``<asset>.blend`` / ``<asset>_FPS.blend`` (BVH), both in the tool fram
 world resolution and samples, its own UV1 atlas and its own QA ``qa_surface_robot.json``; decal rectangles and relief
 patterns follow its deformed parts, the patterns keep their millimetres).
 
+0.20: TOOLGEN_BAKE_SCALE (standard 2, full 1) divides the viewmodel resolution (2048 -> 1024; world/robot stay at 512); the
+contract block then carries ``preview: true`` and the resolution is part of the bake key. Standard is the pre-commit check,
+full (nightly, release) delivers the game maps.
 All bakes run on the CPU with a fixed seed and fixed samples per variant (never the tier's render samples), so standard and
 full give the same files; the hands are removed before baking (no occlusion from them) and moving parts bake at rest.
 """
@@ -368,7 +371,7 @@ def bake_model(work, model, asset, variant, palette, design):
     sources = source_parts(work / (asset + ".blend"), palette) if design else None
     bpy.ops.wm.open_mainfile(filepath=str(work / (model + ".blend")))
     scene, root, lod0 = renderers_at_rest(asset)
-    resolution, samples = surface.MAP_RESOLUTION[variant], surface.AO_SAMPLES[variant]
+    resolution, samples = surface.bake_resolution(variant), surface.AO_SAMPLES[variant]
     key_parts = mesh_key(lod0)
     layout = surface.uv1_report(lod0)
     inverse = frame_inverse(scene)
@@ -441,7 +444,8 @@ def bake_model(work, model, asset, variant, palette, design):
     timings["normal"] = time.perf_counter() - phase
     maps["Fields"] = to_bytes(np.stack([ao[..., 0], emit[..., 0], emit[..., 1], emit[..., 2]], axis=2))
     maps["Normal"] = to_bytes(np.concatenate([normal[..., :3], np.ones_like(normal[..., :1])], axis=2))
-    settings = {"schema": BAKE_SCHEMA, "resolution": resolution, "ao_samples": samples, "edge_samples": surface.EDGE_SAMPLES,
+    settings = {"schema": BAKE_SCHEMA, "resolution": resolution, "preview": resolution < surface.MAP_RESOLUTION[variant],
+                "ao_samples": samples, "edge_samples": surface.EDGE_SAMPLES,
                 "detail_samples": surface.DETAIL_SAMPLES,
                 "ao_distance_m": surface.AO_DISTANCE_M, "bevel_radius_m": surface.BEVEL_RADIUS_M, "edge_gain": surface.EDGE_GAIN,
                 "edge_convex": surface.EDGE_CONVEX, "dilation_px": surface.dilation_at(resolution), "device": "CPU", "seed": 0,
@@ -477,7 +481,7 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
         "regions": dict(surface.REGIONS),
         "channel_map": surface.model_channel_map(palette, slots),
         "unmapped_slots": sorted(slot for slot in slots if not surface.channel_of(slot, palette)),
-        "maps": {"resolution": settings["resolution"], **surface.map_names(model), "format": "PNG RGBA, 8 bit",
+        "maps": {"resolution": settings["resolution"], "preview": settings["preview"], **surface.map_names(model), "format": "PNG RGBA, 8 bit",
                  "color_space": "linear (import with sRGB off)", "rows": "PNG top row = v 1 (Unity texture orientation)",
                  "dilation_px": settings["dilation_px"], "set_bytes": set_bytes, "set_bytes_limit": surface.set_bytes_limit(settings["resolution"]),
                  "import": "sRGB off, alphaIsTransparency off, no premultiply (W0.a carries Emission), wrapMode Clamp (the "

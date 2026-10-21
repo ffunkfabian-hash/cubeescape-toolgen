@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# GENERATED from ce-agent-tools 0.4.0 - do not edit
+# GENERATED from ce-agent-tools 0.5.0 - do not edit
 # ce-sha256: 68ece0d2ba9d4fa8d20c4be841c5208bd6aad67930d71c6c316628f4ae182351
 """ce_sync.py [--repo PATH | --all] [--check] - embedded copies of the shared tools in each repo.
 

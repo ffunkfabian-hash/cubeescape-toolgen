@@ -212,7 +212,9 @@ for tool in catalog():
         assert set(block["channel_map"].values()) <= set(surface.CHANNELS) and block["channel_map"]
         assert all(slot in contract["materials"] for slot in block["channel_map"]), (tool["id"], variant, "channel_map slots")
         maps = block["maps"]
-        assert maps["resolution"] == surface.MAP_RESOLUTION[variant], (tool["id"], variant, "map resolution")
+        # 0.20: a standard-tier output carries preview maps (viewmodel 1024, "preview": true); full delivers the contract size
+        expected = surface.MAP_RESOLUTION[variant] if not maps.get("preview") else surface.bake_resolution(variant, 2)
+        assert maps["resolution"] == expected, (tool["id"], variant, "map resolution")
         total = 0
         for kind in ("w0", "w1", "fields", "normal"):
             name = maps[kind]
@@ -259,7 +261,8 @@ for tool in catalog():
         assert ("surface" in robot) == included, (tool["id"], "robot surface block")
         if included:
             block = robot["surface"]
-            assert block["maps"]["resolution"] == surface.MAP_RESOLUTION["robot"] and not block["uv1"]["shared_with_world"]
+            assert block["maps"]["resolution"] == surface.bake_resolution("robot", 2 if block["maps"].get("preview") else 1) \
+                and not block["uv1"]["shared_with_world"]
             assert block["uv1"]["layout"]["overlap_texels"] == 0 and block["regions"] == surface.REGIONS
             for kind in ("w0", "w1", "fields", "normal"):
                 name = block["maps"][kind]

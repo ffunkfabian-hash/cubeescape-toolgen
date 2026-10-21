@@ -472,7 +472,11 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
 - QA im Spiel-Export (`qa_game*.json`): `uv1_layers` (UVMap Index 0 und Render-Map, UV1 Index 1), `uv1_lod0` (Bereich, Überlappung 0 bei 2048,
   Abstand ≥ 4 px bei 1024, Ecke frei), `uv1_lod1` (wie LOD0, Überlappung nur berichtet), `uv1_source` (Drehung, Hash, Übertragung,
   `decimation_folds`); Reimport: UV1 auf allen Renderern, im GLB `TEXCOORD_1` und `TANGENT` je Primitive.
-- Stufe `surface_bake` (standard/full, nach `game_fps`, `heavy`, `min_contract` 4): je Modell LOD0 bei Frame 1, Hände entfernt; Gewichte als
+- **Stufenauflösung (0.20 Nightshift):** `standard` backt mit `TOOLGEN_BAKE_SCALE=2` (Viewmodel 1024², Welt/Roboter bleiben 512²; Vertrag
+  `maps.preview: true`, Satzgrenze 5 MB), `full` mit Skalierung 1 (2048², Lieferstand). Die Auflösung steckt im Bake-Schlüssel, beide Stufen
+  halten getrennte Cache-Einträge; `verify_output.py` prüft gegen `bake_resolution(variant, 2 bei preview)`. Grund: `surface_bake` 2048² kostete
+  100–460 s je Werkzeug vor jedem Commit; bei 1024² ein Viertel der Texel (Messung folgt im Nachtlauf). Cube Escape importiert nur `full`-Ausgaben.
+- Stufe `surface_bake` (standard/full, nach `game_fps`, `heavy` auf Ressource `blender`, `min_contract` 4): je Modell LOD0 bei Frame 1, Hände entfernt; Gewichte als
   eigenes Raster (Texelmitte, erstes Dreieck gewinnt, Dilatation in fester Nachbarreihenfolge: 8 Schritte bei 512², 16 bei 2048² – `dilation_at`); Cycles auf der CPU mit Seed 0:
   AO-Bake (Welt 16, Ego 32 Samples, 0,08 m), EMIT-Bake für Kante/oben/Höhe und NORMAL-Bake (Tangentenraum UV1) mit je 4 Samples. Kante =
   12 × (1 − Bevel-Normale · Schattierungsnormale), Bevel 4 mm, mal Konvexität aus lokalem AO (16 mm; unter 0,35 Falte = 0, über 0,7 voll).

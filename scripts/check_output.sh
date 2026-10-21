@@ -16,9 +16,9 @@ run_checks() {
 if [[ "${1:-}" == "--locked" ]]; then
     TASK_OUT="${2:-$TASK_ROOT/output}"
     run_checks
-elif [[ "${CE_HEAVY_HELD:-0}" == "1" ]]; then
+elif [[ "${CE_HEAVY_HELD:-}" == "1" || "${CE_HEAVY_HELD:-}" == "blender" ]]; then
     run_checks
 else
-    python3 scripts/heavy_lock.py run --what "toolgen check_output" --checkout "$TASK_ROOT" -- \
+    python3 scripts/heavy_lock.py run --resource blender --what "toolgen check_output" --checkout "$TASK_ROOT" -- \
         bash "$0" --locked "$TASK_OUT"
 fi

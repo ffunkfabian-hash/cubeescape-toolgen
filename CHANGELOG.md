@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.20.0 – Nightshift (21.10.2026)
+
+Rendern vom Commit gelöst (Auftrag des Nutzers, globale Regel 1.14 › Rendern und Prüfen): `standard` backt halb (`TOOLGEN_BAKE_SCALE=2`, Viewmodel 1024²,
+`maps.preview: true`, eigener Cache-Schlüssel), `full` liefert 2048². Neu `scripts/nightly.sh` / `./check --nightly` (`.ce-repo.json` › `check.nightly`):
+`--tier full` aller Werkzeuge plus `check_output.sh` einmal täglich auf `main`; vor Commit nur `quick` plus `standard --tool` der geänderten Werkzeuge.
+Schwere Läufe nehmen die Blender-Sperre (`heavy_lock --resource blender`, ce-agent-tools 0.5.0, eingebettete Kopie erneuert); Cloud nur für Logik.
+Bericht: [docs/versions/0.20.md](docs/versions/0.20.md).
+
+
 ## 0.19.0 – Kinetic (21.10.2026)
 
 E1 des Arm-Umbaus (Entscheidungen des Nutzers 20.10.2026): **Vertrag 5** – ein gemeinsames Ego-Arm-Rig `ego_arms` (Kette Schulter → Oberarm →

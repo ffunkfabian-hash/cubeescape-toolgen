@@ -3,7 +3,9 @@ import json
 import struct
 import sys
 import tempfile
+import os
 import unittest
+from unittest import mock
 import zlib
 from pathlib import Path
 from unittest.mock import patch
@@ -79,7 +81,17 @@ class ChannelTableTests(unittest.TestCase):
         for resolution in surface.MAP_RESOLUTION.values():
             first_island_px = (surface.RESERVED_LOW + surface.PACK_MARGIN * (1 - surface.RESERVED_LOW)) * resolution
             self.assertGreater(first_island_px - surface.dilation_at(resolution), 1)
-        self.assertEqual((2_500_000, 10_000_000), (surface.set_bytes_limit(512), surface.set_bytes_limit(2048)))
+        self.assertEqual((2_500_000, 5_000_000, 10_000_000),
+                         (surface.set_bytes_limit(512), surface.set_bytes_limit(1024), surface.set_bytes_limit(2048)))
+
+    def test_bake_resolution_follows_the_tier_scale(self):
+        """0.20: standard (scale 2) bakes the viewmodel at 1024 as a preview; world and robot never drop under 512; full = contract."""
+        self.assertEqual((1024, 512, 512), tuple(surface.bake_resolution(v, 2) for v in ("viewmodel", "world", "robot")))
+        self.assertEqual((2048, 512, 512), tuple(surface.bake_resolution(v, 1) for v in ("viewmodel", "world", "robot")))
+        with mock.patch.dict(os.environ, {"TOOLGEN_BAKE_SCALE": "2"}):
+            self.assertEqual(1024, surface.bake_resolution("viewmodel"))
+        with mock.patch.dict(os.environ, {"TOOLGEN_BAKE_SCALE": "x"}):
+            self.assertEqual(2048, surface.bake_resolution("viewmodel"))
 
 
 class PngTests(unittest.TestCase):

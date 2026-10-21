@@ -37,9 +37,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import heavy_lock  # noqa: E402 - scripts/ is no package; the lock protocol is shared with Robogen and Cube Escape
 
-TIERS = {"quick": {"samples": 0, "percent": 100, "roundtrip": False},
-         "standard": {"samples": 12, "percent": 50, "roundtrip": True},
-         "full": {"samples": 40, "percent": 100, "roundtrip": True}}
+TIERS = {"quick": {"samples": 0, "percent": 100, "roundtrip": False, "bake_scale": 1},
+         "standard": {"samples": 12, "percent": 50, "roundtrip": True, "bake_scale": 2},   # 0.20: bake at half size
+         "full": {"samples": 40, "percent": 100, "roundtrip": True, "bake_scale": 1}}
 ALL_TIERS = tuple(TIERS)
 RENDER_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["samples"])
 ROUNDTRIP_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["roundtrip"])
@@ -167,7 +167,9 @@ STAGES = (
           renders=True, render_args=("--preview",), qa=("qa_game_fps.json",), min_contract=RIG_CONTRACT,
           replaces=("game_fps",), variants=(Variant("fps_game", "{asset}_FPS_Game", node="{asset}_FPS"),)),
     # Contract 4: mask maps W0/W1/Fields/Normal of both game models and the "surface" block in both contracts. Fixed bake
-    # settings (not the tier's samples), so standard and full share the result; quick leaves it out (manifest "surface").
+    # samples (not the tier's render samples); 0.20: standard bakes at half size (TOOLGEN_BAKE_SCALE=2, viewmodel 1024, world 512
+    # stays), full at full size - the resolution is part of the bake key, so the two keep separate cache entries; quick leaves
+    # the stage out (manifest "surface").
     # 0.13: relief and decals of the weapons (data/surface_recipes.json, weapon_designs.py DECALS) label the LOD0 triangles
     # with the source parts of <asset>.blend / <asset>_FPS.blend; decal masks come from ImageMagick.
     Stage("surface_bake", "toolgen/surface_bake.py", args=("--directory", "{work}", "--tool", "{id}"),
@@ -486,7 +488,8 @@ def snapshot(work, sources):
 def stage_environment(threads, settings, device, render):
     environment = dict(os.environ, TOOLGEN_THREADS=str(threads), OMP_NUM_THREADS=str(threads),
                        OPENBLAS_NUM_THREADS="1", TOOLGEN_SAMPLES=str(settings["samples"] or 12),
-                       TOOLGEN_RENDER_PERCENT=str(settings["percent"]), TOOLGEN_DEVICE=device)
+                       TOOLGEN_RENDER_PERCENT=str(settings["percent"]), TOOLGEN_DEVICE=device,
+                       TOOLGEN_BAKE_SCALE=str(settings.get("bake_scale", 1)))
     if render:
         environment.pop("TOOLGEN_NO_RENDER", None)
     else:
@@ -690,11 +693,11 @@ class ToolBuild:
 
 @contextmanager
 def heavy_stage(run, tool_id):
-    """A heavy stage build waits for the shared heavy-run lock (a full tier holds it already: CE_HEAVY_HELD skips)."""
+    """A heavy stage build waits for the blender lock (a full tier holds it already: CE_HEAVY_HELD skips)."""
     if not run.heavy:
         yield
         return
-    with HEAVY_STAGES, heavy_lock.held(f"toolgen {run.name} {tool_id}", str(ROOT)):
+    with HEAVY_STAGES, heavy_lock.held(f"toolgen {run.name} {tool_id}", str(ROOT), resource="blender"):
         yield
 
 
@@ -952,8 +955,8 @@ def main():
         (output / "logs").mkdir(exist_ok=True)
         selected = [tool for tool in catalog() if not args.tool or tool["id"] in args.tool]
         selected = with_arms(with_contract(selected, args.contract), args.tool)
-        if args.tier == "full":     # one heavy run at a time on this Mac (shared with Robogen, Cube Escape, Cubegen)
-            lock = heavy_lock.HeavyLock(f"toolgen full {output}", str(ROOT)).acquire()
+        if args.tier == "full":     # one Blender heavy run at a time on this Mac (shared with Robogen and Cubegen)
+            lock = heavy_lock.HeavyLock(f"toolgen full {output}", str(ROOT), resource="blender").acquire()
         store = toolcache.Store()
         started = time.perf_counter()
         load = os.getloadavg()[0]

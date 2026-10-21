@@ -1,2 +1,2 @@
-VERSION = "0.19.0"
-CODENAME = "Kinetic"
+VERSION = "0.20.0"
+CODENAME = "Nightshift"
