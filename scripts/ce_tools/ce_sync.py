@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 68ece0d2ba9d4fa8d20c4be841c5208bd6aad67930d71c6c316628f4ae182351
+# ce-sha256: 5df8c064e9860c1dbb5641efce8554ab33d569a6b87ed172925dd6bf60e3fda0
 """ce_sync.py [--repo PATH | --all] [--check] - embedded copies of the shared tools in each repo.
 
 The repos must not depend on the plugin at run time (Codex, cloud sessions and worktrees do not have it). So the tools
@@ -29,7 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ce_common  # noqa: E402
 
 SYNC_FILES = ["heavy_lock.py", "ce_common.py", "ce_check.py", "ce_lint.py", "ce_release.py", "ce_worktrees.py",
-              "ce_sync.py"]
+              "ce_sync.py", "ce_docs.py", "ce_nightly.py", "ce_session_name.py", "ce_await_mail.py",
+              "ce_codex_quota.py", "ce_codex_cloud.py"]
 DEFAULT_TOOLS_DIR = "scripts/ce_tools"
 DEFAULT_PLUGIN_TOOLS = Path.home() / ".claude" / "plugins" / "marketplaces" / "ce-agent-tools" / "plugins" / "ce-shared" / "tools"
 HEADER = "# GENERATED from ce-agent-tools {version} - do not edit"
