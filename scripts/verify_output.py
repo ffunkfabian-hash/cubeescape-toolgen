@@ -13,6 +13,9 @@ import game_export  # noqa: E402 - pure helpers, no bpy at import
 import surface  # noqa: E402
 from generate_tools import ARMS, RIG_CONTRACT, catalog, valid_package  # noqa: E402
 
+sys.path.insert(0, str(ROOT / "scripts/ce_tools"))
+import ce_contract  # noqa: E402 - 0.20: the shared schema of the contract (ce-agent-tools plugins/ce-shared/contracts)
+
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
 EGO = ego_clips.load()
 PROFILES = json.loads((ROOT / "data/viewmodels.json").read_text())["tools"]
@@ -189,8 +192,12 @@ for tool in catalog():
     # contract 4: surface block and maps in standard/full (manifest "surface"), never in quick or older contracts
     world = json.loads((package / "unity_contract.json").read_text())
     # 0.17 Retrace: every contract names both consumer requirements apart; a renamed tool carries its former names
+    # 0.20 Nightshift: and every contract validates against the shared schema (ce_contract, additive-only formats)
     for path in sorted(package.glob("unity_contract*.json")):
         document = json.loads(path.read_text())
+        schema_name, findings = ce_contract.check_file(path, None)
+        assert not findings, (tool["id"], path.name, schema_name, findings[:3])
+        checks += 1
         expected = game_export.consumer_block(tool, document["format"])
         assert document["minimum_consumer"] == expected, (tool["id"], path.name, "minimum_consumer")
         assert document.get("renamed_from") == (game_export.renamed_block(tool) if tool.get("renamed_from") else None), \
