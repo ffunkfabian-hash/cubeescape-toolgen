@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 2f52950c30370bcd150fc259240d1b05faff1f872264dafb6a984851bcb754ec
+# ce-sha256: b5c671a6d105ec51c2d6b6b5427885af13999367c185ee555d9a725fb11a015a
 """Waits for a Briefkasten comment addressed to this session and prints it (regeln-details.md › Briefkasten, Wächter).
 
 Start it in the background when the session stops for the user (before a merge, with a question):
@@ -21,7 +21,7 @@ import subprocess
 import sys
 import time
 
-REPO = "ffunkfabian-hash/cubeescape-rules"
+REPO = "ffunkfabian-hash/cubeescape-nexogen"
 MAILBOX = 16  # 1.15: the one Postfach issue (before: Briefkasten PR 1 = Sightline, one PR per recipient)
 QUOTED = re.compile(r"(\d+\.\d+(?:\.\d+)?)\s*[„“\"']([^“”\"']+)[“”\"']")
 RECIPIENT = re.compile(r"[\s*]*(?:[A-Za-zÄÖÜäöü-]+\s+)?" + QUOTED.pattern)

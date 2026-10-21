@@ -226,12 +226,22 @@ class StageTests(unittest.TestCase):
         self.assertEqual(ROUNDTRIP_TIERS, stage.tiers)
         self.assertTrue(stage.heavy)
         self.assertEqual(4, stage.min_contract)
-        self.assertFalse(stage.renders)   # fixed bake samples: standard and full share the result
+        self.assertFalse(stage.renders)   # fixed bake samples; resolution separates standard/full cache entries
         self.assertEqual(("qa_surface.json",), stage.qa)
         for name in ("{asset}_Game.blend", "{asset}_FPS_Game.blend", "qa_game.json", "qa_game_fps.json"):
             self.assertIn(name, stage.reads)
         self.assertIn("data/game_palette.json", stage.sources)
         self.assertIn("{asset}.blend", next(entry for entry in STAGES if entry.name == "game_fps").reads)
+
+    def test_standard_and_full_bakes_have_separate_cache_keys(self):
+        from generate_tools import ToolBuild
+        tool = catalog()[0]
+        builds = [ToolBuild(tool, None, tier, "unused", "test-blender", 1, False, "cpu", None) for tier in ("standard", "full")]
+        for name in ("surface_bake",):
+            keys = [build.keys(next(run for run in build.runs if run.name == name), {})[0] for build in builds]
+            self.assertNotEqual(*keys, "1024 preview must never satisfy the 2048 full bake")
+        normal = [build.keys(next(run for run in build.runs if run.name == "world"), {})[0] for build in builds]
+        self.assertEqual(*normal, "unaffected geometry should still be shared")
 
     def test_runs_in_standard_and_full_only_and_not_for_contract_three(self):
         tool = catalog()[0]

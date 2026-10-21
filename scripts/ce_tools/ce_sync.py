@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: c1fa1cd17e7ff2b6070b018c07f374c1c67570a5313a62996e70b7e5189757f7
+# ce-sha256: b786cd2582e9b01ebd7a0a44b45dfd30f570acd720420e733089d8bf72635930
 """ce_sync.py [--repo PATH | --all] [--check] - embedded copies of the shared tools in each repo.
 
 The repos must not depend on the plugin at run time (Codex, cloud sessions and worktrees do not have it). So the tools
@@ -138,6 +138,17 @@ def check(root: Path, config: dict, source: Path | None = None) -> list[tuple[st
             if digest(current) != stored:
                 findings.append(("warning", f"{where}/{name}: from ce-agent-tools {version}, plugin has "
                                             f"{plugin_version(source) or '?'} - run ce_sync.py"))
+    for folder in DATA_DIRS:
+        origin = source.parent / folder if source else target / folder
+        if not origin.is_dir():
+            findings.append(("error", f"{where}/{folder}: missing data directory"))
+            continue
+        for item in sorted(origin.iterdir()):
+            if item.suffix not in (".json", ".md"):
+                continue
+            copy = target / folder / item.name
+            if not copy.is_file() or copy.read_bytes() != item.read_bytes():
+                findings.append(("error", f"{where}/{folder}/{item.name}: missing or changed - run ce_sync.py"))
     return findings
 
 

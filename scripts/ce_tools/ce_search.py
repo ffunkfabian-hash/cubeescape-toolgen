@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 5fbe8f20df6a5c595d64169ef41471e70629f01f0d65fc40ee599c8a073b5b12
+# ce-sha256: 91d93d3309529ab59ead97c12e1f6a0556538d879ad9212616aba005c1a3cbdc
 """ce_search.py - local retrieval over the docs of all Cube Escape repos (RAG without a cloud).
 
 0.5.0: the index is a SQLite file with FTS5 (BM25) over chunks of Markdown (docs, skills, AGENTS, version reports, LESSONS),
@@ -29,11 +29,12 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
+from ce_common import load_config, RepoError
 
 HOME = Path.home()
 DEFAULT_INDEX = HOME / "Library" / "Caches" / "CubeEscape" / "search" / "index.sqlite"
 DEFAULT_REPOS = ["cubeescape", "cubeescape-toolgen", "cubeescape-robogen", "cubeescape-cubegen", "cubeescape-formgen",
-                 "cubeescape-motiongen", "cubeescape-design", "cubeescape-rules", "ce-agent-tools"]
+                 "cubeescape-motiongen", "cubeescape-nexogen", "ce-agent-tools"]
 SKIP_DIRS = {".git", "Library", "Temp", "Logs", "obj", "bin", "node_modules", "__pycache__", "output", "outputs", "work",
              ".claude/worktrees", "Packages", "ProjectSettings", "UserSettings", "archive"}
 MAX_CHUNK = 1800          # characters per chunk (about 400 tokens)
@@ -48,7 +49,8 @@ def repos(explicit) -> list[Path]:
     if env:
         return [Path(p).expanduser().resolve() for p in env.split(":") if p]
     base = Path(os.environ.get("CE_HOME", HOME / "Claude"))
-    return [base / name for name in DEFAULT_REPOS if (base / name).is_dir()]
+    from ce_common import standard_repos
+    return standard_repos(DEFAULT_REPOS, HOME)
 
 
 def kind_of(rel: str) -> str:
@@ -159,12 +161,24 @@ def from_blob(blob: bytes):
     return vector
 
 
+def source_files(root: Path):
+    for folder, dirs, files in os.walk(root, followlinks=False):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and d != "worktrees" and not (Path(folder) / d).is_symlink())
+        for name in sorted(files):
+            path = Path(folder) / name
+            if not path.is_symlink():
+                yield path
+
+
 def index_repo(db: sqlite3.Connection, root: Path, model, log) -> tuple[int, int]:
     """(files indexed, chunks written); unchanged files (same sha256) are skipped."""
-    name = root.name
+    try:
+        name = load_config(root).get("name", root.name)
+    except RepoError:  # config-less source repos remain indexable
+        name = root.name
     known = {path: sha for path, sha in db.execute("SELECT path, sha256 FROM files WHERE repo=?", (name,))}
     seen, files, written = set(), 0, 0
-    for path in sorted(root.rglob("*")):
+    for path in source_files(root):
         if not path.is_file() or not wanted(path, root):
             continue
         rel = path.relative_to(root).as_posix()

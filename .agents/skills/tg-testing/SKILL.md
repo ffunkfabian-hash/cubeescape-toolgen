@@ -20,7 +20,7 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    `--no-cache` erzwingt Neubau, ein leerer `TOOLGEN_CACHE`-Ordner ergibt einen kalten Lauf. Bei Hash-/QA-Änderung muss neu gebaut werden.
    `--tier full`, Stufe `surface_bake` und `scripts/check_output.sh` warten auf die Blender-Sperre (`--resource blender`; `scripts/heavy_lock.py status` zeigt die Halter je Ressource);
    den Wartebericht nicht als Fehler lesen, die Sperre nicht umgehen. Braucht eine Messung den Rechner für sich, siehe `AGENTS.md`.
-5. Vor Commit `--tier quick` plus `--tier standard --tool <geändert>` nur für die Werkzeuge aus dem Diff (`testplan.py`); vor Merge
+5. Vor Commit `--tier quick` und gezielte Prüfungen aus dem Diff (`testplan.py`); vor Merge
    `standard` der geänderten Werkzeuge; `--tier full` aller Werkzeuge nur im Nachtlauf (`./check --nightly`) und für den Lieferstand (0.20).
    Der Bogen prüft alle 97 Frames und die exportierten Morphs; der Magnetgreifer prüft die Aktionsposen. Fehler im
    aktuellen Schrittlog beheben, nie den Prüfer lockern oder gespeicherte QA von Hand „grün“ machen.

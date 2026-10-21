@@ -1,8 +1,8 @@
 # Toolgen – Regeln für KI-Agenten
 
-**Werkzeuge (Pflicht, auch für Codex ohne Hooks):** `./ce reserve <Name>` vor der ersten Änderung einer Version (Patch: Branch `claude/<repo>-patch-<kurzname>`) ·
-`./ce search <Begriffe>` vor dem Lesen langer Docs · `./ce lock unity|blender|gpu -- <Befehl>` für schwere Läufe · `./ce check` vor Commit ·
-`./ce judge` vor Merge (Versionen) · Belege `./ce clip|sheet|still`, Bildurteil `./ce diff` · `./ce report` am Ende (Ist-Zeit Warten/Rechnen/Lesen/Umsetzen).
+Zentraler Repo-Einstieg: [Nexogen](https://github.com/ffunkfabian-hash/cubeescape-nexogen) – Repo-Links, Zuständigkeiten, Abhängigkeiten und Live-Status über die Status-CLI im Nexogen-Repo. Globale Regeln dort, Fachwissen und Prüfbelege hier.
+
+**Werkzeuge:** `./ce check` · `./ce search query "Begriff"` · `./ce session topics` · `./ce codex quota|judge` · `./ce evidence clip|sheet|still|diff` · `./ce lock unity|blender|gpu -- <Befehl>` · `./ce report --since 7d`.
 
 ## Projekt
 

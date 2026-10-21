@@ -14,7 +14,7 @@
 - **Pixelkonstanten sind in Wahrheit UV- oder Kartengrößen** → vor jeder Auflösungsänderung jede Konstante einer Klasse zuordnen; ungebackene Golden als `stale` markieren, nie raten ([Quelle](versions/0.16.md))
 - **Eck-Texel-Prüfung mit falschem 16-px-Band ließ elf Spielexporte scheitern** → Dilatation je Kartenauflösung gegen das Eck-Texel prüfen ([Quelle](versions/0.16.md))
 - **Strenges Re-Raster verfehlt Randtexel (Epsilon 1e-7)** → für die Dilatationsgrenze 1e-5, Innenprüfung streng lassen ([Quelle](versions/0.16.md))
-- **`surface_bake` 2048² kostet 100–460 s je Werkzeug (2 Worker)** → Standard backt 1024² (`bake_scale`), Abgabe an Cube Escape nur aus `full` ([Quelle](versions/0.20.md))
+- **`surface_bake` 2048² kostet 100–460 s je Werkzeug (2 Worker)** → Standard backt 1024² (`bake_scale`), Abgabe an Cube Escape nur aus `full` ([Quelle](versions/0.22.md))
 - **Gemeinsame Daten in `viewmodels.json`/`game_budget.json` ändern alle Schlüssel** → neue Daten für wenige Werkzeuge in eigene Datei (`data/ego_arms.json`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Rechtecke als Teil-Box-Bruchteile verzerren bei Verformung** → Mitte abbilden, Größe gleichmäßig skalieren (`decals.refit_rect`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Ein Hüllquader je Ring schließt Visierfenster** → Öffnungen per Probe prüfen, rahmende Teile ohne Kollider ([Quelle](TECHNIK.md#erfahrungen))

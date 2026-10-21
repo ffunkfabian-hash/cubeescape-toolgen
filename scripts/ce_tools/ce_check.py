@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 864e39d3a5c38968f15623aff7c3703ef0a0e8ecf665a018a81c0394dc532d49
+# ce-sha256: 954d69524aa1727245974f82796958eaf173f44dc8d8e4b8984adc1151ab0c60
 """ce_check.py quick|full|nightly [--repo PATH] [--verbose] - runs the commands of .ce-repo.json > check.
 
     "check": {"quick": ["cmd", "arg"], "full": [["cmd1", "a"], ["cmd2", "b"]], "rerun_failed": ["cmd", "--failed"],
@@ -118,7 +118,7 @@ def run_mode(root: Path, config: dict, mode: str, targeted: bool = False) -> dic
     results = [run_one(argv, root) for argv in argvs]
     failed = [r for r in results if r["code"] != 0]
     rerun = None
-    if failed and mode == "full" and check.get("rerun_failed"):
+    if failed and len(argvs) == 1 and mode == "full" and check.get("rerun_failed"):
         rerun = run_one(commands_of(check["rerun_failed"])[0], root)
         results.append(rerun)
     green = not failed or (rerun is not None and rerun["code"] == 0)

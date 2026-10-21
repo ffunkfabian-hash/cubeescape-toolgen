@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: b9cb56cbf710cb590f4f94f0f5e5d6a6585b5b9ba738a2d02d847c8a51124c97
+# ce-sha256: 6606363e9c14f56e329a0fd3017c10535d528dc819ab4f30bf64fcc2c6a56d38
 """ce_contract.py validate <file.json> ... [--schema NAME] | list - contracts between the repos as JSON Schema.
 
 0.5.0: the shape of a contract (what the producer writes and the consumer reads) lives once, in plugins/ce-shared/contracts/
@@ -41,7 +41,7 @@ def schema_for(document: dict, path: Path) -> str:
     """unity_contract*.json with format N -> unity_contract.vN (falls back to the highest schema <= N)."""
     stem = re.sub(r"_(fps|robot|fps_clips|game)$", "", path.stem)
     fmt = document.get("format")
-    candidates = sorted(CONTRACTS.glob(f"{stem}.v*.json"))
+    candidates = sorted(CONTRACTS.glob(f"{stem}.v*.json"), key=lambda p: int(p.stem.rsplit(".v", 1)[1]))
     if not candidates:
         raise FileNotFoundError(f"kein Schema für {stem} unter {CONTRACTS}")
     if isinstance(fmt, int):
@@ -99,6 +99,9 @@ def validate(value, schema: dict, root: dict, where: str = "$") -> list[str]:
             if key in value:
                 errors += validate(value[key], sub, root, f"{where}.{key}")
         extra = schema.get("additionalProperties")
+        if extra is False:
+            for key in value.keys() - schema.get("properties", {}).keys():
+                errors.append(f"{where}.{key}: additional property is not allowed")
         if isinstance(extra, dict):
             for key, item in value.items():
                 if key not in schema.get("properties", {}):

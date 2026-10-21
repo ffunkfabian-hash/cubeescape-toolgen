@@ -14,7 +14,7 @@ class TestPlanTests(unittest.TestCase):
         self.assertEqual([path for path in files if testplan.area_of(path) == "unknown"], [])
 
     def test_examples_and_minimal_paths(self):
-        cases = {"README.md": "docs", "data/tools.json": "data", "scripts/tool_assets/Portalkanone/create.py": "assets",
+        cases = {"ce": "tests", "scripts/nightly.sh": "tests", "scripts/testplan.py": "tests", "README.md": "docs", "data/tools.json": "data", "scripts/tool_assets/Portalkanone/create.py": "assets",
                  "toolgen/toolcache.py": "cache", "toolgen/generate_tools.py": "pipeline",
                  "viewer/build.sh": "viewer", "tests/test_pipeline.py": "tests",
                  "data/concepts/KG02.geo.json": "concepts", "scripts/import_concepts.py": "concepts"}

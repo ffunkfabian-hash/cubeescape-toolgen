@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Nachtlauf (0.20 "Nightshift"): die gebuendelten Bildstufen einmal taeglich auf main, nicht vor jedem Commit.
+# Nachtlauf (0.22 "Nightshift"): die gebuendelten Bildstufen einmal taeglich auf main, nicht vor jedem Commit.
 #   bash scripts/nightly.sh [output-dir]      (./check --nightly ruft dies ueber .ce-repo.json > check.nightly)
 # Laeuft auf dem Mac (Blender, Metal, Swift), wartet auf die Blender-Sperre; nie als GitHub-Workflow.
 # Inhalt: --tier full aller Werkzeuge (volle Aufloesung, Bake 2048, Samples 40), dann scripts/check_output.sh

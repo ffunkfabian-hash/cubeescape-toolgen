@@ -457,7 +457,7 @@ def is_image(path):
     return matches(path, IMAGE_PATTERNS)
 
 
-def stage_key(run, tool, state, blender_version, index, render=None):
+def stage_key(run, tool, state, blender_version, index, render=None, bake_scale=1):
     """Content key of one stage result. render=None: the geometry part (everything but images); else the images
     rendered with {"samples", "percent", "device"}. state: {generated file: sha256} in the work folder before it."""
     payload = {
@@ -467,6 +467,8 @@ def stage_key(run, tool, state, blender_version, index, render=None):
         "inputs": {path: digest for path, digest in sorted(state.items()) if matches(path, run.reads)},
         "programs": {name: program_version(name) for name in run.programs}, "render": render,
     }
+    if run.name.startswith("surface_bake"):
+        payload["bake_scale"] = bake_scale
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
@@ -549,7 +551,7 @@ class ToolBuild:
         self.steps = []
 
     def keys(self, run, state):
-        geometry = stage_key(run, self.tool, state, self.blender_version, self.index)
+        geometry = stage_key(run, self.tool, state, self.blender_version, self.index, bake_scale=self.settings.get("bake_scale", 1))
         images = stage_key(run, self.tool, state, self.blender_version, self.index, self.render) if run.render else None
         return geometry, images
 

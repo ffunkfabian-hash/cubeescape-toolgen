@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: ce9334ff78bfc7ca67a43e0c85814a676a9075c0b342cf3aa93910ebb4ed37ba
+# ce-sha256: 27591dc14dbf3e0996b9e81ea980d92fddbcf7243200753bab7320203bf15650
 """ce_docs.py [--repo PATH] [--json REPORT] - local Markdown links and anchors, skill front matter, JSON and shell syntax.
 
 0.5.0: the one doc checker of the repos (before: Tools/check_docs.py in Cube Escape, scripts/check_docs.py in Toolgen and the
-generators, check.py in cubeescape-rules). Configuration in .ce-repo.json > docs:
+generators, check.py in cubeescape-nexogen). Configuration in .ce-repo.json > docs:
 
     "docs": {"versions": "docs/versions", "changelog": "CHANGELOG.md",
              "check": ["README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md", "docs/**/*.md", ".agents/skills/**/SKILL.md"],
