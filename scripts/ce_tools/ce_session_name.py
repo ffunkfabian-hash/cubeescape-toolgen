@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 39811d0ac492eb316a9549e752db418d2d21be8bade0d4c69622efe61fa4ae6e
+# ce-sha256: c9a6eb612a7c8eefa8fd6da4c99d619235c8cc550cc2f4137f8da5545737a8ff
 """Proposes the session name `<Repo> <Version> „<Name>“ · <Ort>` and the branch name (CLAUDE.md > Sitzungsnamen, regeln-details.md).
 
 Run in the working repository at the start of a session:
@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 ABBREVIATIONS = {
-    "cubeescape": "CE", "cubeescape-toolgen": "TG", "cubeescape-robogen": "RG", "cubeescape-cubegen": "CG",
+    "cubeescape": "CE", "cube-escape": "CE", "cubeescape-toolgen": "TG", "toolgen": "TG", "robogen": "RG", "cubegen": "CG", "cubeescape-robogen": "RG", "cubeescape-cubegen": "CG",
     "cubeescape-design": "DS", "cubeescape-reference": "REF", "cubeescape-rules": "RULES",
 }
 CLOUD_MARKERS = ("CLAUDE_CODE_CONTAINER_ID", "CLAUDE_CODE_REMOTE", "CCR_AGENT_PROXY_ENABLED")

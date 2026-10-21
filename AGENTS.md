@@ -1,5 +1,9 @@
 # Toolgen – Regeln für KI-Agenten
 
+**Werkzeuge (Pflicht, auch für Codex ohne Hooks):** `./ce reserve <Name>` vor der ersten Änderung einer Version (Patch: Branch `claude/<repo>-patch-<kurzname>`) ·
+`./ce search <Begriffe>` vor dem Lesen langer Docs · `./ce lock unity|blender|gpu -- <Befehl>` für schwere Läufe · `./ce check` vor Commit ·
+`./ce judge` vor Merge (Versionen) · Belege `./ce clip|sheet|still`, Bildurteil `./ce diff` · `./ce report` am Ende (Ist-Zeit Warten/Rechnen/Lesen/Umsetzen).
+
 ## Projekt
 
 Gemeinsamer Werkzeug-Generator für Cube Escape. Code ist die Wahrheit, dann [README.md](README.md),

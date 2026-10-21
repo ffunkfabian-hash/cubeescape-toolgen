@@ -1,0 +1,3 @@
+#!/bin/sh
+# ./ce <command> - the shared tools of this repo (ce-agent-tools): check, reserve, search, judge, diff, sheet/clip/still, lock, status, docs, contract, report, sync
+exec "$(dirname "$0")/scripts/ce_tools/ce" "$@"
