@@ -11,7 +11,8 @@
       "verify": "verify_portal_gun.py",
       "animation": null,
       "clip": null,
-      "fps_clip": "PortalEmitter_Use"
+      "fps_clip": "PortalEmitter_Use",
+      "game_contract": "5"
     },
     {
       "id": "magnet_gripper",
@@ -91,7 +92,8 @@
         "eye_distance_m": 0.379,
         "reticle_socket": "Socket_Reticle"
       },
-      "concept": "KG02"
+      "concept": "KG02",
+      "game_contract": "5"
     },
     {
       "id": "pulse_rifle",

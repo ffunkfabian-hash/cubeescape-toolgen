@@ -25,8 +25,8 @@ class EgoClipTableTests(unittest.TestCase):
 
     def test_clip_counts_by_kind(self):
         for tool_id in ego_clip_table.WEAPON_ORDER:
-            # 0.11.0: the fusion rifle adds its Charge loop (T3)
-            self.assertEqual(len(self.tools[tool_id]["clips"]), 16 if tool_id == "fusion_rifle" else 15, tool_id)
+            # 0.11.0: the fusion rifle adds its Charge loop (T3); 0.19: the contract 5 assault rifle its ReloadEmpty
+            self.assertEqual(len(self.tools[tool_id]["clips"]), 16 if tool_id in ("fusion_rifle", "assault_rifle") else 15, tool_id)
         for tool_id in ego_clip_table.TOOL_ORDER:
             # 0.15.0: Inspect_B for the three ego tools, not the bow
             self.assertEqual(len(self.tools[tool_id]["clips"]), 8 if tool_id == "bow" else 9, tool_id)

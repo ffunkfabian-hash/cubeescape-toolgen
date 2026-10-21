@@ -72,8 +72,13 @@ final class ViewerModel: ObservableObject {
     }
 
     func selectTool(_ id: String) {
-        if let info = data.catalog.models.first(where: { $0.tool == id && $0.variant == selected.variant }) ??
-                      data.catalog.models.first(where: { $0.tool == id }) { select(info) }
+        let same = data.catalog.models.first(where: { $0.tool == id && $0.variant == selected.variant })
+        // the Ego view stays the Ego view: a contract 5 Ego game model is an orbit model, the tool's Ego model takes over
+        if selected.isEgo, same?.isEgo != true, let ego = data.catalog.models.first(where: { $0.tool == id && $0.isEgo }) {
+            select(ego)
+        } else if let info = same ?? data.catalog.models.first(where: { $0.tool == id }) {
+            select(info)
+        }
     }
 
     func setView(_ name: String) {

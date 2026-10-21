@@ -7,23 +7,53 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import concept_spec  # noqa: E402
+import ego_arms  # noqa: E402 - pure helpers (contract 5 clip list, rig data)
 import ego_clips  # noqa: E402
 import game_export  # noqa: E402 - pure helpers, no bpy at import
 import surface  # noqa: E402
-from generate_tools import catalog, valid_package  # noqa: E402
+from generate_tools import ARMS, RIG_CONTRACT, catalog, valid_package  # noqa: E402
 
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
 EGO = ego_clips.load()
 PROFILES = json.loads((ROOT / "data/viewmodels.json").read_text())["tools"]
 
+RIG = ego_arms.load()
+
 output = Path(sys.argv[1])
 index = json.loads((output / "catalog.json").read_text())
 checks = 0
+arms_hash = None
+def fps_format(tool):
+    try:
+        return json.loads((output / tool["id"] / "unity_contract_fps.json").read_text())["format"]
+    except (OSError, ValueError, KeyError):
+        return 0
+
+
+if any(fps_format(tool) >= RIG_CONTRACT for tool in catalog()):        # what was built, not what tools.json asks for
+    # 0.19 Kinetic: the shared arm package of contract 5
+    package = output / ARMS["id"]
+    assert valid_package(package), "ego_arms"
+    arms = json.loads((package / "unity_contract_arms.json").read_text())
+    qa = json.loads((package / "qa_arms.json").read_text())
+    assert qa["passed"] and all(check["passed"] for check in qa["checks"].values()), "qa_arms"
+    assert arms["format"] == 5 and arms["rig"]["id"] == "ego_arms" and arms["rig"]["version"] == RIG["rig"]["version"]
+    assert [node["name"] for node in arms["nodes"]] == ego_arms.all_nodes(RIG["rig"]["asset"]), "ego_arms nodes"
+    assert sum(r["triangles"] for r in arms["renderers"]) <= RIG["rig"]["budget_triangles"], "ego_arms budget"
+    assert set(m for r in arms["renderers"] for m in r["materials"]) <= set(ego_arms.LOOK_SLOTS), "ego_arms slots"
+    assert not arms["colliders"] and arms["minimum_consumer"]["shared_arm_rig"]
+    assert any(entry["id"] == "ego_arms/arms" for entry in index["models"]), "ego_arms in the viewer catalogue"
+    arms_hash = arms["rig"]["hash"]
+    checks += 8
 for tool in catalog():
     package = output / tool["id"]
     assert valid_package(package), tool["id"]
     manifest = json.loads((package / "manifest.json").read_text())
-    clips, _ = ego_clips.clip_list(EGO, tool, PROFILES[tool["id"]].get("motion"))
+    rigged = fps_format(tool) >= RIG_CONTRACT
+    if rigged:
+        clips, _ = ego_arms.clip_list_v5(tool, PROFILES[tool["id"]], RIG["devices"][tool["id"]])
+    else:
+        clips, _ = ego_clips.clip_list(EGO, tool, PROFILES[tool["id"]].get("motion"))
     for variant in ["world", "fps", *(["arrow"] if tool.get("arrow") else [])]:
         asset = tool["arrow"] if variant == "arrow" else tool["asset"] + ("_FPS" if variant == "fps" else "")
         for ext in ("blend", "fbx", "glb"):
@@ -35,7 +65,19 @@ for tool in catalog():
         if clip:
             assert scene["frames"] == 97, (asset, "animation frame count")
             assert scene["clip"] == clip
-        if variant == "fps":
+        if variant == "fps" and rigged:
+            # contract 5: the assembly on the shared rig (toolgen/ego_rig.py)
+            rig = json.loads((package / "qa_viewmodel.json").read_text())
+            assert rig["passed"] and not rig["failures"], (tool["id"], rig["failures"][:3])
+            assert rig["rig"]["hash"] == arms_hash, (tool["id"], "clips built on another arm rig")
+            assert max(rig["hand_touch_max_m"].values()) <= rig["hand_touch_limit_m"] <= .008, tool["id"]
+            assert max(rig["wrist_bend_max_degrees"].values()) <= rig["wrist_limit_degrees"] <= 55, tool["id"]
+            assert [name for name in rig["events"]] == [clip["name"] for clip in clips], (tool["id"], "clip names")
+            roundtrip = json.loads((package / "qa_viewmodel_roundtrip.json").read_text())
+            assert roundtrip["passed"], (tool["id"], roundtrip["failures"])
+            assert any(node["name"] == "Hand_R" for node in scene["nodes"]), (tool["id"], "viewer shows the arms")
+            checks += 6
+        elif variant == "fps":
             rig = json.loads((package / "qa_viewmodel.json").read_text())
             assert rig["passed"] and rig["max_contact_error_m"] < .0001
             # every frame of the Use clip and of every ego clip is checked; each clip starts and ends in its named pose
@@ -99,7 +141,21 @@ for tool in catalog():
             assert game_qa["checks"]["roundtrip_clips_" + kind]["passed"], (tool["id"], kind)
         assert all(entry["take"] == ego["ego_clips"]["take"] for entry in ego["clips"][1:])
         checks += 4
-    if tool.get("hold", {}).get("sight_kind"):
+    if rigged:
+        # contract 5 blocks: attach, grip, arms_rig, assembly, event channels, the device alone, the half turn
+        assert ego["format"] == 5 and ego["arms_rig"]["hash"] == arms_hash, tool["id"]
+        assert ego["attach"]["bone"] == "Prop_R" and set(ego["grip"]) == {"R", "L"}, tool["id"]
+        paths = {entry["name"] for entry in ego["assembly"]}
+        assert {"Prop_R", "Hand_L", ego["device_root"]} <= paths, (tool["id"], "assembly")
+        assert all("channel" in event for clip in ego["clips"] for event in clip["events"]), (tool["id"], "event channels")
+        for name in ("device_without_arms", "socket_hand_at_origin", "anchor_half_turn", "triangle_budget"):
+            assert game_qa["checks"][name]["passed"], (tool["id"], name)
+        checks += 8
+    if tool.get("hold", {}).get("sight_kind") and rigged:
+        rig = json.loads((package / "qa_viewmodel.json").read_text())
+        assert rig["sight_aim_idle"] and max(rig["sight_aim_idle"]["lateral_m"], rig["sight_aim_idle"]["vertical_m"]) <= .001
+        checks += 1
+    elif tool.get("hold", {}).get("sight_kind"):
         # 0.11.0 (Cube Escape 0.72 T1/T2/T6): sight anchors in both contracts, Fire marker on the shot, ADS target pose
         world = json.loads((package / "unity_contract.json").read_text())
         scope = tool["hold"]["sight_kind"] == "scope"
@@ -113,7 +169,10 @@ for tool in catalog():
         assert game_qa["ads"]["eye_distance_range_m"], (tool["id"], "no eye distance keeps the ADS framing")
         checks += 5
     event = PROFILES[tool["id"]].get("use_event")
-    if event:
+    if event and rigged:
+        assert [(e["name"], e["frame"]) for e in ego["clips"][0]["events"]] == [(event["name"], event["frame"])], tool["id"]
+        checks += 1
+    elif event:
         # 0.15.0 Toolgrip (Cube Escape 0.85 phase 4): the ego tools' wrists at most 55 degrees in every frame of every clip,
         # their Use event (Fire, Grab, Switch), Inspect_B and a lowered pose with Socket_Hand at least 6 mm lower than rest
         assert ego["clips"][0]["events"] == [{"name": event["name"], "frame": event["frame"],
@@ -132,7 +191,8 @@ for tool in catalog():
     # 0.17 Retrace: every contract names both consumer requirements apart; a renamed tool carries its former names
     for path in sorted(package.glob("unity_contract*.json")):
         document = json.loads(path.read_text())
-        assert document["minimum_consumer"] == game_export.consumer_block(tool), (tool["id"], path.name, "minimum_consumer")
+        expected = game_export.consumer_block(tool, document["format"])
+        assert document["minimum_consumer"] == expected, (tool["id"], path.name, "minimum_consumer")
         assert document.get("renamed_from") == (game_export.renamed_block(tool) if tool.get("renamed_from") else None), \
             (tool["id"], path.name, "renamed_from")
         if "surface" in document and path.name == "unity_contract_fps.json":
@@ -210,7 +270,9 @@ for tool in catalog():
     else:
         assert not any(name.startswith("unity_contract_robot") or "_Robot" in name for name in manifest["files"]), tool["id"]
     if manifest["tier"] != "quick":
-        for suffix in ["", "_fps", *(["_arrow"] if tool.get("arrow") else []), *(["_robot"] if robot_built else [])]:
+        # contract 5: no roundtrip_fps run (ego_rig.py's qa_viewmodel_roundtrip.json, checked above)
+        for suffix in ["", *([] if rigged else ["_fps"]), *(["_arrow"] if tool.get("arrow") else []),
+                       *(["_robot"] if robot_built else [])]:
             roundtrip = json.loads((package / ("qa_roundtrip" + suffix + ".json")).read_text())
             assert all(result["passed"] is True for result in roundtrip["checks"].values())
             checks += len(roundtrip["checks"])

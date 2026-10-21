@@ -26,7 +26,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import toolcache
@@ -48,7 +48,11 @@ CACHE_SCHEMA = 3
 # Stage results: raise when stages would write something else although none of their key parts changed.
 STAGE_SCHEMA = 1
 GAME_CONTRACT = 4               # default contract of toolgen/game_export.py (CONTRACT_FORMAT there; tests compare)
-CONTRACTS = (1, 2, 3, 4)
+CONTRACTS = (1, 2, 3, 4, 5)
+# Contract 5 (Toolgen 0.19 Kinetic): devices without arms on the shared Ego arm rig. Only tools with an entry in
+# data/ego_arms.json devices can be built with it (tools.json game_contract 5); --contract 4 builds them like 0.18.
+RIG_CONTRACT = 5
+ARMS_ROOT = "CubeEscape_EgoArms"
 # Source fingerprints (ASTs) of the functions that decide what a stage writes and how a package is assembled.
 # Timing, reporting and orchestration edits stay outside, so they rebuild nothing (Robogen's producer fingerprint).
 # New helpers that write stage outputs or packages belong in these lists.
@@ -102,11 +106,12 @@ class Stage:
     variants: tuple = ()            # viewer models it adds (after BASE_VARIANTS)
     heavy: bool = False             # a build (not a cache hit) waits for the shared heavy-run lock
     min_contract: int = 0           # runs only when the game contract is at least this
+    replaces: tuple = ()            # stages it replaces for the tools it runs for (contract 5: ego_rig for first_person)
 
 
 # Stage fields added after the first cache schema: in the declaration (and so in the key) only when set, so adding them
 # rebuilds no existing stage.
-OPTIONAL_FIELDS = ("heavy", "min_contract")
+OPTIONAL_FIELDS = ("heavy", "min_contract", "replaces")
 
 
 def declaration(stage):
@@ -131,6 +136,12 @@ STAGES = (
           sources=("data/viewmodels.json",), renders=True),
     Stage("viewmodel_roundtrip", "toolgen/verify_viewmodel.py", args=("--directory", "{work}", "--asset", "{asset}_FPS"),
           tiers=ROUNDTRIP_TIERS, reads=("qa_viewmodel.json", "{asset}_FPS.blend", "{asset}_FPS.glb", "{asset}_FPS.fbx")),
+    # Contract 5 (0.19): the device on the shared arm rig instead of baked arms - the assembly in <asset>_FPS.blend, every clip
+    # on the whole chain, its own reimport check (qa_viewmodel_roundtrip.json in every tier).
+    Stage("ego_rig", "toolgen/ego_rig.py", args=("--directory", "{work}", "--tool", "{id}"),
+          sources=("data/viewmodels.json", "data/ego_arms.json", "data/game_palette.json"), renders=True,
+          qa=("qa_viewmodel.json", "qa_viewmodel_roundtrip.json"), min_contract=RIG_CONTRACT,
+          replaces=("first_person", "viewmodel_roundtrip")),
     # Game export of the world model: merged renderers, matte palette, LOD1, collision, unity_contract.json; adds the
     # viewer model "game" (root <asset>_Game, world clip).
     Stage("game", "toolgen/game_export.py", args=("--directory", "{work}", "--tool", "{id}", "--contract", "{game_contract}"),
@@ -147,6 +158,14 @@ STAGES = (
           sources=("data/game_palette.json", "data/game_budget.json", "toolgen/version.py"), renders=True,
           render_args=("--preview",), qa=("qa_game_fps.json",),
           variants=(Variant("fps_game", "{asset}_FPS_Game", clip=("fps_clip", "clip"), node="{asset}_FPS"),)),
+    # Contract 5: the device alone (<asset>_FPS_Game, no take, hand parts root <asset>_FPS_HandL) and the assembly's nodes
+    # with every clip in <asset>_FPS_Game_Clips (toolgen/game_export_rig.py).
+    Stage("game_fps_rig", "toolgen/game_export_rig.py", args=("--directory", "{work}", "--tool", "{id}"),
+          reads=("{asset}_FPS.blend", "viewmodel_camera.json", "qa_viewmodel.json", "{asset}.blend", "qa_geometry.json",
+                 "qa_geometry_fps.json"),
+          sources=("data/game_palette.json", "data/game_budget.json", "data/ego_arms.json", "toolgen/version.py"),
+          renders=True, render_args=("--preview",), qa=("qa_game_fps.json",), min_contract=RIG_CONTRACT,
+          replaces=("game_fps",), variants=(Variant("fps_game", "{asset}_FPS_Game", node="{asset}_FPS"),)),
     # Contract 4: mask maps W0/W1/Fields/Normal of both game models and the "surface" block in both contracts. Fixed bake
     # settings (not the tier's samples), so standard and full share the result; quick leaves it out (manifest "surface").
     # 0.13: relief and decals of the weapons (data/surface_recipes.json, weapon_designs.py DECALS) label the LOD0 triangles
@@ -173,6 +192,13 @@ STAGES = (
           sources=("data/game_palette.json",), tiers=ROUNDTRIP_TIERS, qa=("qa_surface_robot.json",), programs=("magick",),
           heavy=True, min_contract=4),
 )
+# The shared arm package of contract 5: built once per run (as its own package output/ego_arms) when a selected tool uses
+# contract 5 or --tool ego_arms asks for it.
+ARMS = {"id": "ego_arms", "label": "Ego-Arme", "folder": "EgoArme", "asset": ARMS_ROOT, "kind": "rig"}
+ARMS_STAGES = (Stage("ego_arms", "toolgen/ego_arms.py", args=("--directory", "{work}"),
+                     sources=("data/viewmodels.json", "data/ego_arms.json", "data/game_palette.json", "toolgen/version.py"),
+                     renders=True, qa=("qa_arms.json",)),)
+ARMS_VARIANTS = (Variant("arms", ARMS_ROOT + "_Game", node=ARMS_ROOT),)
 # Serialises the heavy stage builds of this process' workers (the shared lock marks its holder in os.environ).
 HEAVY_STAGES = threading.Lock()
 
@@ -248,28 +274,44 @@ def variant_clip(variant, tool):
     return None
 
 
-def variants(tool, stages=None):
-    found = [variant for variant in BASE_VARIANTS if not variant.when or tool.get(variant.when)]
+def variants(tool, stages=None, base=BASE_VARIANTS):
+    found = [variant for variant in base if not variant.when or tool.get(variant.when)]
     for stage in STAGES if stages is None else stages:
         if (not stage.when or tool.get(stage.when)) and game_contract(tool) >= stage.min_contract:
             found += [variant for variant in stage.variants if not variant.when or tool.get(variant.when)]
-    return found
+    if game_contract(tool) >= RIG_CONTRACT:
+        # contract 5: the Ego viewer model is the assembly (arm rig with the device at Prop_R; the device's own reimport is
+        # ego_rig's); the device's game model carries no take
+        found = [replace(variant, node=ARMS_ROOT, roundtrip=False) if variant.name == "fps"
+                 else replace(variant, clip=()) if variant.name == "fps_game" else variant for variant in found]
+    unique, names = [], set()
+    for variant in found:                      # a replacing stage may name the variant of the stage it replaces
+        if variant.name not in names:
+            unique.append(variant)
+            names.add(variant.name)
+    return unique
 
 
-def expand(tool, tier, stages=None):
+def applies(stage, tool):
+    return (not stage.when or tool.get(stage.when)) and game_contract(tool) >= stage.min_contract
+
+
+def expand(tool, tier, stages=None, base=BASE_VARIANTS):
     """The concrete runs of one tool in one tier in build order: STAGES, viewer exports, roundtrip checks."""
     stages = STAGES if stages is None else stages
     settings = TIERS[tier]
+    replaced = {name for stage in stages if applies(stage, tool) for name in stage.replaces}
+    stages = [stage for stage in stages if stage.name not in replaced]
     runs = []
     for stage in stages:
-        if tier not in stage.tiers or stage.when and not tool.get(stage.when) or game_contract(tool) < stage.min_contract:
+        if tier not in stage.tiers or not applies(stage, tool):
             continue
         runs.append(Run(stage.name, declaration(stage), stage.runner, template(stage.script, tool),
                         tuple(template(argument, tool) for argument in stage.args), stage.quiet_args,
                         tuple(template(pattern, tool) for pattern in stage.reads), stage.sources,
                         stage.renders and bool(settings["samples"]), stage.programs, stage.qa,
                         render_args=stage.render_args, heavy=stage.heavy))
-    for variant in variants(tool, stages):
+    for variant in variants(tool, stages, base):
         root, clip = template(variant.root, tool), variant_clip(variant, tool)
         node = template(variant.node, tool) if variant.node else root
         args = ("--source", f"{{work}}/{root}.blend", "--output", f"{{work}}/ViewerData/{variant.name}", "--root", node)
@@ -279,7 +321,7 @@ def expand(tool, tier, stages=None):
                         "toolgen/export_viewer.py", args, (), (root + ".blend",), (), False,
                         variant={"name": variant.name, "root": root, "clip": clip, "exports": variant.exports}))
     if settings["roundtrip"]:
-        for variant in variants(tool, stages):
+        for variant in variants(tool, stages, base):
             if variant.roundtrip:
                 runs.append(Run("roundtrip_" + variant.name, {"roundtrip": variant.name}, "blender", tool["verify"],
                                 ("--variant", variant.name), (), WITH_IMAGES, (), False))
@@ -492,14 +534,15 @@ def record(run, part, key, meta):
 class ToolBuild:
     """Builds one tool package: resolves the stage keys, restores hits from the shared cache, runs the misses."""
 
-    def __init__(self, tool, output, tier, blender, blender_version, threads, no_cache, device, store, index=None):
+    def __init__(self, tool, output, tier, blender, blender_version, threads, no_cache, device, store, index=None,
+                 stages=None, base=BASE_VARIANTS):
         self.tool, self.output, self.tier = tool, output, tier
         self.blender, self.blender_version, self.threads = blender, blender_version, threads
         self.no_cache, self.device, self.store = no_cache, device, store
         self.index = index or SourceIndex()
         self.settings = TIERS[tier]
         self.render = {"samples": self.settings["samples"], "percent": self.settings["percent"], "device": device}
-        self.runs = expand(tool, tier)
+        self.runs = expand(tool, tier, stages, base)
         self.steps = []
 
     def keys(self, run, state):
@@ -526,7 +569,7 @@ class ToolBuild:
     def package_key(self, records):
         folder = ROOT / "scripts/tool_assets" / self.tool["folder"]
         data = {path.name: hash_file(path) for path in sorted(folder.iterdir())
-                if path.is_file() and path.suffix not in (".py", ".sh")}
+                if path.is_file() and path.suffix not in (".py", ".sh")} if folder.is_dir() else {}
         payload = [CACHE_SCHEMA, VERSION, CODENAME, self.tier, self.device, self.tool["id"],
                    [(item["stage"], item["part"], item["key"]) for item in records], data,
                    function_fingerprint(PIPELINE_CACHE_FUNCTIONS)]
@@ -628,6 +671,7 @@ class ToolBuild:
             if (ROOT / CONCEPTS).is_dir():         # 0.18: concept sheets for concept_spec.py (no network in the build)
                 shutil.copytree(ROOT / CONCEPTS, authors / "concepts")
             work = authors / self.tool["folder"]
+            work.mkdir(parents=True, exist_ok=True)        # the arm package has no author folder
             sources = {str(path.relative_to(work)) for path in work.rglob("*") if path.is_file()}
             state, records = {}, []
             for run in self.runs:
@@ -689,7 +733,10 @@ def assemble_package(work, tool, tier, device, runs, records, key):
             models.append({"id": tool["id"] + "/" + variant["name"], "tool": tool["id"], "label": tool["label"],
                            "variant": variant["name"], "path": "ViewerData/" + variant["name"], "asset": variant["root"],
                            "clip": variant["clip"], "triangles": scene["triangles"], "frames": scene["frames"],
-                           "qa": "roundtrip" if TIERS[tier]["roundtrip"] else "geometry"})
+                           "qa": "roundtrip" if TIERS[tier]["roundtrip"] else "geometry",
+                           # contract 5 only (the viewer checks its Ego game model as the device alone): contract 4
+                           # entries stay as they were
+                           **({"contract": game_contract(tool)} if game_contract(tool) >= RIG_CONTRACT else {})})
     cleanup_work(work)
     files = {str(path.relative_to(work)): hash_file(path) for path in sorted(work.rglob("*")) if path.is_file()}
     (work / "manifest.json").write_text(json.dumps({"version": VERSION, "codename": CODENAME,
@@ -701,8 +748,37 @@ def assemble_package(work, tool, tier, device, runs, records, key):
 
 
 def build(tool, output, tier, blender, blender_version, threads, no_cache, device="cpu", store=None):
+    if tool["id"] == ARMS["id"]:
+        return ToolBuild(tool, output, tier, blender, blender_version, threads, no_cache, device, store or toolcache.Store(),
+                         stages=ARMS_STAGES, base=ARMS_VARIANTS).build()
     return ToolBuild(tool, output, tier, blender, blender_version, threads, no_cache, device,
                      store or toolcache.Store()).build()
+
+
+def rig_devices():
+    return set(json.loads((ROOT / "data/ego_arms.json").read_text())["devices"]) - {"note"}
+
+
+def with_contract(tools, contract):
+    """--contract for every selected tool: the default contract leaves the tool entry as it is (no key change) unless the
+    entry sets another one (the contract 5 pilots: --contract 4 is their way back); contract 5 only for rig devices."""
+    result = []
+    for tool in tools:
+        if contract is None:
+            result.append(tool)
+        elif contract == GAME_CONTRACT:
+            result.append({key: value for key, value in tool.items() if key != "game_contract"})
+        else:
+            if contract >= RIG_CONTRACT and tool["id"] not in rig_devices():
+                raise ValueError(f"--contract {contract}: {tool['id']} has no entry in data/ego_arms.json devices")
+            result.append(dict(tool, game_contract=str(contract)))
+    return result
+
+
+def with_arms(tools, requested):
+    """The arm package joins the run when a selected tool uses contract 5 or --tool ego_arms names it."""
+    wanted = ARMS["id"] in (requested or []) or any(game_contract(tool) >= RIG_CONTRACT for tool in tools)
+    return [ARMS, *tools] if wanted else list(tools)
 
 
 def valid_package(package, key=None):
@@ -771,7 +847,7 @@ def output_lock(root):
 def foreign_packages(output, tools=None):
     """Tool packages in the output that the catalogue no longer names (e.g. scout_rifle/ after the 0.17 rename): left in
     place (never deleted), named in a warning so nobody copies them on."""
-    ids = {tool["id"] for tool in (catalog() if tools is None else tools)}
+    ids = {tool["id"] for tool in (catalog() if tools is None else tools)} | {ARMS["id"]}
     return sorted(path.name for path in output.iterdir()
                   if path.is_dir() and path.name not in ids and (path / "manifest.json").is_file())
 
@@ -782,7 +858,8 @@ def write_catalog(output):
         print(f"warning: {output} holds packages of tools not in data/tools.json (not in catalog.json, not rebuilt): "
               f"{', '.join(stray)}", file=sys.stderr, flush=True)
     models = []
-    for tool in catalog():
+    # the arm package last: the viewer opens the first model (a tool, as before 0.19), the shared part follows the tools
+    for tool in [*catalog(), ARMS]:
         package = output / tool["id"]
         if not valid_package(package):
             continue
@@ -846,17 +923,20 @@ def render_device(blender, requested):
 def main():
     parser = argparse.ArgumentParser(description="Generate the authored Cube Escape tools and native viewer data")
     parser.add_argument("--tier", choices=TIERS, default="quick")
-    parser.add_argument("--tool", action="append", choices=[tool["id"] for tool in catalog()] + sorted(former_ids()))
+    parser.add_argument("--tool", action="append",
+                        choices=[tool["id"] for tool in catalog()] + sorted(former_ids()) + [ARMS["id"]])
     parser.add_argument("--output", type=Path)
     parser.add_argument("--blender")
     parser.add_argument("--workers", type=int)
     parser.add_argument("--threads", type=int)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--device", choices=("auto", "cpu", "metal"), default="auto")
-    parser.add_argument("--contract", type=int, choices=CONTRACTS, default=GAME_CONTRACT,
-                        help="game export contract: 4 (default, UV1 and surface maps, Cube Escape 0.71), 3 (Toolgen 0.10 "
-                             "layout, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout for Cube "
-                             "Escape before 0.64)")
+    parser.add_argument("--contract", type=int, choices=CONTRACTS, default=None,
+                        help="game export contract for every selected tool (default: each tool's own, tools.json game_contract, "
+                             "else 4): 5 (Toolgen 0.19, devices on the shared arm rig; only the tools of data/ego_arms.json), "
+                             "4 (UV1 and surface maps, Cube Escape 0.71; the way back for the contract 5 pilots), 3 (Toolgen "
+                             "0.10 layout, ego clips), 2 (Toolgen 0.8 layout, Use clip only) or 1 (Toolgen 0.7 layout for "
+                             "Cube Escape before 0.64)")
     args = parser.parse_args()
     args.tool = resolve_tool_ids(args.tool)
     lock = None
@@ -871,8 +951,7 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
         (output / "logs").mkdir(exist_ok=True)
         selected = [tool for tool in catalog() if not args.tool or tool["id"] in args.tool]
-        if args.contract != GAME_CONTRACT:
-            selected = [dict(tool, game_contract=str(args.contract)) for tool in selected]
+        selected = with_arms(with_contract(selected, args.contract), args.tool)
         if args.tier == "full":     # one heavy run at a time on this Mac (shared with Robogen, Cube Escape, Cubegen)
             lock = heavy_lock.HeavyLock(f"toolgen full {output}", str(ROOT)).acquire()
         store = toolcache.Store()

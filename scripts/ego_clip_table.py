@@ -7,8 +7,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+sys.path.insert(0, str(ROOT / "toolgen"))
 
 import ego_clips
+import ego_arms
 
 
 WEAPON_ORDER = ("pistol", "smg", "assault_rifle", "trace_rifle", "pulse_rifle",
@@ -29,7 +31,11 @@ def resolved():
         tool = by_id[tool_id]
         profile = viewmodels.get("tools", {}).get(tool_id, {})
         motion = profile.get("motion")
-        clips, _ = ego_clips.clip_list(data, tool, motion)
+        if int(tool.get("game_contract", 4)) >= ego_arms.CONTRACT_FORMAT:
+            # contract 5 (0.19): the device's own Reload, the appended ReloadEmpty, event channels (data/ego_arms.json)
+            clips, _ = ego_arms.clip_list_v5(tool, profile, ego_arms.load()["devices"][tool_id])
+        else:
+            clips, _ = ego_clips.clip_list(data, tool, motion)
         # Use clip event (timeline marker): the weapons' Fire on the shot, the ego tools' use_event (0.15.0); None where the
         # markers come from the model's own animation script (the bow: Idle_Loaded, Drawn, Release, ...), see its contract
         use = ({"name": "Fire", "frame": motion["fire_frame"]} if motion else profile.get("use_event"))
@@ -53,7 +59,8 @@ def json_data(data, result):
                     "seconds": c["length"] / data["fps"], "loop": c["loop"],
                     "from": c["from"], "to": c["to"], "reticle_free": c["reticle_free"],
                     "interruptible": c["interruptible"],
-                    "events": [{"name": e["name"], "frame": e["frame"] - c["frame_start"]} for e in c["events"]],
+                    "events": [{"name": e["name"], "frame": e["frame"] - c["frame_start"],
+                                **({"channel": e["channel"]} if "channel" in e else {})} for e in c["events"]],
                 } for c in item["clips"]],
                 "transitions": item["transitions"],
                 "use_events": None if item["use_events"] is None else
@@ -87,7 +94,10 @@ def render_markdown(data, result):
               "Loops dürfen an jedem Frame mit kurzer Überblendung verlassen werden. Bei `interruptible: false` ist ein Clip nur am Ende verlassbar.",
               "Events sind relativ zum Clipstart angegeben.",
               "In den Ziel-Clips (AimIn, AimIdle, AimFire, AimOut) darf der Unterarm der Stützhand sichtbar sein "
-              "(`support_forearm_visible`, Entscheidung des Nutzers 16.10.2026); sonst bleiben die Ellbogenhälften der Unterarme außerhalb des Bildes.", ""]
+              "(`support_forearm_visible`, Entscheidung des Nutzers 16.10.2026); sonst bleiben die Ellbogenhälften der Unterarme außerhalb des Bildes.",
+              "Vertrag 5 (0.19, Sturmgewehr und Portalkanone, `data/ego_arms.json`): alle Clips, der Use-Clip zuerst, liegen in "
+              "`<Asset>_FPS_Game_Clips.fbx` und bewegen die gemeinsame Armkette; das Sturmgewehr hat eigene `Reload`/`ReloadEmpty` "
+              "(Start/End und die Rig-Ereignisse `HandOff`/`HandOn`, Kanal „rig“, markiert mit ⟂). Einbau: docs/UNITY_EINBAU.md › Vertrag 5.", ""]
     lines += ["## Clips je Klasse", "", "Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht besitzt.", ""]
     tool_heading = "Werkzeuge (" + " / ".join(result[x]["tool"]["label"] for x in TOOL_ORDER) + ")"
     headings = ["Suffix", *[result[x]["tool"]["label"] for x in WEAPON_ORDER], tool_heading, "Loop", "Von → nach",
@@ -131,7 +141,8 @@ def render_markdown(data, result):
                       ", ".join(f"{e['name']} {e['frame'] - 1}" for e in item["use_events"]) or "—")
         lines.append(f"| `{use_name}` | 1–97 | {seconds(96, fps)} | {use_events} |")
         for c in item["clips"]:
-            events = ", ".join(f"{e['name']} {e['frame'] - c['frame_start']}" for e in c["events"]) or "—"
+            events = ", ".join(f"{e['name']}{'⟂' if e.get('channel') == 'rig' else ''} {e['frame'] - c['frame_start']}"
+                               for e in c["events"]) or "—"
             lines.append(f"| `{c['name']}` | {c['frame_start']}–{c['frame_end']} | {seconds(c['length'], fps)} | {events} |")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"

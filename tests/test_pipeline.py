@@ -228,7 +228,8 @@ class GameFpsStageTest(unittest.TestCase):
         self.assertGreater(names.index("game_fps"), names.index("first_person"))
         for tool in catalog():
             runs = [run.name for run in expand(tool, "quick")]
-            self.assertIn("game_fps", runs)
+            # 0.19: contract 5 devices take the rig export instead (game_fps_rig replaces game_fps)
+            self.assertIn("game_fps_rig" if int(tool.get("game_contract", 4)) >= 5 else "game_fps", runs)
 
 if __name__ == "__main__":
     unittest.main()

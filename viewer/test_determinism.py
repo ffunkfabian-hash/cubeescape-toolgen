@@ -8,7 +8,8 @@ this test in check_output.sh). Usage:
 
 Without --model every catalog model is checked. Each render is compared with the first one (magick AE, fuzz 2 %); a
 model is unstable when any comparison exceeds --limit pixels (below 1 px is antialiasing noise). Exit 1 with
-DETERMINISM_FAILED when a model outside KNOWN_UNSTABLE is unstable; KNOWN_UNSTABLE models are reported, never skipped.
+DETERMINISM_FAILED when a model outside KNOWN_UNSTABLE is unstable; KNOWN_UNSTABLE models are reported, never skipped, and fail
+above their known value plus the limit (0.19).
 """
 import argparse
 import json
@@ -25,7 +26,14 @@ LIMIT_PX = 1.0
 KNOWN_UNSTABLE = {"portal_emitter/world": 1.7,   # 3 of 11 at 1.6-1.7 px (Mac, 3396e1f), cause not found, borderline
                   # 0.18: 2 of 15 at 1.3 px; identical viewer data in v0.17.2 gave 0 of 15 (0.9 px) and 1 of 15 (1.0 px) on the
                   # same Mac - borderline before this version, cause not found
-                  "magnet_gripper/world": 1.3}
+                  "magnet_gripper/world": 1.3,
+                  # 0.19 (Mac, 21.10.2026): 1 of 7 at 2.4 px, 12 extra renders up to 2.4; the differing pixels are single edge
+                  # pixels (finger tips, light strip end, elbow end; 6-13 of 960 000 at 3 %), no patch - antialiasing, not
+                  # coplanar faces
+                  "ego_arms/arms": 2.4,
+                  # 0.19 (Mac, 21.10.2026): 4 of 14 at 1.3 px; cross check 0.18 viewer on 0.19 data 1 of 11 (1.26 px), 0.19 viewer
+                  # on 0.18 data 1 of 11 (1.32 px), 0.18 on 0.18 0 of 14 - borderline in every version, viewer data unchanged
+                  "pistol/world": 1.3}
 
 
 def difference(first, second):
@@ -42,7 +50,9 @@ def classify(model, differences, limit=LIMIT_PX, known=None):
     over = [value for value in differences if value > limit]
     worst = max(differences, default=0.0)
     if over:
-        return ("EXPECTED_UNSTABLE" if model in known else "UNSTABLE"), worst, len(over)
+        # a known model is expected only up to its measured value plus the noise limit: a larger flip is a new defect
+        expected = model in known and worst <= known[model] + limit
+        return ("EXPECTED_UNSTABLE" if expected else "UNSTABLE"), worst, len(over)
     return ("KNOWN_NOW_STABLE" if model in known else "STABLE"), worst, 0
 
 

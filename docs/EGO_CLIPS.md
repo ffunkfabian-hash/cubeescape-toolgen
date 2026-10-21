@@ -18,6 +18,7 @@ Bei Loop-Clips ist das letzte Sample identisch mit dem ersten.
 Loops dürfen an jedem Frame mit kurzer Überblendung verlassen werden. Bei `interruptible: false` ist ein Clip nur am Ende verlassbar.
 Events sind relativ zum Clipstart angegeben.
 In den Ziel-Clips (AimIn, AimIdle, AimFire, AimOut) darf der Unterarm der Stützhand sichtbar sein (`support_forearm_visible`, Entscheidung des Nutzers 16.10.2026); sonst bleiben die Ellbogenhälften der Unterarme außerhalb des Bildes.
+Vertrag 5 (0.19, Sturmgewehr und Portalkanone, `data/ego_arms.json`): alle Clips, der Use-Clip zuerst, liegen in `<Asset>_FPS_Game_Clips.fbx` und bewegen die gemeinsame Armkette; das Sturmgewehr hat eigene `Reload`/`ReloadEmpty` (Start/End und die Rig-Ereignisse `HandOff`/`HandOn`, Kanal „rig“, markiert mit ⟂). Einbau: docs/UNITY_EINBAU.md › Vertrag 5.
 
 ## Clips je Klasse
 
@@ -40,7 +41,8 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
 | Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
 | Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | — |
-| Reload | 42 | 48 | 56 | 56 | 56 | 64 | 60 | 64 | 78 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
+| Reload | 42 | 48 | 40 | 56 | 56 | 64 | 60 | 64 | 78 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
+| ReloadEmpty | — | — | 46 | — | — | — | — | — | — | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, HandOff, MagOut, MagIn, Chamber, HandOn, Ready, End |
 | Charge | — | — | — | — | — | — | 18 | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
 
 ## Clips je Werkzeug und Waffe
@@ -106,7 +108,8 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `AssaultRifle_Holster` | 403–411 | 0.33 | Holstered 8 |
 | `AssaultRifle_Inspect_A` | 415–511 | 4.00 | — |
 | `AssaultRifle_Inspect_B` | 515–611 | 4.00 | — |
-| `AssaultRifle_Reload` | 615–671 | 2.33 | MagOut 17, MagIn 37, Ready 56 |
+| `AssaultRifle_Reload` | 615–655 | 1.67 | Start 0, HandOff⟂ 2, MagOut 8, MagIn 22, HandOn⟂ 29, Ready 32, End 40 |
+| `AssaultRifle_ReloadEmpty` | 659–705 | 1.92 | Start 0, HandOff⟂ 2, MagOut 8, MagIn 22, Chamber 27, HandOn⟂ 34, Ready 38, End 46 |
 
 ### Spurgewehr (`trace_rifle`)
 

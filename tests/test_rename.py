@@ -82,7 +82,8 @@ class RenamedFromTests(unittest.TestCase):
         self.assertIn("0.96 and older do NOT read this package", block["renamed_tool_ids"])
         self.assertIn("git checkout v0.16.0", block["renamed_tool_ids"])
         self.assertEqual(block["renamed_tool_ids"], ge.renamed_block(TOOLS["trace_rifle"])["minimum_consumer"])
-        self.assertIn('"minimum_consumer": consumer_block(tool)', inspect.getsource(ge.build_contract))
+        # 0.19: the contract format joins the call (contract 5 adds shared_arm_rig)
+        self.assertIn('"minimum_consumer": consumer_block(tool, contract)', inspect.getsource(ge.build_contract))
         # 0.18: a concept weapon adds its own requirement, the others keep exactly the two
         self.assertEqual({"first_person_maps_2048", "renamed_tool_ids", "triangle_budgets", "concept_models"},
                          set(ge.consumer_block(TOOLS["assault_rifle"])))
