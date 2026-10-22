@@ -160,6 +160,63 @@ class ImportTests(unittest.TestCase):
                                           folder=folder / "c")
 
 
+class SpecImportTests(unittest.TestCase):
+    """0.23: import_concepts.py --spec adds the weapon spec (palettes) of an imported sheet, checked against formgen's list."""
+
+    def setup(self):
+        folder = Path(tempfile.mkdtemp())
+        path, golden = ImportTests().fake_release(folder)
+        target = folder / "concepts"
+        import_concepts.import_sheets(path, ["KG02"], "test-release", "abc1234", sha(path.read_bytes()), golden,
+                                      today="2026-10-22", folder=target)
+        spec = folder / "KG02.spec.json"
+        spec.write_bytes((FOLDER / "KG02.spec.json").read_bytes())
+        lists = json.loads(golden.read_text())
+        lists["specs"] = {"KG02": sha(spec.read_bytes())}
+        golden.write_text(json.dumps(lists))
+        return folder, target, spec, golden
+
+    def test_the_repository_carries_kg02s_weapon_spec(self):
+        entry = concept_spec.provenance(FOLDER)["imported"]["KG02"]["spec"]
+        self.assertEqual("b373acee3f7c2d5152b92554279674848bb6d576886b50381ecc3e6ee30b9cf2", entry["sha256"])
+        self.assertEqual(entry["sha256"], concept_spec.provenance(FOLDER)["releases"]["claude-v0.15"]["spec_files"]["KG02"])
+        self.assertEqual("KG02", concept_spec.weapon_spec("KG02", FOLDER)["sheet"]["id"])
+
+    def test_spec_import_writes_the_file_and_its_entry(self):
+        folder, target, spec, golden = self.setup()
+        record = import_concepts.import_specs([spec], "test-release", golden, folder=target)
+        self.assertEqual(sha(spec.read_bytes()), record["imported"]["KG02"]["spec"]["sha256"])
+        self.assertEqual([], import_concepts.check(target))
+        self.assertEqual(4, len(concept_spec.palettes("KG02", target)))
+        # a re-import of the sheet from the same release keeps the spec
+        path = folder / "claude-geo-test.zip"
+        import_concepts.import_sheets(path, ["KG02"], "test-release", folder=target)
+        self.assertIn("spec", concept_spec.provenance(target)["imported"]["KG02"])
+
+    def test_a_spec_off_the_list_or_of_another_commit_is_refused(self):
+        folder, target, spec, golden = self.setup()
+        lists = json.loads(golden.read_text())
+        wrong = folder / "wrong.json"
+        wrong.write_text(json.dumps(dict(lists, specs={"KG02": "0" * 64})))
+        with self.assertRaises(SystemExit):
+            import_concepts.import_specs([spec], "test-release", wrong, folder=target)
+        other = folder / "other.json"
+        other.write_text(json.dumps(dict(lists, geo={"KG02": "1" * 64})))
+        with self.assertRaises(SystemExit):
+            import_concepts.import_specs([spec], "test-release", other, folder=target)
+        with self.assertRaises(SystemExit):                       # no spec list yet and no golden
+            import_concepts.import_specs([spec], "test-release", folder=target)
+        self.assertFalse((target / "KG02.spec.json").exists())
+
+    def test_a_changed_spec_is_found(self):
+        folder, target, spec, golden = self.setup()
+        import_concepts.import_specs([spec], "test-release", golden, folder=target)
+        (target / "KG02.spec.json").write_bytes(spec.read_bytes() + b" ")
+        self.assertTrue(any("weapon spec sha256" in error for error in import_concepts.check(target)))
+        with self.assertRaises(concept_spec.ConceptError):
+            concept_spec.weapon_spec("KG02", target)
+
+
 class PlanTests(unittest.TestCase):
     """Toolgen's rules on top of the spec (docs/TECHNIK.md › Konzeptmodelle)."""
 
@@ -311,6 +368,9 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("data/concepts/KG02.geo.json", sources)
         self.assertIn("data/concepts/provenance.json", sources)
         self.assertIn("scripts/tool_assets/concept_kit.py", sources)
+        self.assertIn("data/concepts/KG02.spec.json", sources)          # 0.23: palettes
+        bake = next(run for run in expand(tool, "standard") if run.name == "surface_bake")
+        self.assertIn("data/concepts/KG02.spec.json", stage_sources(bake, tool, SourceIndex()))
 
     def test_only_the_concept_tool_depends_on_concept_files(self):
         """codex sol finding (20.10.2026): a sheet import must not rebuild weapons without a concept."""
@@ -327,11 +387,26 @@ class PipelineTests(unittest.TestCase):
         tool = TOOLS["assault_rifle"]
         world = next(run for run in expand(tool, "quick") if run.name == "world")
         found = {path for path in stage_sources(world, tool, index) if path.startswith(CONCEPTS + "/")}
-        self.assertEqual(generate_tools.concept_sources(tool), found)
+        self.assertEqual({path for path in generate_tools.concept_sources(tool) if path.startswith(CONCEPTS + "/")}, found)
         self.assertEqual("KG02", tool["concept"])
         for name in generate_tools.CONCEPT_SHARED:
             data = json.loads((FOLDER / name).read_text())
             self.assertIsNotNone(data.get("imported", data.get("sheets", {})).get("KG02"), name)
+
+    def test_the_loader_is_in_the_keys_of_concept_weapons_only(self):
+        """Judge finding 22.10.2026: weapon_designs imports concept_spec on use, so a change of the loader rebakes only the
+        weapons built from a sheet; their stages that read the sheet carry it explicitly."""
+        index = SourceIndex()
+        for tool_id, tool in TOOLS.items():                # world stages reach it through weapon_kit -> concept_kit (0.18)
+            for run in expand(tool, "standard"):
+                if not run.name.startswith("surface_bake") or tool.get("concept"):
+                    continue
+                with self.subTest(tool=tool_id, stage=run.name):
+                    self.assertNotIn(generate_tools.CONCEPT_LOADER, stage_sources(run, tool, index))
+        tool = TOOLS["assault_rifle"]
+        for name in ("world", "surface_bake"):
+            run = next(run for run in expand(tool, "standard") if run.name == name)
+            self.assertIn(generate_tools.CONCEPT_LOADER, stage_sources(run, tool, index), name)
 
     def test_shared_concept_files_count_with_the_own_entry_only(self):
         tool = TOOLS["assault_rifle"]

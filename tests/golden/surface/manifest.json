@@ -1,37 +1,27 @@
 {
   "alternates": {
-    "rocket_launcher": {
-      "CubeEscape_RocketLauncher_Robot_Game_Normal.png": [
-        "40a0f717aed51f4cda777820ef682d63328acb358de5c6b7c840130b0f8f71e5"
-      ]
-    },
     "sniper_rifle": {
       "CubeEscape_SniperRifle_FPS_Game_Normal.png": [
-        "0d3357396d1424e23d5c5ee08aa9cf3eeb594b2a62fb553f407a8ca29c87beaa",
-        "b16817ddde45c323e7aec91dfb79b227b23eb1e6673c32ca2f278708e02d945b",
-        "f2718ede0693bba9988cbaf87d4d4679daa4e5b73ec2939cb4dc41d82ca9ef10",
-        "f55b694f631a9079038d3d6adf7b47a0d48743a0815d5ccb11f5703ccfe19d81"
-      ],
-      "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
-        "89a21136d6b72244a05f9ae9e2918b594a9a75f6b31a469bae3011286568451c"
+        "f2718ede0693bba9988cbaf87d4d4679daa4e5b73ec2939cb4dc41d82ca9ef10"
       ]
     }
   },
-  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates. 0.19.0 (Mac acceptance 21.10.2026): sniper rifle first-person normal map, one texel one step (PAE 1/255) against the 0.18 Mac bake of the same geometry, new bake key (game_export.py, version string). 0.20 (Mac acceptance 22.10.2026, verify_surface --determinism, package bake plus 1 and 8 threads): sniper rifle first-person normal map gave three values for unchanged geometry (package b16817dd, 1 thread 0d335739, 8 threads f2718ede); the primary stays the 0.18 value, the new ones are alternates. Rocket launcher robot normal map: the package bake hit its alternate.",
+  "alternates_note": "Legacy (0.15.1-0.20): confirmed alternate sha256 per map; 0.23 removed every alternate that the measured rebakes reproduced inside the fingerprint tolerance or that is the fingerprint's own source (rocket launcher robot, sniper rifle robot, sniper rifle Ego 0d335739/b16817dd/f55b694f). f2718ede (sniper rifle Ego, 0.20) was not reproduced and stays until the map is rewritten; no new alternates are written. The removed values stay listed under retired_alternates (provenance of the fingerprints taken from them; not used by the check).",
+  "fingerprint_note": "0.23 Livery (user 21.10.2026, 'Mittelweg'): a map that is not byte-identical passes with a note when its fingerprint (64 x 64 block means and 256-level histogram per channel, toolgen/map_fingerprint.py) stays within 'tolerance' and its kind is one of 'kinds' (Normal): in every channel at most 'share' of the texels changed, by at most 'levels' on average, and no block mean moved more than 'block_levels'; else it fails with map, channel and block. The values come from measured bake noise (docs/versions/0.23.md); the alternates of 0.15.1-0.20 stay until a map is rewritten, no new ones are written.",
   "maps": {
     "assault_rifle": {
       "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "0bd34482e02144342b5a07f33c42e65a4350dd202112b8a5c7bc121cf42ca4cd",
       "CubeEscape_AssaultRifle_FPS_Game_Normal.png": "1653414b097bcdeaf82aa8502b1e361788c7d0ed40b0537c4950f1938313b0b6",
-      "CubeEscape_AssaultRifle_FPS_Game_W0.png": "a028c5eeb6c87808bf95a19309dce10c83672c2c63fc25fe03bde98f13051cbb",
-      "CubeEscape_AssaultRifle_FPS_Game_W1.png": "072d74c52c5e6bfd6acc05bf60bd6f79ee9c88756d8b23595d653be0dae4a928",
+      "CubeEscape_AssaultRifle_FPS_Game_W0.png": "1be9ace07e783d4f2dc95335abfa150bfefdff1cddd85cdf7559c33c22c4df8f",
+      "CubeEscape_AssaultRifle_FPS_Game_W1.png": "b6e4ac93c727d95834589258e030bce48ef6c7fcda2288bd73dd8d98b5896dbf",
       "CubeEscape_AssaultRifle_Game_Fields.png": "74a7fee07f5e62b5ea0eac876df39c7382f7e3d7dbf2c5d148fbd482a73f1210",
       "CubeEscape_AssaultRifle_Game_Normal.png": "996b082dfcb9323e9e4ade624087840005a4209da899641aa9b38866aaf7fa70",
-      "CubeEscape_AssaultRifle_Game_W0.png": "55b40b32a460bebd5279369086975d7f873388301a798a2d197bad123469f5f8",
-      "CubeEscape_AssaultRifle_Game_W1.png": "4a5360bb26a18ce31aaf6dfdd09c06c869e91f6052d84a87fe3ca3a8a6c0e2d7",
+      "CubeEscape_AssaultRifle_Game_W0.png": "0fad7121f55ede12227788de2b02be4209129bde5e99f993edcd14b3aaed8a50",
+      "CubeEscape_AssaultRifle_Game_W1.png": "dcc2d9c4838e3595254e7bc23814313455bd60cb4bd0179089280e297a690d20",
       "CubeEscape_AssaultRifle_Robot_Game_Fields.png": "815e4c3724ac133595969ce578e059b28d937342db212d7641ded0422c83a58a",
       "CubeEscape_AssaultRifle_Robot_Game_Normal.png": "03180b5871f52f016b4c8b54358ea047b3f794407a137fd2fcb789612a0ef245",
-      "CubeEscape_AssaultRifle_Robot_Game_W0.png": "a583febd33b66d45f823e30a617379d03cd6befb2109aba5f8de3c1eea3e19ac",
-      "CubeEscape_AssaultRifle_Robot_Game_W1.png": "63397301e62aa50ebf4d8e01d0c26c2dd65306da7ee63bb4f4ca868a06d5b44a"
+      "CubeEscape_AssaultRifle_Robot_Game_W0.png": "7d135e372be6b1d3c67ca2ff8e4734e2a34eac01d61e0fd638a44505fb2d401d",
+      "CubeEscape_AssaultRifle_Robot_Game_W1.png": "fc43f4fc0f21ca135fb911b4efb59aa036c182176588b7e548ad30ca68a2f21c"
     },
     "fusion_rifle": {
       "CubeEscape_FusionRifle_FPS_Game_Fields.png": "c7351ccb709c9d42e1269e38e3c523ef03ea1af8ab6b438b53bd109de2729ead",
@@ -142,5 +132,31 @@
       "CubeEscape_TraceRifle_Robot_Game_W1.png": "575fea8f1d479bf5953fe51540aab3487c8feec05c414bcff61b89e0dea871a3"
     }
   },
-  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 of every map, no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change."
+  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, full tier since 0.22): sha256 of every map plus a fingerprint per map (fingerprints/<tool>.json, 0.23 Livery), no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change: only maps that are not green get a new hash and fingerprint.",
+  "retired_alternates": {
+    "rocket_launcher": {
+      "CubeEscape_RocketLauncher_Robot_Game_Normal.png": [
+        "40a0f717aed51f4cda777820ef682d63328acb358de5c6b7c840130b0f8f71e5"
+      ]
+    },
+    "sniper_rifle": {
+      "CubeEscape_SniperRifle_FPS_Game_Normal.png": [
+        "0d3357396d1424e23d5c5ee08aa9cf3eeb594b2a62fb553f407a8ca29c87beaa",
+        "b16817ddde45c323e7aec91dfb79b227b23eb1e6673c32ca2f278708e02d945b",
+        "f55b694f631a9079038d3d6adf7b47a0d48743a0815d5ccb11f5703ccfe19d81"
+      ],
+      "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
+        "89a21136d6b72244a05f9ae9e2918b594a9a75f6b31a469bae3011286568451c"
+      ]
+    }
+  },
+  "tolerance": {
+    "block_levels": 1,
+    "kinds": [
+      "Normal"
+    ],
+    "levels": 1,
+    "share": 0.0001
+  },
+  "tolerance_note": "0.23 Livery, measured 22.10.2026 on the Mac (8 rebakes of unchanged 0.22 full packages: rocket launcher robot 5x, sniper rifle world/Ego 2048/robot 3x at 1/8/4/2/5 threads): W0, W1 and Fields bit-identical in every bake; normal maps differ by at most 2 texels of 4194304 (0.00005 %), each by exactly 1 level, no block mean moved. share 0.0001 (0.01 %: 419 texels at 2048, 26 at 512) leaves a margin of about 200x over the measured noise and stays far below the user's guide value 0.5 %; levels 1 and block_levels 1 are the measured step (block 1 allows one rounding flip). kinds ['Normal']: W0, W1 and Fields were bit-identical in every bake and keep the sha256 alone - the weight maps are one-hot, a region moved inside one 32 x 32 block changes neither histogram nor block mean (judge finding)."
 }

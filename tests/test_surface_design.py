@@ -148,14 +148,14 @@ class DecalCatalogTests(unittest.TestCase):
         self.assertEqual([], decals.catalog_errors(CATALOG))
         for tool_id in WEAPONS:
             with self.subTest(tool=tool_id):
-                anchors = weapon_designs.DECALS[tool_id]
+                anchors = weapon_designs.decal_anchors(tool_id)
                 self.assertTrue(anchors, "every weapon of the sheet has decals")
                 self.assertEqual([], decals.anchor_errors(anchors, CATALOG, set(parts_of(tool_id))))
 
     def test_anchor_rects_fit_their_image_and_part(self):
         for tool_id in WEAPONS:
             parts = parts_of(tool_id)
-            for anchor in weapon_designs.DECALS[tool_id]:
+            for anchor in weapon_designs.DECALS.get(tool_id, []):
                 width, height = CATALOG["decals"][anchor["image"]]["size"]
                 with self.subTest(tool=tool_id, image=anchor["image"]):
                     error = decals.rect_aspect_error(anchor, parts[anchor["part"]], (height, width))
@@ -185,6 +185,89 @@ class DecalCatalogTests(unittest.TestCase):
         self.assertEqual((2, 1, b"\x00\xff"), decals.read_pgm(b"P5\n# comment\n2 1\n255\n\x00\xff"))
         with self.assertRaises(ValueError):
             decals.read_pgm(b"P6\n1 1\n255\n\x00\x00\x00")
+
+
+class RegionTests(unittest.TestCase):
+    """0.23 Livery, stage B: the concept sheet's decals as mask regions and its colour palettes (pure Python)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.anchors = weapon_designs.decal_anchors("assault_rifle")
+        cls.spec = concept_spec.load("KG02.geo.json")
+
+    def test_the_63_sheet_decals_are_the_assault_rifles_regions(self):
+        self.assertEqual(63, len(self.anchors))
+        self.assertTrue(all(decals.is_region(anchor) for anchor in self.anchors), "no Toolgen decal doubles a sheet decal")
+        self.assertNotIn("assault_rifle", weapon_designs.DECALS)
+        self.assertEqual([f"KG02#{i}" for i in range(63)], [anchor["region"] for anchor in self.anchors])
+        for anchor, decal in zip(self.anchors, self.spec["decals"]):
+            self.assertEqual(decal["channel"], "MT_" + anchor["channel"])
+            self.assertEqual(decal["part"], anchor["part"].rsplit("_", 1)[1])
+
+    def test_no_region_reaches_over_its_part(self):
+        self.assertEqual([], self.spec["checks"]["decals_outside_part"])
+        for anchor in self.anchors:
+            with self.subTest(region=anchor["region"]):
+                self.assertLessEqual(anchor["outside_m"], decals.REGION_OUTSIDE_M)
+                self.assertTrue(all(-1e-6 <= v <= 1 + 1e-6 for point in anchor["polygon"] for v in point))
+                u0, v0, u1, v1 = anchor["rect"]
+                self.assertTrue(0 <= u0 < u1 <= 1 and 0 <= v0 < v1 <= 1)
+
+    def test_regions_map_the_sheet_surfaces_to_box_faces(self):
+        faces = {anchor["face"] for anchor in self.anchors}
+        self.assertEqual({"+x", "-x", "-y"}, faces)
+        # the first decal (grip panel, left = +x): its corner (y, z) as fractions of the grip box
+        grip = next(mesh for mesh in concept_spec.plan(self.spec)[0] if mesh["name"] == "SM_PG_Griff_p03")
+        low, high = concept_spec.bounds(grip["vertices"])
+        corner = self.spec["decals"][0]["polygon_m"][0]
+        expected = ((corner[1] - low[1]) / (high[1] - low[1]), (corner[2] - low[2]) / (high[2] - low[2]))
+        self.assertAlmostEqual(expected[0], self.anchors[0]["polygon"][0][0], places=5)
+        self.assertAlmostEqual(expected[1], self.anchors[0]["polygon"][0][1], places=5)
+        # -x is seen from outside: y runs the other way
+        mirrored = concept_spec.box_fraction(corner, low, high, "-x")
+        self.assertAlmostEqual(1 - expected[0], mirrored[0], places=9)
+
+    def test_bad_regions_are_found(self):
+        bad = {"kind": "region", "region": "X#0", "part": "Nope", "face": "+w", "channel": "Glow",
+               "polygon": [[0, 0], [1.2, 0]]}
+        errors = "\n".join(decals.anchor_errors([bad], CATALOG, {"Griff_p03"}))
+        for expected in ("face", "channel", "three corners", "not in the model"):
+            self.assertIn(expected, errors)
+        over = dict(bad, face="+x", channel="Accent", part="Griff_p03", polygon=[[0, 0], [1, 0], [0, 1]], outside_m=.0015)
+        self.assertIn("1.5 mm over its part", "\n".join(decals.anchor_errors([over], CATALOG, {"Griff_p03"})))
+        self.assertEqual([], decals.anchor_errors([dict(over, outside_m=.001)], CATALOG, {"Griff_p03"}))
+
+    def test_a_surface_against_its_normal_is_refused(self):
+        spec = json.loads(json.dumps(self.spec))
+        spec["decals"][0]["surface"] = "right"                     # normal +x
+        with self.assertRaises(concept_spec.ConceptError):
+            concept_spec.decal_regions(spec, concept_spec.plan(spec)[0])
+
+    def test_the_sheet_palettes_come_from_the_weapon_spec(self):
+        palettes = weapon_designs.palettes("assault_rifle")
+        self.assertEqual(["base", "standard", "arktis", "nacht"], [item["id"] for item in palettes])
+        base = palettes[0]
+        self.assertEqual("#1B1C1F", base["channels"]["Primary"])
+        self.assertEqual("#D9CBB0", base["channels"]["Secondary"])
+        self.assertIsNone(base["channels"]["Energy"], "KG02 has no MT_Energy (CE 0.106 finding): every palette leaves it free")
+        self.assertTrue(all(item["channels"]["Energy"] is None for item in palettes))
+        self.assertEqual(set(surface.CHANNELS), set(base["channels"]))
+        self.assertEqual([], weapon_designs.palettes("pistol"))
+
+    def test_recipe_block_carries_regions_and_palettes_additively(self):
+        entry = RECIPES["weapons"]["assault_rifle"]
+        plain = surface_relief.recipe_block("assault_rifle", entry, RECIPES["limits"], [], "arc")
+        block = surface_relief.recipe_block("assault_rifle", entry, RECIPES["limits"], [], "arc",
+                                            regions=[{"region": "KG02#0"}], palettes=weapon_designs.palettes("assault_rifle"))
+        self.assertEqual(plain, {key: value for key, value in block.items() if key not in ("regions", "palettes")})
+        self.assertEqual(1, block["version"])
+        self.assertEqual("base", block["palettes"]["default"])      # user decision 22.10.2026
+        self.assertEqual(4, len(block["palettes"]["items"]))
+        self.assertEqual("KG02#0", block["regions"]["items"][0]["region"])
+        self.assertNotIn("palettes", plain)
+        with self.assertRaises(ValueError):
+            surface_relief.recipe_block("assault_rifle", dict(entry, palette_default="neon"), RECIPES["limits"], [], "arc",
+                                        palettes=weapon_designs.palettes("assault_rifle"))
 
 
 @unittest.skipUnless(MAGICK, "ImageMagick needed")
@@ -286,6 +369,47 @@ class DecalProjectionTests(unittest.TestCase):
         self.assertEqual(255, values["min_weight_sum_inside"])
         self.assertGreaterEqual(values["texels_per_channel"]["Accent"], int(hit.sum()))
         self.assertGreater(values["texels_per_channel"]["Accent"], 0)
+
+    def region(self, polygon, face="+x"):
+        return {"kind": "region", "region": "T#0", "part": "P", "face": face, "polygon": polygon, "channel": "Accent"}
+
+    def test_a_region_paints_its_polygon_on_the_facing_side_only(self):
+        np = surface.np
+        triangle = [[0, 0], [1, 0], [0, 1]]                    # lower-left half of the +x face: -y and low z
+        hit = decals.project_region(self.region(triangle), self.texels, self.parts, self.normals, 0, self.box)
+        ys, xs, tris, positions = self.texels
+        self.assertTrue(hit.any())
+        self.assertFalse(hit[tris == 2].any(), "the -x face gets nothing")
+        s = (positions[hit, 1] + .02) / .04
+        t = positions[hit, 2] / .02
+        self.assertTrue(np.all(s + t <= 1 + 1e-6))
+        share = hit.sum() / (tris < 2).sum()
+        self.assertAlmostEqual(.5, share, delta=.05)
+        coverage = decals.region_coverage(self.region(triangle), hit, self.texels, self.uv, self.corners, self.box, 64)
+        self.assertAlmostEqual(1.0, coverage, delta=.1)
+
+    def test_a_region_follows_a_deformation_through_life_corners(self):
+        """The deformation moves only the vertices: a texel lies barycentrically between its triangle's life-size corners."""
+        np = surface.np
+        square = [[.25, .25], [.75, .25], [.75, .75], [.25, .75]]
+        plain = decals.project_region(self.region(square), self.texels, self.parts, self.normals, 0, self.box)
+        same = decals.life_corners(self.corners, lambda points: np.asarray(points, dtype=np.float64) * 1)
+        self.assertTrue(np.array_equal(self.corners, same))
+        # a model stretched to twice its length along y: back on the design, the region lands on the same texels
+        stretched = self.corners * np.array([1.0, 2.0, 1.0])
+        life = decals.life_corners(stretched, lambda points: np.asarray(points, dtype=np.float64) / np.array([1.0, 2.0, 1.0]))
+        texels = decals.texel_positions(self.raster, self.uv, life)
+        moved = decals.project_region(self.region(square), texels, self.parts, self.normals, 0, self.box)
+        self.assertTrue(np.array_equal(plain, moved))
+        coverage = decals.region_coverage(self.region(square), moved, texels, self.uv, life, self.box, 64)
+        self.assertAlmostEqual(1.0, coverage, delta=.1)
+
+    def test_inside_polygon_is_even_odd(self):
+        np = surface.np
+        ring = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        s, t = np.array([.5, 1.5, .5]), np.array([.5, .5, -.1])
+        self.assertEqual([True, False, False], decals.inside_polygon(s, t, ring).tolist())
+        self.assertAlmostEqual(1.0, decals.polygon_area(ring))
 
     def test_aspect_error(self):
         anchor = {"face": "+x", "rect": (0, 0, 1, 1), "rotation": 0}

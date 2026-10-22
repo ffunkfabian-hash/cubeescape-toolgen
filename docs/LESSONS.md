@@ -2,7 +2,7 @@
 ≤60 Zeilen, eine Zeile je Lehre, Langform nur per Link; neue Lehren hier zuerst, dann ggf. in TECHNIK.md.
 
 ## Blender/Export und Bytegleichheit
-- **Golden-Fehler nach reinem Versionswechsel** → mit frischem Bau des alten Tags gegenprüfen, belegten Hash als `alternates` eintragen, Golden nie blind neu schreiben ([Quelle](TECHNIK.md#erfahrungen))
+- **Golden-Fehler nach reinem Versionswechsel** → mit frischem Bau des alten Tags gegenprüfen; seit 0.23 trägt die Fingerabdruck-Toleranz Rauschen, `alternates` werden nicht mehr geschrieben, Golden nie blind neu schreiben ([Quelle](TECHNIK.md#erfahrungen))
 - **Normal-Bake kippt einzelne Texel (1 von 3 Läufen, jede Thread-Zahl)** → vor Golden-Änderung 3–5× nachbacken; zwei gleiche Bauten beweisen nichts ([Quelle](TECHNIK.md#erfahrungen))
 - **`*_FPS_Game.glb`/`*_Robot_Game.glb` schwanken um 1e-4 (Tangenten)** → getrennt vergleichen, nicht als Inhaltsfehler werten ([Quelle](TECHNIK.md#grenzen))
 - **FBX und .blend tragen Exportzeit und absoluten Pfad** → Bytegleichheit nur für GLB und Viewer-Daten behaupten ([Quelle](TECHNIK.md#grenzen))
@@ -15,6 +15,10 @@
 - **Eck-Texel-Prüfung mit falschem 16-px-Band ließ elf Spielexporte scheitern** → Dilatation je Kartenauflösung gegen das Eck-Texel prüfen ([Quelle](versions/0.16.md))
 - **Strenges Re-Raster verfehlt Randtexel (Epsilon 1e-7)** → für die Dilatationsgrenze 1e-5, Innenprüfung streng lassen ([Quelle](versions/0.16.md))
 - **`surface_bake` 2048² kostet 100–460 s je Werkzeug (2 Worker)** → Standard backt 1024² (`bake_scale`), Abgabe an Cube Escape nur aus `full` ([Quelle](versions/0.22.md))
+- **Golden nur als Hash kannte bei 1 Texel Rauschen nur „Ausnahme pflegen“** → Fingerabdruck je Karte (Blockmittel + Histogramm, 2–17 KB) mit Toleranz aus gemessenem Rauschen; Neuschrift nur für rote Karten, sonst wandert die Referenz ([Quelle](versions/0.23.md))
+- **Verformung bewegt nur Eckpunkte, Dreiecke bleiben linear** → Texel über die zurückgebildeten Dreiecksecken baryzentrisch abbilden, nie je Texel über die stückweise Achse ([Quelle](versions/0.23.md))
+- **Paletten stehen im Weapon-Spec, nicht im Geo-Blatt** → `import_concepts.py --spec` mit Golden-Hash aus formgen; Formatversion des Specs (2) prüfen, nicht raten ([Quelle](versions/0.23.md))
+- **Blatt-Kanal ≠ Blattbild (KG02-Schiene: dunkelgrau gezeichnet, `MT_Secondary` = beige)** → Kanal des Blatts ist Vertrag; Abweichung an formgen melden, nicht in Toolgen korrigieren ([Quelle](ENTSCHEIDUNGEN.md))
 - **Gemeinsame Daten in `viewmodels.json`/`game_budget.json` ändern alle Schlüssel** → neue Daten für wenige Werkzeuge in eigene Datei (`data/ego_arms.json`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Rechtecke als Teil-Box-Bruchteile verzerren bei Verformung** → Mitte abbilden, Größe gleichmäßig skalieren (`decals.refit_rect`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Ein Hüllquader je Ring schließt Visierfenster** → Öffnungen per Probe prüfen, rahmende Teile ohne Kollider ([Quelle](TECHNIK.md#erfahrungen))

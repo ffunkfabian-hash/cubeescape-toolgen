@@ -8,6 +8,12 @@ projection onto the weight maps.
 * ``project``: box projection of one anchor (weapon_designs.py DECALS: part, face, rect in part coordinates, image, channel,
   rotation) onto the texels of the target part whose face looks along the face axis; the result is a texel mask that
   surface_bake.py writes into the channel raster before the dilation (one-hot 255 stays; the decal texel takes its channel).
+* ``project_region`` (0.23 Livery, stage B): a concept sheet's decal as a mask region (concept_spec.decal_regions: part,
+  face, polygon as fractions of the part's box) - the same box projection with an exact point-in-polygon test instead of an
+  image. A deformed model (robot variant) is first taken back to the life-size design with ``life_corners``: the
+  deformation moves only the vertices, a triangle stays linear between them, so each texel lies barycentrically between
+  its triangle's life-size corners (exactly where UV1 puts it). ``region_coverage`` compares the painted surface with the
+  polygon's area (QA).
 
 Pure Python plus numpy for the projection (Blender's Python has numpy).
 """
@@ -194,10 +200,41 @@ def catalog_errors(catalog):
     return errors
 
 
+REGION_OUTSIDE_M = .001         # a region may reach this far over its part's box (the sheet's rule, concept_spec outside_m)
+REGION_COVERAGE = (.7, 1.3)      # painted surface / polygon area of a region (QA, regions with REGION_MIN_TEXELS or more)
+REGION_MIN_TEXELS = 40
+
+
+def is_region(anchor):
+    return anchor.get("kind") == "region"
+
+
+def region_errors(index, anchor, parts=None):
+    """Problems of one region anchor (concept_spec.decal_regions)."""
+    where = f"region {index} ({anchor.get('region')})"
+    errors = []
+    if anchor.get("face") not in FACES:
+        errors.append(f"{where}: face must be one of {sorted(FACES)}")
+    if anchor.get("channel") not in CHANNELS:
+        errors.append(f"{where}: unknown channel")
+    polygon = anchor.get("polygon", [])
+    if len(polygon) < 3:
+        errors.append(f"{where}: polygon needs three corners")
+    if anchor.get("outside_m", 0.0) > REGION_OUTSIDE_M:
+        errors.append(f"{where}: polygon reaches {anchor['outside_m'] * 1000:.1f} mm over its part")
+    if parts is not None and anchor.get("part") not in parts:
+        errors.append(f"{where}: part {anchor.get('part')} not in the model")
+    return errors
+
+
 def anchor_errors(anchors, catalog, parts=None):
-    """Problems of the DECALS anchors of one weapon (parts: its source part names, optional)."""
+    """Problems of the DECALS anchors of one weapon (parts: its source part names, optional); region anchors (0.23) have
+    their own rules."""
     errors = []
     for index, anchor in enumerate(anchors):
+        if is_region(anchor):
+            errors += region_errors(index, anchor, parts)
+            continue
         where = f"decal {index} ({anchor.get('image')})"
         if anchor.get("image") not in catalog["decals"]:
             errors.append(f"{where}: unknown image")
@@ -279,6 +316,73 @@ def project(anchor, mask, texels, triangle_parts, normals, part_index, part_box)
     hit = np.zeros(len(ys), dtype=bool)
     hit[inside] = mask[row[inside], column[inside]] >= 128
     return hit
+
+
+def box_fractions(points, face, part_box):
+    """(s, t) of points (N x 3) as fractions of the box seen on ``face`` (s to the right, t up, from outside)."""
+    _, _, u_axis, u_sign, v_axis, v_sign = FACES[face]
+    low, high = np.asarray(part_box[0], dtype=np.float64), np.asarray(part_box[1], dtype=np.float64)
+    span = np.where(high - low > 1e-9, high - low, 1.0)
+    s = (points[:, u_axis] - low[u_axis]) / span[u_axis]
+    t = (points[:, v_axis] - low[v_axis]) / span[v_axis]
+    return (s if u_sign > 0 else 1 - s), (t if v_sign > 0 else 1 - t)
+
+
+def inside_polygon(s, t, polygon):
+    """Even-odd test of the points (s, t) against ``polygon`` [(s, t), ...] (fixed edge order: same result everywhere)."""
+    inside = np.zeros(len(s), dtype=bool)
+    corners = [(float(a), float(b)) for a, b in polygon]
+    for (s0, t0), (s1, t1) in zip(corners, corners[1:] + corners[:1]):
+        crosses = (t0 > t) != (t1 > t)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            at = s0 + (t - t0) * (s1 - s0) / np.where(t1 != t0, t1 - t0, 1.0)
+        inside ^= crosses & (s < at)
+    return inside
+
+
+def life_corners(corners, to_life):
+    """Triangle corners (T x 3 x 3) of a deformed model mapped back to the design by ``to_life(points N x 3)`` (monotonic per
+    axis); texel_positions over them gives each texel's life-size place, its box is ``to_life`` of the model's box."""
+    return to_life(np.asarray(corners, dtype=np.float64).reshape(-1, 3)).reshape(np.shape(corners))
+
+
+def project_region(anchor, texels, triangle_parts, normals, part_index, part_box):
+    """Texel selection of one region anchor: texels of its part whose face looks along the face axis (FACING_MIN) and whose
+    position lies inside the polygon. ``texels``/``part_box`` in the design's frame (a deformed model: over life_corners)."""
+    ys, xs, tris, positions = texels
+    axis, sign = FACES[anchor["face"]][:2]
+    own = (triangle_parts[tris] == part_index) & (normals[tris, axis] * sign >= FACING_MIN)
+    s, t = box_fractions(positions, anchor["face"], np.asarray(part_box, dtype=np.float64))
+    hit = np.zeros(len(ys), dtype=bool)
+    hit[own] = inside_polygon(s[own], t[own], anchor["polygon"])
+    return hit
+
+
+def polygon_area(polygon):
+    corners = np.asarray(polygon, dtype=np.float64)
+    return abs(float(np.dot(corners[:, 0], np.roll(corners[:, 1], -1)) - np.dot(corners[:, 1], np.roll(corners[:, 0], -1)))) / 2
+
+
+def region_coverage(anchor, hit, texels, uv_triangles, corners, part_box, resolution):
+    """Painted surface of a region (sum over its texels of the texel's area on the model, projected onto the face plane)
+    against the polygon's area, both in the frame of ``corners``/``part_box`` (a deformed model: life_corners); 1.0 = the
+    region lands exactly on its part."""
+    tris = texels[2]
+    axis, _, u_axis, _, v_axis, _ = FACES[anchor["face"]]
+    box, life = np.asarray(part_box, dtype=np.float64), corners
+    used = tris[hit]
+    if not len(used):
+        return 0.0
+    a, b, c = life[used, 0], life[used, 1], life[used, 2]
+    normal = np.cross(b - a, c - a)
+    projected = np.abs(normal[:, axis]) / 2                                    # triangle area projected on the face plane
+    uv = uv_triangles[used]
+    uv_area = np.abs((uv[:, 1, 0] - uv[:, 0, 0]) * (uv[:, 2, 1] - uv[:, 0, 1])
+                     - (uv[:, 2, 0] - uv[:, 0, 0]) * (uv[:, 1, 1] - uv[:, 0, 1])) / 2 * resolution * resolution
+    painted = float(np.sum(projected / np.where(uv_area > 1e-12, uv_area, np.inf)))
+    span = box[1] - box[0]
+    expected = polygon_area(anchor["polygon"]) * span[u_axis] * span[v_axis]
+    return painted / expected if expected > 0 else 0.0
 
 
 def refit_rect(anchor, box, to_life, to_model, scale, margin=.02, shift=(0.0, 0.0)):

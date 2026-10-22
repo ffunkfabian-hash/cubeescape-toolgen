@@ -9,6 +9,9 @@ viewmodel camera, and per model (world, Ego) the regions colour-coded, Fields (A
 use a preview material that only imitates Cube Escape's mask mode: the sheet's palette per channel from data/
 surface_recipes.json, wear on the convex edges (Fields G x wear amount), AO, the normal map on UV1 and the glow. Preview only:
 the game's shader, its noise and its finish rules decide the real look (Eevee, not deterministic, not part of any contract).
+
+0.23 (Livery): a weapon built from a concept sheet is shown in the sheet's default palette (surface.recipe.palettes, ``base``)
+and gets ``surface_palettes_<tool>.png``: the world model from +x in each of the sheet's palettes and the robot variant.
 """
 import json
 import math
@@ -25,6 +28,8 @@ sys.path.insert(0, str(ROOT / "toolgen"))
 import decals  # noqa: E402
 import surface  # noqa: E402
 import surface_relief  # noqa: E402
+sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import weapon_designs  # noqa: E402
 
 REGION_COLOURS = {"Primary": (225, 225, 225), "Secondary": (70, 80, 95), "Accent": (240, 140, 40), "Metal": (150, 165, 185),
                   "Detail": (30, 30, 30), "Energy": (60, 200, 255), "Emission": (255, 60, 200)}
@@ -44,13 +49,16 @@ def linear(colour):
     return tuple(c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4 for c in value) + (1.0,)
 
 
-def channel_colours(recipe):
+def channel_colours(recipe, sheet_palette=None):
     palette = recipe["palette"]
-    return {"Primary": palette[0], "Secondary": palette[1], "Accent": palette[2], "Metal": METAL_COLOUR,
-            "Detail": RUBBER_COLOUR, "Energy": recipe["glow"]["color"], "Emission": recipe["glow"]["color"]}
+    colours = {"Primary": palette[0], "Secondary": palette[1], "Accent": palette[2], "Metal": METAL_COLOUR,
+               "Detail": RUBBER_COLOUR, "Energy": recipe["glow"]["color"], "Emission": recipe["glow"]["color"]}
+    if sheet_palette:                    # 0.23: a concept sheet's palette (channels it leaves free keep the colours above)
+        colours.update({channel: colour for channel, colour in sheet_palette["channels"].items() if colour})
+    return colours
 
 
-def preview_material(model_folder, model, recipe, levels):
+def preview_material(model_folder, model, recipe, levels, sheet_palette=None):
     material = bpy.data.materials.new("SurfacePreview")
     material.use_nodes = True
     nodes, links = material.node_tree.nodes, material.node_tree.links
@@ -111,7 +119,7 @@ def preview_material(model_folder, model, recipe, levels):
                 links.new(value, node.inputs[socket])
         return node.outputs[0]
 
-    colours = channel_colours(recipe)
+    colours = channel_colours(recipe, sheet_palette)
     channels = recipe["channels"]
     colour, rough, metal, total = linear(HAND_COLOUR), .6, 0.0, None
     for channel in ORDER:
@@ -154,7 +162,7 @@ def preview_material(model_folder, model, recipe, levels):
     links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
     glow = math("ADD", weight["Energy"], weight["Emission"])
     links.new(glow, bsdf.inputs["Emission Strength"])
-    bsdf.inputs["Emission Color"].default_value = tuple(c * 1.6 for c in linear(recipe["glow"]["color"])[:3]) + (1.0,)
+    bsdf.inputs["Emission Color"].default_value = tuple(c * 1.6 for c in linear(colours["Emission"])[:3]) + (1.0,)
     return material
 
 
@@ -249,6 +257,42 @@ def map_panels(model_folder, model, out_prefix):
     return paths
 
 
+def palette_sheet(folder, tool_id, tool, recipe, levels, palettes, previews, scratch, magick):
+    """0.23: ``surface_palettes_<tool>.png`` (1280 px wide) - the world model from +x in every palette of the concept sheet
+    (two per row), below the robot variant in the default palette from both sides; returns its path."""
+    asset, tiles = tool["asset"], []
+    for item in palettes:
+        scene, objects = scene_for(folder / f"{asset}_Game.blend", asset,
+                                   lambda: preview_material(folder, f"{asset}_Game", recipe, levels, item))
+        tile = scratch / f"{tool_id}_palette_{item['id']}.png"
+        render_view(scene, objects, (1, 0, 0), tile, size=(640, 280))
+        subprocess.run(magick + [str(tile), "-gravity", "NorthWest", "-fill", "#e8e8e8", "-pointsize", "18", "-annotate",
+                                 "+10+8", f"{item['id']}  {item['name']}", str(tile)], check=True)
+        tiles.append(tile)
+    robot = tool.get("robot")
+    if robot and (folder / f"{robot}_Game_W0.png").exists():
+        for side, direction in (("plus", (1, 0, 0)), ("minus", (-1, 0, 0))):
+            scene, objects = scene_for(folder / f"{robot}_Game.blend", robot,
+                                       lambda: preview_material(folder, f"{robot}_Game", recipe, levels, palettes[0]))
+            tile = scratch / f"{tool_id}_robot_{side}.png"
+            render_view(scene, objects, direction, tile, size=(640, 280))
+            subprocess.run(magick + [str(tile), "-gravity", "NorthWest", "-fill", "#e8e8e8", "-pointsize", "18", "-annotate",
+                                     "+10+8", f"robot variant {'+x' if side == 'plus' else '-x'}  {palettes[0]['id']}",
+                                     str(tile)], check=True)
+            tiles.append(tile)
+    rows = [tiles[i:i + 2] for i in range(0, len(tiles), 2)]
+    sheet = previews / f"surface_palettes_{tool_id}.png"
+    command = magick[:]
+    for row in rows:
+        command += ["(", *[str(t) for t in row], "+append", ")"]
+    subprocess.run(command + ["-append", "-gravity", "North", "-background", "#10131a", "-splice", "0x30", "-fill", "#e8e8e8",
+                              "-pointsize", "20", "-annotate", "+0+5",
+                              f"{tool_id}: sheet palettes and regions - Toolgen preview (not the game shader)",
+                              "-define", "png:exclude-chunks=date,time", str(sheet)], check=True)
+    print(f"SURFACE_PREVIEW_OK {tool_id} palettes: {sheet}")
+    return sheet
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     output = Path(argv[0]).resolve()
@@ -268,15 +312,23 @@ def main():
             print(f"SURFACE_PREVIEW_SKIP {tool_id}: no maps (standard or full tier)")
             continue
         levels = recipes["limits"]["wear_levels"]
-        parts = []
+        palettes = weapon_designs.palettes(tool_id)
+        default = surface_relief.default_palette(palettes, recipe) if palettes else None
+        if palettes:
+            sheets.append(palette_sheet(folder, tool_id, tools[tool_id], recipe, levels, palettes, previews, scratch, magick))
         scene, objects = scene_for(folder / f"{asset}_Game.blend", asset,
-                                   lambda: preview_material(folder, f"{asset}_Game", recipe, levels))
+                                   lambda: preview_material(folder, f"{asset}_Game", recipe, levels, default))
         render_view(scene, objects, (1, 0, 0), scratch / f"{tool_id}_side.png")
         render_view(scene, objects, (1, -1.1, .6), scratch / f"{tool_id}_quarter.png", ortho=False)
         camera = json.loads((folder / "viewmodel_camera.json").read_text())
         scene, objects = scene_for(folder / f"{asset}_FPS_Game.blend", f"{asset}_FPS",
-                                   lambda: preview_material(folder, f"{asset}_FPS_Game", recipe, levels))
-        render_ego(scene, scratch / f"{tool_id}_ego.png", camera["vertical_fov_degrees"])
+                                   lambda: preview_material(folder, f"{asset}_FPS_Game", recipe, levels, default))
+        if json.loads((folder / "unity_contract_fps.json").read_text()).get("format", 4) >= 5:
+            # contract 5 (0.19): the device hangs without arms at its own origin, the viewmodel camera sits in the rig's
+            # space - show the first-person model (its own maps) at three quarters instead (0.23)
+            render_view(scene, objects, (1, -1.1, .6), scratch / f"{tool_id}_ego.png", size=(640, 360), ortho=False)
+        else:
+            render_ego(scene, scratch / f"{tool_id}_ego.png", camera["vertical_fov_degrees"])
         world_maps = map_panels(folder, f"{asset}_Game", scratch / f"{tool_id}_world")
         ego_maps = map_panels(folder, f"{asset}_FPS_Game", scratch / f"{tool_id}_ego")
         title = f"{recipe['sheet']}  {recipe['title']}  -  Toolgen surface preview (not the game shader)"
