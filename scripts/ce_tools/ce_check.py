@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# GENERATED from ce-agent-tools 0.5.0 - do not edit
-# ce-sha256: 954d69524aa1727245974f82796958eaf173f44dc8d8e4b8984adc1151ab0c60
+# GENERATED from ce-agent-tools 0.14.0 - do not edit
+# ce-sha256: 1e0094ea5472796dd4577fd8bb9d685c2bbfda9c81ebda304f132e4bc93da23c
 """ce_check.py quick|full|nightly [--repo PATH] [--verbose] - runs the commands of .ce-repo.json > check.
 
     "check": {"quick": ["cmd", "arg"], "full": [["cmd1", "a"], ["cmd2", "b"]], "rerun_failed": ["cmd", "--failed"],
@@ -26,6 +26,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -37,6 +38,17 @@ import ce_common  # noqa: E402
 TAIL_LINES = 25
 REPEAT_MINUTES = 30
 REPEAT_HINT = "hint: voller Lauf nur einmal vor Abschluss - second full run within 30 minutes without a code change"
+TOOLS_VENV_PYTHON = Path.home() / ".local" / "share" / "ce-agent-tools" / "venv" / "bin" / "python"
+
+
+def _resolve_argv(argv: list[str], root: Path) -> list[str]:
+    """Use the project/tools virtualenv for bare python3 calls when the default python3 lacks PIL/numpy."""
+    if not argv or argv[0] not in ("python3", "python"):
+        return argv
+    for candidate in (root / ".venv" / "bin" / "python", TOOLS_VENV_PYTHON):
+        if candidate.is_file():
+            return [str(candidate), *argv[1:]]
+    return argv
 
 
 def cache_dir() -> Path:
@@ -95,8 +107,9 @@ def commands_of(value) -> list[list[str]]:
 
 def run_one(argv: list[str], root: Path) -> dict:
     start = time.monotonic()
+    resolved = _resolve_argv(argv, root)
     try:
-        done = subprocess.run(argv, cwd=root, capture_output=True, text=True)
+        done = subprocess.run(resolved, cwd=root, capture_output=True, text=True)
         code, output = done.returncode, done.stdout + done.stderr
     except OSError as error:
         code, output = 127, f"cannot start {argv[0]}: {error}\n"
@@ -173,13 +186,18 @@ def main(argv: list[str]) -> int:
     parser.add_argument("mode", choices=["quick", "full", "nightly"])
     parser.add_argument("--repo", help="repository (default: current directory)")
     parser.add_argument("--verbose", action="store_true", help="print the output of every command")
+    parser.add_argument("--profile", help="run an existing named .ce-repo.json check profile instead of quick")
     parser.add_argument("--targeted", dest="targeted", action="store_true", default=None,
                         help="only for the changed files (check.targeted; default in quick)")
     parser.add_argument("--no-targeted", dest="targeted", action="store_false")
     args = parser.parse_args(argv)
     try:
         root, config = ce_common.open_repo(args.repo)
-        if args.mode == "full":
+        if args.profile:
+            if args.mode != 'quick' or args.profile in ('full','nightly','targeted','rerun_failed') or not re.fullmatch(r'[a-z][a-z0-9_-]*', args.profile):
+                raise ce_common.RepoError('--profile benötigt quick und einen ausdrücklich konfigurierten Prüfnamen')
+            outcome = run_mode(root, config, args.profile)
+        elif args.mode == "full":
             outcome = run_full(root, config)
         elif args.mode == "nightly":
             outcome = run_mode(root, config, "nightly")
@@ -188,7 +206,7 @@ def main(argv: list[str]) -> int:
     except ce_common.RepoError as error:
         print(f"ce_check: {error}")
         return 2
-    print(report(config.get("name", root.name), args.mode, outcome, args.verbose))
+    print(report(config.get("name", root.name), args.profile or args.mode, outcome, args.verbose))
     return 0 if outcome["green"] else 1
 
 
