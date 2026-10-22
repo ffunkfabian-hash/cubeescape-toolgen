@@ -85,7 +85,7 @@ class ChannelTableTests(unittest.TestCase):
                          (surface.set_bytes_limit(512), surface.set_bytes_limit(1024), surface.set_bytes_limit(2048)))
 
     def test_bake_resolution_follows_the_tier_scale(self):
-        """0.20: standard (scale 2) bakes the viewmodel at 1024 as a preview; world and robot never drop under 512; full = contract."""
+        """0.22: standard (scale 2) bakes the viewmodel at 1024 as a preview; world and robot never drop under 512; full = contract."""
         self.assertEqual((1024, 512, 512), tuple(surface.bake_resolution(v, 2) for v in ("viewmodel", "world", "robot")))
         self.assertEqual((2048, 512, 512), tuple(surface.bake_resolution(v, 1) for v in ("viewmodel", "world", "robot")))
         with mock.patch.dict(os.environ, {"TOOLGEN_BAKE_SCALE": "2"}):

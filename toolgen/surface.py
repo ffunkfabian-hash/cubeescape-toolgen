@@ -51,7 +51,7 @@ EDGE_CONVEX = (.35, .7)          # local AO below .35: concave crease (edge 0); 
 # every island continues outward by the dilation (nearest texel, fixed neighbour order on ties): 8 px at 512 (0.11), 16 px at
 # 2048 (0.16) - the same 8/1024 of the atlas the 1024 maps had, so mips lose the border at the same level as before
 DILATION_PX = {512: 8, 1024: 8, 2048: 16}
-MAX_SET_BYTES = {512: 2_500_000, 1024: 5_000_000, 2048: 10_000_000}   # four PNGs of one model (2048: measured 1024 x 4 + reserve; 1024: half of it, 0.20)
+MAX_SET_BYTES = {512: 2_500_000, 1024: 5_000_000, 2048: 10_000_000}   # four PNGs of one model (2048: measured 1024 x 4 + reserve; 1024: half of it, 0.22)
 MIN_BAKE_RESOLUTION = 512
 AO_MEAN_RANGE = (.3, .95)
 EDGE_SHARE_RANGE = (.02, .25)

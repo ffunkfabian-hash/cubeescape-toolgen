@@ -25,11 +25,12 @@ meshes of ``<asset>.blend`` / ``<asset>_FPS.blend`` (BVH), both in the tool fram
 world resolution and samples, its own UV1 atlas and its own QA ``qa_surface_robot.json``; decal rectangles and relief
 patterns follow its deformed parts, the patterns keep their millimetres).
 
-0.20: TOOLGEN_BAKE_SCALE (standard 2, full 1) divides the viewmodel resolution (2048 -> 1024; world/robot stay at 512); the
-contract block then carries ``preview: true`` and the resolution is part of the bake key. Standard is the pre-commit check,
-full (nightly, release) delivers the game maps.
+0.22: TOOLGEN_BAKE_SCALE (standard 2, full 1) divides the viewmodel resolution (2048 -> 1024; world/robot stay at 512); the
+contract block then carries ``preview: true`` and the resolution is part of the bake key. Standard (--tool of the changed
+tools) is the pre-merge check, full (nightly, release) delivers the game maps.
 All bakes run on the CPU with a fixed seed and fixed samples per variant (never the tier's render samples), so standard and
-full give the same files; the hands are removed before baking (no occlusion from them) and moving parts bake at rest.
+full give the same world/robot maps and differ only in the viewmodel's resolution; the hands are removed before baking (no
+occlusion from them) and moving parts bake at rest.
 """
 import argparse
 import json

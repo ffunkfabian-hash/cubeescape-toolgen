@@ -38,7 +38,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import heavy_lock  # noqa: E402 - scripts/ is no package; the lock protocol is shared with Robogen and Cube Escape
 
 TIERS = {"quick": {"samples": 0, "percent": 100, "roundtrip": False, "bake_scale": 1},
-         "standard": {"samples": 12, "percent": 50, "roundtrip": True, "bake_scale": 2},   # 0.20: bake at half size
+         "standard": {"samples": 12, "percent": 50, "roundtrip": True, "bake_scale": 2},   # 0.22: bake at half size
          "full": {"samples": 40, "percent": 100, "roundtrip": True, "bake_scale": 1}}
 ALL_TIERS = tuple(TIERS)
 RENDER_TIERS = tuple(tier for tier, settings in TIERS.items() if settings["samples"])
@@ -167,7 +167,7 @@ STAGES = (
           renders=True, render_args=("--preview",), qa=("qa_game_fps.json",), min_contract=RIG_CONTRACT,
           replaces=("game_fps",), variants=(Variant("fps_game", "{asset}_FPS_Game", node="{asset}_FPS"),)),
     # Contract 4: mask maps W0/W1/Fields/Normal of both game models and the "surface" block in both contracts. Fixed bake
-    # samples (not the tier's render samples); 0.20: standard bakes at half size (TOOLGEN_BAKE_SCALE=2, viewmodel 1024, world 512
+    # samples (not the tier's render samples); 0.22: standard bakes at half size (TOOLGEN_BAKE_SCALE=2, viewmodel 1024, world 512
     # stays), full at full size - the resolution is part of the bake key, so the two keep separate cache entries; quick leaves
     # the stage out (manifest "surface").
     # 0.13: relief and decals of the weapons (data/surface_recipes.json, weapon_designs.py DECALS) label the LOD0 triangles

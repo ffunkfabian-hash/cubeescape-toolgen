@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin wrapper (0.20): the shared ce_docs.py checks Markdown links/anchors, skill front matter, JSON and shell syntax
+"""Thin wrapper (0.22): the shared ce_docs.py checks Markdown links/anchors, skill front matter, JSON and shell syntax
 with the lists in .ce-repo.json > docs (check, json, shell). python3 scripts/check_docs.py [--json REPORT]"""
 import sys
 from pathlib import Path

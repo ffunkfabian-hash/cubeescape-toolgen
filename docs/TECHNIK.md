@@ -199,7 +199,8 @@ Greifraum, beim Bogen der Raum zwischen Griff und Nocke) werden mit Testpunkten 
 
 **Dreiecksbudget.** `data/game_budget.json` nennt je Werkzeug ein LOD0-Budget (seit 0.18 alle +25 %, Entscheidung des Nutzers
 20.10.2026; Welt: Portalkanone und Magnetgreifer 10 000, Bogen 7 500, Taschenlampe 6 500; Ego: 20 000 / 20 000 / 17 500 / 15 000;
-Waffen und Roboter: [versions/0.18.md](versions/0.18.md)). Ein Modell unter dem Budget wird nicht dezimiert. Nach dem Zusammenführen wird LOD0 mit dem
+Waffen und Roboter: [versions/0.18.md](versions/0.18.md)). Ein Modell unter dem Budget wird nicht dezimiert; `reduce_to_budget` trianguliert dann nur seine
+n-Ecken, in fester Flächenreihenfolge (`scripts/tool_assets/mesh_order.py`, 0.20, siehe Erfahrungen). Nach dem Zusammenführen wird LOD0 mit dem
 Collapse-Decimate-Modifier gleichmäßig auf das Budget verkleinert (Shape Keys des Bogens folgen wie bei LOD1 über das nächste
 Dreieck; Iteration bis auf 4 % genau); LOD1 entsteht danach aus dem reduzierten LOD0. Die Maßprüfung `bounds_lod0` (1 mm gegen das
 Quellmodell in jedem Clipbild) gilt unverändert, `triangle_budget` prüft das Budget. Das Budget ist ein Datenwert: Ändern baut
@@ -472,7 +473,7 @@ Code: `toolgen/surface.py` (reine Helfer und UV1), `toolgen/surface_bake.py` (St
 - QA im Spiel-Export (`qa_game*.json`): `uv1_layers` (UVMap Index 0 und Render-Map, UV1 Index 1), `uv1_lod0` (Bereich, Überlappung 0 bei 2048,
   Abstand ≥ 4 px bei 1024, Ecke frei), `uv1_lod1` (wie LOD0, Überlappung nur berichtet), `uv1_source` (Drehung, Hash, Übertragung,
   `decimation_folds`); Reimport: UV1 auf allen Renderern, im GLB `TEXCOORD_1` und `TANGENT` je Primitive.
-- **Stufenauflösung (0.20 Nightshift):** `standard` backt mit `TOOLGEN_BAKE_SCALE=2` (Viewmodel 1024², Welt/Roboter bleiben 512²; Vertrag
+- **Stufenauflösung (0.22 Nightshift):** `standard` backt mit `TOOLGEN_BAKE_SCALE=2` (Viewmodel 1024², Welt/Roboter bleiben 512²; Vertrag
   `maps.preview: true`, Satzgrenze 5 MB), `full` mit Skalierung 1 (2048², Lieferstand). Die Auflösung steckt im Bake-Schlüssel, beide Stufen
   halten getrennte Cache-Einträge; `verify_output.py` prüft gegen `bake_resolution(variant, 2 bei preview)`. Grund: `surface_bake` 2048² kostete
   100–460 s je Werkzeug vor jedem Commit; bei 1024² ein Viertel der Texel (Messung folgt im Nachtlauf). Cube Escape importiert nur `full`-Ausgaben.
@@ -634,7 +635,8 @@ Alles nach der Geometrie (Ego-Kopie, Clips, Ego-Hände, Spiel-Export, Karten, Ro
   (Öffnungsprobe an `Socket_Reticle` im Spiel-Export).
 - **Bau** (`concept_kit.py`, Blender): ein Objekt je Netz `SM_PG_<Bezeichnung>_<id>`, Ursprung in der Hüllmitte, Material über den
   Kanal (`MT_Primary` → Primary … `MT_Emission` → Display, `MT_Energy` → Elementleuchten), Glättung nach `hard`, n-Ecken als Dreiecke
-  (Tangenten auf UV1 brauchen Drei- und Vierecke; ein Modell unter dem Budget wird nicht dezimiert), UV wie die Kit-Primitive.
+  (Tangenten auf UV1 brauchen Drei- und Vierecke; ein Modell unter dem Budget wird nicht dezimiert) in fester Flächenreihenfolge
+  (`mesh_order.triangulate_ngons`, 0.20), UV wie die Kit-Primitive.
   Das Magazin hängt unter `Anim_Magazine` (Nachladeclip), Teile mit `moving.toolgen_node` hängen unter diesem Knoten (KG02:
   Ladehebel p32 unter `Anim_Bolt`), Use-Clip-Knoten ohne Teil wären leere Knoten (`empty_clip_nodes` in der QA). Die Design-Funktion ruft `k.concept(...)`
   (`weapon_designs.concept_build`), Ersatz-Kits der Tests bekommen dieselben Teile über `concept_spec.layout()`.
@@ -840,7 +842,9 @@ kann das nicht prüfen (er macht die Achsenumrechnung rückgängig), nur Cube Es
 `*_FPS_Game.glb` ist zwischen zwei Läufen derselben Quellen nicht immer bytegleich (gemessen 0.13: eine Tangente um 1e-4, gegenüber dem
 0.12-Lauf die Handnetze in anderer Reihenfolge); Werkzeug-UV1, Geometrie-QA und die Maskenkarten sind davon nicht betroffen (der Bake
 entfernt die Hände). Grund nicht festgehalten. Ebenso `*_Robot_Game.glb` (gemessen 0.15: je Waffe zwei Werte um 1e-4 verschieden, wenn in
-einem anderen Ordner gebaut, im selben Ordner gleich; JSON-Teil gleich). `compare_models.py` führt beide getrennt. Anker unter anderem Socket_Hand,
+einem anderen Ordner gebaut, im selben Ordner gleich; JSON-Teil gleich; am Mac 0.20 noch 2–8 niedrige Float-Bytes bei Raketenwerfer und
+Spurgewehr). `compare_models.py` führt beide GLBs getrennt; die Viewer-Daten `ViewerData/robot_game` vergleicht es seit 0.20 wieder (am Mac
+in zwei kalten Läufen aller 13 Werkzeuge bytegleich), die Ego-Spiel-Viewer-Daten `fps_game` nicht. Anker unter anderem Socket_Hand,
 Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket_Grab. Ältere Contract-Zielnamen
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.
@@ -868,6 +872,25 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
+- 22.10.2026 · Sperre wartet auf sich selbst – `heavy_lock run --resource blender` hält die alte Gesamtsperre geteilt und setzt
+  `CE_HEAVY_HELD=blender`; die eingebettete Kopie `scripts/ce_tools/heavy_lock.py` kennt nur `CE_HEAVY_HELD=1` und verlangt die Gesamtsperre
+  exklusiv – `verify_surface.py`/`generate_tools.py` darunter warten auf den eigenen Elternprozess (105 min verloren). Bis die Kopie per
+  `ce_sync.py` erneuert ist: `heavy_lock run --resource blender -- env CE_HEAVY_LOCK=0 <Befehl>`, die Variable **nur innen** – vor `heavy_lock`
+  gesetzt schaltet sie auch die äußere Sperre ab (so geschehen: das Nachbacken lief zunächst ohne Sperre). Beleg: 0.20 Mac-Abnahme. Gilt auch
+  für: jedes Repo mit älterer eingebetteter Sperre unter einer Ressourcensperre (`./ce sync --check`).
+- 20.10.2026 · Reihenfolge nach `bmesh.ops.triangulate` – Das bpy-Wheel 5.2.2 unter Linux (BEAUTY) liefert dieselben Dreiecke mit derselben
+  Windung, aber in wechselnder Flächenreihenfolge: zwischen Prozessen und sogar zweimal im selben Prozess, ein fester `PYTHONHASHSEED` hilft
+  nicht; Blender.app 5.2.2 (macOS) war in zwei kalten Bauten stabil (0.19-Mac-Gegenprüfung). Folge unter Linux:
+  gleiche `vertices.bin`, andere `indices.bin` und GLBs bei jedem kalten Bau. Nach dem Triangulieren die Reihenfolge selbst festlegen
+  (`mesh_order.triangulate_ngons`: Platz der Ausgangsfläche, dann Eckindizes) und kalten Determinismus mit zwei `--no-cache`-Läufen belegen –
+  der Cache-Treffer im zweiten quick-Lauf beweist ihn nicht. Die Sortierung macht Mac und Linux gleich, ändert aber einmalig die
+  Mac-Ausgabe (Golden der betroffenen Karten bewusst neu, nach mehrfachem Nachbacken). Beleg: 0.19 Befund 1, 0.20 Lockstep
+  (`tests/test_mesh_order.py` sperrt andere Aufrufer). Gilt auch für: jede bmesh-Operation, die Flächen erzeugt (Bevel war stabil), Robogen/Cubegen.
+- 21.10.2026 · Ausnahmeliste versteckt Änderungen – `compare_models.py` zählte das ganze Roboter-Spielmodell (GLB und Viewer-Daten) als
+  „bekannt instabil“; die neue Flächenreihenfolge aus 0.20 an den Roboter-Spielmodellen von Fusionsgewehr, Pulsgewehr, Schrotflinte und
+  SMG fiel deshalb erst im Golden der Roboter-Karten auf. Ausnahmen so eng wie gemessen fassen (je Datei, nicht je Modell) und eine
+  „bytegleich“-Aussage auch gegen die Ausnahmeliste prüfen. Beleg: 0.20 Mac-Abnahme (`tests/test_compare_models.py`, kalte Läufe main/Branch je
+  zweimal). Gilt auch für: jede Toleranz- oder Ausnahmeliste in Prüfwerkzeugen (Golden-`alternates`, Robogen-Vergleiche).
 - 20.10.2026 · Griffpunkt per Strahl – Ein Strahl vom Griffmittelpunkt nach außen trifft zuerst Innenteile (Portalkanone: Chassis in der
   Schale); die Hand lag 2 cm im Gehäuse. Strahlen für Kontaktflächen immer von außen nach innen schießen. Beleg: 0.19 Kinetic
   (`ego_rig.grip_matrix`). Gilt auch für: Cubegen-Ankerflächen, Robogen-Bodenkontakte.
@@ -877,7 +900,6 @@ Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 - 20.10.2026 · Gemeinsame Daten in eigener Datei – Neue Daten für wenige Werkzeuge in `viewmodels.json`/`game_budget.json` ändern die
   Schlüssel aller Werkzeuge (und `game_budget.json` deren Vertrag über `budget.sha256`). Vertrag-5-Daten stehen deshalb in
   `data/ego_arms.json`. Beleg: 0.19, `compare_models` gegen 0.18. Gilt auch für: jede Pilotstufe.
-
 - 20.10.2026 · Modell unter dem Dreiecksbudget – Bis 0.17 lag jedes Spielmodell über dem Budget und wurde dezimiert; die Dezimierung hat
   nebenbei n-Ecken trianguliert und die UV-Markierungen (Render, aktiv) neu gesetzt, die das Zusammenfügen in ein leeres Netz verliert.
   Das erste Modell darunter (KG02, 5 872 von 7 000) zeigte beides: glTF ohne Tangenten, `uv1_layers` rot; nach dem Anheben aller

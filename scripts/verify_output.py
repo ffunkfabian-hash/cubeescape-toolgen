@@ -14,7 +14,9 @@ import surface  # noqa: E402
 from generate_tools import ARMS, RIG_CONTRACT, catalog, valid_package  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "scripts/ce_tools"))
-import ce_contract  # noqa: E402 - 0.20: the shared schema of the contract (ce-agent-tools plugins/ce-shared/contracts)
+import ce_contract  # noqa: E402 - 0.22: the shared schema of the contract (ce-agent-tools plugins/ce-shared/contracts)
+# the oldest contract format with a shared schema (unity_contract.v4); older formats stay supported without one
+SHARED_SCHEMA_MIN_FORMAT = min(int(p.stem.rsplit(".v", 1)[1]) for p in ce_contract.CONTRACTS.glob("unity_contract.v*.json"))
 
 PALETTE = json.loads((ROOT / "data/game_palette.json").read_text())
 EGO = ego_clips.load()
@@ -192,12 +194,13 @@ for tool in catalog():
     # contract 4: surface block and maps in standard/full (manifest "surface"), never in quick or older contracts
     world = json.loads((package / "unity_contract.json").read_text())
     # 0.17 Retrace: every contract names both consumer requirements apart; a renamed tool carries its former names
-    # 0.20 Nightshift: and every contract validates against the shared schema (ce_contract, additive-only formats)
+    # 0.22 Nightshift: and every contract validates against the shared schema (ce_contract, additive-only formats)
     for path in sorted(package.glob("unity_contract*.json")):
         document = json.loads(path.read_text())
-        schema_name, findings = ce_contract.check_file(path, None)
-        assert not findings, (tool["id"], path.name, schema_name, findings[:3])
-        checks += 1
+        if document["format"] >= SHARED_SCHEMA_MIN_FORMAT:   # formats 1-3 (--contract 1-3) are frozen, no shared schema
+            schema_name, findings = ce_contract.check_file(path, None)
+            assert not findings, (tool["id"], path.name, schema_name, findings[:3])
+            checks += 1
         expected = game_export.consumer_block(tool, document["format"])
         assert document["minimum_consumer"] == expected, (tool["id"], path.name, "minimum_consumer")
         assert document.get("renamed_from") == (game_export.renamed_block(tool) if tool.get("renamed_from") else None), \
@@ -219,7 +222,7 @@ for tool in catalog():
         assert set(block["channel_map"].values()) <= set(surface.CHANNELS) and block["channel_map"]
         assert all(slot in contract["materials"] for slot in block["channel_map"]), (tool["id"], variant, "channel_map slots")
         maps = block["maps"]
-        # 0.20: a standard-tier output carries preview maps (viewmodel 1024, "preview": true); full delivers the contract size
+        # 0.22: a standard-tier output carries preview maps (viewmodel 1024, "preview": true); full delivers the contract size
         expected = surface.MAP_RESOLUTION[variant] if not maps.get("preview") else surface.bake_resolution(variant, 2)
         assert maps["resolution"] == expected, (tool["id"], variant, "map resolution")
         total = 0

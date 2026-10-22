@@ -10,7 +10,9 @@ worktrees); they come from the same Blender scene as the GLB and are listed for 
 Files new in the second output (the robot variant) are counted, not compared. Exit 1 when a compared file differs or is gone.
 Known limit (Toolgen 0.13): the first-person game GLB (<asset>_FPS_Game*.glb, ViewerData/fps_game) is not byte-identical
 between builds; it is reported separately and does not fail. The same holds for the robot game GLB (<asset>_Robot_Game.glb,
-measured 0.15: two values per weapon 1e-4 apart between builds in different folders, JSON chunk identical).
+measured 0.15: two values per weapon 1e-4 apart between builds in different folders, JSON chunk identical; on the Mac 0.20 still
+2-8 low float bytes in two of 13 weapons). Its viewer data (ViewerData/robot_game) are compared: byte-identical in two cold Mac
+builds of all 13 tools (0.20), and the only file that showed 0.20's new face order of four robot game models.
 """
 import hashlib
 import json
@@ -22,7 +24,7 @@ SIZE_ONLY = (".fbx", ".blend")
 
 
 def known_unstable(name):
-    return "_FPS_Game" in name or "_Robot_Game" in name or name.startswith(("ViewerData/fps_game/", "ViewerData/robot_game/"))
+    return "_FPS_Game" in name or "_Robot_Game" in name or name.startswith("ViewerData/fps_game/")
 
 
 def digest_of(path):
@@ -67,7 +69,7 @@ def main():
     report = compare(base, new)
     print(f"identical GLB/viewer files: {report['identical']}")
     print(f"different: {len(report['different'])} {report['different'][:20]}")
-    print(f"known unstable (first-person and robot game GLB): {len(report['unstable'])}")
+    print(f"known unstable (first-person game GLB and viewer data, robot game GLB): {len(report['unstable'])}")
     print(f"FBX/blend (information only, paths and timestamps inside): same size {report['size_only']['same']}, "
           f"other size {len(report['size_only']['different'])}")
     print(f"added files: {len(report['added'])}, missing: {report['missing'][:20]}")

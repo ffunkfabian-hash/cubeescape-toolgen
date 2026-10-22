@@ -5,7 +5,7 @@ geometry (Socket_Sight check, first-person copy, clips, game export, maps, robot
 rules (glass, merged open parts, coplanar faces, bevels, sockets) live in concept_spec.py, which reads no bpy.
 
 Each planned mesh becomes one object ``SM_PG_<Label>_<id>`` with the Kit source material of its channel, the spec's
-smoothing (``hard`` faces flat, others smooth), n-gons as triangles, a bevel of ``bevel_m`` with two segments on edges sharper than
+smoothing (``hard`` faces flat, others smooth), n-gons as triangles (fixed order, mesh_order.py), a bevel of ``bevel_m`` with two segments on edges sharper than
 concept_spec.BEVEL_ANGLE next to a hard face, and the kit's per-face box UVs. Moving parts hang under their Toolgen node
 (``Anim_*`` pivot at the top centre of the part); Use-clip nodes without a part are empty pivots (reported in the QA).
 """
@@ -14,6 +14,7 @@ import bmesh
 from mathutils import Vector
 
 import concept_spec
+import mesh_order
 
 SEGMENTS = 2
 
@@ -37,10 +38,9 @@ def make(kit, mesh, parent, state):
                 face.smooth = True
         bm.normal_update()
     # n-gons (the spec's faces are planar n-gons, also concave) become triangles: tangents on UV1 need tris and quads
-    # (an under-budget model is not decimated, which would triangulate them), and concave faces shade wrongly otherwise
-    ngons = [face for face in bm.faces if len(face.verts) > 4]
-    if ngons:
-        bmesh.ops.triangulate(bm, faces=ngons, quad_method='BEAUTY', ngon_method='BEAUTY')
+    # (an under-budget model is not decimated, which would triangulate them), and concave faces shade wrongly otherwise;
+    # in a fixed face order (mesh_order: bmesh's own order varies between runs)
+    if mesh_order.triangulate_ngons(bm):
         bm.normal_update()
     name = mesh["name"].removeprefix("SM_PG_")
     data = bpy.data.meshes.new("ME_PG_" + name)

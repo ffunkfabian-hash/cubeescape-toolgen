@@ -46,7 +46,7 @@ Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrack
 ## Befehle
 
 `./check` (schnell: Doku-/Konfigurationsprüfung und Python-Tests, kein Blender), `./check --full` (Doku plus
-`scripts/check_output.sh`, schwer), `./check --nightly` (0.20: `scripts/nightly.sh` – `--tier full` aller Werkzeuge plus `check_output.sh`,
+`scripts/check_output.sh`, schwer), `./check --nightly` (0.22: `scripts/nightly.sh` – `--tier full` aller Werkzeuge plus `check_output.sh`,
 einmal täglich auf `main`, vom Nutzer oder `launchd` gestartet, nie als Workflow), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
 Nutzerwunsch). Konfiguration: `.ce-repo.json`. Die gemeinsamen Werkzeuge liegen als eingebettete Kopie in `scripts/ce_tools/`
 (erzeugt mit `python3 $CE_TOOLS/ce_sync.py --repo .` aus dem Plugin `ce-agent-tools`, nie von Hand ändern, Prüfung
@@ -60,7 +60,7 @@ Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing
 | `standard` | vor Merge nach `main`, **nur geänderte Werkzeuge** (`--tool`, aus `testplan.py`) | `output/_standard`: zusätzlich unabhängiger Reimport, kleine Renderings (50 %, 12 Samples), Aktions-GIFs, Bake halb (Viewmodel 1024², `preview: true`) |
 | `full` | Nachtlauf auf `main`, Lieferstand, Release | `output`: dieselben Prüfungen, volle Auflösung, 40 Samples, Bake 2048² |
 
-Rendern ist vom Commit gelöst (0.20, globale Regel › Rendern und Prüfen): vor Commit nur `quick` plus gezielte Bilder der geänderten
+Rendern ist vom Commit gelöst (0.22, globale Regel › Rendern und Prüfen): vor Commit nur `quick` plus gezielte Bilder der geänderten
 Werkzeuge; die vollen Bildstufen, Golden-Hashes und der Determinismus-Test laufen gebündelt im Nachtlauf. Vorher: `standard` aller 13
 Werkzeuge 43,5 min vor jedem Commit (0.16), `surface_bake` 2048² 100–460 s je Werkzeug.
 Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` führt ihn aus). Dann

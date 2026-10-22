@@ -8,6 +8,8 @@
     "sniper_rifle": {
       "CubeEscape_SniperRifle_FPS_Game_Normal.png": [
         "0d3357396d1424e23d5c5ee08aa9cf3eeb594b2a62fb553f407a8ca29c87beaa",
+        "b16817ddde45c323e7aec91dfb79b227b23eb1e6673c32ca2f278708e02d945b",
+        "f2718ede0693bba9988cbaf87d4d4679daa4e5b73ec2939cb4dc41d82ca9ef10",
         "f55b694f631a9079038d3d6adf7b47a0d48743a0815d5ccb11f5703ccfe19d81"
       ],
       "CubeEscape_SniperRifle_Robot_Game_Normal.png": [
@@ -15,21 +17,21 @@
       ]
     }
   },
-  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates. 0.19.0 (Mac acceptance 21.10.2026): sniper rifle first-person normal map, one texel one step (PAE 1/255) against the 0.18 Mac bake of the same geometry, new bake key (game_export.py, version string).",
+  "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates. 0.19.0 (Mac acceptance 21.10.2026): sniper rifle first-person normal map, one texel one step (PAE 1/255) against the 0.18 Mac bake of the same geometry, new bake key (game_export.py, version string). 0.20 (Mac acceptance 22.10.2026, verify_surface --determinism, package bake plus 1 and 8 threads): sniper rifle first-person normal map gave three values for unchanged geometry (package b16817dd, 1 thread 0d335739, 8 threads f2718ede); the primary stays the 0.18 value, the new ones are alternates. Rocket launcher robot normal map: the package bake hit its alternate.",
   "maps": {
     "assault_rifle": {
-      "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "4f3b1d912f9b1c5d476345a0bb34d83653acea9730fa14c82e070922db6ed3b1",
-      "CubeEscape_AssaultRifle_FPS_Game_Normal.png": "2fb3ccb3eca842063096d5b3c9fa7534b3f3972d0d09f9aafd71aa1118e2daf2",
-      "CubeEscape_AssaultRifle_FPS_Game_W0.png": "c376b47e551277c14ce1de996bf9d20061537f591313f22595aca1470c71afc4",
-      "CubeEscape_AssaultRifle_FPS_Game_W1.png": "f769dd5796e0d63ebd3020a2fef6f8153968982dacafb592a2849cf721b9a6a6",
-      "CubeEscape_AssaultRifle_Game_Fields.png": "bec838162d51524a9d795527b38dbb9cfe4cb3bf5fd6c263a643a860539662d3",
-      "CubeEscape_AssaultRifle_Game_Normal.png": "9b77c03309afd6ab04801be8f454b708043c6ef1c779fce08f1f563ab1745228",
-      "CubeEscape_AssaultRifle_Game_W0.png": "acd18cd11887d24e990c2cc52326cc8882df52cf84fa9feb11c42f6d143c238a",
-      "CubeEscape_AssaultRifle_Game_W1.png": "5a886a5eebad39ed035fd7909bd540b359c9f7c15141910e2bc5df8ac01b563c",
-      "CubeEscape_AssaultRifle_Robot_Game_Fields.png": "4dd52d7440af2005c97426962ead32f5e427227a9509b5be68522cbcac97ceb6",
-      "CubeEscape_AssaultRifle_Robot_Game_Normal.png": "b0239ce178ea3083076ac08b71e814ef06fcab3af0cd2dce6ed98a8256106baf",
-      "CubeEscape_AssaultRifle_Robot_Game_W0.png": "5ca3f3aeba4aa4bfc0633c08d74eff91b565708525f101eb4f7abc97844eed90",
-      "CubeEscape_AssaultRifle_Robot_Game_W1.png": "2b2b7a12eff4c941c288b09a8dfe8872005e04f4682ad61f0593fdb5e808e36d"
+      "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "0bd34482e02144342b5a07f33c42e65a4350dd202112b8a5c7bc121cf42ca4cd",
+      "CubeEscape_AssaultRifle_FPS_Game_Normal.png": "1653414b097bcdeaf82aa8502b1e361788c7d0ed40b0537c4950f1938313b0b6",
+      "CubeEscape_AssaultRifle_FPS_Game_W0.png": "a028c5eeb6c87808bf95a19309dce10c83672c2c63fc25fe03bde98f13051cbb",
+      "CubeEscape_AssaultRifle_FPS_Game_W1.png": "072d74c52c5e6bfd6acc05bf60bd6f79ee9c88756d8b23595d653be0dae4a928",
+      "CubeEscape_AssaultRifle_Game_Fields.png": "74a7fee07f5e62b5ea0eac876df39c7382f7e3d7dbf2c5d148fbd482a73f1210",
+      "CubeEscape_AssaultRifle_Game_Normal.png": "996b082dfcb9323e9e4ade624087840005a4209da899641aa9b38866aaf7fa70",
+      "CubeEscape_AssaultRifle_Game_W0.png": "55b40b32a460bebd5279369086975d7f873388301a798a2d197bad123469f5f8",
+      "CubeEscape_AssaultRifle_Game_W1.png": "4a5360bb26a18ce31aaf6dfdd09c06c869e91f6052d84a87fe3ca3a8a6c0e2d7",
+      "CubeEscape_AssaultRifle_Robot_Game_Fields.png": "815e4c3724ac133595969ce578e059b28d937342db212d7641ded0422c83a58a",
+      "CubeEscape_AssaultRifle_Robot_Game_Normal.png": "03180b5871f52f016b4c8b54358ea047b3f794407a137fd2fcb789612a0ef245",
+      "CubeEscape_AssaultRifle_Robot_Game_W0.png": "a583febd33b66d45f823e30a617379d03cd6befb2109aba5f8de3c1eea3e19ac",
+      "CubeEscape_AssaultRifle_Robot_Game_W1.png": "63397301e62aa50ebf4d8e01d0c26c2dd65306da7ee63bb4f4ca868a06d5b44a"
     },
     "fusion_rifle": {
       "CubeEscape_FusionRifle_FPS_Game_Fields.png": "c7351ccb709c9d42e1269e38e3c523ef03ea1af8ab6b438b53bd109de2729ead",
@@ -41,7 +43,7 @@
       "CubeEscape_FusionRifle_Game_W0.png": "f4fe617569a680802ed9f51f1c417ea59f2dc243dd2e9c1b3f6eaf4a9982df1d",
       "CubeEscape_FusionRifle_Game_W1.png": "5447c755a80924c8a5698158c933419abcb6f98affc54813db04802b890f82ff",
       "CubeEscape_FusionRifle_Robot_Game_Fields.png": "b3f68e1fd2983d8b8a6d92b4ba9594824ba217a7bc02100611047d81fd38e843",
-      "CubeEscape_FusionRifle_Robot_Game_Normal.png": "3b0e41bdc28b31ed33bd99d37ab386ee52d889952bc3dfc963e47d127b91d9d1",
+      "CubeEscape_FusionRifle_Robot_Game_Normal.png": "84b9fedf7b13abe22f1dc52d8921df265ea3856b1451ba2c02ae3f516607918a",
       "CubeEscape_FusionRifle_Robot_Game_W0.png": "04d9063f0be8e1e4c9695d53498907b75c5fb877ec5c1eb80b8b7e16066d9424",
       "CubeEscape_FusionRifle_Robot_Game_W1.png": "4f8c2cf90be86fb592c1ae822106aa13ebb8d5a993e419803cd27f909733408a"
     },
@@ -64,8 +66,8 @@
       "CubeEscape_PulseRifle_Game_Normal.png": "3e622d2be3813d8a376cf3ed5222616809bd34905fda8d8d2fa5669396ef1844",
       "CubeEscape_PulseRifle_Game_W0.png": "7bb9db9ffe3a0150ba117d94c52d010f3f2434931b2bcc2ca7b66a5d1da34ac2",
       "CubeEscape_PulseRifle_Game_W1.png": "296e7899e754c93182b42a64d9be02045564f3c4fe6fb2dcc2c025ffb492f0d0",
-      "CubeEscape_PulseRifle_Robot_Game_Fields.png": "7c9f504ac576d275cc27f6a12cb4e13537df8aeb1d8e46584d9ee6b9ff83de94",
-      "CubeEscape_PulseRifle_Robot_Game_Normal.png": "ba1dba691f78ac7460bb20908f1d8537237d6d61cf40a6011fade32a11ec3bcd",
+      "CubeEscape_PulseRifle_Robot_Game_Fields.png": "8c704076996b441c6c0d7bb24be2f0c37f6d9f04c3f91e279c34b7a082e73161",
+      "CubeEscape_PulseRifle_Robot_Game_Normal.png": "02925fb103a367357c0c9e19ba057cfd6b1a907e2b70ca68eef4fb1226b6c41a",
       "CubeEscape_PulseRifle_Robot_Game_W0.png": "2a6f1ff0ad80511d9f85ee8a0c76834d61cb62b91990f21b978920922f0d5e1e",
       "CubeEscape_PulseRifle_Robot_Game_W1.png": "3417529f9bb608fcbc5adb9f916cbe672f44daf542d08b8320e6a5e261485239"
     },
@@ -92,8 +94,8 @@
       "CubeEscape_Shotgun_Game_Normal.png": "4f3decb48d84e800e62acdcfde5491834c72332a20c7269c9c892693b16b0600",
       "CubeEscape_Shotgun_Game_W0.png": "6c547cf5dab8641b4faf75d31758846de436d6cf36a662311f9e9a738404b65c",
       "CubeEscape_Shotgun_Game_W1.png": "7a210a1e5a1c2e598209e3e400a9d8689045d64b636fbf0970db23e44d0ae8a0",
-      "CubeEscape_Shotgun_Robot_Game_Fields.png": "88462d28761b9b4ef09e969e196773c213d30a5e45768afd93c61cc10a183d9e",
-      "CubeEscape_Shotgun_Robot_Game_Normal.png": "513a67d78411a262d579e519ebaf7b468571737a359ecb6c0852eef9a4a4397b",
+      "CubeEscape_Shotgun_Robot_Game_Fields.png": "3a41368712f364e3aef34f36c9cde978379e9f6946aa22f44e0c2d0a8bdd734c",
+      "CubeEscape_Shotgun_Robot_Game_Normal.png": "55dfaf350735548e8b0787665ceb5b47da4de52f52e6b20a3d01699188713eb3",
       "CubeEscape_Shotgun_Robot_Game_W0.png": "6c40ba36c385a90a926832452bf11498bc42cccd6da8123b282e8dd48b9bdccc",
       "CubeEscape_Shotgun_Robot_Game_W1.png": "5c5924b9deedc126b2e97b23b8854fcdd90d659b22933d46df25d910ce18e840"
     },
