@@ -96,7 +96,7 @@ class RenamedFromTests(unittest.TestCase):
         self.assertNotIn("data/concepts", inspect.getsource(ge), "the export reads the concept from qa_geometry*.json")
 
     def test_consumer_of_budgets_and_arm_rig_is_cube_escape_0_106(self):
-        """0.21: Cube Escape 0.106 „Knuckleline“ raised FrameBudgetEnvelopeTests (device 20000, world 10000) and took the shared
+        """0.23: Cube Escape 0.106 „Knuckleline“ raised FrameBudgetEnvelopeTests (device 20000, world 10000) and took the shared
         arm rig - the contracts name it instead of „offen“ (game_export.py and the arm package's own copy alike)."""
         import ego_arms
         knuckleline = "Cube Escape 0.106 „Knuckleline“"

@@ -19,7 +19,7 @@ the spec (docs/TECHNIK.md › Konzeptmodelle, docs/ENTSCHEIDUNGEN.md, 20.10.2026
   game export gives it no box, so the window stays open (opening probe at Socket_Reticle).
 * **Bevels** (decision 3 of the formgen plan, 19.10.2026): 0.5-2 mm by part size (``BEVEL_RATIO`` x smallest extent),
   none on glowing parts; edges sharper than ``BEVEL_ANGLE`` next to a hard face.
-* **Decals** (0.21 Livery, stage B): the sheet's decals are mask regions, no geometry - ``decal_regions`` turns each into a
+* **Decals** (0.23 Livery, stage B): the sheet's decals are mask regions, no geometry - ``decal_regions`` turns each into a
   region anchor (toolgen/decals.py: part, box face, polygon as fractions of the part's box) that surface_bake.py writes
   into the weight maps; the four colour palettes come from the sheet's weapon spec (``palettes``, ``KXnn.spec.json``).
 * **Sockets**: Socket_Hand/SupportHand/Muzzle/CenterOfMass from ``anchors``; Socket_Sight from ``sight.socket_sight_rear_m``
@@ -35,7 +35,7 @@ from pathlib import Path
 
 FORMAT = "cubeescape-design/geometry-spec"
 FORMAT_VERSION = 1
-WEAPON_FORMAT = "cubeescape-design/weapon-spec"      # 0.21: the weapon spec of a sheet (palettes), import_concepts.py --spec
+WEAPON_FORMAT = "cubeescape-design/weapon-spec"      # 0.23: the weapon spec of a sheet (palettes), import_concepts.py --spec
 WEAPON_FORMAT_VERSION = 2
 PROVENANCE = "provenance.json"
 CORRECTIONS = "corrections.json"     # named Toolgen corrections (anchor, spec value, Toolgen value, reason, decision)
@@ -46,9 +46,8 @@ FOLDERS = (Path(__file__).resolve().parent / "concepts",                       #
 # None = the element glow of the weapon (MT_Energy).
 CHANNELS = {"MT_Primary": "Primary", "MT_Secondary": "Secondary", "MT_Accent": "Accent", "MT_Metal": "Metal",
             "MT_Detail": "Detail", "MT_Emission": "Display", "MT_Energy": None}
-# 0.21 (Livery): decal surface of the spec -> box face of toolgen/decals.py (+x is the side the first-person camera sees)
+# 0.23 (Livery): decal surface of the spec -> box face of toolgen/decals.py (+x is the side the first-person camera sees)
 DECAL_FACES = {"left": "+x", "right": "-x", "front": "-y", "back": "+y", "top": "+z", "bottom": "-z"}
-DECAL_OUTSIDE_M = .001          # a region may reach this far over its part's box (the spec's own rule: 1 mm)
 # Toolgen nodes of parts by their label where moving_parts has none (Toolgen's convention: the reload clip moves
 # Anim_Magazine, data/ego_clips.json reload.part).
 LABEL_NODES = {"Magazin": "Anim_Magazine"}
@@ -455,7 +454,7 @@ def part_names(meshes, label):
     return [mesh["name"].removeprefix("SM_PG_") for mesh in meshes if mesh["label"] == label]
 
 
-# ------------------------------------------------------------------------------------- stage B: decals and palettes (0.21)
+# ------------------------------------------------------------------------------------- stage B: decals and palettes (0.23)
 def weapon_spec(sheet, where=None):
     """The verified weapon spec of ``sheet`` (``KXnn.spec.json``, import_concepts.py --spec) or None when it is not imported."""
     where = where or folder()
@@ -498,10 +497,11 @@ def box_fraction(point, low, high, face):
 
 
 def decal_regions(spec, meshes):
-    """The sheet's decals as region anchors of toolgen/decals.py (stage B, 0.21): part = the mesh holding the decal's part
+    """The sheet's decals as region anchors of toolgen/decals.py (stage B, 0.23): part = the mesh holding the decal's part
     (name without SM_PG_), face from the decal's surface, polygon = its corners as fractions of that mesh's box on the
     face, rect = the polygon's bounds, channel = the decal's MT_ channel without the prefix, ``region`` = sheet and index
-    in ``decals[]``. ``outside_m``: how far the polygon reaches over the box (the spec says none over 1 mm)."""
+    in ``decals[]`` (follows the sheet's order, no permanent id). ``outside_m``: how far the polygon reaches over the box
+    (toolgen/decals.py REGION_OUTSIDE_M, the sheet's rule 1 mm). The surface must agree with the decal's normal."""
     owner = {part_id: mesh for mesh in meshes for part_id in mesh["ids"]}
     regions = []
     for index, decal in enumerate(spec.get("decals", [])):
@@ -509,6 +509,10 @@ def decal_regions(spec, meshes):
         if mesh is None:
             raise ConceptError(f"{spec['sheet']['id']} decal {index}: part {decal['part']} is not built")
         face = DECAL_FACES[decal["surface"]]
+        axis = "xyz".index(face[1])
+        if decal["normal"][axis] * (1 if face[0] == "+" else -1) < .99:
+            raise ConceptError(f"{spec['sheet']['id']} decal {index}: surface {decal['surface']} does not match its normal "
+                               f"{decal['normal']}")
         low, high = bounds(mesh["vertices"])
         polygon = [box_fraction(point, low, high, face) for point in decal["polygon_m"]]
         outside = max(max(low[i] - point[i], point[i] - high[i]) for point in decal["polygon_m"] for i in range(3)

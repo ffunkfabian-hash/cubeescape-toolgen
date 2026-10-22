@@ -1,4 +1,4 @@
-"""Toolgen 0.21 Livery: fingerprints of the golden surface maps (toolgen/map_fingerprint.py) and the three verdicts of the golden
+"""Toolgen 0.23 Livery: fingerprints of the golden surface maps (toolgen/map_fingerprint.py) and the three verdicts of the golden
 (toolgen/surface_golden.py: identical, within the tolerance, failed). Pure Python, no Blender."""
 import hashlib
 import json
@@ -90,6 +90,9 @@ class CompareTests(unittest.TestCase):
     def test_identical_maps_differ_nowhere(self):
         comparison = mf.compare(self.reference, fp(self.pixels))
         self.assertTrue(all(c["moved"] == 0 and c["shift"] == 0 and c["block"] == 0 for c in comparison["channels"]))
+        within, text = mf.judge("X_Game_Normal.png", comparison, TOLERANCE)
+        self.assertTrue(within)
+        self.assertIn("same histograms and block means", text)
 
     def test_one_texel_one_level_is_bake_noise(self):
         """The noise of the normal bake (0.15.1-0.20): one texel, one level."""
@@ -166,7 +169,7 @@ class GoldenTests(unittest.TestCase):
         result = self.check()
         self.assertEqual((2, [], [], []), (result["compared"], result["errors"], result["tolerated"],
                                            result["alternate_matches"]))
-        self.assertEqual(TOLERANCE, self.manifest()["tolerance"])
+        self.assertEqual(golden.DEFAULT_TOLERANCE, self.manifest()["tolerance"])
         self.assertEqual({"X_Game_Normal.png", "X_Game_W0.png"},
                          set(golden.load_fingerprints("t", self.golden)))
 
@@ -198,6 +201,26 @@ class GoldenTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(png(changed)).hexdigest(), self.manifest()["maps"]["t"]["X_Game_W0.png"])
         self.assertEqual([], self.check()["errors"])
 
+    def test_a_weight_map_change_inside_a_block_is_red(self):
+        """Judge finding 22.10.2026: W0/W1 are one-hot - a region moved inside one block keeps histogram and block means, so
+        the fingerprint sees nothing; only Normal maps (the measured bake noise) get a tolerance, W0/W1/Fields stay sha256."""
+        def w0(x, y):                                           # all Primary, one Secondary texel at (x, y)
+            pixels = bytearray(self.base["X_Game_W0.png"])
+            set_texel(pixels, x, y, 0, 0)
+            set_texel(pixels, x, y, 1, 255)
+            return pixels
+        self.write({"X_Game_W0.png": w0(0, 0)})
+        self.check(update=True)
+        swapped = w0(1, 1)                                      # the same texel moves inside block 0 (2 x 2 texels)
+        reference = golden.load_fingerprints("t", self.golden)["X_Game_W0.png"]
+        self.assertTrue(mf.judge("X_Game_W0.png", mf.compare(reference, fp(swapped)), golden.DEFAULT_TOLERANCE)[0],
+                        "the fingerprint alone cannot see it")
+        self.write({"X_Game_W0.png": swapped})
+        result = self.check()
+        self.assertEqual(1, len(result["errors"]))
+        self.assertIn("only Normal maps have a tolerance", result["errors"][0])
+        self.assertEqual([], result["tolerated"])
+
     def test_legacy_alternates_still_count_and_stale_maps_fail(self):
         manifest = self.manifest()
         noisy = bytearray(self.base["X_Game_Normal.png"])
@@ -224,7 +247,7 @@ class GoldenTests(unittest.TestCase):
 
 
 class RepositoryGoldenTests(unittest.TestCase):
-    """The migrated golden (0.21): every map keeps its sha256 and has a fingerprint of a confirmed bake of it."""
+    """The migrated golden (0.23): every map keeps its sha256 and has a fingerprint of a confirmed bake of it."""
 
     @classmethod
     def setUpClass(cls):
@@ -238,7 +261,8 @@ class RepositoryGoldenTests(unittest.TestCase):
             for name, digest in maps.items():
                 with self.subTest(tool=tool, map=name):
                     entry = fingerprints[name]
-                    accepted = [digest, *self.manifest.get("alternates", {}).get(tool, {}).get(name, [])]
+                    accepted = [digest, *self.manifest.get("alternates", {}).get(tool, {}).get(name, []),
+                                *self.manifest.get("retired_alternates", {}).get(tool, {}).get(name, [])]
                     self.assertIn(entry["sha256"], accepted)
                     size = 2048 if "_FPS_Game_" in name else 512           # full tier (0.22): Ego 2048², world/robot 512²
                     self.assertEqual([size, size], entry["size"])
@@ -249,9 +273,32 @@ class RepositoryGoldenTests(unittest.TestCase):
 
     def test_the_tolerance_stays_inside_the_users_guide_value(self):
         tolerance = self.manifest["tolerance"]
+        self.assertEqual(["Normal"], tolerance["kinds"], "W0/W1/Fields showed no bake noise: sha256 only")
         self.assertLessEqual(tolerance["share"], .005)                  # user 21.10.2026: <= 0.5 % of the texels
         self.assertLessEqual(tolerance["levels"], 1)                    # by <= 1 level
         self.assertLessEqual(tolerance["block_levels"], 1)
+
+    def test_the_measured_bake_noise_is_inside_the_tolerance(self):
+        """22.10.2026, 8 rebakes of unchanged 0.22 packages: the normal maps moved at most 2 texels by 1 level (sniper rifle
+        Ego 2048: 0d335739, 47dc547e), 1 at 512 (rocket launcher and sniper rifle robot); nothing else changed."""
+        tolerance = self.manifest["tolerance"]
+        for texels, moved in ((2048 * 2048, 2), (512 * 512, 1)):
+            channel = {"moved": moved, "shift": moved, "block": 0, "block_index": 0, "blocks": 0, "mean": 0.0}
+            comparison = {"texels": texels, "channels": [channel] + [dict(channel, moved=0, shift=0)] * 3}
+            within, text = mf.judge("X_Game_Normal.png", comparison, tolerance)
+            self.assertTrue(within, text)
+        # and the step above it fails: one texel two levels off, or 0.02 % of the texels by one level
+        two_levels = {"texels": 512 * 512, "channels": [{"moved": 1, "shift": 2, "block": 0, "block_index": 0, "blocks": 0,
+                                                          "mean": 0.0}] * 4}
+        self.assertFalse(mf.judge("X_Game_Normal.png", two_levels, tolerance)[0])
+        many = {"texels": 512 * 512, "channels": [{"moved": 53, "shift": 53, "block": 0, "block_index": 0, "blocks": 0,
+                                                    "mean": 0.0}] * 4}
+        self.assertFalse(mf.judge("X_Game_Normal.png", many, tolerance)[0])
+
+    def test_alternates_left_are_the_unreproduced_ones(self):
+        """0.23 removed every alternate the rebakes reproduced inside the tolerance; only sniper rifle Ego f2718ede stays."""
+        self.assertEqual({"sniper_rifle": {"CubeEscape_SniperRifle_FPS_Game_Normal.png": [
+            "f2718ede0693bba9988cbaf87d4d4679daa4e5b73ec2939cb4dc41d82ca9ef10"]}}, self.manifest["alternates"])
 
     def test_fingerprints_unpack(self):
         entry = next(iter(golden.load_fingerprints("pistol").values()))

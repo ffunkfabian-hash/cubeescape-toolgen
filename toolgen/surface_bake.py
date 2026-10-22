@@ -17,7 +17,7 @@ and ``qa_surface.json`` (exit code 1 when a check fails).
   driven by the patterns of toolgen/surface_relief.py, at most 0.3 mm high, selected per face by its source part.
 * Decals (scripts/tool_assets/weapon_designs.py DECALS, images toolgen/decals.py): projected onto the texels of their part
   and written into the channel raster before the dilation, so W0/W1 stay one-hot 255 (the decal's channel wins).
-* Mask regions (0.21 Livery, stage B): a weapon built from a concept sheet takes the sheet's decals as regions
+* Mask regions (0.23 Livery, stage B): a weapon built from a concept sheet takes the sheet's decals as regions
   (concept_spec.decal_regions, decals.project_region) instead of Toolgen decals, the same way into the channel raster; the
   recipe block lists them (``regions``) together with the sheet's colour palettes (``palettes``).
 
@@ -297,35 +297,39 @@ def to_bytes(values):
     return np.clip(np.rint(values * 255.0), 0, 255).astype(np.uint8)
 
 
-def apply_region(anchor, entry, table, texels, triangle_parts, normals, part_index, box, island_of_texel, raster, to_life):
-    """One mask region (0.21): its texels take the region's channel; QA = no texel outside the part, texels found, the painted
-    surface matches the polygon (``decals.region_coverage``, regions of REGION_MIN_TEXELS or more)."""
-    ys, xs, tris, _ = texels
-    hit = decals.project_region(anchor, texels, triangle_parts, normals, part_index, box, to_life)
+def apply_region(anchor, entry, table, frame, triangle_parts, normals, part_index, box, island_of_texel, raster):
+    """One mask region (0.23): its texels (of its part only) take the region's channel; QA = texels found, the painted
+    surface matches the polygon (``decals.region_coverage``, regions of REGION_MIN_TEXELS or more). ``frame`` = (texels,
+    corners, to_box): the design's frame (the robot variant over decals.life_corners)."""
+    texels, corners, to_box = frame
+    ys, xs, _, _ = texels
+    box = to_box(np.asarray(box, dtype=np.float64))
+    hit = decals.project_region(anchor, texels, triangle_parts, normals, part_index, box)   # texels of the part only
     touched = sorted(set(island_of_texel[hit].tolist()))
-    foreign = int(np.count_nonzero(triangle_parts[tris[hit]] != part_index))
-    coverage = decals.region_coverage(anchor, hit, texels, table["uv"], table["corners"], box, raster.shape[0], to_life)
+    coverage = decals.region_coverage(anchor, hit, texels, table["uv"], corners, box, raster.shape[0])
     errors = []
     if not hit.any():
         errors.append("no texels")
-    if foreign:
-        errors.append(f"{foreign} region texels outside the target part")
     if hit.sum() >= decals.REGION_MIN_TEXELS and not decals.REGION_COVERAGE[0] <= coverage <= decals.REGION_COVERAGE[1]:
         errors.append(f"coverage {coverage:.2f} outside {decals.REGION_COVERAGE}")
     channel = surface.CHANNELS.index(anchor["channel"])
     changed = int(np.count_nonzero(raster[ys[hit], xs[hit]] != channel))
     raster[ys[hit], xs[hit]] = channel
     entry.update(passed=not errors, errors=errors, texels=int(hit.sum()), changed_texels=changed, islands=len(touched),
-                 foreign_texels=foreign, coverage=round(coverage, 3), region=anchor["region"],
+                 coverage=round(coverage, 3), region=anchor["region"],
                  box_mm=[round(float(v) * 1000, 2) for v in (*box[0], *box[1])])
 
 
 def apply_decals(anchors, catalog, table, triangles, raster, names, islands, command, refit=None, to_life=None):
     """Writes the decals into the channel raster (in place) and returns their QA entries. ``refit(anchor, box)``: candidate
     anchors on a deformed part (robot variant), the first one that passes the QA is placed (the entry carries its ``rect``).
-    Region anchors (0.21) follow a deformed part exactly through ``to_life`` instead."""
+    Region anchors (0.23) follow a deformed part through ``to_life`` (its triangles' corners back to the design) instead."""
     texels = decals.texel_positions(triangles, table["uv"], table["corners"])
     normals = decals.face_normals(table["corners"])
+    frame = (texels, table["corners"], lambda box: box)
+    if to_life is not None and any(decals.is_region(anchor) for anchor in anchors):
+        life = decals.life_corners(table["corners"], to_life)
+        frame = (decals.texel_positions(triangles, table["uv"], life), life, to_life)
     part_ids = {name: index for index, name in enumerate(sorted({name for name in names if name}))}
     triangle_parts = np.array([part_ids.get(name, -1) for name in names], dtype=np.int32)
     ys, xs, tris, _ = texels
@@ -341,8 +345,8 @@ def apply_decals(anchors, catalog, table, triangles, raster, names, islands, com
         corners = table["corners"][own].reshape(-1, 3)
         box = (corners.min(axis=0), corners.max(axis=0))
         if decals.is_region(anchor):
-            apply_region(anchor, entry, table, texels, triangle_parts, normals, part_ids[anchor["part"]], box,
-                         island_of_texel, raster, to_life)
+            apply_region(anchor, entry, table, frame, triangle_parts, normals, part_ids[anchor["part"]], box,
+                         island_of_texel, raster)
             results.append(entry)
             continue
         mask = decals.mask_array(decals.render(anchor["image"], catalog, command))
@@ -532,14 +536,18 @@ def surface_block(model, variant, palette, slots, settings, files, set_bytes, ke
     }
 
 
-def robot_to_life(fit):
-    """Points (N x 3) of the robot variant mapped back to the life-size design (weapon_designs.ROBOT: x and z scaled by
-    ``cross`` about Socket_Hand, y piecewise linear) - the region anchors (0.21) follow the deformation exactly."""
+def robot_to_life(fit, anchors=()):
+    """Points (N x 3) of the robot variant mapped back to the life-size design (weapon_designs.robot_life_point: x and z by
+    ``cross`` about Socket_Hand, y piecewise linear) for the region anchors (0.23). Energy cells map on their own
+    (robot_cell_map), so a region on a cell part is refused instead of being placed wrong."""
+    cells = weapon_designs.robot_cells([anchor["part"] for anchor in anchors if decals.is_region(anchor)])
+    if cells:
+        raise RuntimeError(f"mask regions on energy cell parts {sorted(cells)} are not supported on the robot variant")
+
     def to_life(points):
         points = np.asarray(points, dtype=np.float64)
-        life = points / fit["cross"]
-        life[..., 1] = np.vectorize(lambda y: weapon_designs.robot_life_y(fit, float(y)), otypes=[np.float64])(points[..., 1])
-        return life
+        return np.array([weapon_designs.robot_life_point(fit, point) for point in points.reshape(-1, 3)],
+                        dtype=np.float64).reshape(points.shape)
     return to_life
 
 
@@ -599,7 +607,7 @@ def main():
                       "command": command, "magick": decals.magick_version(command) if command else None}
             if args.robot:
                 design["refit"] = robot_refit(weapon_designs.ROBOT[args.tool])
-                design["to_life"] = robot_to_life(weapon_designs.ROBOT[args.tool])
+                design["to_life"] = robot_to_life(weapon_designs.ROBOT[args.tool], anchors)
         qa = {variant: json.loads((work / qa_name).read_text()) for variant, _, _, qa_name in variants}
         if args.robot:
             shared = False               # the robot variant has its own UV1 atlas (own parts, own decimation)

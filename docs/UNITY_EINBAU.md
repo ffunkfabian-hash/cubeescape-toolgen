@@ -284,10 +284,11 @@ Karten und ein Block, den Cube Escape 0.71–0.75 ignoriert.
   rough_cast, rubber, energy_glass; `smoothness` ≤ 0,45 als Glätte im Masken-Modus, `note`), `decals` (Anker mit Bild, Kanal, Texelzahl),
   `relief` (was in der Normalkarte steckt, nur zur Information), `computed_by_consumer`, `minimum_consumer`. „Poliert“/„Premium“ ist eine
   Glätte im Masken-Modus; `game_palette.json` › `finish` gilt weiter für den Slot-Weg.
-- **0.21 (Livery), additiv – Konzeptwaffen:** `regions` (`source`, `items`: je Aufkleber des Blatts `region` „KG02#i“, `part`, `face`,
+- **0.23 (Livery), additiv – Konzeptwaffen:** `regions` (`source`, `items`: je Aufkleber des Blatts `region` „KG02#i“, `part`, `face`,
   `polygon`, `rect`, `channel`, `part_channel`, `color`, `emissive`, `texels`) und `palettes` (`default` „base“, `items`: `id`, `name`,
   `swatches`, `channels` Primary … Detail → sRGB oder `null`, `other_colors`, `on_sheet`). `decals` bleibt die Liste der Toolgen-Decals
-  (bei KG02 leer), `palette` die vier Farben des Texturblatts 1–9; `version` bleibt 1. Die Regionen ändern nur Inhalte von W0/W1
+  (bei KG02 leer), `palette` die vier Farben des Texturblatts 1–9; `version` bleibt 1. Die Regions-ID folgt der Reihenfolge der
+  Aufkleber im Blatt und ist **nicht dauerhaft** (formgen kann neu ordnen): Regionen über `part`/`face`/`polygon` ansprechen. Die Regionen ändern nur Inhalte von W0/W1
   (dieselben Kanäle, one-hot 255): kein neuer Kanal, keine neue Karte, kein neues Format.
 - **Mindestversion:** Karten Cube Escape 0.71 (wie Vertrag 4), Rezept Cube Escape 0.76. Ältere Fassung ohne Relief/Decals: Toolgen 0.12.0
   (`v0.12.0`), ohne Karten `--contract 3`.
@@ -359,7 +360,7 @@ Anker bleiben; neu oder geändert:
 - **Kanäle:** KG02 nutzt sechs der sieben Ausrüstungs-Slots; `MT_Energy` fehlt, das Leuchten des Blatts (Emitter) ist `MT_Emission`
   (Orange). `equipment.channels` und die Maskenkarten nennen nur diese sechs; das Element (`arc`) bleibt Wurzeleigenschaft.
 - **Block `concept`** (nur Konzeptwaffen): Blatt, Variante, Format, Repository, Release, Commit, Zip- und Datei-sha256, `sight_window`.
-- **Aufkleber und Paletten (0.21 Livery, Stufe B):** die 63 Aufkleber des Blatts stecken als Maskenregionen in W0/W1 (Kanal des Blatts:
+- **Aufkleber und Paletten (0.23 Livery, Stufe B):** die 63 Aufkleber des Blatts stecken als Maskenregionen in W0/W1 (Kanal des Blatts:
   56 Secondary, 5 Primary, 2 Accent; die zwei Toolgen-Decals von 0.13–0.20 entfallen), die vier Blattpaletten `base` (Standard),
   `standard`, `arktis`, `nacht` stehen in `surface.recipe.palettes`. Keine Palette belegt `MT_Energy` (bei allen `null`); der Kanal fehlt
   KG02 also weiter, ohne dass Paletten oder Regionen ihn brauchen. Cube Escape 0.106 lädt das Paket unverändert (liest aus dem Block
@@ -369,7 +370,7 @@ Anker bleiben; neu oder geändert:
   (wie in der Tabelle oben), aber ein Wert für die Übernahme.
 - **Dreiecksbudgets (alle Werkzeuge, 0.18):** +25 % (Welt bis 10 000, Ego bis 20 000, Roboter 15 000 LOD0-Dreiecke; Werte in
   `data/game_budget.json`, je Vertrag `budget`). `minimum_consumer.triangle_budgets`: die CE-Version, die `FrameBudgetEnvelopeTests`
-  (bisher 16 000 Ego, 8 000 Welt) anhebt – **Cube Escape 0.106 „Knuckleline“** (Gerät 20 000, Welt 10 000; Toolgen 0.21).
+  (bisher 16 000 Ego, 8 000 Welt) anhebt – **Cube Escape 0.106 „Knuckleline“** (Gerät 20 000, Welt 10 000; Toolgen 0.23).
 - **Mindestversion des Abnehmers:** `minimum_consumer.concept_models` – die Cube-Escape-Version, die das Konzeptmodell zuerst übernimmt
   (CE-A „Refit“, **noch nicht reserviert: „offen“**). Cube Escape ab 0.98 liest das Paket (gleiche IDs, Anker, Clips), ist aber auf das alte
   Modell abgestimmt (Griffneigung, Handpose, Visierart). Das alte Sturmgewehr: `git checkout v0.17.2 && python3 toolgen/generate_tools.py
@@ -386,7 +387,7 @@ mehr, hängt an `Prop_R` und bewegt sich nur über die rechte Armkette. Vertrag 
 und Clipnamen) und lässt die übrigen Geräte unberührt; Cube Escape 0.104 und älter lesen nur diese Fassung.
 
 **Mindestversion:** jeder Vertrag eines Vertrag-5-Geräts (Welt, Roboter, Ego) und der Armvertrag tragen `minimum_consumer.shared_arm_rig`
-= **Cube Escape 0.106 „Knuckleline“** (E2 des Arm-Umbaus; bis Toolgen 0.20 „offen“, nachgetragen in 0.21). Welt- und Robotervertrag ändern sonst nichts (Format 5, Inhalt wie 4).
+= **Cube Escape 0.106 „Knuckleline“** (E2 des Arm-Umbaus; bis Toolgen 0.20 „offen“, nachgetragen in 0.23). Welt- und Robotervertrag ändern sonst nichts (Format 5, Inhalt wie 4).
 
 ### Arm-Paket `ego_arms`
 

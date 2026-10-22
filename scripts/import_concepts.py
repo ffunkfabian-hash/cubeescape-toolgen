@@ -8,7 +8,7 @@ against provenance.json). This tool is the one way in:
         --release claude-v0.14 --commit 28aa956 --zip-sha256 <sha256> KG02 [KG05 ...]
     python3 scripts/import_concepts.py --zip <zip> --release claude-v0.14 KG05   # known release: hashes from provenance.json
     python3 scripts/import_concepts.py --release claude-v0.15 --golden <formgen claude/tests/golden.json> \
-        --spec KG02.spec.json                                    # weapon spec of an imported sheet (palettes, 0.21)
+        --spec KG02.spec.json                                    # weapon spec of an imported sheet (palettes, 0.23)
     python3 scripts/import_concepts.py --check                   # data/concepts/ matches provenance.json
 
 ``--zip`` is a local copy of the release asset (download it with ``gh release download <tag> -R
@@ -16,7 +16,7 @@ ffunkfabian-hash/cubeescape-formgen -p 'claude-geo-*.zip'``). The zip must have 
 the sha256 of formgen's golden list (``golden.json`` › ``geo``, or the release list kept in provenance.json), the format
 ``cubeescape-design/geometry-spec`` and version 1. Only the named sheets are copied; their bytes stay unchanged.
 
-0.21 (Livery): ``--spec`` adds the weapon spec ``KXnn.spec.json`` of an imported sheet (its four colour palettes and the
+0.23 (Livery): ``--spec`` adds the weapon spec ``KXnn.spec.json`` of an imported sheet (its four colour palettes and the
 decal colours; the geometry spec has neither). Source: the file at the release commit, e.g. ``git -C <formgen> show
 claude-v0.15:claude/output/sheets/KG02.spec.json > KG02.spec.json``; its sha256 must be the one of formgen's golden list
 (``golden.json`` › ``specs``, kept per release as ``spec_files``), the format ``cubeescape-design/weapon-spec``.
@@ -96,7 +96,7 @@ def check(folder=CONCEPTS):
 
 
 def spec_errors(sheet, entry, release, folder=CONCEPTS):
-    """Errors of the weapon spec of one imported sheet (0.21): present, sha256 of its entry and of the release's list."""
+    """Errors of the weapon spec of one imported sheet (0.23): present, sha256 of its entry and of the release's list."""
     path = folder / entry["spec"]["file"]
     if not path.is_file():
         return [f"{sheet}: {entry['spec']['file']} missing"]
@@ -217,7 +217,7 @@ def main():
     parser.add_argument("--zip-sha256")
     parser.add_argument("--golden", type=Path)
     parser.add_argument("--spec", type=Path, action="append", default=[],
-                        help="weapon spec KXnn.spec.json of an imported sheet (palettes, decal colours; 0.21)")
+                        help="weapon spec KXnn.spec.json of an imported sheet (palettes, decal colours; 0.23)")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     if args.check:

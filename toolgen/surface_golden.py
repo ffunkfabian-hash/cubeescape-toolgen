@@ -1,5 +1,5 @@
 """Golden of the weapons' surface maps (tests/golden/surface): sha256 per map (Toolgen 0.13), confirmed alternates (0.15.1-0.20,
-legacy) and a fingerprint per map with a tolerance (0.21 Livery, toolgen/map_fingerprint.py). scripts/verify_surface.py
+legacy) and a fingerprint per map with a tolerance (0.23 Livery, toolgen/map_fingerprint.py). scripts/verify_surface.py
 uses it after its Blender checks; pure Python (the decoder is passed in), so the unit tests run without Blender."""
 import hashlib
 import json
@@ -10,22 +10,24 @@ import surface
 
 ROOT = Path(__file__).resolve().parents[1]
 # Golden maps of the weapons (Toolgen 0.13): sha256 of every map in manifest.json, no reference images (user, 17.10.2026).
-# 0.21 (Livery, user 21.10.2026 "Mittelweg"): plus a fingerprint per map (fingerprints/<tool>.json, toolgen/map_fingerprint.py);
+# 0.23 (Livery, user 21.10.2026 "Mittelweg"): plus a fingerprint per map (fingerprints/<tool>.json, toolgen/map_fingerprint.py);
 # a map is byte-identical (green), within manifest["tolerance"] of its fingerprint (green with a note) or failed (red, with
 # map, channel and block). The confirmed alternates of 0.15.1-0.20 still count as identical until they are retired.
 GOLDEN = ROOT / "tests/golden/surface"
 FINGERPRINTS = "fingerprints"
-# Richtwert of the user (21.10.2026) until the measured bake noise sets the final values (manifest["tolerance"] wins)
-DEFAULT_TOLERANCE = {"share": .005, "levels": 1, "block_levels": 1}
+# From the measured bake noise (0.23, manifest["tolerance_note"]: at most 2 texels by 1 level), far below the user's guide
+# value of 0.5 %; manifest["tolerance"] wins
+DEFAULT_TOLERANCE = {"share": .0001, "levels": 1, "block_levels": 1, "kinds": ["Normal"]}
 GOLDEN_NOTE = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since "
                "0.14 Fieldfit; baked on the Mac, full tier since 0.22): sha256 of every map plus a fingerprint per map "
-               "(fingerprints/<tool>.json, 0.21 Livery), no reference images. Rewrite with verify_surface.py --update-golden "
+               "(fingerprints/<tool>.json, 0.23 Livery), no reference images. Rewrite with verify_surface.py --update-golden "
                "after a deliberate change: only maps that are not green get a new hash and fingerprint.")
-FINGERPRINT_NOTE = ("0.21 Livery (user 21.10.2026, 'Mittelweg'): a map that is not byte-identical passes with a note when "
+FINGERPRINT_NOTE = ("0.23 Livery (user 21.10.2026, 'Mittelweg'): a map that is not byte-identical passes with a note when "
                     "its fingerprint (64 x 64 block means and 256-level histogram per channel, toolgen/map_fingerprint.py) "
-                    "stays within 'tolerance': in every channel at most 'share' of the texels changed, by at most 'levels' "
+                    "stays within 'tolerance' and its kind is one of 'kinds' (Normal: the only maps that showed bake noise): "
+                    "in every channel at most 'share' of the texels changed (histogram, a lower bound), by at most 'levels' "
                     "on average, and no block mean moved more than 'block_levels'; else it fails with map, channel and block. "
-                    "The values come from measured bake noise (docs/versions/0.21.md); the alternates of 0.15.1-0.20 stay "
+                    "The values come from measured bake noise (docs/versions/0.23.md); the alternates of 0.15.1-0.20 stay "
                     "until a map is rewritten, no new ones are written.")
 
 
@@ -80,13 +82,20 @@ def golden_verdict(manifest, tool, name, digest, data, fingerprints, decode=png_
     current = map_fingerprint.fingerprint(*decode(data), digest)
     model = {map_fingerprint.map_kind(other): entry for other, entry in fingerprints.items()
              if model_of(other) == model_of(name)}
-    within, text = map_fingerprint.judge(f"{tool}/{name}", map_fingerprint.compare(reference, current),
-                                         manifest["tolerance"], model, current)
+    tolerance = manifest["tolerance"]
+    within, text = map_fingerprint.judge(f"{tool}/{name}", map_fingerprint.compare(reference, current), tolerance, model,
+                                         current)
+    kinds = tolerance.get("kinds", DEFAULT_TOLERANCE["kinds"])
+    if within and map_fingerprint.map_kind(name) not in kinds:
+        # W0/W1/Fields never showed bake noise (0.23 measurement): any other hash is a change. The weight maps are one-hot,
+        # so a region moved inside one 32 x 32 block keeps every histogram and block mean (judge finding 22.10.2026).
+        return "failed", (f"{text.split(': ', 1)[0]}: sha256 differs; only {', '.join(kinds)} maps have "
+                          f"a tolerance (the fingerprint locates nothing: {text.split(': ', 1)[1]})")
     return ("tolerated" if within else "failed"), text
 
 
 def golden_update(manifest, tool, digests):
-    """New golden hashes of one tool from ``digests`` {map: sha256} (0.21: golden_check passes only the maps whose verdict
+    """New golden hashes of one tool from ``digests`` {map: sha256} (0.23: golden_check passes only the maps whose verdict
     was not green - identical, alternate or within the tolerance keep their reference, so a noisy bake never moves it back
     and forth). A map with new content drops its alternates; alternates are no longer written (the tolerance replaces
     them); a rewritten map leaves the stale mark."""
@@ -113,7 +122,7 @@ def golden_update(manifest, tool, digests):
 
 def golden_check(output, tools, update=False, folder=GOLDEN, decode=png_pixels):
     """Compare (or with ``update`` rewrite) the weapons' maps against the golden in ``folder``: sha256, legacy alternates,
-    then the fingerprint tolerance (0.21). ``update`` rewrites hash and fingerprint of every map that is not green and adds
+    then the fingerprint tolerance (0.23). ``update`` rewrites hash and fingerprint of every map that is not green and adds
     a missing fingerprint of an identical map."""
     manifest_path = folder / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"maps": {}}

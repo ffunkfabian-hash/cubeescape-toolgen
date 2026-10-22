@@ -188,7 +188,7 @@ class DecalCatalogTests(unittest.TestCase):
 
 
 class RegionTests(unittest.TestCase):
-    """0.21 Livery, stage B: the concept sheet's decals as mask regions and its colour palettes (pure Python)."""
+    """0.23 Livery, stage B: the concept sheet's decals as mask regions and its colour palettes (pure Python)."""
 
     @classmethod
     def setUpClass(cls):
@@ -208,7 +208,7 @@ class RegionTests(unittest.TestCase):
         self.assertEqual([], self.spec["checks"]["decals_outside_part"])
         for anchor in self.anchors:
             with self.subTest(region=anchor["region"]):
-                self.assertLessEqual(anchor["outside_m"], concept_spec.DECAL_OUTSIDE_M)
+                self.assertLessEqual(anchor["outside_m"], decals.REGION_OUTSIDE_M)
                 self.assertTrue(all(-1e-6 <= v <= 1 + 1e-6 for point in anchor["polygon"] for v in point))
                 u0, v0, u1, v1 = anchor["rect"]
                 self.assertTrue(0 <= u0 < u1 <= 1 and 0 <= v0 < v1 <= 1)
@@ -233,8 +233,15 @@ class RegionTests(unittest.TestCase):
         errors = "\n".join(decals.anchor_errors([bad], CATALOG, {"Griff_p03"}))
         for expected in ("face", "channel", "three corners", "not in the model"):
             self.assertIn(expected, errors)
-        over = dict(bad, face="+x", channel="Accent", part="Griff_p03", polygon=[[0, 0], [1.1, 0], [0, 1]])
-        self.assertIn("reaches over", "\n".join(decals.anchor_errors([over], CATALOG, {"Griff_p03"})))
+        over = dict(bad, face="+x", channel="Accent", part="Griff_p03", polygon=[[0, 0], [1, 0], [0, 1]], outside_m=.0015)
+        self.assertIn("1.5 mm over its part", "\n".join(decals.anchor_errors([over], CATALOG, {"Griff_p03"})))
+        self.assertEqual([], decals.anchor_errors([dict(over, outside_m=.001)], CATALOG, {"Griff_p03"}))
+
+    def test_a_surface_against_its_normal_is_refused(self):
+        spec = json.loads(json.dumps(self.spec))
+        spec["decals"][0]["surface"] = "right"                     # normal +x
+        with self.assertRaises(concept_spec.ConceptError):
+            concept_spec.decal_regions(spec, concept_spec.plan(spec)[0])
 
     def test_the_sheet_palettes_come_from_the_weapon_spec(self):
         palettes = weapon_designs.palettes("assault_rifle")
@@ -381,24 +388,21 @@ class DecalProjectionTests(unittest.TestCase):
         coverage = decals.region_coverage(self.region(triangle), hit, self.texels, self.uv, self.corners, self.box, 64)
         self.assertAlmostEqual(1.0, coverage, delta=.1)
 
-    def test_a_region_follows_a_deformation_through_to_life(self):
+    def test_a_region_follows_a_deformation_through_life_corners(self):
+        """The deformation moves only the vertices: a texel lies barycentrically between its triangle's life-size corners."""
         np = surface.np
         square = [[.25, .25], [.75, .25], [.75, .75], [.25, .75]]
         plain = decals.project_region(self.region(square), self.texels, self.parts, self.normals, 0, self.box)
-        stretched = decals.project_region(self.region(square), self.texels, self.parts, self.normals, 0, self.box,
-                                          to_life=lambda points: np.asarray(points, dtype=np.float64) ** 1)
-        self.assertTrue(np.array_equal(plain, stretched))
-        # model y -> life y (y + .02)^2 / .04 - .02 keeps the box ends; the middle of the life part sits further +y on
-        # the model (model 0 is life -0.01), so the painted texels move towards +y and stay where the map sends them
-        def squash(points):
-            life = np.array(points, dtype=np.float64)
-            life[..., 1] = (life[..., 1] + .02) ** 2 / .04 - .02
-            return life
-        moved = decals.project_region(self.region(square), self.texels, self.parts, self.normals, 0, self.box, squash)
-        ys, xs, tris, positions = self.texels
-        self.assertGreater(positions[moved, 1].mean(), positions[plain, 1].mean())
-        life_s = (squash(positions[moved])[:, 1] + .02) / .04
-        self.assertTrue(np.all((life_s >= .25 - 1e-9) & (life_s <= .75 + 1e-9)))
+        same = decals.life_corners(self.corners, lambda points: np.asarray(points, dtype=np.float64) * 1)
+        self.assertTrue(np.array_equal(self.corners, same))
+        # a model stretched to twice its length along y: back on the design, the region lands on the same texels
+        stretched = self.corners * np.array([1.0, 2.0, 1.0])
+        life = decals.life_corners(stretched, lambda points: np.asarray(points, dtype=np.float64) / np.array([1.0, 2.0, 1.0]))
+        texels = decals.texel_positions(self.raster, self.uv, life)
+        moved = decals.project_region(self.region(square), texels, self.parts, self.normals, 0, self.box)
+        self.assertTrue(np.array_equal(plain, moved))
+        coverage = decals.region_coverage(self.region(square), moved, texels, self.uv, life, self.box, 64)
+        self.assertAlmostEqual(1.0, coverage, delta=.1)
 
     def test_inside_polygon_is_even_odd(self):
         np = surface.np

@@ -534,13 +534,16 @@ kennt; Farbe, Werkstoffart, Glätte, Abnutzung, Schmutz, Kratzer, Rauschen und G
   Ohne Rezept und Decals (Portalwerfer, Magnetgreifer, Taschenlampe, Bogen) bleiben alle Karten bytegleich zu 0.12.
 - **Abnahme:** `verify_surface.py` zählt Decal-Texel getrennt (höchstens die im Rezept gemeldeten, nur in Decal-Kanälen) und vergleicht die
   Karten der Waffen mit `tests/golden/surface/manifest.json` (sha256 jeder Karte, keine Referenzbilder – Entscheidung des Nutzers vom
-  17.10.2026). Seit 0.21 (Livery, „Mittelweg“ vom 21.10.2026) dreistufig über `toolgen/surface_golden.py`: bytegleich (oder ein belegtes
+  17.10.2026). Seit 0.23 (Livery, „Mittelweg“ vom 21.10.2026) dreistufig über `toolgen/surface_golden.py`: bytegleich (oder ein belegtes
   `alternates` aus 0.15.1–0.20) → grün; sonst Vergleich mit dem **Fingerabdruck** der Karte (`tests/golden/surface/fingerprints/<Werkzeug>.json`,
   `toolgen/map_fingerprint.py`: 64×64-Blockmittel und 256-Stufen-Histogramm je Kanal, Mittelwerte, sha256 der Quelle; 2–17 KB je Karte,
-  1,0 MB für 104 Karten) innerhalb `manifest.json` › `tolerance` → grün mit Hinweis (`NOTE …`); sonst rot mit Karte, Kanal, Block
-  (UV-Rechteck) und Region (stärkster W0/W1-Kanal dort). `--update-golden` schreibt Hash und Fingerabdruck nur für Karten, die nicht grün
-  sind (Rauschen verschiebt die Referenz nie), und schreibt keine `alternates` mehr. Grenze: eine Änderung, die jedes Histogrammfach und
-  jedes gerundete Blockmittel erhält (zwei Texel tauschen ihre Werte), sieht nur der Hash. Determinismus: `verify_surface.py --determinism` backt bei 1 und 8 Threads.
+  1,0 MB für 104 Karten) innerhalb `manifest.json` › `tolerance` → grün mit Hinweis (`NOTE …`), aber **nur für Normalkarten**
+  (`tolerance.kinds`: nur sie zeigten Bake-Rauschen); sonst rot mit Karte, Kanal, Block (UV-Rechteck) und Region (stärkster W0/W1-Kanal
+  dort). W0/W1/Fields bleiben reine Hash-Prüfung: die Gewichtskarten sind one-hot, eine Region, die sich innerhalb eines Blocks (32×32
+  Texel bei 2048²) verschiebt, ändert weder Histogramm noch Blockmittel (Richterbefund 22.10.2026). `--update-golden` schreibt Hash und
+  Fingerabdruck nur für Karten, die nicht grün sind (Rauschen verschiebt die Referenz nie), und schreibt keine `alternates` mehr. Grenze:
+  auch in der Normalkarte sieht eine Änderung, die jedes Histogrammfach und jedes gerundete Blockmittel erhält, nur der Hash; `share`
+  misst eine Untergrenze der geänderten Texel. Determinismus: `verify_surface.py --determinism` backt bei 1 und 8 Threads.
 - **Sichtprüfung ohne Unity:** `blender -b --factory-startup --python scripts/surface_preview.py -- <output> [--tool <id>]` →
   `<output>/Previews/surface_<id>.png` (Seite +x, Dreiviertel, Ego-Ausschnitt durch die Viewmodel-Kamera, je Modell Regionen farbcodiert,
   Fields, Normal) und `surface_contact.png`. Das Vorschau-Material ahmt den Masken-Modus nur nach (Palette des Rezepts, Kantenabnutzung aus
@@ -660,14 +663,16 @@ Alles nach der Geometrie (Ego-Kopie, Clips, Ego-Hände, Spiel-Export, Karten, Ro
   Handschutzquerschnitts (`concept_spec.hold`, Test gegen `data/viewmodels.json`).
 - **Vertrag** 4 additiv: Block `concept` (Blatt, Release, Hashes, Fenster offen) und `minimum_consumer.concept_models` (CE-Version „offen“,
   CE-A; älteres Modell: `v0.17.2`).
-- **Stufe B (0.21 Livery): Aufkleber und Paletten.** Die Aufkleber des Geo-Blatts (`decals[]`: Teil, Fläche, Normale, Kanal, Farbe,
+- **Stufe B (0.23 Livery): Aufkleber und Paletten.** Die Aufkleber des Geo-Blatts (`decals[]`: Teil, Fläche, Normale, Kanal, Farbe,
   Polygon in m) sind Maskenregionen, keine Geometrie. `concept_spec.decal_regions` macht daraus Regionsanker von `toolgen/decals.py`
   (Teil = Netz, das die Teil-ID trägt; Fläche `left`/`right`/`front`/`back`/`top` → `+x`/`-x`/`-y`/`+y`/`+z`; Polygon als Anteil der
   Netz-Hülle, wie die Rechtecke der Decals); `weapon_designs.decal_anchors` liefert sie für **jede** Waffe mit `concept` statt
   der Toolgen-Decals (`DECALS` hat für das Sturmgewehr keinen Eintrag mehr). `surface_bake` schreibt jede Region wie ein Decal
   vor der Dilatation in das Kanalraster (Texel des Teils, Fläche ≥ 0,7 zur Achse, exakter Punkt-im-Polygon-Test statt Bild);
-  die Roboter-Variante bildet die Texel über `robot_to_life` auf das Design zurück, die Region folgt der Verformung exakt (kein
-  `refit_rect`). QA je Region in `qa_surface*.json` › `design_<variante>.decals`: Texel > 0, keine fremden Texel, Abdeckung
+  die Roboter-Variante bildet die Dreiecksecken über `robot_to_life` aufs Design zurück und legt jeden Texel baryzentrisch
+  dazwischen (`decals.life_corners`; kein `refit_rect`). Die Verformung verschiebt nur Eckpunkte, ein Dreieck bleibt dazwischen
+  linear – die erste Fassung bildete jeden Texel einzeln über die stückweise Achse ab und verfehlte so große Dreiecke
+  (Gehäuseseite p09: Abdeckung 0,48, sechs Schienenquadrate p10 ohne Texel). QA je Region in `qa_surface*.json` › `design_<variante>.decals`: Texel > 0, keine fremden Texel, Abdeckung
   (gemalte Fläche ÷ Polygonfläche, beides in Design-Metern) 0,7–1,3 ab 40 Texeln; `changed_texels` zählt, was sich am Kanal
   tatsächlich ändert (Region im Kanal ihres Teils: 0). Die vier Farbpaletten stehen nicht im Geo-, sondern im Weapon-Spec des
   Blatts (`KXnn.spec.json`, formgen `claude/output/sheets/`, Format `cubeescape-design/weapon-spec` 2): `import_concepts.py --spec`
@@ -876,8 +881,8 @@ den Bereich zwischen Abzug und Stützhand (0,45–0,6); Rundteile quer zur Achse
 derselbe wie im Weltmodell; sein Satz „`Socket_SupportHand` in der Mitte des Handschutzes“ gilt für die Variante nicht (Block `robot`).
 FBX und .blend tragen Exportzeit und den absoluten Pfad des Bauordners, Bytegleichheit gilt nur für GLB und Viewer-Daten.
 Der Cycles-Normal-Bake ist zwischen Läufen nicht immer bitgleich: Bei den Roboter-Varianten von Spur- und Scharfschützengewehr kippt je ein
-Texel um eine Stufe (0.15.1); das Golden führte dafür belegte Ausweich-Hashes (`tests/golden/surface/manifest.json` › `alternates`), seit 0.21
-trägt die Toleranz des Fingerabdrucks dieses Rauschen (Messung: `docs/versions/0.21.md`).
+Texel um eine Stufe (0.15.1); das Golden führte dafür belegte Ausweich-Hashes (`tests/golden/surface/manifest.json` › `alternates`), seit 0.23
+trägt die Toleranz des Fingerabdrucks dieses Rauschen (Messung: `docs/versions/0.23.md`).
 Der Spiel-Export (Renderer, LODGroup, Kollision, Clip, Materialien) und die Ego-Kamera sind in Blender, GLB und FBX geprüft,
 aber noch nicht in Unity abgenommen. Die Spielmodelle kommen erst später in Cube Escape; dann entstehen dort die `_Matte`-Varianten
 und `M_GlowWarm` aus den Palettenwerten (`ce_status` im Vertrag).

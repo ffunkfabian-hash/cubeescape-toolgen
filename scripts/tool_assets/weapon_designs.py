@@ -16,10 +16,9 @@ Socket_Sight (and Socket_Eye for scopes).
 concept_kit.py) instead of ``build``; part names are those of the spec (``SM_PG_<Label>_<id>``), the sockets come from the
 spec and Socket_Reticle is added. ``DESIGN_PICK`` lists the weapons that use a concept.
 """
+import importlib
 import math
 import re
-
-import concept_spec
 
 
 def along(k, ly, lz):
@@ -724,7 +723,7 @@ def decal(part, face, rect, image, channel, rotation=0):
 
 
 # Decals of the concept sheet "Waffen Texturen 1-9" (Toolgen 0.13 Enamel): baked into the weight maps by surface_bake.py.
-# A weapon built from a formgen concept sheet has none here: the sheet's own decals are its mask regions (0.21 Livery,
+# A weapon built from a formgen concept sheet has none here: the sheet's own decals are its mask regions (0.23 Livery,
 # surface_bake.design_anchors; the assault rifle's two 0.13 decals on Gehaeuse_p09/Handschutz_p11 went into KG02's 63).
 DECALS = {
     'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
@@ -746,17 +745,24 @@ DECALS = {
 
 def decal_anchors(key):
     """The decal anchors surface_bake.py writes into a weapon's weight maps: for a weapon built from a concept sheet the
-    sheet's decals as mask regions (0.21 Livery, stage B; concept_spec.decal_regions), then its DECALS."""
+    sheet's decals as mask regions (0.23 Livery, stage B; concept_spec.decal_regions), then its DECALS."""
     anchors = list(DECALS.get(key, []))
     if DESIGNS.get(key, {}).get('concept'):
+        concept_spec = concepts()
         sheet = concept_spec.load(DESIGNS[key]['concept'])
         anchors = concept_spec.decal_regions(sheet, concept_spec.plan(sheet)[0]) + anchors
     return anchors
 
 
 def palettes(key):
-    """The colour palettes of the weapon's concept sheet (0.21, weapon spec), [] for a weapon without one."""
-    return concept_spec.palettes(DESIGN_PICK[key]) if key in DESIGN_PICK else []
+    """The colour palettes of the weapon's concept sheet (0.23, weapon spec), [] for a weapon without one."""
+    return concepts().palettes(DESIGN_PICK[key]) if key in DESIGN_PICK else []
+
+
+def concepts():
+    """concept_spec, imported on use: an import statement would put concept_spec.py into the cache key of every weapon's
+    stages (generate_tools.concept_sources adds it for the weapons built from a sheet; judge finding 22.10.2026)."""
+    return importlib.import_module('concept_spec')
 
 
 # ------------------------------------------------------------------------------------ robot variant (Toolgen 0.14 Fieldfit)
@@ -834,6 +840,12 @@ def robot_point(fit, point, cell=None):
     c = fit['cross']
     y = cell[1] + (point[1] - cell[0]) * cell[2] if cell else robot_y(fit, point[1])
     return (point[0] * c, y, point[2] * c)
+
+
+def robot_life_point(fit, point):
+    """Life point of a robot position (the inverse of robot_point outside energy cells; 0.23 mask regions)."""
+    c = fit['cross']
+    return (point[0] / c, robot_life_y(fit, point[1]), point[2] / c)
 
 
 def robot_cells(names):

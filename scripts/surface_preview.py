@@ -10,7 +10,7 @@ use a preview material that only imitates Cube Escape's mask mode: the sheet's p
 surface_recipes.json, wear on the convex edges (Fields G x wear amount), AO, the normal map on UV1 and the glow. Preview only:
 the game's shader, its noise and its finish rules decide the real look (Eevee, not deterministic, not part of any contract).
 
-0.21 (Livery): a weapon built from a concept sheet is shown in the sheet's default palette (surface.recipe.palettes, ``base``)
+0.23 (Livery): a weapon built from a concept sheet is shown in the sheet's default palette (surface.recipe.palettes, ``base``)
 and gets ``surface_palettes_<tool>.png``: the world model from +x in each of the sheet's palettes and the robot variant.
 """
 import json
@@ -53,7 +53,7 @@ def channel_colours(recipe, sheet_palette=None):
     palette = recipe["palette"]
     colours = {"Primary": palette[0], "Secondary": palette[1], "Accent": palette[2], "Metal": METAL_COLOUR,
                "Detail": RUBBER_COLOUR, "Energy": recipe["glow"]["color"], "Emission": recipe["glow"]["color"]}
-    if sheet_palette:                    # 0.21: a concept sheet's palette (channels it leaves free keep the colours above)
+    if sheet_palette:                    # 0.23: a concept sheet's palette (channels it leaves free keep the colours above)
         colours.update({channel: colour for channel, colour in sheet_palette["channels"].items() if colour})
     return colours
 
@@ -258,7 +258,7 @@ def map_panels(model_folder, model, out_prefix):
 
 
 def palette_sheet(folder, tool_id, tool, recipe, levels, palettes, previews, scratch, magick):
-    """0.21: ``surface_palettes_<tool>.png`` (1280 px wide) - the world model from +x in every palette of the concept sheet
+    """0.23: ``surface_palettes_<tool>.png`` (1280 px wide) - the world model from +x in every palette of the concept sheet
     (two per row), below the robot variant in the default palette from both sides; returns its path."""
     asset, tiles = tool["asset"], []
     for item in palettes:
@@ -313,8 +313,7 @@ def main():
             continue
         levels = recipes["limits"]["wear_levels"]
         palettes = weapon_designs.palettes(tool_id)
-        default = next((item for item in palettes if item["id"] == recipe.get("palette_default", palettes[0]["id"])),
-                       None) if palettes else None
+        default = surface_relief.default_palette(palettes, recipe) if palettes else None
         if palettes:
             sheets.append(palette_sheet(folder, tool_id, tools[tool_id], recipe, levels, palettes, previews, scratch, magick))
         scene, objects = scene_for(folder / f"{asset}_Game.blend", asset,
@@ -324,7 +323,12 @@ def main():
         camera = json.loads((folder / "viewmodel_camera.json").read_text())
         scene, objects = scene_for(folder / f"{asset}_FPS_Game.blend", f"{asset}_FPS",
                                    lambda: preview_material(folder, f"{asset}_FPS_Game", recipe, levels, default))
-        render_ego(scene, scratch / f"{tool_id}_ego.png", camera["vertical_fov_degrees"])
+        if json.loads((folder / "unity_contract_fps.json").read_text()).get("format", 4) >= 5:
+            # contract 5 (0.19): the device hangs without arms at its own origin, the viewmodel camera sits in the rig's
+            # space - show the first-person model (its own maps) at three quarters instead (0.23)
+            render_view(scene, objects, (1, -1.1, .6), scratch / f"{tool_id}_ego.png", size=(640, 360), ortho=False)
+        else:
+            render_ego(scene, scratch / f"{tool_id}_ego.png", camera["vertical_fov_degrees"])
         world_maps = map_panels(folder, f"{asset}_Game", scratch / f"{tool_id}_world")
         ego_maps = map_panels(folder, f"{asset}_FPS_Game", scratch / f"{tool_id}_ego")
         title = f"{recipe['sheet']}  {recipe['title']}  -  Toolgen surface preview (not the game shader)"

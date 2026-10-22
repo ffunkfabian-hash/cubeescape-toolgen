@@ -1,4 +1,4 @@
-"""Fingerprints of the golden surface maps (Toolgen 0.21 Livery; user 21.10.2026, "Mittelweg", Sightline 6315367022).
+"""Fingerprints of the golden surface maps (Toolgen 0.23 Livery; user 21.10.2026, "Mittelweg", Sightline 6315367022).
 
 The golden manifest (tests/golden/surface/manifest.json) keeps the sha256 of every map; this module adds a small fingerprint
 per map (tests/golden/surface/fingerprints/<tool>.json), so a map that is not byte-identical can still be judged without a
@@ -171,5 +171,7 @@ def judge(name, comparison, tolerance, model_fingerprints=None, current=None):
         return False, f"{name}: {where}: " + "; ".join(failed[0][1]) + \
             "".join(f"; channel {names[c]}: " + ", ".join(r) for c, r in failed[1:])
     moved = max(values["moved"] for values in comparison["channels"])
+    if not moved and not any(values["block"] for values in comparison["channels"]):
+        return True, f"{name}: other sha256, same histograms and block means as its fingerprint"
     return True, (f"{name}: within the tolerance, at most {moved} texels ({moved / texels:.5%}) changed by "
                   f"<= {tolerance['levels']} level; largest at {where}")

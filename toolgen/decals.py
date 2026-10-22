@@ -8,10 +8,12 @@ projection onto the weight maps.
 * ``project``: box projection of one anchor (weapon_designs.py DECALS: part, face, rect in part coordinates, image, channel,
   rotation) onto the texels of the target part whose face looks along the face axis; the result is a texel mask that
   surface_bake.py writes into the channel raster before the dilation (one-hot 255 stays; the decal texel takes its channel).
-* ``project_region`` (0.21 Livery, stage B): a concept sheet's decal as a mask region (concept_spec.decal_regions: part,
+* ``project_region`` (0.23 Livery, stage B): a concept sheet's decal as a mask region (concept_spec.decal_regions: part,
   face, polygon as fractions of the part's box) - the same box projection with an exact point-in-polygon test instead of an
-  image; ``to_life`` maps a deformed model (robot variant) back to the life-size design, so the region follows the
-  deformation exactly. ``region_coverage`` compares the painted surface with the polygon's area (QA).
+  image. A deformed model (robot variant) is first taken back to the life-size design with ``life_corners``: the
+  deformation moves only the vertices, a triangle stays linear between them, so each texel lies barycentrically between
+  its triangle's life-size corners (exactly where UV1 puts it). ``region_coverage`` compares the painted surface with the
+  polygon's area (QA).
 
 Pure Python plus numpy for the projection (Blender's Python has numpy).
 """
@@ -198,7 +200,7 @@ def catalog_errors(catalog):
     return errors
 
 
-REGION_OUTSIDE = .02             # a region polygon may reach this share of its box over the box (sheet rule: 1 mm)
+REGION_OUTSIDE_M = .001         # a region may reach this far over its part's box (the sheet's rule, concept_spec outside_m)
 REGION_COVERAGE = (.7, 1.3)      # painted surface / polygon area of a region (QA, regions with REGION_MIN_TEXELS or more)
 REGION_MIN_TEXELS = 40
 
@@ -218,15 +220,15 @@ def region_errors(index, anchor, parts=None):
     polygon = anchor.get("polygon", [])
     if len(polygon) < 3:
         errors.append(f"{where}: polygon needs three corners")
-    elif any(not -REGION_OUTSIDE <= value <= 1 + REGION_OUTSIDE for point in polygon for value in point):
-        errors.append(f"{where}: polygon reaches over its part")
+    if anchor.get("outside_m", 0.0) > REGION_OUTSIDE_M:
+        errors.append(f"{where}: polygon reaches {anchor['outside_m'] * 1000:.1f} mm over its part")
     if parts is not None and anchor.get("part") not in parts:
         errors.append(f"{where}: part {anchor.get('part')} not in the model")
     return errors
 
 
 def anchor_errors(anchors, catalog, parts=None):
-    """Problems of the DECALS anchors of one weapon (parts: its source part names, optional); region anchors (0.21) have
+    """Problems of the DECALS anchors of one weapon (parts: its source part names, optional); region anchors (0.23) have
     their own rules."""
     errors = []
     for index, anchor in enumerate(anchors):
@@ -338,17 +340,19 @@ def inside_polygon(s, t, polygon):
     return inside
 
 
-def project_region(anchor, texels, triangle_parts, normals, part_index, part_box, to_life=None):
+def life_corners(corners, to_life):
+    """Triangle corners (T x 3 x 3) of a deformed model mapped back to the design by ``to_life(points N x 3)`` (monotonic per
+    axis); texel_positions over them gives each texel's life-size place, its box is ``to_life`` of the model's box."""
+    return to_life(np.asarray(corners, dtype=np.float64).reshape(-1, 3)).reshape(np.shape(corners))
+
+
+def project_region(anchor, texels, triangle_parts, normals, part_index, part_box):
     """Texel selection of one region anchor: texels of its part whose face looks along the face axis (FACING_MIN) and whose
-    position lies inside the polygon. ``to_life(points N x 3)``: the deformed model mapped back to the design (robot variant;
-    monotonic per axis, so the box maps to the box), None for an undeformed or uniformly scaled model."""
+    position lies inside the polygon. ``texels``/``part_box`` in the design's frame (a deformed model: over life_corners)."""
     ys, xs, tris, positions = texels
     axis, sign = FACES[anchor["face"]][:2]
     own = (triangle_parts[tris] == part_index) & (normals[tris, axis] * sign >= FACING_MIN)
-    box = np.asarray(part_box, dtype=np.float64)
-    if to_life is not None:
-        positions, box = to_life(positions), to_life(box)
-    s, t = box_fractions(positions, anchor["face"], box)
+    s, t = box_fractions(positions, anchor["face"], np.asarray(part_box, dtype=np.float64))
     hit = np.zeros(len(ys), dtype=bool)
     hit[own] = inside_polygon(s[own], t[own], anchor["polygon"])
     return hit
@@ -359,15 +363,13 @@ def polygon_area(polygon):
     return abs(float(np.dot(corners[:, 0], np.roll(corners[:, 1], -1)) - np.dot(corners[:, 1], np.roll(corners[:, 0], -1)))) / 2
 
 
-def region_coverage(anchor, hit, texels, uv_triangles, corners, part_box, resolution, to_life=None):
+def region_coverage(anchor, hit, texels, uv_triangles, corners, part_box, resolution):
     """Painted surface of a region (sum over its texels of the texel's area on the model, projected onto the face plane)
-    against the polygon's area, both in the design's metres (``to_life``); 1.0 = the region lands exactly on its part."""
+    against the polygon's area, both in the frame of ``corners``/``part_box`` (a deformed model: life_corners); 1.0 = the
+    region lands exactly on its part."""
     tris = texels[2]
     axis, _, u_axis, _, v_axis, _ = FACES[anchor["face"]]
-    box = np.asarray(part_box, dtype=np.float64)
-    life = corners if to_life is None else to_life(corners.reshape(-1, 3)).reshape(corners.shape)
-    if to_life is not None:
-        box = to_life(box)
+    box, life = np.asarray(part_box, dtype=np.float64), corners
     used = tris[hit]
     if not len(used):
         return 0.0

@@ -26,7 +26,7 @@ COMPONENTS = {5126: ("f", 4), 5123: ("H", 2), 5125: ("I", 4)}
 TANGENT_PRIMITIVE_QUOTE = .9
 TANGENT_MODEL_QUOTE = .98
 TYPE_WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
-# Golden maps of the weapons: tests/golden/surface (sha256 per map since 0.13, fingerprint per map since 0.21 Livery),
+# Golden maps of the weapons: tests/golden/surface (sha256 per map since 0.13, fingerprint per map since 0.23 Livery),
 # toolgen/surface_golden.py.
 GOLDEN = surface_golden.GOLDEN
 
@@ -256,7 +256,9 @@ def map_validate(folder, block, raster, counts, labels, reach_raster=None):
     # Decals (Toolgen 0.13, surface.recipe.decals): their texels carry the decal's channel instead of the slot's; they
     # count apart, up to the number the bake declared, and only in the decal channels.
     # The bake's QA (qa_surface.json design_*) checks part, island and area; here each decal channel has its own budget.
-    decal_list = block.get("recipe", {}).get("decals", [])
+    # 0.23: the mask regions of a concept weapon (surface.recipe.regions) count the same way.
+    recipe = block.get("recipe", {})
+    decal_list = [*recipe.get("decals", []), *recipe.get("regions", {}).get("items", [])]
     budgets = {}
     for entry in decal_list:
         index = surface.CHANNELS.index(entry["channel"])

@@ -254,6 +254,16 @@ class DecalRefitTests(unittest.TestCase):
             return designs.robot_y(fit, value) if axis == 1 else value * fit["cross"]
         return to_life, to_model
 
+    def test_robot_life_point_inverts_robot_point(self):
+        """0.23: the mask regions of the robot variant map its triangle corners back to the design, also over the knots."""
+        for key, fit in designs.ROBOT.items():
+            for y in (-.62, -.3, -.14, -.1, -.05, 0.0, .03, .05, .2, .31):
+                point = (.012, y, .15)
+                with self.subTest(weapon=key, y=y):
+                    back = designs.robot_life_point(fit, designs.robot_point(fit, point))
+                    for a, b in zip(point, back):
+                        self.assertAlmostEqual(a, b, places=9)
+
     def test_inverse_map(self):
         for key, fit in designs.ROBOT.items():
             for y in (-.7, -.3, -.1, -.05, 0.0, .02, .06, .2, .4):
@@ -263,7 +273,7 @@ class DecalRefitTests(unittest.TestCase):
     def test_every_decal_keeps_its_aspect_and_stays_on_its_part(self):
         for key, fit in designs.ROBOT.items():
             kit, (to_life, to_model) = built(key), self.maps(fit)
-            for anchor in designs.DECALS.get(key, []):        # 0.21: a concept weapon has regions instead
+            for anchor in designs.DECALS.get(key, []):        # 0.23: a concept weapon has regions instead
                 life_box = primitive_bounds(*kit.geometry[anchor["part"]])
                 box = (designs.robot_point(fit, life_box[0]), designs.robot_point(fit, life_box[1]))
                 for scale in (fit["cross"], 1.0):
