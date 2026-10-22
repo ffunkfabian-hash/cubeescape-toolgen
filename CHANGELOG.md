@@ -1,5 +1,12 @@
 # Änderungen
 
+## Werkzeugpaket tools-0.14.0 „Crosstalk“ (22.10.2026)
+
+Eingebettete gemeinsame Werkzeuge `scripts/ce_tools` per `ce_sync.py` von ce-agent-tools 0.5.0 auf 0.14.0 (ce-agent-tools#12): behebt die
+Sperrfalle (`heavy_lock --resource` wartete unter der alten Gesamtsperre auf sich selbst, Befund aus 0.20 Lockstep), bringt
+`./ce session say|who|patch` (Anmeldung im Postfach beim Reservieren) und die Vertrags-Schemas v4/v5. Eigenständiger Werkzeugstand,
+Toolgen-Version und Ausgaben unverändert.
+
 ## 0.23.0 – Livery (22.10.2026)
 
 Stufe B der Konzeptwaffen an KG02: die 63 Aufkleber des Blatts sind Maskenregionen in W0/W1 (statt der zwei Toolgen-Decals), die vier
