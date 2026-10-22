@@ -1050,15 +1050,15 @@ CONCEPT_CONSUMER = ("Cube Escape „offen“ (CE-A „Refit“, version not rese
 
 # Toolgen 0.18: all triangle budgets +25 % (user decision 20.10.2026); Cube Escape's FrameBudgetEnvelopeTests caps LOD0 at 16000
 # (viewmodel) and 8000 (world) and has to follow before it takes this package.
-BUDGET_CONSUMER = ("Cube Escape „offen“ (the version that raises FrameBudgetEnvelopeTests to the budgets of data/game_budget.json "
-                   "since Toolgen 0.18: world up to 10000, viewmodel up to 20000, robot 15000 LOD0 triangles; was 8000/16000/"
-                   "12000). Older Cube Escape versions fail that test with this package. Budgets before: git checkout v0.17.2 "
-                   "&& python3 toolgen/generate_tools.py --tier standard")
+BUDGET_CONSUMER = ("Cube Escape 0.106 „Knuckleline“ (FrameBudgetEnvelopeTests raised to the budgets of data/game_budget.json "
+                   "since Toolgen 0.18: device 20000, world 10000 LOD0 triangles, robot 15000 in Toolgen's budget; was 8000/"
+                   "16000/12000). Older Cube Escape versions fail that test with this package. Budgets before: git checkout "
+                   "v0.17.2 && python3 toolgen/generate_tools.py --tier standard")
 
 
 # Toolgen 0.19: a device on contract 5 writes format 5 into all its contracts; the world and robot contracts are contract 4
 # otherwise, the Ego package hangs at the shared arm rig (toolgen/ego_arms.py SHARED_ARM_CONSUMER, game_export_rig.py).
-SHARED_ARM_CONSUMER = ("Cube Escape „offen“ (E2 of the arm rebuild, version not reserved yet): contract 5 - the arm package "
+SHARED_ARM_CONSUMER = ("Cube Escape 0.106 „Knuckleline“ (E2 of the arm rebuild): contract 5 - the arm package "
                        "ego_arms, devices without arms at Prop_R, frame size 1.0, support-hand IK between HandOff/HandOn. "
                        "Older package for Cube Escape 0.104 and before: python3 toolgen/generate_tools.py --contract 4")
 

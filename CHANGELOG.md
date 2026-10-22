@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.21.0 – Livery (22.10.2026)
+
+Stufe B der Konzeptwaffen an KG02: die 63 Aufkleber des Blatts sind Maskenregionen in W0/W1 (statt der zwei Toolgen-Decals), die vier
+Blattpaletten (`base` Standard, `standard`, `arktis`, `nacht`) stehen in `surface.recipe.palettes` – aus dem Weapon-Spec des Blatts
+(`import_concepts.py --spec`, Hash aus formgens Golden). Jede weitere Konzeptwaffe bekommt beides ohne Code. Kein neues Kanalformat,
+Vertrag additiv; Cube Escape 0.106 lädt unverändert. Golden der Oberflächenkarten dreistufig: sha256, sonst Fingerabdruck je Karte
+(64×64-Blockmittel und Histogramm, `tests/golden/surface/fingerprints/`) mit Toleranz aus gemessenem Bake-Rauschen, sonst rot mit Ort.
+`minimum_consumer.shared_arm_rig`/`triangle_budgets`: Cube Escape 0.106 „Knuckleline“. Bericht: [docs/versions/0.21.md](docs/versions/0.21.md).
+
 ## 0.22.0 – Nightshift (21.10.2026)
 
 Rendern vom Commit gelöst (Auftrag des Nutzers, globale Regel 1.14 › Rendern und Prüfen): `standard` backt halb (`TOOLGEN_BAKE_SCALE=2`, Viewmodel 1024²,

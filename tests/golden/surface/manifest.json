@@ -18,6 +18,7 @@
     }
   },
   "alternates_note": "Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot variants flips one texel by one step (trace and sniper rifle between runs of the same input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three runs). Only flips seen in a bake of unchanged geometry belong here; a map with new content drops them. Toolgen 0.18 (all budgets +25 %, every map new; verify_surface --determinism 20.10.2026, Mac, 1 and 8 threads rebaking the standard package): W0/W1/Fields bit-identical for all 13 tools; three normal maps flip between bakes of the same files - rocket launcher robot (1 thread differs), sniper rifle robot (8 threads differ), sniper rifle first-person (both reruns equal, the package bake differs); their observed values are the alternates. 0.19.0 (Mac acceptance 21.10.2026): sniper rifle first-person normal map, one texel one step (PAE 1/255) against the 0.18 Mac bake of the same geometry, new bake key (game_export.py, version string). 0.20 (Mac acceptance 22.10.2026, verify_surface --determinism, package bake plus 1 and 8 threads): sniper rifle first-person normal map gave three values for unchanged geometry (package b16817dd, 1 thread 0d335739, 8 threads f2718ede); the primary stays the 0.18 value, the new ones are alternates. Rocket launcher robot normal map: the package bake hit its alternate.",
+  "fingerprint_note": "0.21 Livery (user 21.10.2026, 'Mittelweg'): a map that is not byte-identical passes with a note when its fingerprint (64 x 64 block means and 256-level histogram per channel, toolgen/map_fingerprint.py) stays within 'tolerance': in every channel at most 'share' of the texels changed, by at most 'levels' on average, and no block mean moved more than 'block_levels'; else it fails with map, channel and block. The values come from measured bake noise (docs/versions/0.21.md); the alternates of 0.15.1-0.20 stay until a map is rewritten, no new ones are written.",
   "maps": {
     "assault_rifle": {
       "CubeEscape_AssaultRifle_FPS_Game_Fields.png": "0bd34482e02144342b5a07f33c42e65a4350dd202112b8a5c7bc121cf42ca4cd",
@@ -142,5 +143,10 @@
       "CubeEscape_TraceRifle_Robot_Game_W1.png": "575fea8f1d479bf5953fe51540aab3487c8feec05c414bcff61b89e0dea871a3"
     }
   },
-  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 of every map, no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change."
+  "note": "Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* maps since 0.14 Fieldfit; baked on the Mac, full tier since 0.22): sha256 of every map plus a fingerprint per map (fingerprints/<tool>.json, 0.21 Livery), no reference images. Rewrite with verify_surface.py --update-golden after a deliberate change: only maps that are not green get a new hash and fingerprint.",
+  "tolerance": {
+    "block_levels": 1,
+    "levels": 1,
+    "share": 0.005
+  }
 }

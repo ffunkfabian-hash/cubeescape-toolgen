@@ -19,6 +19,8 @@ spec and Socket_Reticle is added. ``DESIGN_PICK`` lists the weapons that use a c
 import math
 import re
 
+import concept_spec
+
 
 def along(k, ly, lz):
     """World (y, z) of the grip-local offset (ly, lz): the grip frame is tilted about X by the grip tilt."""
@@ -722,11 +724,11 @@ def decal(part, face, rect, image, channel, rotation=0):
 
 
 # Decals of the concept sheet "Waffen Texturen 1-9" (Toolgen 0.13 Enamel): baked into the weight maps by surface_bake.py.
+# A weapon built from a formgen concept sheet has none here: the sheet's own decals are its mask regions (0.21 Livery,
+# surface_bake.design_anchors; the assault rifle's two 0.13 decals on Gehaeuse_p09/Handschutz_p11 went into KG02's 63).
 DECALS = {
     'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
                decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
-    'assault_rifle': [decal('Gehaeuse_p09', '+x', (.30, .18, .44, .40), 'mil_ar2', 'Secondary'),
-                      decal('Handschutz_p11', '+x', (.10, .55, .26, .80), 'tech_bars', 'Accent')],
     'pulse_rifle': [decal('Chassis', '+x', (.735, .53, .803, .767), 'tech_ring', 'Emission'),
                     decal('Shroud', '+x', (.06, .45, .22, .7), 'tech_bars', 'Accent')],
     'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
@@ -740,6 +742,21 @@ DECALS = {
     'rocket_launcher': [decal('Tube', '+x', (.70, .3, .783, .7), 'warning_triangle', 'Accent'),
                         decal('Tube', '+x', (.033, .41, .133, .59), 'hazard_stripes', 'Accent')],
 }
+
+
+def decal_anchors(key):
+    """The decal anchors surface_bake.py writes into a weapon's weight maps: for a weapon built from a concept sheet the
+    sheet's decals as mask regions (0.21 Livery, stage B; concept_spec.decal_regions), then its DECALS."""
+    anchors = list(DECALS.get(key, []))
+    if DESIGNS.get(key, {}).get('concept'):
+        sheet = concept_spec.load(DESIGNS[key]['concept'])
+        anchors = concept_spec.decal_regions(sheet, concept_spec.plan(sheet)[0]) + anchors
+    return anchors
+
+
+def palettes(key):
+    """The colour palettes of the weapon's concept sheet (0.21, weapon spec), [] for a weapon without one."""
+    return concept_spec.palettes(DESIGN_PICK[key]) if key in DESIGN_PICK else []
 
 
 # ------------------------------------------------------------------------------------ robot variant (Toolgen 0.14 Fieldfit)

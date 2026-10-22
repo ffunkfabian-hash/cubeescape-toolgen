@@ -263,7 +263,7 @@ class DecalRefitTests(unittest.TestCase):
     def test_every_decal_keeps_its_aspect_and_stays_on_its_part(self):
         for key, fit in designs.ROBOT.items():
             kit, (to_life, to_model) = built(key), self.maps(fit)
-            for anchor in designs.DECALS[key]:
+            for anchor in designs.DECALS.get(key, []):        # 0.21: a concept weapon has regions instead
                 life_box = primitive_bounds(*kit.geometry[anchor["part"]])
                 box = (designs.robot_point(fit, life_box[0]), designs.robot_point(fit, life_box[1]))
                 for scale in (fit["cross"], 1.0):

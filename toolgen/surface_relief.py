@@ -141,9 +141,29 @@ def relief_index(relief, parts, channels):
     return [(-1 if (found := select(relief, part, channel)) is None else found) for part, channel in zip(parts, channels)]
 
 
-def recipe_block(tool_id, entry, limits, decals, design_element):
-    """Block surface.recipe of the contract (additive, contract stays 4): data for Cube Escape's presets."""
+def palette_block(palettes, entry):
+    """0.21 (Livery, stage B), additive: the colour palettes of the weapon's concept sheet (formgen weapon spec ``palette``)
+    as proposals for Cube Escape's presets; ``default`` = the recipe's ``palette_default`` or the sheet's first palette
+    (formgen lists ``base``, the sheet's own colours, first; user decision 22.10.2026: base)."""
+    default = entry.get("palette_default", palettes[0]["id"])
+    if default not in [item["id"] for item in palettes]:
+        raise ValueError(f"palette_default {default} is not a palette of the sheet")
+    return {"source": "formgen weapon spec palette (data/concepts/<sheet>.spec.json)", "default": default,
+            "channels": "Primary ... Detail = the MT_ slots; null = the sheet leaves the channel free",
+            "items": palettes}
+
+
+def recipe_block(tool_id, entry, limits, decals, design_element, regions=(), palettes=()):
+    """Block surface.recipe of the contract (additive, contract stays 4): data for Cube Escape's presets. 0.21: a weapon
+    built from a concept sheet adds ``regions`` (the sheet's decals as mask regions) and ``palettes``."""
     levels = limits["wear_levels"]
+    extra = {}
+    if regions:
+        extra["regions"] = {"source": "concept sheet decals[] (geometry spec), baked into W0/W1 like decals: the region's "
+                                      "texels take its channel; part_channel = the channel of the part beneath",
+                            "items": list(regions)}
+    if palettes:
+        extra["palettes"] = palette_block(list(palettes), entry)
     return {
         "version": RECIPE_VERSION,
         "source": "Cube Escape Docs/EQUIPMENT.md > Zielbild > Texturen 1-9 (sheet %d, %s)" % (entry["sheet"], entry["title"]),
@@ -159,6 +179,7 @@ def recipe_block(tool_id, entry, limits, decals, design_element):
                                 "(shader, SurfaceGenerator1, EquipmentDesign.surface); smoothness is a mask-mode value - "
                                 "game_palette.json finish stays for the slot path",
         "minimum_consumer": "Cube Escape 0.76 (Equipment presets); 0.71-0.75 ignore the block",
+        **extra,
     }
 
 

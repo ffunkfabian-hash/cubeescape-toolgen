@@ -52,7 +52,7 @@ ROUNDTRIP_TOLERANCE = 1e-4       # reimported node matrices against the authored
 LOOK_SLOTS = {"M_RobotBody_Matte": "armor", "M_RobotDark_Matte": "mech", "M_Metal_Matte": "metal",
               "M_HazardOrange_Matte": "lights"}
 ARMOR, MECH, METAL, LIGHTS = LOOK_SLOTS
-SHARED_ARM_CONSUMER = ("Cube Escape „offen“ (E2 of the arm rebuild, version not reserved yet): contract 5 - the arm package "
+SHARED_ARM_CONSUMER = ("Cube Escape 0.106 „Knuckleline“ (E2 of the arm rebuild): contract 5 - the arm package "
                        "ego_arms (Assets/Art/ToolgenShared/EgoArms/), devices without arms at Prop_R, frame size 1.0 (the "
                        "factor 1.4 is baked in), support-hand IK between the rig events HandOff/HandOn. Cube Escape 0.104 "
                        "and older read only contract 4.")

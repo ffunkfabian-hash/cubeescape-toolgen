@@ -403,10 +403,13 @@ CONCEPT_SHARED = ("provenance.json", "corrections.json")
 
 
 def concept_sources(tool):
-    """0.18: the concept files a tool depends on - its own sheet and the shared provenance/correction files - or none."""
+    """0.18: the concept files a tool depends on - its own sheet and the shared provenance/correction files - or none;
+    0.21: also its weapon spec (palettes), when imported."""
     if not tool.get("concept"):
         return set()
-    return {f"{CONCEPTS}/{tool['concept']}.geo.json", *(f"{CONCEPTS}/{name}" for name in CONCEPT_SHARED)}
+    weapon = f"{CONCEPTS}/{tool['concept']}.spec.json"
+    return {f"{CONCEPTS}/{tool['concept']}.geo.json", *(f"{CONCEPTS}/{name}" for name in CONCEPT_SHARED),
+            *([weapon] if (ROOT / weapon).is_file() else [])}
 
 
 def stage_sources(run, tool, index):
@@ -416,7 +419,12 @@ def stage_sources(run, tool, index):
     # 0.18: weapon_designs.py names every concept sheet, but only the tool built from one depends on it (codex sol finding:
     # otherwise each further sheet import rebuilt every weapon down to its maps)
     own = concept_sources(tool)
-    return [path for path in index.closure(roots) if not path.startswith(CONCEPTS + "/") or path in own]
+    found = [path for path in index.closure(roots) if not path.startswith(CONCEPTS + "/") or path in own]
+    # 0.21: the weapon spec is named by no source (concept_spec.py derives it from provenance.json): a stage that reads the
+    # tool's sheet reads its palettes too
+    if any(path.startswith(CONCEPTS + "/") for path in found):
+        found = sorted(set(found) | {path for path in own if path in index.pool})
+    return found
 
 
 def source_digest(relative, tool, index):

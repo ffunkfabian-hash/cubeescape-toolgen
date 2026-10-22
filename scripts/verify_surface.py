@@ -18,6 +18,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 import surface  # noqa: E402 - toolgen/ is no package
+import surface_golden  # noqa: E402
 
 COMPONENTS = {5126: ("f", 4), 5123: ("H", 2), 5125: ("I", 4)}
 # MikkTSpace averages tangents per corner group, this check per vertex over its triangles: a few vertices on hard edges or
@@ -25,10 +26,9 @@ COMPONENTS = {5126: ("f", 4), 5123: ("H", 2), 5125: ("I", 4)}
 TANGENT_PRIMITIVE_QUOTE = .9
 TANGENT_MODEL_QUOTE = .98
 TYPE_WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
-# Golden maps of the weapons (Toolgen 0.13): sha256 of every map in manifest.json, no reference images (user, 17.10.2026).
-# Every changed map fails until it is confirmed with --update-golden.
-GOLDEN = ROOT / "tests/golden/surface"
-
+# Golden maps of the weapons: tests/golden/surface (sha256 per map since 0.13, fingerprint per map since 0.21 Livery),
+# toolgen/surface_golden.py.
+GOLDEN = surface_golden.GOLDEN
 
 def blender_executable():
     """Resolve Blender like the Toolgen command-line entry point."""
@@ -359,90 +359,19 @@ def determinism(folder, tool):
                 "matches_each_other": hashes[0] == hashes[1]}
 
 
-def golden_stale(manifest, tool, name):
-    """Is the golden hash of the map marked stale (``manifest["stale"]["maps"]``: known to be outdated, e.g. Toolgen 0.16 first-person
-    maps at 2048 until the Mac bake confirms them)? A stale map fails until ``--update-golden`` rewrites it."""
-    return name in manifest.get("stale", {}).get("maps", {}).get(tool, [])
+def png_pixels(data):
+    """(width, height, RGBA bytes top to bottom) of a map (numpy decoder of toolgen/surface.py)."""
+    pixels = surface.png_array(data)
+    return pixels.shape[1], pixels.shape[0], pixels.tobytes()
 
 
-def golden_accepts(manifest, tool, name, digest):
-    """Is ``digest`` a golden hash of the map: the primary one or a confirmed alternate (``manifest["alternates"]``)?"""
-    return digest == manifest["maps"].get(tool, {}).get(name) or digest in manifest.get("alternates", {}).get(tool, {}).get(name, [])
+golden_stale = surface_golden.golden_stale
+golden_accepts = surface_golden.golden_accepts
+golden_update = surface_golden.golden_update
 
 
-def golden_update(manifest, tool, digests):
-    """New golden entries of one tool from ``digests`` {map: sha256}. A map whose new hash is its old primary or an old
-    alternate keeps its alternates (the old primary joins them: the bake flips between known values); a map with new
-    content drops them, so a stale alternate never masks a later change."""
-    old = manifest["maps"].get(tool, {})
-    alternates = manifest.setdefault("alternates", {})
-    kept = {}
-    for name, digest in digests.items():
-        known = [old[name]] if name in old else []
-        known += alternates.get(tool, {}).get(name, [])
-        if digest in known:
-            others = sorted({value for value in known if value != digest})
-            if others:
-                kept[name] = others
-    manifest["maps"][tool] = dict(digests)
-    if kept:
-        alternates[tool] = kept
-    else:
-        alternates.pop(tool, None)
-    stale = manifest.get("stale", {}).get("maps", {})
-    if tool in stale:
-        remaining = [name for name in stale[tool] if name not in digests]
-        if remaining:
-            stale[tool] = remaining
-        else:
-            stale.pop(tool)
-        if not stale:
-            manifest.pop("stale", None)
-
-
-def golden_check(output, tools, update=False):
-    """Compare (or with ``update`` rewrite) the weapons' maps against tests/golden/surface. A map may also match one of its
-    confirmed alternates (``alternates``, Toolgen 0.15.1): two robot normal maps flip one texel by one step between bakes."""
-    manifest_path = GOLDEN / "manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"maps": {}}
-    errors, compared, alternate = [], 0, []
-    for tool in tools:
-        folder = output / tool
-        files = sorted(folder.glob("*_Game_*.png"))
-        if not files:
-            continue
-        if update:
-            golden_update(manifest, tool, {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files})
-            continue
-        if tool not in manifest["maps"]:
-            errors.append(f"{tool}: no golden maps")
-            continue
-        for path in files:
-            compared += 1
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if golden_stale(manifest, tool, path.name):
-                errors.append(f"{tool}/{path.name}: golden is stale ({manifest['stale'].get('note', 'rebake pending')}); confirm "
-                              "the new bake with --update-golden")
-            elif not golden_accepts(manifest, tool, path.name, digest):
-                errors.append(f"{tool}/{path.name}: sha256 differs from the golden (confirm a deliberate change with "
-                              "--update-golden)")
-            elif digest != manifest["maps"][tool].get(path.name):
-                alternate.append(f"{tool}/{path.name}")
-    if update:
-        manifest["note"] = ("Golden surface maps of the weapons (Toolgen 0.13 Enamel; the robot variants' <Asset>_Robot_Game_* "
-                            "maps since 0.14 Fieldfit; baked on the Mac, standard tier): sha256 "
-                            "of every map, no reference images. Rewrite with verify_surface.py "
-                            "--update-golden after a deliberate change.")
-        manifest["alternates_note"] = ("Confirmed alternate sha256 per map (Toolgen 0.15.1): the Cycles normal bake of the robot "
-                                       "variants flips one texel by one step (trace and sniper rifle between runs of the same "
-                                       "input, any thread count; measured 18.10.2026: 1 of 3 runs; SMG with the version string "
-                                       "alone, 0.17.0: v0.16.0 sources with version.py 0.17.0 bake the alternate, three of three "
-                                       "runs). Only flips seen in a bake of unchanged geometry belong here; a map with new "
-                                       "content drops them.")
-        manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    stale = sum(len(names) for names in manifest.get("stale", {}).get("maps", {}).values())
-    return {"compared": compared, "errors": errors, "alternate_matches": alternate, "stale": stale}
+def golden_check(output, tools, update=False, folder=GOLDEN):
+    return surface_golden.golden_check(output, tools, update, folder, decode=png_pixels)
 
 
 def main():
@@ -499,9 +428,11 @@ def main():
     if golden["errors"]:
         report["passed"] = False
         report["tools"].append({"tool": "golden", "errors": golden["errors"]})
+    for text in golden["tolerated"]:
+        print(f"NOTE {text}")
     print(f"{'PASS' if not golden['errors'] else 'FAIL'} golden maps compared={golden['compared']} "
-          f"alternates={len(golden['alternate_matches'])} stale={golden['stale']}"
-          f"{' (updated)' if args.update_golden else ''}")
+          f"alternates={len(golden['alternate_matches'])} tolerated={len(golden['tolerated'])} stale={golden['stale']}"
+          f"{' (updated ' + str(len(golden['updated'])) + ')' if args.update_golden else ''}")
     if args.report:
         args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     if report["passed"]:

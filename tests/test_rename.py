@@ -95,6 +95,18 @@ class RenamedFromTests(unittest.TestCase):
         self.assertEqual("KG02", ge.concept_block(TOOLS["assault_rifle"], report)["sheet"])
         self.assertNotIn("data/concepts", inspect.getsource(ge), "the export reads the concept from qa_geometry*.json")
 
+    def test_consumer_of_budgets_and_arm_rig_is_cube_escape_0_106(self):
+        """0.21: Cube Escape 0.106 „Knuckleline“ raised FrameBudgetEnvelopeTests (device 20000, world 10000) and took the shared
+        arm rig - the contracts name it instead of „offen“ (game_export.py and the arm package's own copy alike)."""
+        import ego_arms
+        knuckleline = "Cube Escape 0.106 „Knuckleline“"
+        self.assertTrue(ge.BUDGET_CONSUMER.startswith(knuckleline))
+        self.assertIn("device 20000, world 10000", ge.BUDGET_CONSUMER)
+        for text in (ge.SHARED_ARM_CONSUMER, ego_arms.SHARED_ARM_CONSUMER):
+            self.assertTrue(text.startswith(knuckleline), text)
+            self.assertNotIn("offen", text)
+        self.assertEqual(knuckleline, ge.consumer_block(TOOLS["assault_rifle"], 5)["shared_arm_rig"][:len(knuckleline)])
+
     def test_foreign_packages_are_named_not_deleted(self):
         with tempfile.TemporaryDirectory() as folder:
             output = Path(folder)

@@ -76,12 +76,12 @@ class GoldenAlternatesTests(unittest.TestCase):
 
     def test_update_keeps_a_flip_and_drops_alternates_of_new_content(self):
         m = self.manifest()
-        self.verify.golden_update(m, "t", {"a.png": "A2", "b.png": "B"})       # the bake flipped: both stay accepted
-        self.assertEqual("A2", m["maps"]["t"]["a.png"])
-        self.assertEqual({"a.png": ["A"]}, m["alternates"]["t"])
+        self.verify.golden_update(m, "t", {"a.png": "A2", "b.png": "B"})       # the bake flipped: the reference stays (0.21)
+        self.assertEqual("A", m["maps"]["t"]["a.png"])
+        self.assertEqual({"a.png": ["A2"]}, m["alternates"]["t"])
         self.verify.golden_update(m, "t", {"a.png": "NEW", "b.png": "B"})      # a deliberate change: no stale alternate
         self.assertEqual("NEW", m["maps"]["t"]["a.png"])
-        self.assertNotIn("t", m["alternates"])
+        self.assertNotIn("t", m.get("alternates", {}))
         self.assertFalse(self.verify.golden_accepts(m, "t", "a.png", "A"))
 
     def test_stale_maps_fail_until_updated(self):
