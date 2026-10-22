@@ -838,7 +838,9 @@ kann das nicht prüfen (er macht die Achsenumrechnung rückgängig), nur Cube Es
 `*_FPS_Game.glb` ist zwischen zwei Läufen derselben Quellen nicht immer bytegleich (gemessen 0.13: eine Tangente um 1e-4, gegenüber dem
 0.12-Lauf die Handnetze in anderer Reihenfolge); Werkzeug-UV1, Geometrie-QA und die Maskenkarten sind davon nicht betroffen (der Bake
 entfernt die Hände). Grund nicht festgehalten. Ebenso `*_Robot_Game.glb` (gemessen 0.15: je Waffe zwei Werte um 1e-4 verschieden, wenn in
-einem anderen Ordner gebaut, im selben Ordner gleich; JSON-Teil gleich). `compare_models.py` führt beide getrennt. Anker unter anderem Socket_Hand,
+einem anderen Ordner gebaut, im selben Ordner gleich; JSON-Teil gleich; am Mac 0.20 noch 2–8 niedrige Float-Bytes bei Raketenwerfer und
+Spurgewehr). `compare_models.py` führt beide GLBs getrennt; die Viewer-Daten `ViewerData/robot_game` vergleicht es seit 0.20 wieder (am Mac
+in zwei kalten Läufen aller 13 Werkzeuge bytegleich), die Ego-Spiel-Viewer-Daten `fps_game` nicht. Anker unter anderem Socket_Hand,
 Socket_Muzzle, beim Bogen Socket_Nock/Socket_ArrowTip, beim Magnetgreifer Socket_Grab. Ältere Contract-Zielnamen
 sind keine geprüfte Unity-Montage. Der unveränderte Magnetgreifer-Player behält seinen historischen Quellhash und die
 Kompilierungsherkunft. Licht, Schussereignis, Projektil und Greifphysik werden beim Einbau separat geprüft.
@@ -866,6 +868,12 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
+- 22.10.2026 · Sperre wartet auf sich selbst – `heavy_lock run --resource blender` hält die alte Gesamtsperre geteilt und setzt
+  `CE_HEAVY_HELD=blender`; die eingebettete Kopie `scripts/ce_tools/heavy_lock.py` kennt nur `CE_HEAVY_HELD=1` und verlangt die Gesamtsperre
+  exklusiv – `verify_surface.py`/`generate_tools.py` darunter warten auf den eigenen Elternprozess (105 min verloren). Bis die Kopie per
+  `ce_sync.py` erneuert ist: `heavy_lock run --resource blender -- env CE_HEAVY_LOCK=0 <Befehl>`, die Variable **nur innen** – vor `heavy_lock`
+  gesetzt schaltet sie auch die äußere Sperre ab (so geschehen: das Nachbacken lief zunächst ohne Sperre). Beleg: 0.20 Mac-Abnahme. Gilt auch
+  für: jedes Repo mit älterer eingebetteter Sperre unter einer Ressourcensperre (`./ce sync --check`).
 - 20.10.2026 · Reihenfolge nach `bmesh.ops.triangulate` – Das bpy-Wheel 5.2.2 unter Linux (BEAUTY) liefert dieselben Dreiecke mit derselben
   Windung, aber in wechselnder Flächenreihenfolge: zwischen Prozessen und sogar zweimal im selben Prozess, ein fester `PYTHONHASHSEED` hilft
   nicht; Blender.app 5.2.2 (macOS) war in zwei kalten Bauten stabil (0.19-Mac-Gegenprüfung). Folge unter Linux:
@@ -874,6 +882,11 @@ Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
   der Cache-Treffer im zweiten quick-Lauf beweist ihn nicht. Die Sortierung macht Mac und Linux gleich, ändert aber einmalig die
   Mac-Ausgabe (Golden der betroffenen Karten bewusst neu, nach mehrfachem Nachbacken). Beleg: 0.19 Befund 1, 0.20 Lockstep
   (`tests/test_mesh_order.py` sperrt andere Aufrufer). Gilt auch für: jede bmesh-Operation, die Flächen erzeugt (Bevel war stabil), Robogen/Cubegen.
+- 21.10.2026 · Ausnahmeliste versteckt Änderungen – `compare_models.py` zählte das ganze Roboter-Spielmodell (GLB und Viewer-Daten) als
+  „bekannt instabil“; die neue Flächenreihenfolge aus 0.20 an den Roboter-Spielmodellen von Fusionsgewehr, Pulsgewehr, Schrotflinte und
+  SMG fiel deshalb erst im Golden der Roboter-Karten auf. Ausnahmen so eng wie gemessen fassen (je Datei, nicht je Modell) und eine
+  „bytegleich“-Aussage auch gegen die Ausnahmeliste prüfen. Beleg: 0.20 Mac-Abnahme (`tests/test_compare_models.py`, kalte Läufe main/Branch je
+  zweimal). Gilt auch für: jede Toleranz- oder Ausnahmeliste in Prüfwerkzeugen (Golden-`alternates`, Robogen-Vergleiche).
 - 20.10.2026 · Griffpunkt per Strahl – Ein Strahl vom Griffmittelpunkt nach außen trifft zuerst Innenteile (Portalkanone: Chassis in der
   Schale); die Hand lag 2 cm im Gehäuse. Strahlen für Kontaktflächen immer von außen nach innen schießen. Beleg: 0.19 Kinetic
   (`ego_rig.grip_matrix`). Gilt auch für: Cubegen-Ankerflächen, Robogen-Bodenkontakte.

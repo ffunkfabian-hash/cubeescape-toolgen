@@ -1,12 +1,14 @@
 # Änderungen
 
-## 0.20.0 – Lockstep (20.10.2026, ungeprüft: Mac-Abnahme offen)
+## 0.20.0 – Lockstep (20.10.2026, Mac-Abnahme 22.10.2026)
 
 Kalter Bau wieder bytegleich (Befund 1 aus 0.19 „Kinetic“): `bmesh.ops.triangulate` liefert mit dem bpy-Wheel 5.2.2 unter Linux dieselben
 Dreiecke in wechselnder Flächenreihenfolge, auch im selben Prozess und bei festem `PYTHONHASHSEED` (Blender.app auf dem Mac war stabil). `scripts/tool_assets/mesh_order.py` legt die
 Reihenfolge danach fest (Platz der Ausgangsfläche, dann Eckindizes); `concept_kit.make` und `game_export.reduce_to_budget` triangulieren nur
 noch darüber, `tests/test_mesh_order.py` prüft die Ordnung und sperrt andere Aufrufer. Geometrie unverändert, nur die Dreiecksreihenfolge
-der betroffenen Netze ist neu – auch am Mac: Sturmgewehr-Modelle und -Karten ändern sich einmalig (Golden bewusst neu). Bericht: [docs/versions/0.20.md](docs/versions/0.20.md).
+der betroffenen Netze ist neu – auch am Mac: Sturmgewehr-Modelle und -Karten sowie die Roboter-Spielmodelle von Fusionsgewehr, Pulsgewehr,
+Schrotflinte und SMG ändern sich einmalig (Golden nach dreifachem Bake bewusst neu: Sturmgewehr 12 Karten, Roboter-Spielkarten von Fusion,
+Puls und Schrotflinte 5). `compare_models.py` vergleicht die Viewer-Daten `robot_game` wieder (`tests/test_compare_models.py`). Bericht: [docs/versions/0.20.md](docs/versions/0.20.md).
 
 ## 0.19.0 – Kinetic (21.10.2026)
 
