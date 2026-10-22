@@ -1,12 +1,78 @@
 {
   "name": "toolgen",
-  "version": {"file": "toolgen/version.py", "pattern": "VERSION\\s*=\\s*\"([^\"]+)\""},
-  "check": {
-    "quick": [["python3", "scripts/check_docs.py"], ["python3", "-m", "unittest", "discover", "-s", "tests"]],
-    "full": [["python3", "scripts/check_docs.py"], ["bash", "scripts/check_output.sh"]]
+  "version": {
+    "file": "toolgen/version.py",
+    "pattern": "VERSION\\s*=\\s*\"([^\"]+)\""
   },
-  "docs": {"versions": "docs/versions", "archive": "docs/archive/versions", "changelog": "CHANGELOG.md"},
-  "limits": {"AGENTS.md": 150, "CLAUDE.md": 20},
-  "release": {"branch_prefix": "release/", "tag_prefix": "v"},
-  "heavy_lock": true
+  "check": {
+    "quick": [
+      [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ]
+    ],
+    "full": [
+      [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      [
+        "bash",
+        "scripts/check_output.sh"
+      ]
+    ],
+    "nightly": [
+      [
+        "bash",
+        "scripts/nightly.sh"
+      ]
+    ]
+  },
+  "docs": {
+    "versions": "docs/versions",
+    "archive": "docs/archive/versions",
+    "changelog": "CHANGELOG.md",
+    "check": [
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CHANGELOG.md",
+      "toolgen/README.md",
+      "docs/*.md",
+      "docs/versions/*.md",
+      ".agents/skills/**/SKILL.md"
+    ],
+    "json": [
+      ".claude/settings.json",
+      ".claude/agent-guard.json",
+      "data/tools.json",
+      "data/viewmodels.json"
+    ],
+    "shell": [
+      "viewer/*.sh",
+      "scripts/*.sh",
+      ".claude/hooks/*.sh"
+    ]
+  },
+  "limits": {
+    "AGENTS.md": 150,
+    "CLAUDE.md": 20
+  },
+  "release": {
+    "branch_prefix": "release/",
+    "tag_prefix": "v"
+  },
+  "heavy_lock": true,
+  "coordination": {
+    "repo": "ffunkfabian-hash/cubeescape-nexogen",
+    "registry": "https://github.com/ffunkfabian-hash/cubeescape-nexogen/blob/main/repos.json"
+  }
 }

@@ -231,5 +231,27 @@ class GameFpsStageTest(unittest.TestCase):
             # 0.19: contract 5 devices take the rig export instead (game_fps_rig replaces game_fps)
             self.assertIn("game_fps_rig" if int(tool.get("game_contract", 4)) >= 5 else "game_fps", runs)
 
+class SurfaceBakeCacheTests(unittest.TestCase):
+    def test_surface_bake_images_invalidate_with_the_unsplit_stage_key(self):
+        import generate_tools
+        import toolcache
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            builder = generate_tools.ToolBuild(catalog()[0], root, "standard", "blender", "5.2", 1, False,
+                                               "cpu", toolcache.Store(root / "cache"))
+            runs = [run for run in builder.runs if run.name.startswith("surface_bake")]
+            self.assertTrue(runs)
+            for run in runs:
+                with self.subTest(stage=run.name):
+                    builder.settings = dict(builder.settings, bake_scale=0.5)
+                    before = builder.keys(run, {})
+                    builder.settings["bake_scale"] = 1
+                    after = builder.keys(run, {})
+                    self.assertFalse(run.render)
+                    self.assertIsNone(before[1])
+                    self.assertIsNone(after[1])
+                    self.assertNotEqual(before[0], after[0])
+
+
 if __name__ == "__main__":
     unittest.main()

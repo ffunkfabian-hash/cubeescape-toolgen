@@ -3,7 +3,9 @@ import json
 import struct
 import sys
 import tempfile
+import os
 import unittest
+from unittest import mock
 import zlib
 from pathlib import Path
 from unittest.mock import patch
@@ -79,7 +81,17 @@ class ChannelTableTests(unittest.TestCase):
         for resolution in surface.MAP_RESOLUTION.values():
             first_island_px = (surface.RESERVED_LOW + surface.PACK_MARGIN * (1 - surface.RESERVED_LOW)) * resolution
             self.assertGreater(first_island_px - surface.dilation_at(resolution), 1)
-        self.assertEqual((2_500_000, 10_000_000), (surface.set_bytes_limit(512), surface.set_bytes_limit(2048)))
+        self.assertEqual((2_500_000, 5_000_000, 10_000_000),
+                         (surface.set_bytes_limit(512), surface.set_bytes_limit(1024), surface.set_bytes_limit(2048)))
+
+    def test_bake_resolution_follows_the_tier_scale(self):
+        """0.22: standard (scale 2) bakes the viewmodel at 1024 as a preview; world and robot never drop under 512; full = contract."""
+        self.assertEqual((1024, 512, 512), tuple(surface.bake_resolution(v, 2) for v in ("viewmodel", "world", "robot")))
+        self.assertEqual((2048, 512, 512), tuple(surface.bake_resolution(v, 1) for v in ("viewmodel", "world", "robot")))
+        with mock.patch.dict(os.environ, {"TOOLGEN_BAKE_SCALE": "2"}):
+            self.assertEqual(1024, surface.bake_resolution("viewmodel"))
+        with mock.patch.dict(os.environ, {"TOOLGEN_BAKE_SCALE": "x"}):
+            self.assertEqual(2048, surface.bake_resolution("viewmodel"))
 
 
 class PngTests(unittest.TestCase):
@@ -214,12 +226,22 @@ class StageTests(unittest.TestCase):
         self.assertEqual(ROUNDTRIP_TIERS, stage.tiers)
         self.assertTrue(stage.heavy)
         self.assertEqual(4, stage.min_contract)
-        self.assertFalse(stage.renders)   # fixed bake samples: standard and full share the result
+        self.assertFalse(stage.renders)   # fixed bake samples; resolution separates standard/full cache entries
         self.assertEqual(("qa_surface.json",), stage.qa)
         for name in ("{asset}_Game.blend", "{asset}_FPS_Game.blend", "qa_game.json", "qa_game_fps.json"):
             self.assertIn(name, stage.reads)
         self.assertIn("data/game_palette.json", stage.sources)
         self.assertIn("{asset}.blend", next(entry for entry in STAGES if entry.name == "game_fps").reads)
+
+    def test_standard_and_full_bakes_have_separate_cache_keys(self):
+        from generate_tools import ToolBuild
+        tool = catalog()[0]
+        builds = [ToolBuild(tool, None, tier, "unused", "test-blender", 1, False, "cpu", None) for tier in ("standard", "full")]
+        for name in ("surface_bake",):
+            keys = [build.keys(next(run for run in build.runs if run.name == name), {})[0] for build in builds]
+            self.assertNotEqual(*keys, "1024 preview must never satisfy the 2048 full bake")
+        normal = [build.keys(next(run for run in build.runs if run.name == "world"), {})[0] for build in builds]
+        self.assertEqual(*normal, "unaffected geometry should still be shared")
 
     def test_runs_in_standard_and_full_only_and_not_for_contract_three(self):
         tool = catalog()[0]

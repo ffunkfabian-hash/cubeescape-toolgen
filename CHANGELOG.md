@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.22.0 – Nightshift (21.10.2026)
+
+Rendern vom Commit gelöst (Auftrag des Nutzers, globale Regel 1.14 › Rendern und Prüfen): `standard` backt halb (`TOOLGEN_BAKE_SCALE=2`, Viewmodel 1024²,
+`maps.preview: true`, eigener Cache-Schlüssel), `full` liefert 2048². Neu `scripts/nightly.sh` / `./check --nightly` (`.ce-repo.json` › `check.nightly`):
+`--tier full` aller Werkzeuge plus `check_output.sh` einmal täglich auf `main`; vor Commit `quick` und gezielte Prüfungen; vor Merge `standard --tool` der geänderten Werkzeuge.
+Schwere Läufe nehmen die Blender-Sperre (`heavy_lock --resource blender`, ce-agent-tools 0.5.0, eingebettete Kopie erneuert); Cloud nur für Logik.
+Abgleich mit Lockstep 0.20 per Merge: `ego_video.py` sperrt mit Ressource, Schemaprüfung nur ab Vertragsformat 4; `standard` aller 13 und Nachtlauf grün (Golden 104/104).
+Bericht: [docs/versions/0.22.md](docs/versions/0.22.md).
+
 ## 0.20.0 – Lockstep (20.10.2026, Mac-Abnahme 22.10.2026)
 
 Kalter Bau wieder bytegleich (Befund 1 aus 0.19 „Kinetic“): `bmesh.ops.triangulate` liefert mit dem bpy-Wheel 5.2.2 unter Linux dieselben

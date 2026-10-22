@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -64,6 +65,30 @@ class HeavyLockTests(unittest.TestCase):
                                     capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn(expected, result.stdout)
+
+    def test_nested_blender_step_does_not_wait_for_its_parent(self):
+        # Lockstep 0.20: the 0.4.0 copy under `run --resource blender` waited for its own parent's shared gate.
+        inner = [sys.executable, str(ROOT / "scripts/heavy_lock.py"), "run", "--resource", "blender", "--what", "inner",
+                 "--", sys.executable, "-c", "print('inner ran')"]
+        result = subprocess.run([sys.executable, str(ROOT / "scripts/heavy_lock.py"), "run", "--resource", "blender",
+                                 "--what", "outer", "--"] + inner, env=self.env, capture_output=True, text=True,
+                                timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("inner ran", result.stdout)
+
+    def test_every_repo_caller_names_a_resource(self):
+        # Without a resource a step takes the old shared lock and fails inside a resource holder (0.5.0 ValueError).
+        sources = [path for pattern in ("toolgen/*.py", "scripts/*.py", "scripts/*.sh", "viewer/*.sh", "check")
+                   for path in ROOT.glob(pattern) if path.name != "heavy_lock.py"]
+        calls = re.compile(r'heavy_lock\.py"?\)?,? *"?run|heavy_lock\.held\(|heavy_lock\.HeavyLock\(')
+        found = 0
+        for path in sources:
+            text = path.read_text(encoding="utf-8")
+            for match in calls.finditer(text):
+                found += 1
+                call = text[match.start():match.start() + 300]
+                self.assertIn("resource", call, f"{path.relative_to(ROOT)}: heavy lock call without a resource")
+        self.assertGreaterEqual(found, 6)
 
     def test_lock_descriptor_is_not_inherited_by_child(self):
         lock = heavy_lock.HeavyLock("parent").acquire()

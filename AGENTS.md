@@ -1,5 +1,9 @@
 # Toolgen – Regeln für KI-Agenten
 
+Zentraler Repo-Einstieg: [Nexogen](https://github.com/ffunkfabian-hash/cubeescape-nexogen) – Repo-Links, Zuständigkeiten, Abhängigkeiten und Live-Status über die Status-CLI im Nexogen-Repo. Globale Regeln dort, Fachwissen und Prüfbelege hier.
+
+**Werkzeuge:** `./ce check` · `./ce search query "Begriff"` · `./ce session topics` · `./ce codex quota|judge` · `./ce evidence clip|sheet|still|diff` · `./ce lock unity|blender|gpu -- <Befehl>` · `./ce report --since 7d`.
+
 ## Projekt
 
 Gemeinsamer Werkzeug-Generator für Cube Escape. Code ist die Wahrheit, dann [README.md](README.md),
@@ -34,16 +38,16 @@ lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überl
 [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
 Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-rules` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
 Links darauf).
-**Erfahrungen** (Techniken, Fallen, Messwerte, Entscheidungen mit Grund) stehen in `docs/TECHNIK.md` und `docs/ENTSCHEIDUNGEN.md`; vor dem
-Bauen, das ein Schwesterprojekt berührt, dessen Stelle lesen (Cube Escape `Docs/QUALITY.md`/`Docs/ARCHITECTURE.md`, Robogen
-`docs/TECHNIK.md`, Cubegen `docs/DEVELOPER.md`, cubeescape-design `docs/`), Regel: `~/.claude/CLAUDE.md` › Erfahrungen festhalten und
-querlesen.
+**Erfahrungen:** [docs/LESSONS.md](docs/LESSONS.md) (≤ 60 Zeilen, eine Zeile je Lehre, Link zur Langform) wird vor Arbeit gelesen und von
+Schwesterprojekten quergelesen (globale Regel › Erfahrungen festhalten und querlesen); Langform in `docs/TECHNIK.md`, `docs/ENTSCHEIDUNGEN.md`.
+Schwesterprojekte: Cube Escape `Docs/LESSONS.md`, Robogen/Cubegen/Design `docs/LESSONS.md`.
 Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
 
 ## Befehle
 
 `./check` (schnell: Doku-/Konfigurationsprüfung und Python-Tests, kein Blender), `./check --full` (Doku plus
-`scripts/check_output.sh`, schwer), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
+`scripts/check_output.sh`, schwer), `./check --nightly` (0.22: `scripts/nightly.sh` – `--tier full` aller Werkzeuge plus `check_output.sh`,
+einmal täglich auf `main`, vom Nutzer oder `launchd` gestartet, nie als Workflow), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
 Nutzerwunsch). Konfiguration: `.ce-repo.json`. Die gemeinsamen Werkzeuge liegen als eingebettete Kopie in `scripts/ce_tools/`
 (erzeugt mit `python3 $CE_TOOLS/ce_sync.py --repo .` aus dem Plugin `ce-agent-tools`, nie von Hand ändern, Prüfung
 `python3 scripts/ce_tools/ce_lint.py`). Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
@@ -52,10 +56,13 @@ Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing
 
 | Stufe | Anlass | Ausgabe |
 |---|---|---|
-| `quick` | nach Code-Änderungen | `output/_quick`: Modelle, Animation, Geometrie-QA, Spiel-Export mit QA, Viewer-Daten; keine Bilder |
-| `standard` | vor Commit | `output/_standard`: zusätzlich unabhängiger Reimport, kleine Renderings, Aktions-GIFs |
-| `full` | Lieferstand / Release | `output`: dieselben Prüfungen, volle Renderauflösung und Samples |
+| `quick` | nach Code-Änderungen, **vor Commit** | `output/_quick`: Modelle, Animation, Geometrie-QA, Spiel-Export mit QA, Viewer-Daten; keine Bilder |
+| `standard` | vor Merge nach `main`, **nur geänderte Werkzeuge** (`--tool`, aus `testplan.py`) | `output/_standard`: zusätzlich unabhängiger Reimport, kleine Renderings (50 %, 12 Samples), Aktions-GIFs, Bake halb (Viewmodel 1024², `preview: true`) |
+| `full` | Nachtlauf auf `main`, Lieferstand, Release | `output`: dieselben Prüfungen, volle Auflösung, 40 Samples, Bake 2048² |
 
+Rendern ist vom Commit gelöst (0.22, globale Regel › Rendern und Prüfen): vor Commit nur `quick` plus gezielte Bilder der geänderten
+Werkzeuge; die vollen Bildstufen, Golden-Hashes und der Determinismus-Test laufen gebündelt im Nachtlauf. Vorher: `standard` aller 13
+Werkzeuge 43,5 min vor jedem Commit (0.16), `surface_bake` 2048² 100–460 s je Werkzeug.
 Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` führt ihn aus). Dann
 `python3 toolgen/generate_tools.py --tier quick`; danach unverändert wiederholen: Cache-Treffer, unveränderte Dateien.
 `--no-cache` umgeht Treffer und erzeugt alles neu. Der Cache ist geteilt (`~/Library/Caches/CubeEscapeToolgen/cache`,
@@ -63,12 +70,13 @@ Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` f
 und bei Bildern Samples/Gerät, nicht aus Dateizeiten oder Pfaden; jeder Treffer prüft die Datei-Hashes erneut. Eine neue Stufe ist
 ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Umgebungsbedingungen erfordern `STAGE_SCHEMA`/
 `CACHE_SCHEMA` zu erhöhen oder einen zusätzlichen Schlüssel. Aufbau und Regeln: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
-Schwere Läufe (`--tier full`, `scripts/check_output.sh`) warten auf `scripts/heavy_lock.py`, die gemeinsame Sperre mit Robogen,
-Cube Escape und Cubegen (`CE_HEAVY_LOCK=0` überspringt sie); sie wird nur gemeinsam mit den anderen Repos geändert.
+Schwere Läufe (`--tier full`, Stufe `surface_bake`, `scripts/check_output.sh`, `verify_surface --determinism`) warten auf die
+**Blender-Sperre** `scripts/heavy_lock.py --resource blender` (ce-agent-tools 0.5.0: eine Sperre je Ressource; eine Unity-Regression von
+Cube Escape läuft daneben, ein zweiter Blender-Lauf wartet; `CE_HEAVY_LOCK=0` überspringt). Renderings in `quick`/`standard`, GIFs,
+Viewer-Screenshots und Kontaktbögen sind nicht schwer und nehmen keine Sperre. Die Sperre wird nur gemeinsam mit den anderen Repos geändert.
 
-**Cloud-Sitzungen** führen nur `./check` und `--tier quick` (ohne Bilder) aus; `standard`/`full`, `surface_bake`, Renderings, GIFs,
-Viewer-Build/-Tests und die Unity-Abnahme laufen in einer Mac-Sitzung (`heavy_lock`, Zeitband). Eine Cloud-Sitzung schließt als
-„ungeprüft“ ab und übergibt den Prüfweg (Stufen, Befehle, erwartete Unterschiede) an den Mac. Cloud-Zeiten werden nicht bewertet.
+**Cloud-Sitzungen** nur für reine Logik (Code ohne Bildbeurteilung, Daten, Doku, `./check`, `--tier quick`); alles mit Bild, Blender oder Viewer
+startet direkt auf dem Mac (globale Regel › Cloud-Sitzungen, 21.10.2026). Cloud-Zeiten werden nicht bewertet.
 
 Maximal zwei Worker standardmäßig; Threads werden unter ihnen aufgeteilt. `--workers` und `--threads` dürfen zusammen
 die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Prozesse, Zusammenführung in Katalogreihenfolge.

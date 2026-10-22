@@ -104,7 +104,8 @@ def main():
         if frames.exists():
             shutil.rmtree(frames)
         frames.mkdir()
-        subprocess.run([sys.executable, str(ROOT / "scripts/heavy_lock.py"), "run", "--what", f"toolgen ego_video {tool_id}",
+        subprocess.run([sys.executable, str(ROOT / "scripts/heavy_lock.py"), "run", "--resource", "blender",
+                        "--what", f"toolgen ego_video {tool_id}",
                         "--checkout", str(ROOT), "--", blender, "--background", "--factory-startup", str(blend),
                         "--python-exit-code", "1", "--python", __file__, "--",
                         "--render", str(frames), args.size, args.engine, str(args.samples), ",".join(args.clip)],
