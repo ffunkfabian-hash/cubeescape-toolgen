@@ -4,8 +4,10 @@ with the lists in .ce-repo.json > docs (check, json, shell). python3 scripts/che
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "ce_tools"))
-import ce_docs  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import shared_tools  # noqa: E402
+
+ce_docs = shared_tools.use("ce_docs")
 
 if __name__ == "__main__":
     sys.exit(ce_docs.main(["--repo", str(Path(__file__).resolve().parents[1]), *sys.argv[1:]]))

@@ -948,7 +948,7 @@ Stufenergebnisse oder Pakete schreiben, gehören in diese Listen. Dieses Verhalt
 Format: Datum · Thema – Lehre in 1–3 Sätzen. Beleg. Gilt auch für.
 
 - 22.10.2026 · Sperre wartet auf sich selbst – `heavy_lock run --resource blender` hält die alte Gesamtsperre geteilt und setzt
-  `CE_HEAVY_HELD=blender`; die eingebettete Kopie `scripts/ce_tools/heavy_lock.py` kennt nur `CE_HEAVY_HELD=1` und verlangt die Gesamtsperre
+  `CE_HEAVY_HELD=blender`; die damalige eingebettete Kopie `scripts/ce_tools/heavy_lock.py` (seit 0.26 gibt es keine Kopie mehr) kannte nur `CE_HEAVY_HELD=1` und verlangt die Gesamtsperre
   exklusiv – `verify_surface.py`/`generate_tools.py` darunter warten auf den eigenen Elternprozess (105 min verloren). Bis die Kopie per
   `ce_sync.py` erneuert ist: `heavy_lock run --resource blender -- env CE_HEAVY_LOCK=0 <Befehl>`, die Variable **nur innen** – vor `heavy_lock`
   gesetzt schaltet sie auch die äußere Sperre ab (so geschehen: das Nachbacken lief zunächst ohne Sperre). Beleg: 0.20 Mac-Abnahme. Gilt auch

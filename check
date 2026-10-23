@@ -1,6 +1,5 @@
 #!/bin/sh
-# ./check [--full|--nightly] [--verbose]: runs .ce-repo.json > check (embedded shared tool, scripts/ce_tools).
-cd "$(dirname "$0")" || exit 2
-mode=quick
-case "$1" in --full) mode=full; shift;; --nightly) mode=nightly; shift;; esac
-exec python3 scripts/ce_tools/ce_check.py "$mode" --repo . "$@"
+# Thin wrapper: runs the checks of .ce-repo.json via the shared tools (./ce = loader, tools_version): ./check = quick,
+# ./check --full, ./check --nightly.
+here="$(cd "$(dirname "$0")" && pwd)"
+exec "$here/ce" check "$@"

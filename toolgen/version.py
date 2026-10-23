@@ -1,2 +1,2 @@
-VERSION = "0.25.0"
-CODENAME = "Ocular"
+VERSION = "0.26.0"
+CODENAME = "Unbundled"
