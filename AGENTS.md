@@ -48,9 +48,11 @@ Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrack
 `./check` (schnell: Doku-/Konfigurationsprüfung und Python-Tests, kein Blender), `./check --full` (Doku plus
 `scripts/check_output.sh`, schwer), `./check --nightly` (0.22: `scripts/nightly.sh` – `--tier full` aller Werkzeuge plus `check_output.sh`,
 einmal täglich auf `main`, vom Nutzer oder `launchd` gestartet, nie als Workflow), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
-Nutzerwunsch). Konfiguration: `.ce-repo.json`. Die gemeinsamen Werkzeuge liegen als eingebettete Kopie in `scripts/ce_tools/`
-(erzeugt mit `python3 $CE_TOOLS/ce_sync.py --repo .` aus dem Plugin `ce-agent-tools`, nie von Hand ändern, Prüfung
-`python3 scripts/ce_tools/ce_lint.py`). Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
+Nutzerwunsch). Konfiguration: `.ce-repo.json`. **Keine eingebettete Werkzeugkopie (0.26):** `./ce` ist der Lader, `.ce-repo.json` ›
+`tools_version` nennt den gepinnten Stand von `ce-agent-tools`; `./ce tools where` liefert den Werkzeugordner, `./ce tools pin <Commit>` hebt
+den Stand, `./ce tools fetch` füllt den Cache. Eigene Skripte beziehen Werkzeugmodule über `scripts/shared_tools.py` (`use("ce_docs")`),
+nie über einen Pfad; `scripts/heavy_lock.py` ist nur die Weiterleitung. Aufräumen: `./ce tidy` (`.ce-repo.json` › `tidy`: Stufen-Ausgaben `output/_*`).
+Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
 
 Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing/SKILL.md).
 

@@ -1,4 +1,7 @@
 #!/bin/sh
-# ./release [--execute]: dry run by default; checks version, CHANGELOG, tag, branch (embedded shared tool).
-cd "$(dirname "$0")" || exit 2
-exec python3 scripts/ce_tools/ce_release.py --repo . "$@"
+# Thin wrapper: dry run of the release checks (./release), --execute does it, via the shared tools (tools: ./ce tools where).
+here="$(cd "$(dirname "$0")" && pwd)"
+tools="$("$here/ce" tools where | sed 's/ (.*//')" || exit 2
+[ -f "$tools/ce_release.py" ] || { echo "release: $tools/ce_release.py missing - ./ce tools fetch" >&2; exit 2; }
+# no bytecode inside the checked tools cache (read-only does not stop root)
+PYTHONDONTWRITEBYTECODE=1 exec python3 "$tools/ce_release.py" --repo "$here" "$@"

@@ -74,5 +74,20 @@
   "coordination": {
     "repo": "ffunkfabian-hash/cubeescape-nexogen",
     "registry": "https://github.com/ffunkfabian-hash/cubeescape-nexogen/blob/main/repos.json"
+  },
+  "tidy": {
+    "paths": [
+      {
+        "name": "Stufen-Ausgaben output/_* (_quick, _standard; Lieferstand output/ bleibt)",
+        "root": "output",
+        "glob": "_*",
+        "keep": 2,
+        "older_than_days": 14
+      }
+    ]
+  },
+  "tools_version": {
+    "version": "0.21.0",
+    "commit": "96d6e901052a7bf604c09c6c50e34894418a6144"
   }
 }

@@ -13,8 +13,10 @@ import game_export  # noqa: E402 - pure helpers, no bpy at import
 import surface  # noqa: E402
 from generate_tools import ARMS, RIG_CONTRACT, catalog, valid_package  # noqa: E402
 
-sys.path.insert(0, str(ROOT / "scripts/ce_tools"))
-import ce_contract  # noqa: E402 - 0.22: the shared schema of the contract (ce-agent-tools plugins/ce-shared/contracts)
+sys.path.insert(0, str(ROOT / "scripts"))
+import shared_tools  # noqa: E402
+
+ce_contract = shared_tools.use("ce_contract")  # 0.22: the shared schema of the contract (ce-agent-tools, `./ce tools where`)
 # the oldest contract format with a shared schema (unity_contract.v4); older formats stay supported without one
 SHARED_SCHEMA_MIN_FORMAT = min(int(p.stem.rsplit(".v", 1)[1]) for p in ce_contract.CONTRACTS.glob("unity_contract.v*.json"))
 

@@ -5,9 +5,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
-sys.path.insert(0, str(ROOT / "scripts/ce_tools"))
-import ce_contract  # noqa: E402
+sys.path.insert(0, str(ROOT / "scripts"))
+import shared_tools  # noqa: E402
 import generate_tools  # noqa: E402
+
+ce_contract = shared_tools.use("ce_contract")
 
 
 class ContractSchemaTests(unittest.TestCase):
