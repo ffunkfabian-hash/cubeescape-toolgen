@@ -35,6 +35,7 @@ from mathutils.bvhtree import BVHTree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "toolgen"))
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+import ads_view  # noqa: E402 - the ADS rule (pure numpy)
 import ego_arms  # noqa: E402
 import ego_clips  # noqa: E402
 import first_person as fp  # noqa: E402 - shared helpers (camera, clip matrix, ADS, recoil, clip keys)
@@ -50,7 +51,8 @@ RIG_EVENTS = ego_arms.RIG_EVENTS
 SWAP_TOLERANCE_M = .002
 CURL_STEPS = 60
 CURL_LEAD = .25                      # each joint further out starts curling this share of the sweep later
-AIM_MOTIONS = ("aim_in", "aim_idle", "aim_fire", "aim_out")
+# 0.25: the clips aimed down sights keep the ADS rule, not the framing rule (validate)
+AIM_MOTIONS = ("aim_in", "aim_idle", "aim_fire", "aim_out", "aim_auto_fire", "aim_burst")
 
 
 # --------------------------------------------------------------------------------------------- data
@@ -879,6 +881,7 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
     side_bend = {"R": 0.0, "L": 0.0}
     cardan_worst = {"R": 0.0, "L": 0.0}
     proximal_visible, elbow_visible, chains_missing, reticle_hits = [], [], [], []
+    aim_hands_out, near_cuts = [], []
     penetrating, self_contacts = [], []
     renderers = {obj.name: obj for obj in state["renderers"]}
     clip_ranges = {clip["name"]: clip for clip in clips}
@@ -901,6 +904,9 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
         key = clip["name"] if clip else "Use"
         device_inverse = root.matrix_world.inverted()
         live = live_device_bvh(root, hand_parts, device_inverse)
+        # Toolgen 0.25 (user decision 23.10.2026, Destiny 2): while aiming no hand needs to stay in the frame; the framing
+        # rule (fingers, forearm half, elbow) holds everywhere else, the aim frames keep the near plane free instead
+        aiming = clip is not None and clip["motion"] in AIM_MOTIONS
         for side in ego_arms.SIDES:
             lower = nodes[f"LowerArm_{side}"].matrix_world
             hand = nodes[f"Hand_{side}"].matrix_world
@@ -938,23 +944,26 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             elbow = np.array([list(nodes[f"LowerArm_{side}"].matrix_world.translation)])
             support_free = side == "L" and clip is not None and clip.get("support_forearm_visible")
             for aspect, frustum in views.items():
-                if not support_free and screen_points(proximal, frustum, near)[2].any():
+                if not support_free and not aiming and screen_points(proximal, frustum, near)[2].any():
                     proximal_visible.append([key, frame, side, aspect])
-                if screen_points(elbow, frustum, near)[2].any():
+                if not aiming and screen_points(elbow, frustum, near)[2].any():
                     elbow_visible.append([key, frame, side, aspect])
-            # 0.24: a scope's aim clips may let the named hands leave the frame (devices.<tool>.ads.hands_may_leave, user
-            # decision 22.10.2026: the scope sits close to the eye like Dead Man's Tale)
-            scope_free = (clip is not None and clip["motion"] in AIM_MOTIONS
-                          and side in device.get("ads", {}).get("hands_may_leave", ()))
-            if (side == "R" or not free) and not scope_free:
+            if side == "R" or not free:
                 fingers, thumb, _ = hand_link_meshes(state, side)
                 for name, links in [*((f"finger {index}", chain) for index, chain in enumerate(fingers)), ("thumb", thumb)]:
                     # in every aspect (16:9 and 16:10): a finger only inside the wider frame is missing in 16:10
                     shown = all(any(screen_points(mesh_world(obj, graph)[0], frustum, near)[2].any() for obj in links)
                                 for frustum in views.values())
-                    if not shown and (clip is None or clip["motion"] not in ("draw", "holster", "sprint", "sprint_in",
-                                                                             "sprint_out")):
+                    if shown:
+                        continue
+                    if aiming:
+                        aim_hands_out.append([key, frame, side, name])
+                    elif clip is None or clip["motion"] not in ("draw", "holster", "sprint", "sprint_in", "sprint_out"):
                         chains_missing.append([key, frame, side, name])
+        if aiming:
+            cuts = viewmodel_cuts(state, root, hand_parts, graph, views, near)
+            if cuts:
+                near_cuts.append([key, frame, cuts[:4]])
         if clip is None or clip.get("reticle_free"):
             for obj in state["renderers"]:
                 points = mesh_world(obj, graph)[0]
@@ -968,6 +977,8 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
         failures.append(f"elbow / upper arm in frame: {len(elbow_visible)} samples, first {elbow_visible[:3]}")
     if chains_missing:
         failures.append(f"finger or thumb of a holding hand out of frame: {len(chains_missing)} samples, first {chains_missing[:3]}")
+    if near_cuts:
+        failures.append(f"aim clips: the near plane cuts the viewmodel: {len(near_cuts)} samples, first {near_cuts[:3]}")
     if reticle_hits:
         failures.append(f"arms on the reticle in reticle-free frames: {reticle_hits[:3]}")
     if penetrating:
@@ -980,7 +991,7 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
     failures += events["failures"]
     swap = swap_checks(scene, clips, device, hand_parts)
     failures += swap["failures"]
-    sight = None
+    sight = ads = None
     if aim is not None:
         idle = next((clip for clip in clips if clip["motion"] == "aim_idle"), None)
         socket = scene.objects.get("Socket_Sight")
@@ -990,6 +1001,8 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             sight = {"lateral_m": round(abs(point.x), 6), "vertical_m": round(abs(point.z), 6), "depth_m": round(-point.y, 4)}
             if max(sight["lateral_m"], sight["vertical_m"]) > fp.SIGHT_LINE_TOLERANCE_M * 10:
                 failures.append(f"Socket_Sight off the AimIdle line of sight {sight}")
+            ads = ads_target(state, root, hand_parts, views, near, sight, aim_hands_out, near_cuts)
+            failures += ads["failures"]
     return {"passed": not failures, "failures": failures, "sampled_frames": len(sample),
             "hand_touch_limit_m": TOUCH_LIMIT_M, "hand_touch_max_m": {side: round(value, 5) for side, value in touch.items()},
             "hand_touch_worst_frame": touch_frames, "wrist_bend_max_degrees": {side: round(value, 2) for side, value in bend.items()},
@@ -1005,11 +1018,61 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             "framing": {"proximal_forearm_visible": proximal_visible[:20],
                                                        "elbow_visible": elbow_visible[:20],
                                                        "chains_missing": chains_missing[:20], "reticle": reticle_hits[:20],
+                                                       "aim_hands_out_of_frame": aim_hands_out[:20],
+                                                       "aim_near_plane_cuts": near_cuts[:20],
                                                        "rule": "three gripping fingers + thumb of each holding hand in frame "
                                                                "(not while drawing, holstering, sprinting), proximal forearm "
-                                                               "half and the elbow never; 16:9 and 16:10 at the binding FOV"},
+                                                               "half and the elbow never; 16:9 and 16:10 at the binding FOV. "
+                                                               "Not in the aim clips (AIM_MOTIONS, user decision 23.10.2026): "
+                                                               "there the near plane stays free (" + fp.ADS_RULE + ")"},
             "clips": per_clip, "events": events["clips"], "named_poses": poses["checks"], "magazine_swap": swap["checks"], "sight_aim_idle": sight,
+            "ads_target": ads,
             "support_ik_blend_frames": blend}
+
+
+def visible_meshes(state, root, hand_parts):
+    """Arms, device and the parts in the left hand as drawn in this frame (hidden parts: visibility scale 0.001)."""
+    parts = [*state["renderers"], *device_meshes(root), *(device_meshes(hand_parts["root"]) if hand_parts else [])]
+    return [obj for obj in parts if obj.matrix_world.to_scale().x > .01]
+
+
+def viewmodel_cuts(state, root, hand_parts, graph, views, near):
+    """Parts of the viewmodel between the camera and the near plane inside the view (ads_view; camera space = the camera
+    at the origin)."""
+    vertices, triangles, owners = fp.mesh_triangles(visible_meshes(state, root, hand_parts), graph)
+    return ads_view.near_plane_cuts(vertices, triangles, owners, list(views.values()), near, 0.0)
+
+
+def ads_target(state, root, hand_parts, views, near, sight, aim_hands_out, near_cuts):
+    """The aim-down-sights block of contract 5 at the first AimIdle frame (the scene stands there), the same rule and keys
+    as first_person.ads_target_report of contract 4 (ads_view): sight on the screen centre, the centre ray free (a scope's
+    eye lens excepted), no near-plane cut in any sampled aim frame (binding); hands in the frame measured only. The
+    eye-distance range moves the camera along the axis with the pose fixed."""
+    graph = bpy.context.evaluated_depsgraph_get()
+    vertices, triangles, owners = fp.mesh_triangles(visible_meshes(state, root, hand_parts), graph)
+    point = bpy.context.scene.objects["Socket_Sight"].matrix_world.translation.copy()
+    distance = -point.y
+    # the sight frame of ads_view: Socket_Sight at the origin, the camera of an eye distance d at (0, d, 0) (Codex sol
+    # 0.25: the sweep had placed the camera with the sign flipped)
+    local = vertices - np.array(list(point))
+    configurations, failures = [], []
+    for aspect, frustum in views.items():
+        u, v, _ = screen_points(np.array([list(point)]), frustum, 0.0)
+        entry = {"aspect": aspect, "sight_screen": [round(float(u[0]), 6), round(float(v[0]), 6)]}
+        configurations.append(entry)
+        if max(abs(u[0] - .5), abs(v[0] - .5)) > .002:
+            failures.append(f"{aspect}: sight off the screen centre {entry['sight_screen']}")
+    frusta_list = list(views.values())
+    reasons, hit, _ = ads_view.rule(local, triangles, owners, frusta_list, near, distance, fp.ADS_CENTRE_ALLOWED)
+    failures += [f"AimIdle: {reason}" for reason in reasons if reason.startswith("the centre ray")]
+    return {"pose": "the AimIdle clip as keyed (device, arms, hands), first frame", "rule": fp.ADS_RULE,
+            "sight_socket": "Socket_Sight", "eye_distance_m": round(distance, 4), "near_clip_m": near,
+            "configurations": configurations, "centre_hit": hit,
+            "centre_clear": not any(reason.startswith("the centre ray") for reason in reasons),
+            "near_plane_cuts": near_cuts[:20], "hands_in_frame": not aim_hands_out, "hands_out_of_frame": aim_hands_out[:20],
+            "passed": not failures and not near_cuts, "failures": failures,
+            **ads_view.eye_distance_range(local, triangles, owners, frusta_list, near, fp.ADS_CENTRE_ALLOWED),
+            "sight_socket_line": dict(sight, ok=max(sight["lateral_m"], sight["vertical_m"]) <= fp.SIGHT_LINE_TOLERANCE_M * 10)}
 
 
 POSE_TOLERANCE = 1e-4

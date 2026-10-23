@@ -28,6 +28,12 @@ output = Path(sys.argv[1])
 index = json.loads((output / "catalog.json").read_text())
 checks = 0
 arms_hash = None
+def in_interval(ads):
+    """0.25: the ADS check at the device's eye distance and the sweep agree (a passing distance lies in a passing stretch)."""
+    distance = round(ads["eye_distance_m"], 3)
+    return any(low - 1e-9 <= distance <= high + 1e-9 for low, high in ads["eye_distance_intervals_m"])
+
+
 def fps_format(tool):
     try:
         return json.loads((output / tool["id"] / "unity_contract_fps.json").read_text())["format"]
@@ -159,7 +165,10 @@ for tool in catalog():
     if tool.get("hold", {}).get("sight_kind") and rigged:
         rig = json.loads((package / "qa_viewmodel.json").read_text())
         assert rig["sight_aim_idle"] and max(rig["sight_aim_idle"]["lateral_m"], rig["sight_aim_idle"]["vertical_m"]) <= .001
-        checks += 1
+        # 0.25 (user decision 23.10.2026): the ADS rule in the aim clips - centre free, no near-plane cut
+        assert rig["ads_target"]["passed"] and game_qa["checks"]["ads_target_pose"]["passed"], (tool["id"], "ADS rule")
+        assert in_interval(rig["ads_target"]), (tool["id"], "the eye distance lies outside the sweep's passing stretches")
+        checks += 2
     elif tool.get("hold", {}).get("sight_kind"):
         # 0.11.0 (Cube Escape 0.72 T1/T2/T6): sight anchors in both contracts, Fire marker on the shot, ADS target pose
         world = json.loads((package / "unity_contract.json").read_text())
@@ -171,7 +180,8 @@ for tool in catalog():
             fire = [event["frame"] for event in contract["clips"][0]["events"] if event["name"] == "Fire"]
             assert fire == [PROFILES[tool["id"]]["motion"]["fire_frame"]], (tool["id"], "Fire marker", fire)
         assert game_qa["checks"]["sight_anchors"]["passed"] and game_qa["checks"]["ads_target_pose"]["passed"], tool["id"]
-        assert game_qa["ads"]["eye_distance_range_m"], (tool["id"], "no eye distance keeps the ADS framing")
+        # 0.25: the ADS rule (centre free, no near-plane cut) holds at the device's eye distance, fingers are measured only
+        assert game_qa["ads"]["passed"] and in_interval(game_qa["ads"]), (tool["id"], "ADS rule")
         checks += 5
     event = PROFILES[tool["id"]].get("use_event")
     if event and rigged:

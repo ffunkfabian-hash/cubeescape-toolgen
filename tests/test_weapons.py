@@ -394,9 +394,12 @@ class SightTests(unittest.TestCase):
     # Toolgen 0.13 adopted them so the ADS QA checks the real pose). Toolgen 0.24 patch (user decision 23.10.2026, Cube
     # Escape 0.112 aims with data/ego_arms.json devices.<tool>.ads.eye_distance_m): a device with an ads block there has ONE
     # distance, that one, and no hold.eye_distance_m in tools.json; the table keeps the CE profile for the others.
-    EYE = {"pistol": .40, "shotgun": .65, "sniper_rifle": .221, "fusion_rifle": .40, "trace_rifle": .221,
-           "rocket_launcher": .453}
-    EGO_ADS = {"assault_rifle": .62, "pulse_rifle": .70, "smg": .72, "scout_rifle": .12}
+    # Toolgen 0.25 (user decision 23.10.2026, sight sizes like Destiny 2 in % of the picture height at 1470x956, viewmodel
+    # FOV 46.69 deg: holo/reflex window 30 %, iron rear sight about 18 %, scope eyepiece 65 %, energy by eye; measured in
+    # Cube Escape 0.114 Loupe): contract 4 = CE metres / CE hip.scale, contract 5 = CE metres.
+    EYE = {"pistol": .209, "shotgun": .264, "sniper_rifle": .053, "fusion_rifle": .1, "trace_rifle": .041,
+           "rocket_launcher": .169}
+    EGO_ADS = {"assault_rifle": .134, "pulse_rifle": .138, "smg": .202, "scout_rifle": .053}
 
     def eye_distance(self, key):
         return ego_clips.ads_eye_distance_m(WEAPONS[key])
@@ -497,8 +500,10 @@ class SightTests(unittest.TestCase):
 
 
 class AdsCheckTests(unittest.TestCase):
-    """game_export.check_ads: the binding part (sight centred, socket on the AimIdle line, some eye distance keeps the
-    framing) against the reported part (the game profile's distance)."""
+    """game_export.check_ads: the binding part (sight centred, socket on the AimIdle line, at the device's eye distance the
+    centre free and no near-plane cut: ads.passed) against the measured part (fingers, model top). Toolgen 0.25 (user
+    decision 23.10.2026): the framing rule no longer holds while aiming, so the profile distance is binding now and the
+    fingers are measured instead (they were binding as some distance of eye_distance_range_m before)."""
     TOOL = {"hold": {"sight_kind": "scope", "eye_distance_m": .22, "eye_radius_m": .011}}
 
     def contract(self, eye_y=-.008):
@@ -506,38 +511,44 @@ class AdsCheckTests(unittest.TestCase):
         eye = {"parent": "Viewmodel_Hold", "blender": {"location": [0.0, .1 + eye_y, .2], "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]}}
         return {"anchors": [dict(socket, name="Socket_Sight"), dict(eye, name="Socket_Eye")]}
 
-    def run_check(self, ads, contract=None, on_line=True):
+    def run_check(self, ads, contract=None, on_line=True, rig=False):
         import tempfile
         with tempfile.TemporaryDirectory() as folder:
             work = Path(folder)
-            (work / "qa_viewmodel.json").write_text(json.dumps({"ads_target": ads, "ego_clips": {"sight_socket": {"ok": on_line}}}))
+            qa = ({"ads_target": dict(ads, sight_socket_line={"ok": on_line})} if rig else
+                  {"ads_target": ads, "ego_clips": {"sight_socket": {"ok": on_line}}})
+            (work / "qa_viewmodel.json").write_text(json.dumps(qa))
             checks = ge.Checks()
             block = ge.check_ads(checks, work, contract or self.contract(), self.TOOL)
             return checks.results, block
 
-    def ads(self, passed, distances, screen=(.5, .5), clear=True, top_ok=True):
-        return {"passed": passed, "eye_distance_range_m": distances, "failures": [] if passed else ["too close"],
-                "eye_distance_m": .22, "configurations": [{"sight_screen": list(screen)}], "centre_clear": clear,
-                "centre_hit": None if clear else "SM_PG_Optic", "model_top_above_centre": .1 if top_ok else .3,
-                "model_top_ok": top_ok}
+    def ads(self, passed, distances=(.04, .5), screen=(.5, .5), hands=True, top=.1):
+        return {"passed": passed, "eye_distance_range_m": distances and list(distances),
+                "failures": [] if passed else ["cut by the near plane (0.03 m): ['SM_PG_Stock']"],
+                "eye_distance_m": .22, "configurations": [{"sight_screen": list(screen)}], "centre_clear": True,
+                "centre_hit": "SM_PG_ScopeEyeLens", "near_plane_cuts": [] if passed else ["SM_PG_Stock"],
+                "hands_in_frame": hands, "model_top_above_centre": top}
 
-    def test_profile_distance_is_reported_not_binding(self):
-        results, block = self.run_check(self.ads(False, [.3, .5]))
+    def test_hands_and_model_top_are_reported_not_binding(self):
+        """Destiny shows no hands while aiming and a scope eyepiece of 65 % reaches far above the centre (was: 25 %)."""
+        results, block = self.run_check(self.ads(True, hands=False, top=.36))
         self.assertTrue(results["ads_target_pose"]["passed"])
-        self.assertFalse(results["ads_target_pose"]["profile_distance_passed"])
+        self.assertFalse(results["ads_target_pose"]["hands_in_frame"])
         self.assertTrue(results["sight_anchors"]["passed"])
         self.assertEqual("scope", block["sight_kind"])
 
     def test_binding_failures(self):
-        self.assertFalse(self.run_check(self.ads(True, None))[0]["ads_target_pose"]["passed"], "no distance keeps the framing")
-        self.assertFalse(self.run_check(self.ads(True, [.2, .4], (.51, .5)))[0]["ads_target_pose"]["passed"], "off centre")
-        self.assertFalse(self.run_check(self.ads(True, [.2, .4]), on_line=False)[0]["ads_target_pose"]["passed"])
-        self.assertFalse(self.run_check(self.ads(True, [.2, .4]), self.contract(.3))[0]["sight_anchors"]["passed"],
+        self.assertFalse(self.run_check(self.ads(False))[0]["ads_target_pose"]["passed"],
+                         "a near-plane cut or a closed centre at the device's eye distance")
+        self.assertFalse(self.run_check(self.ads(True, screen=(.51, .5)))[0]["ads_target_pose"]["passed"], "off centre")
+        self.assertFalse(self.run_check(self.ads(True), on_line=False)[0]["ads_target_pose"]["passed"])
+        self.assertFalse(self.run_check(self.ads(True), self.contract(.3))[0]["sight_anchors"]["passed"],
                          "Socket_Eye far behind the eyepiece")
-        self.assertFalse(self.run_check(self.ads(True, [.2, .4], clear=False))[0]["ads_target_pose"]["passed"],
-                         "a closed housing on the screen centre")
-        self.assertFalse(self.run_check(self.ads(True, [.2, .4], top_ok=False))[0]["ads_target_pose"]["passed"],
-                         "model over 25 % of the screen height above the centre")
+        self.assertFalse(self.run_check(None)[0]["ads_target_pose"]["passed"], "no ads_target")
+
+    def test_contract_5_reads_the_line_from_its_ads_block(self):
+        self.assertTrue(self.run_check(self.ads(True), rig=True)[0]["ads_target_pose"]["passed"])
+        self.assertFalse(self.run_check(self.ads(True), on_line=False, rig=True)[0]["ads_target_pose"]["passed"])
 
 
 class Uv1RotationTests(unittest.TestCase):

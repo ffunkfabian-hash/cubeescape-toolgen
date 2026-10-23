@@ -54,7 +54,11 @@ Hauptmotiv; seine Größe, Neigung und Halteposition werden zusammen mit den Hä
 gegliederte Greiffinger und ein Daumen müssen pro Hand erkennbar sein (`finger_count_per_hand` 4, `gripping_fingers_per_hand` 3,
 `thumb_count_per_hand` 1). „Erkennbar“ heißt **im Bild** (Sichtkegel 16:9 und 16:10): beim Greifen darf das eigene Gerät die Finger verdecken
 (Hüfte, ADS, Sprint); erkennbar sein müssen sie, wo die Hand frei arbeitet (Nachladen, Umgreifen, Inspect) – Entscheidung des Nutzers
-21.10.2026 (rules#1 6309735263), Prüfung wie bisher über den Sichtkegel. Fingerglieder sind keine zusätzlichen Finger. Keine kastenförmige Ersatzhand oder durchgehende
+21.10.2026 (rules#1 6309735263), Prüfung wie bisher über den Sichtkegel. **Nicht beim Zielen (0.25):** in der ADS-Zielpose und in den
+Ziel-Clips (`AimIn`, `AimIdle`, `AimFire`, `AimOut`; `ego_rig.AIM_MOTIONS`) gilt der Bildausschnitt nicht – wie Destiny 2 zeigt das Spiel
+dort keine Hände (Entscheidung des Nutzers 23.10.2026); verbindlich bleiben Bildmitte frei (Scopes: Okularlinse), Visier auf der Achse und
+keine Teile von Waffe oder Armen zwischen Kamera und Nahebene im Bild (› Visier und Zielen, ADS-Zielpose). Hüfte, Sprint, Ziehen,
+Wegstecken, Nachladen und Inspect behalten die Regel unverändert. Fingerglieder sind keine zusätzlichen Finger. Keine kastenförmige Ersatzhand oder durchgehende
 Stange als Arm.
 
 Jeder Arm hat die starren Rig-Knoten `UpperArm_*` → `LowerArm_*`. Ihre Längen und Schulterpositionen sind feste
@@ -707,18 +711,27 @@ Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals
   `action_contract.json` in `events`. Fire und AimFire der Ego-Clips tragen zusätzlich zu `Shot` das gleichbedeutende `Fire` (Bild 0).
 - **Prüfung je Clipbild (T6).** `hand_touch_m` jetzt in jedem Bild jedes Ego-Clips (`ego_clips.clips[].hand_touch_max_m`, Grenze
   `touch_tolerance_m` = 8 mm; die Stützhand im Reload-Fenster `detached` zählt nicht); Handgelenk ≤ 55° je Bild wie seit 0.8.0.
-- **ADS-Zielpose (T6).** Toolgen rechnet die Zielpose von Cube Escape selbst (Konzept › 5.3): das ganze Ego-Modell in der Ruhepose
-  (Bild 1) starr so bewegt, dass `Socket_Sight` auf der Kameraachse im Abstand `ego_clips.ads_eye_distance_m(tool)` liegt (`devices.<tool>.ads.eye_distance_m` aus `ego_arms.json`, sonst `hold.eye_distance_m`; Cube-Escape-Profilklassen:
-  sidearm 0,30, rifle 0,26, submachine_gun 0,24, shotgun 0,28, sniper 0,22, heavy 0,30, Spurgewehr 0,20 m) und entlang des Blicks
-  zeigt, Maßstab 1. Geprüft beim eingestellten Viewmodel-Sichtfeld für 16:9 und 16:10: Visier in der Bildmitte, die drei Greiffinger und
-  der Daumen jeder Hand im Bild, proximale Unterarmhälften unter dem Bild (der Stützarm wird wie in den Ziel-Clips nur gemessen,
-  Entscheidung des Nutzers), kein sichtbarer Punkt vor der Near-Clip-Ebene. Ergebnis: `qa_viewmodel.json` › `ads_target`, im Spiel-Export
-  `qa_game_fps.json` › `ads` mit den Prüfungen `sight_anchors` und `ads_target_pose`. Zusätzlich sucht die Prüfung den Bereich der
-  Augenabstände (0,10–0,80 m, 5 mm Schritt), in dem der Bildausschnitt hält (`eye_distance_range_m`). Beim Profilabstand zusätzlich
-  (Cube Escape 0.72): der Strahl durch die Bildmitte trifft kein Teil (`centre_clear`; bei Scopes nur die Okularlinse) und das Modell
-  reicht höchstens 25 % der Bildhöhe über die Mitte (`model_top_above_centre`). Verbindlich ist: Visier auf der Linie, Anker im Vertrag,
-  Bildmitte frei, 25-%-Grenze, ein Bereich existiert. Ob die Finger beim Profilabstand im Bild bleiben (`ads.passed`), ist ein Befund
-  für Cube Escape (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Visier und Zielen), kein Abbruch.
+- **ADS-Zielpose (T6, Regel seit 0.25).** Toolgen rechnet die Zielpose von Cube Escape selbst (Konzept › 5.3): das ganze Ego-Modell in der
+  Ruhepose (Bild 1) starr so bewegt, dass `Socket_Sight` auf der Kameraachse im Abstand `ego_clips.ads_eye_distance_m(tool)` liegt
+  (`devices.<tool>.ads.eye_distance_m` aus `ego_arms.json`, sonst `hold.eye_distance_m`) und entlang des Blicks zeigt, Maßstab 1.
+  **Augenabstand je Visierart (Entscheidung des Nutzers 23.10.2026, Größen wie Destiny 2):** Zielgröße in % der Bildhöhe bei 1470×956
+  und festem Viewmodel-Sichtfeld 46,69° – Holo/Reflex 30 % (Fenster außen), Kimme ≈ 18 % (Kimmenbreite), Zielfernrohr 65 % (Okular
+  außen), Energie nach Augenmaß. Gemessen hat Cube Escape 0.114 „Loupe“ im Spiel (Werte: [UNITY_EINBAU](UNITY_EINBAU.md) › Augenabstand
+  beim Zielen); Vertrag 4 trägt den CE-Wert ÷ CE `hip.scale`. Geprüft beim eingestellten Viewmodel-Sichtfeld für 16:9 und 16:10,
+  **verbindlich** beim Augenabstand des Geräts: Visier in der Bildmitte, der Strahl durch die Bildmitte trifft kein Teil (`centre_clear`;
+  bei Scopes nur die Okularlinse) und kein Teil von Waffe oder Armen liegt zwischen Kamera und Nahebene (0,03 m) im Bild
+  (`near_plane_cuts`: Dreiecke, die die Pyramide Kamera → Nahebenen-Rechteck schneiden oder in ihr liegen – Trennachsentest in
+  `scripts/tool_assets/ads_view.py`, reines numpy, Tests `tests/test_ads_view.py`; Unity schneidet sie sichtbar ab). Vertrag 4 prüft im
+  Toolgen-Maß; Cube Escape vergrößert das Modell um `hip.scale` bei gleicher Nahebene, die Toolgen-Prüfung ist also die strengere. **Gemessen, nicht verbindlich:** die drei Greiffinger und der Daumen jeder Hand
+  (`hands_in_frame`, `configurations[].margins`), die proximalen Unterarmhälften und wie weit das Modell über die Mitte reicht
+  (`model_top_above_centre`; die 25-%-Grenze von Cube Escape 0.72 entfällt, ein 65-%-Okular reicht 32 % darüber). `eye_distance_range_m`
+  reicht vom ersten bis zum letzten Abstand (0,02–0,80 m, 5 mm Schritt), bei dem diese ADS-Regel hält, `eye_distance_intervals_m` nennt die
+  Abschnitte (Schrotflinte 0,23–0,315 und ab 0,39 m: Laufschiene nah, Kammerstängel weiter hinten; Scharfschütze bis 0,10 und ab 0,18 m:
+  Wangenauflage) – bis 0.24 war es der Bereich der Fingerregel. Ergebnis:
+  `qa_viewmodel.json` › `ads_target`, im Spiel-Export `qa_game_fps.json` › `ads` mit den Prüfungen `sight_anchors` und `ads_target_pose`
+  (verbindlich: Visier auf der Linie, Anker im Vertrag, `ads.passed`). Vertrag 5 (`ego_rig.ads_target`) prüft dieselbe Regel am ersten
+  Bild von `AimIdle` und die Nahebene in jedem abgetasteten Bild der Ziel-Clips; seine Ziel-Clips stehen auf dem Augenabstand, die von
+  Vertrag 4 nicht (dort rechnet Cube Escape die Zielpose aus `ads_eye_distance_m`, Toolgens AimIdle bleibt die eigene Anzeige).
 - **Finger (T5).** Pose-Werte `trigger` und `regrip` (`ego_clips.py`, Daten `defaults.fingers` in `data/ego_clips.json`): in Fire und
   AimFire hebt der Zeigefinger der Griffhand (`Fingers_R_0`, oberste Reihe am Abzug) nach dem Schuss um `trigger_deg` (10°) ab und legt sich
   wieder an (2 Bilder hoch, 4 zurück); in Reload öffnen sich die drei Finger der Stützhand um `regrip_deg` (24°), während sie den
@@ -885,9 +898,9 @@ Vertrag: [UNITY_EINBAU](UNITY_EINBAU.md) › Gruppe 1. Bericht mit Herkunft je F
   `stroke_frames` (Pulswürfel, Bolzen). `ego_rig.fire_event_failures` prüft `Shot` je Muster, `BurstEnd` = letzter Schuss,
   `Ready` < `Still` < `End`; Nachladen zusätzlich `Move` < `HandOff` und `Ready` < `Still` < `End`.
 - **Zielfernrohr:** `devices.scout_rifle.events` hängt `ScopeOn`/`ScopeOff`/`Move` an `AimIn`/`AimOut`, `ads.lens_lead_frames` hält die
-  Zielpose ein Bild, während das Linsenbild geht (`ego_clips.aim_out`). Augenabstand 0,12 m (Okular ≈ 45 % der Bildhöhe); in den
-  Ziel-Clips darf die Griffhand das Bild verlassen (`ads.hands_may_leave`, `ego_rig.AIM_MOTIONS`) – die einzige Ausnahme der Bildregel,
-  Entscheidung des Nutzers nach Vergleichsbildern (mit der Regel lag das Okular bei 0,60 m klein in der Mitte, der Schaft vor der Kamera).
+  Zielpose ein Bild, während das Linsenbild geht (`ego_clips.aim_out`). Augenabstand seit 0.25 **0,053 m** (Okular 65 % der Bildhöhe,
+  gemessen im Spiel); die 0,12 m von 0.24 sollten 45 % ergeben – geschätzt in Blender, im Spiel waren es 28,7 %. Die Ausnahme
+  `ads.hands_may_leave` von 0.24 ist in der allgemeinen ADS-Regel aufgegangen (› Hände und Bewegungsgefühl, `ego_rig.AIM_MOTIONS`).
 - **Spiel-Export:** Block `fire`, `minimum_consumer.group_1_clips`, Schleifen im Regeltext aus den Clips; Handteil-Quelle als
   `reload_part` (KG03: `Anim_EnergyCell`). `merge_boxes` fasst nie zwei Boxen zusammen, deren gemeinsame Box eine Öffnungsprobe enthielte
   (die Roboter-MP schloss ihr Reflexfenster beim Zusammenfassen auf 6 Kollider); bestehende Kollider ändern sich dadurch nicht (dort deckte

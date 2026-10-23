@@ -326,10 +326,12 @@ alle bisherigen Namen, Anker, Clips (auch `<Name>_Use`) und Felder bleiben.
   Clips-Datei; Ablauf im Spiel: Charge schleifen, solange geladen wird, dann `FusionRifle_Fire` (Schnitt ohne Überblendung, beide in `rest`).
 - **Clip-Liste:** Wurzeleigenschaft `ce_action_clips` (JSON-Liste aller Clipnamen); `ce_action_clip` bleibt `<Name>_Use`.
 - **Zielpose:** `qa_game_fps.json` › `ads`: Ruhepose starr so verschoben, dass `Socket_Sight` bei `ads_eye_distance_m` auf der
-  Kameraachse liegt (`frame_matrix_blender`), Bildausschnitt je 16:9/16:10, `eye_distance_range_m` = Abstände, bei denen drei Greiffinger
-  und Daumen beider Hände im Bild und die Griffarm-Unterarmhälfte draußen bleiben.
+  Kameraachse liegt (`frame_matrix_blender`), je 16:9/16:10. Seit 0.25 (Entscheidung des Nutzers 23.10.2026, wie Destiny 2) verbindlich
+  nur: Visier in der Mitte, Bildmitte frei (Scopes: Okularlinse), nichts von Waffe oder Armen vor der Nahebene im Bild (`near_plane_cuts`);
+  Finger (`hands_in_frame`) und Modellhöhe nur gemessen. `eye_distance_range_m` = erster bis letzter Abstand, bei dem diese Regel hält,
+  `eye_distance_intervals_m` die Abschnitte dazwischen (bis 0.24: die Fingerregel). Vertrag 5 liefert denselben Block (aus `qa_viewmodel.json` › `ads_target` des AimIdle-Clips).
 
-Gemessen mit Toolgen 0.12.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Verbindlich und bei allen erfüllt: Bildmitte frei (Scopes: Okularlinse), Modell höchstens 25 % der Bildhöhe über der Mitte (negativ = ganz darunter). Nicht verbindlich, Befund für Cube Escape: die Finger beim Profilabstand. Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
+Historisch (bis 0.24; seit 0.25 gelten die Abstände und die Regel aus › Vertrag 5 › Augenabstand beim Zielen). Gemessen mit Toolgen 0.12.0 (quick, 16.10.2026; Viewmodel-Sichtfeld 46,69°, 16:9 und 16:10, Maßstab 1). Verbindlich und bei allen erfüllt: Bildmitte frei (Scopes: Okularlinse), Modell höchstens 25 % der Bildhöhe über der Mitte (negativ = ganz darunter). Nicht verbindlich, Befund für Cube Escape: die Finger beim Profilabstand. Zu nah heißt: die Waffe füllt das Bild, Finger rutschen unten heraus (Grund in allen Fällen; die Unterarmhälfte des Griffarms bleibt überall draußen). Die Schrotflinte hat nur ein Korn (`FrontBead`) vorn am Lauf, ihr `Socket_Sight` liegt deshalb weit vorn und der Abstand zählt bis dorthin.
 
 | Waffe | `sight_kind` | Profilabstand (m) | Bildmitte | Modell über der Mitte | Finger im Bild beim Profil | Bereich, der hält (m) |
 |---|---|---:|---|---:|---|---|
@@ -457,7 +459,8 @@ im Builder).
 Reimport FBX/GLB des Arm-Pakets (Namen, Eltern, Ruhe-Matrizen, Slots, Dreiecke), der Zusammensetzung und beider Spieldateien; Gerät ohne
 Arm-Knoten, `Socket_Hand` im Ursprung; Handkontakt ≤ 8 mm rechts in jedem Bild, links außerhalb `[HandOff + 3, HandOn]`; Handgelenk ≤ 55°;
 Bildausschnitt 16:9 und 16:10 beim festen FOV (drei Greiffinger + Daumen jeder haltenden Hand im Bild außer in Ziehen/Wegstecken/Sprint,
-proximale Unterarmhälfte und Ellbogen nie, Fadenkreuz frei in den freien Clips); Ereignisse vollständig und geordnet, genau ein `Ready`;
+proximale Unterarmhälfte und Ellbogen nie, Fadenkreuz frei in den freien Clips; nicht in den Ziel-Clips – dort seit 0.25 die ADS-Regel:
+Bildmitte frei, Visier auf der Achse, keine Nahebenen-Schnitte, `qa_viewmodel.json` › `ads_target`); Ereignisse vollständig und geordnet, genau ein `Ready`;
 Magazintausch an derselben Stelle; Fingerposen ohne Berührung nicht benachbarter Teile – in der Bibliothek und in jedem abgetasteten Bild
 (`hand_self_contacts`); **kein Eindringen** der Hand ins Gerät dieses Bilds (`penetration`: bewegte Teile, ausgeblendete Teile weg,
 `HandMag_L` dabei); seitliche Handgelenkneigung gemessen (`wrist_side_max_degrees`, ohne Grenze). Der Arm-Reimport prüft Eltern und Lage
@@ -503,11 +506,33 @@ Neu ist nur Angehängtes; Clipnamen, Anker und Knoten der übrigen Geräte bleib
   `ClipEventsOf` liest jedes Ereignis), spielt aber keinen neuen Clip; den Ordner `scout_rifle/` erst mit dieser Version kopieren.
   `shared_arm_rig`/`triangle_budgets`: Cube Escape 0.106. **Rückweg `--contract 4`** ist für die drei Konzeptmodelle nicht abgestimmt
   (gebackene Arme verlassen den Bildausschnitt); die alten Modelle: `git checkout v0.23.0`.
-- **Augenabstand beim Zielen:** Toolgens Ego-Lage (`devices.<tool>.ads.eye_distance_m`) MP 0,72 m und Impulsgewehr 0,70 m (drei Greiffinger
-  + Daumen im Bild), Scout **0,12 m** – das Okular deckt etwa 45 % der Bildhöhe, in den Ziel-Clips darf die Griffhand das Bild verlassen
-  (`ads.hands_may_leave`; Entscheidung des Nutzers 22.10.2026 nach Vergleichsbildern 0,31 / 0,12 / 0,08 m). Seit dem Patch vom 23.10.2026 ist das
-  die **einzige** Zahl: `hold.ads_eye_distance_m` und die ADS-QA übernehmen sie für jedes Gerät mit `ads`-Block (auch KG02: 0,62 statt 0,379);
-  `hold.eye_distance_m` in `tools.json` gibt es nur noch für Geräte ohne solchen Block (CE-0.75-Profil).
+- **Augenabstand beim Zielen (0.25 „Ocular“, Entscheidung des Nutzers 23.10.2026):** Visiergröße wie Destiny 2, je Visierart eine
+  Zielgröße in % der Bildhöhe bei 1470×956 und festem Viewmodel-Sichtfeld 46,69° (`fov_scale` zoomt nur die Welt): Holo/Reflex 30 %
+  (Fenster außen), Kimme ≈ 18 % (Kimmenbreite), Zielfernrohr 65 % (Okular außen), Energie nach Augenmaß. Gemessen im Spiel von
+  Cube Escape 0.114 „Loupe“ (Tabelle `~/Library/Caches/CubeEscape/videos/0.114/visier/tabelle.md`, Destiny-Werte
+  `cubeescape-reference/docs/destiny2.md`). Eine Zahl je Gerät (`ego_clips.ads_eye_distance_m`, Vertrag `hold.ads_eye_distance_m`):
+  Vertrag 5 aus `ego_arms.json` › `devices.<tool>.ads.eye_distance_m` (CE-Meter), Vertrag 4 aus `tools.json` › `hold.eye_distance_m`
+  (CE-Meter ÷ CE `hip.scale`). **Im ADS gilt die Bildregel nicht** (keine Finger, keine Unterarmgrenze – auch `ads.hands_may_leave`
+  entfällt); verbindlich bleiben Bildmitte frei, Visier auf der Achse, Nahebene frei. Nachladen aus dem ADS geht in die Nachladehaltung mit
+  sichtbaren Händen und zurück ins ADS (Cube Escape); dort gilt die Bildregel wie bisher.
+
+  | Gerät | Vertrag | Visier | Augenabstand bis 0.24 (m) | ab 0.25 (m) | CE-Wert (m) | Visiergröße im Spiel (CE 0.114) |
+  |---|---|---|---:|---:|---:|---|
+  | Pistole | 4 (×1,6) | `iron` | 0,400 | 0,209 | 0,334 | ≈ 18 % (abgeleitet) |
+  | Schrotflinte | 4 (×1,4) | `iron` | 0,650 | 0,264 | 0,369 | ≈ 18 % (abgeleitet, nur Korn) |
+  | Raketenwerfer | 4 (×1,7) | `iron` | 0,453 | 0,169 | 0,287 | ≈ 18 % (abgeleitet) |
+  | Sturmgewehr | 5 | `holo` | 0,620 | 0,134 | 0,134 | 29,9 % |
+  | Impulsgewehr | 5 | `holo` | 0,700 | 0,138 | 0,138 | 29,9 % |
+  | MP | 5 | `reflex` | 0,720 | 0,202 | 0,202 | 30,1 % |
+  | Fusionsgewehr | 4 (×1,4) | `energy` | 0,400 | 0,100 | 0,140 | Gabelkimme bildfüllend (Augenmaß) |
+  | Scharfschützengewehr | 4 (×1,4) | `scope` | 0,221 | 0,053 | 0,074 | 64,6 % (Linse 32 %) |
+  | Spurgewehr | 4 (×1,4) | `scope` | 0,221 | 0,041 | 0,057 | 65,1 % (Linse 32 %) |
+  | Scout-Gewehr | 5 | `scope` | 0,120 | 0,053 | 0,053 | 65,1 % (Linse 33 %) |
+
+  Die Toolgen-Prüfwerte je Gerät (Bildmitte, Nahebene, Abschnitte, Finger gemessen) stehen in `qa_game_fps.json` › `ads`.
+  **Mindestversion:** `minimum_consumer.ads_sight_size` (jede Waffe mit Visier) – **Cube Escape 0.114 „Loupe“** (Profilwerte und Grenzen
+  für die Destiny-Größen). 0.113 und älter lesen die Pakete unverändert (`ads_eye_distance_m` ist dort nur Referenz, das Spiel zielt mit
+  dem eigenen Profilabstand und dessen Untergrenze 0,1 m), aber die Ziel-Clips von Vertrag 5 bringen das Visier so nah.
 
 ## Prüfen
 

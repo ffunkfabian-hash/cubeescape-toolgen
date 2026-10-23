@@ -22,6 +22,7 @@ from mathutils.bvhtree import BVHTree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 from motion_profiles import draw_hand_offset, envelope, recoil_impulse, settle, solve_elbow
+import ads_view
 import ego_clips
 
 
@@ -316,8 +317,12 @@ PROXIMAL_MARGIN = .01             # ego clips keep the proximal forearm half thi
 # Cube Escape 0.65 enlarges the weapon viewmodels 1.35-1.7x about Socket_Hand (Resources/Toolgen/viewmodel_holds.json);
 # the proximal forearm halves must leave the frame at that size as well.
 GAME_ENLARGEMENT_MAX = 1.7
-ADS_TOP_LIMIT = .25               # ADS target pose: model at most this share of the screen height above the centre (CE 0.72)
 ADS_CENTRE_ALLOWED = ("ScopeEyeLens",)   # the only part the centre ray may meet in the ADS target pose (scope picture)
+# Toolgen 0.25 (user decision 23.10.2026): while aiming the sight is as large as in Destiny 2 and no hand needs to stay in
+# the frame; the ADS keeps only these binding rules (contract 4 ads_target_report, contract 5 ego_rig aim clips).
+ADS_RULE = ("aiming down sights (user decision 23.10.2026, Destiny 2): sight on the screen centre, centre ray free (a "
+            "scope's eye lens excepted), no part of weapon or arms between the camera and the near plane inside the view; "
+            "fingers, thumb and forearms are measured only, the hip framing rule does not apply")
 SIGHT_LINE_TOLERANCE_M = .0001   # Socket_Sight against the AimIdle line of sight (lateral and vertical)
 # Finger rows along the palm's Z axis (Robogen Mitt: three fingers at a 31 mm pitch).
 # Thinner links than the Mitt keep visible gaps, so each finger reads at FPS distance.
@@ -816,7 +821,7 @@ def build(directory, spec, profile):
                                                  support_hand.name if support_hand else None)
         print("ADS_TARGET", tool, json.dumps({key: report["ads_target"][key] for key in
                                               ("eye_distance_m", "passed", "eye_distance_range_m", "centre_hit",
-                                               "model_top_above_centre", "failures")}), flush=True)
+                                               "near_plane_cuts", "hands_in_frame", "failures")}), flush=True)
     root["toolgen_ego_clips"] = json.dumps({"timeline_start": clips[0]["frame_start"] if clips else None,
                                             "timeline_end": ego_clips.timeline_end(clips),
                                             "reload_part": part.name if part is not None else None,
@@ -882,7 +887,7 @@ def recoil_pose(config, frame, pivot):
 
 def ads_setup(scene, root, hold, params):
     """Aim-down-sights transform of Viewmodel_Motion (ego clip pose ``aim`` = 1): the tool's forward axis along the view
-    without roll, and its line of sight on the camera axis at ``ads.eye_distance_m``. The line of sight runs
+    without roll, and its line of sight on the camera axis at ``ads.eye_distance_m`` (measured to Socket_Sight). The line of sight runs
     ``eye_above_m`` over the top of the sight parts (``ads.sight_mode`` "top", iron sights) or through their centre
     ("center", optics); sight parts are ``ads.sight_parts`` (mesh names without SM_PG_) or every mesh whose name contains
     one of ``ads.sight_markers``. Without sight parts the line runs over the highest point of the tool."""
@@ -909,6 +914,11 @@ def ads_setup(scene, root, hold, params):
         points = local_points(tool_meshes)
         sight = Vector((0, float(points[:, 1].mean()), float(points[:, 2].max())))
     eye = sight + Vector((0, 0, block["eye_above_m"] if mode == "top" else 0))
+    socket = next((obj for obj in hold.children_recursive if obj.name == "Socket_Sight"), None)
+    if block["eye_distance_m"] and socket is not None:
+        # 0.25: a given eye distance counts to Socket_Sight, the rear of the sight on this line (contract
+        # hold.ads_eye_distance_m; Cube Escape aims the live Socket_Sight there), not to the middle of the sight parts
+        eye.y = (inverse @ socket.matrix_world.translation).y
     rotation = hold.matrix_world.to_quaternion().inverted()
     world_eye = rotation.to_matrix() @ (hold.matrix_world @ eye)
     # Default distance: the sight's own depth at rest less pull_back_m, so the grip hand mostly moves sideways.
@@ -1216,6 +1226,24 @@ def mesh_data(objects, graph):
     return vertices, polygons, owners
 
 
+def mesh_triangles(objects, graph):
+    """World-space triangles of the evaluated meshes as arrays: vertices (N x 3), triangles (M x 3 vertex indices) and
+    the owner name of every triangle."""
+    vertices, triangles, owners = [], [], []
+    offset = 0
+    for obj in objects:
+        evaluated = obj.evaluated_get(graph)
+        mesh = evaluated.data
+        mesh.calc_loop_triangles()
+        indices = np.empty(len(mesh.loop_triangles) * 3, dtype=np.int64)
+        mesh.loop_triangles.foreach_get("vertices", indices)
+        vertices.append(world_vertices(obj, graph))
+        triangles.append(indices.reshape(-1, 3) + offset)
+        owners.extend([obj.name] * len(mesh.loop_triangles))
+        offset += len(mesh.vertices)
+    return np.concatenate(vertices), np.concatenate(triangles), owners
+
+
 def head_visibility(scene, root, head, frusta, settings):
     """Rest-pose head check: anchor inside the frame and enough unoccluded head on screen.
 
@@ -1343,13 +1371,14 @@ def sight_socket_check(scene, hold, aim):
 def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand):
     """Cube Escape's aim-down-sights target pose (FIRST_PERSON_EQUIPMENT.md 5.3): the whole first-person model in its rest
     pose (frame 1) moved rigidly so Socket_Sight lies on the camera axis at an eye distance and looks along the view
-    (rotation = inverse of Socket_Sight's, scale 1). Framing rule per binding frustum (configured FOV, 16:9 and 16:10):
-    sight on the screen centre; the three gripping fingers and the thumb of each hand inside the frame; the proximal
-    forearm halves below the frame (the support forearm may show while aiming, user decision 16.10.2026: measured, not
-    binding); no vertex inside the frame closer than the near clip. Reported at ``eye_distance_m`` (the game profile,
-    data/tools.json hold) and as the eye-distance range that keeps the rule (``eye_distance_range_m``). Wrist bend and
-    hand touch do not change under a rigid move; they are reported from the rest pose. The whole hand's margin is
-    measured, not binding (the palm may leave the frame at the bottom)."""
+    (rotation = inverse of Socket_Sight's, scale 1). Toolgen 0.25 (user decision 23.10.2026, sight sizes like Destiny 2):
+    the framing rule of the hip pose does not hold while aiming. Binding per binding frustum (configured FOV, 16:9 and
+    16:10): the sight on the screen centre, the centre ray free (a scope's eye lens excepted) and no part of weapon or arms
+    between the camera and the near plane inside the view (ads_view.near_plane_cuts). Measured only: the three gripping fingers and
+    the thumb of each hand in the frame, the proximal forearm halves, the model's top above the centre (rule: ads_view). Reported at
+    ``eye_distance_m`` (ego_clips.ads_eye_distance_m) and as the eye-distance range that keeps the binding rule
+    (``eye_distance_range_m``). Wrist bend and hand touch do not change under a rigid move; they are reported from the
+    rest pose."""
     socket = scene.objects.get("Socket_Sight")
     if socket is None:
         return None
@@ -1366,7 +1395,9 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
 
     frusta = [frustum for frustum in frustum_configurations(settings) if frustum["binding"]]
     meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
-    every = np.concatenate([world_vertices(obj, graph) for obj in meshes])
+    vertices, triangles, owners = mesh_triangles(meshes, graph)
+    # sight frame: Socket_Sight at the origin, view along -Y; the camera of an eye distance d sits at (0, d, 0) (ads_view)
+    local = moved(vertices, 0.0)
     sight_point = np.array([sight.translation])
     parts = {}
     for rig in arms:
@@ -1383,63 +1414,45 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
                             for cx in (-.047, .047) for cy in (-.047, .047)])
         forearms[rig["hand"].name] = corners @ lower[:3, :3].T + lower[:3, 3]
 
-    def evaluate(distance):
-        configurations, failures = [], []
-        for frustum in frusta:
-            label = f"{frustum['vertical_fov_degrees']:.2f} deg vertical, {frustum['aspect']}"
-            u, v, _ = camera_space(moved(sight_point, distance))
-            x, y = screen(u, v, frustum)
-            entry = {"vertical_fov_degrees": frustum["vertical_fov_degrees"], "aspect": frustum["aspect"],
-                     "sight_screen": [round(float(x[0]), 6), round(float(y[0]), 6)], "margins": {},
-                     "proximal_forearm_max_screen_y": {}}
-            reasons = []
-            if max(abs(x[0] - .5), abs(y[0] - .5)) > .002:
-                reasons.append(f"sight off the screen centre ({x[0]:.4f}, {y[0]:.4f})")
-            for hand_name, groups in parts.items():
-                margins = {}
-                for name, points in groups.items():
-                    pu, pv, pdepth = camera_space(moved(points, distance))
-                    px, py = screen(pu, pv, frustum)
-                    margins[name] = round(float(min(px.min(), (1 - px).min(), py.min(), (1 - py).min())), 5) \
-                        if (pdepth > near).all() else -1.0
-                entry["margins"][hand_name] = margins
-                outside = sorted(name for name, margin in margins.items() if name != hand_name and margin < 0)
-                if outside:
-                    reasons.append(f"{hand_name}: {outside} not in the frame")
-            for name, corners in forearms.items():
-                cu, cv, cdepth = camera_space(moved(corners, distance))
-                top = float(np.where(cdepth > near, screen(cu, cv, frustum)[1], -1.0).max())
-                entry["proximal_forearm_max_screen_y"][name] = round(top, 5)
-                if top >= 0 and name != support_hand:
-                    reasons.append(f"proximal forearm of {name} enters the viewport (y {top:.4f})")
-            eu, ev, edepth = camera_space(moved(every, distance))
-            ex, ey = screen(eu, ev, frustum)
-            seen = (ex >= 0) & (ex <= 1) & (ey >= 0) & (ey <= 1) & (edepth > 0)
-            beside = (ex >= 0) & (ex <= 1) & (edepth > near)
-            entry["model_top_screen_y"] = round(float(ey[beside].max()), 5) if beside.any() else None
-            closest = float(edepth[seen].min()) if seen.any() else None
-            entry["min_visible_depth_m"] = closest and round(closest, 5)
-            if closest is not None and closest <= near:
-                reasons.append(f"a visible vertex lies in front of the near clip ({closest:.4f} m)")
-            entry["ok"] = not reasons
-            entry["reasons"] = reasons
-            configurations.append(entry)
-            failures.extend(f"{label}: {reason}" for reason in reasons)
-        return configurations, failures
-
-    configurations, failures = evaluate(eye_distance_m)
-    # Cube Escape 0.72: the screen centre stays free (the ray along the view meets no part, a scope's eye lens excepted)
-    # and the model reaches at most ADS_TOP_LIMIT of the screen height above the centre, at the profile distance.
-    vertices, polygons, owners = mesh_data(meshes, graph)
-    shifted = moved(np.array([tuple(vertex) for vertex in vertices]), eye_distance_m)
-    tree = BVHTree.FromPolygons([Vector(point) for point in shifted.tolist()], polygons)
-    hit = tree.ray_cast(Vector((0, 0, 0)), Vector((0, -1, 0)), 50.0)
-    centre_hit = owners[hit[2]] if hit[0] is not None else None
-    centre_clear = centre_hit is None or centre_hit.removeprefix("SM_PG_") in ADS_CENTRE_ALLOWED
+    configurations, failures = [], []
+    for frustum in frusta:
+        label = f"{frustum['vertical_fov_degrees']:.2f} deg vertical, {frustum['aspect']}"
+        u, v, _ = camera_space(moved(sight_point, eye_distance_m))
+        x, y = screen(u, v, frustum)
+        entry = {"vertical_fov_degrees": frustum["vertical_fov_degrees"], "aspect": frustum["aspect"],
+                 "sight_screen": [round(float(x[0]), 6), round(float(y[0]), 6)], "margins": {},
+                 "proximal_forearm_max_screen_y": {}, "hands_out_of_frame": []}
+        reasons = []
+        if max(abs(x[0] - .5), abs(y[0] - .5)) > .002:
+            reasons.append(f"sight off the screen centre ({x[0]:.4f}, {y[0]:.4f})")
+        for hand_name, groups in parts.items():
+            margins = {}
+            for name, points in groups.items():
+                pu, pv, pdepth = camera_space(moved(points, eye_distance_m))
+                px, py = screen(pu, pv, frustum)
+                margins[name] = round(float(min(px.min(), (1 - px).min(), py.min(), (1 - py).min())), 5) \
+                    if (pdepth > near).all() else -1.0
+            entry["margins"][hand_name] = margins
+            entry["hands_out_of_frame"] += sorted(name for name, margin in margins.items()
+                                                  if name != hand_name and margin < 0)
+        for name, corners in forearms.items():
+            cu, cv, cdepth = camera_space(moved(corners, eye_distance_m))
+            entry["proximal_forearm_max_screen_y"][name] = round(float(np.where(cdepth > near, screen(cu, cv, frustum)[1],
+                                                                                -1.0).max()), 5)
+        eu, ev, edepth = camera_space(moved(vertices, eye_distance_m))
+        ex, ey = screen(eu, ev, frustum)
+        seen = (ex >= 0) & (ex <= 1) & (ey >= 0) & (ey <= 1) & (edepth > 0)
+        beside = (ex >= 0) & (ex <= 1) & (edepth > near)
+        entry["model_top_screen_y"] = round(float(ey[beside].max()), 5) if beside.any() else None
+        closest = float(edepth[seen].min()) if seen.any() else None
+        entry["min_visible_depth_m"] = closest and round(closest, 5)
+        entry["ok"] = not reasons
+        entry["reasons"] = reasons
+        configurations.append(entry)
+        failures.extend(f"{label}: {reason}" for reason in reasons)
+    reasons, hit, cuts = ads_view.rule(local, triangles, owners, frusta, near, eye_distance_m, ADS_CENTRE_ALLOWED)
+    failures.extend(reasons)
     tops = [entry["model_top_screen_y"] for entry in configurations if entry["model_top_screen_y"] is not None]
-    top_above = round(max(tops) - .5, 5) if tops else None
-    steps = [round(.10 + .005 * index, 3) for index in range(141)]           # 0.10 ... 0.80 m
-    passing = [distance for distance in steps if not evaluate(distance)[1]]
     bends = {}
     for rig in arms:
         if "arm_limits" in rig:
@@ -1448,17 +1461,15 @@ def ads_target_report(scene, root, arms, settings, eye_distance_m, support_hand)
     matrix = Matrix.Translation(Vector(base.tolist()) + Vector((0, -eye_distance_m, 0))) @ rotation.to_4x4()
     return {"pose": "rest pose (frame 1) moved rigidly: Socket_Sight on the camera axis at the eye distance, rotation = "
                     "inverse of Socket_Sight's (FIRST_PERSON_EQUIPMENT.md 5.3); scale 1",
-            "rule": "three gripping fingers and the thumb of each hand in the frame, proximal forearm halves below it "
-                    "(support forearm measured only, user decision 16.10.2026), no visible vertex before the near clip",
-            "sight_socket": "Socket_Sight", "eye_distance_m": eye_distance_m,
+            "rule": ADS_RULE, "sight_socket": "Socket_Sight", "eye_distance_m": eye_distance_m,
             "frame_matrix_blender": [[round(float(value), 7) for value in row] for row in matrix],
             "near_clip_m": near, "support_forearm_exempt": support_hand, "configurations": configurations,
             "passed": not failures, "failures": failures,
-            "centre_clear": centre_clear, "centre_hit": centre_hit, "model_top_above_centre": top_above,
-            "model_top_limit": ADS_TOP_LIMIT, "model_top_ok": top_above is None or top_above <= ADS_TOP_LIMIT,
-            "eye_distance_range_m": [passing[0], passing[-1]] if passing else None,
-            "eye_distance_steps_m": [steps[0], steps[-1], .005],
-            "eye_distance_range_contiguous": bool(passing) and len(passing) == round((passing[-1] - passing[0]) / .005) + 1,
+            "centre_clear": not any(reason.startswith("the centre ray") for reason in reasons), "centre_hit": hit,
+            "near_plane_cuts": cuts,
+            "hands_in_frame": not any(entry["hands_out_of_frame"] for entry in configurations),
+            "model_top_above_centre": round(max(tops) - .5, 5) if tops else None,
+            **ads_view.eye_distance_range(local, triangles, owners, frusta, near, ADS_CENTRE_ALLOWED),
             "wrist_bend": bends}
 
 

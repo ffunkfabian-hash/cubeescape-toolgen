@@ -110,7 +110,8 @@ Nach Änderungen: `bash viewer/build.sh [output-dir]` und `bash viewer/test_view
 Sichtbare Änderungen mit Screenshots prüfen; `--sidebar-check` muss bei 360 pt passen. Der Playhead beobachtet nur die
 Zeitleiste, nicht die ganze Seitenleiste. Im Ruhezustand kein Wiedergabe-Timer, keine dauernden Dateizugriffe.
 Die App bündelt Modelle und Backend. Ohne vorherige Generierung müssen die gelieferten Modelle direkt sichtbar sein.
-Ego-Gestaltung, Viewmodel-Sichtfeld und verbindlicher Bildausschnitt (drei Greiffinger plus Daumen, maximal halbe Unterarme):
+Ego-Gestaltung, Viewmodel-Sichtfeld und verbindlicher Bildausschnitt (drei Greiffinger plus Daumen, maximal halbe Unterarme; nicht im
+ADS – dort seit 0.25 Bildmitte frei, Visier auf der Achse, Nahebene frei, Nutzer 23.10.2026):
 [docs/TECHNIK.md](docs/TECHNIK.md) › Hände und Bewegungsgefühl; bei Änderungen vorab lesen. Spiel-Export für Unity
 (`toolgen/game_export.py`, `data/game_palette.json`, `data/game_budget.json`; Ego: Stufe `game_fps`; UV1 und Maskenkarten ab Vertrag 4:
 `toolgen/surface.py`, Stufe `surface_bake`): › Spiel-Export, › Oberflächenkarten, Einbau: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md); matte Palette, ein Renderer für statische Teile, Kollision

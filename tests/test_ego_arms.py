@@ -233,18 +233,28 @@ class FireClipTests(unittest.TestCase):
                         moved = ego_clips.pose_at(clip, clip["frame_start"] + shot + 1, params)
                         self.assertGreater(abs(moved["pitch"]) + abs(moved["back"]) * 1000, .2)
 
-    def test_only_a_scope_lets_the_grip_hand_leave_the_aim_frame(self):
-        """0.24 (user decision 22.10.2026): the scope sits close to the eye; only there may the grip hand leave the frame
-        in the aim clips (ego_rig AIM_MOTIONS), every other device keeps the framing rule."""
+    def test_aim_clips_follow_the_ads_rule_for_every_device(self):
+        """0.24 let only a scope's grip hand leave the aim frame (ads.hands_may_leave). 0.25 (user decision 23.10.2026,
+        Destiny 2 shows no hands while aiming): the framing rule does not hold in the aim clips of any device
+        (ego_rig.AIM_MOTIONS), so there is no per-device exception left - one truth, in ego_rig - and every ads block has
+        the eye distance of its sight kind (holo/reflex window 30 %, scope eyepiece 65 % of the picture height)."""
+        import ast
+        sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
+        import ego_clips
+        source = (ROOT / "toolgen/ego_rig.py").read_text()          # bpy module: read, not imported
+        assigned = next(node.value for node in ast.parse(source).body if isinstance(node, ast.Assign)
+                        and getattr(node.targets[0], "id", None) == "AIM_MOTIONS")
+        aimed = {entry["motion"] for entry in ego_clips.load()["clips"] if "aim" in (entry["from"], entry["to"])}
+        aimed |= {motion for pair in ego_arms.FIRE_CLIPS.values() for _, motion, pose in pair if pose == "aim"}
+        self.assertEqual(aimed, set(ast.literal_eval(assigned)), "every clip from or to the aim pose")
+        self.assertNotIn("hands_may_leave", source)
         tools = {tool["id"]: tool for tool in catalog()}
         for tool_id, device in DEVICES.items():
-            leave = device.get("ads", {}).get("hands_may_leave")
             with self.subTest(tool=tool_id):
-                if tools[tool_id].get("hold", {}).get("sight_kind") == "scope":
-                    self.assertEqual(["R"], leave)
-                    self.assertLessEqual(device["ads"]["eye_distance_m"], .15)
-                else:
-                    self.assertIsNone(leave)
+                self.assertNotIn("hands_may_leave", device.get("ads", {}))
+                if "ads" in device:
+                    kind = tools[tool_id]["hold"]["sight_kind"]
+                    self.assertLessEqual(device["ads"]["eye_distance_m"], .06 if kind == "scope" else .21)
 
     def test_scope_markers_and_lens_lead(self):
         clips = self.clips("scout_rifle")
