@@ -129,24 +129,36 @@ RIG_EVENTS = ("HandOff", "HandOn")      # events of the channel "rig" (support-h
 def clip_list_v5(tool, profile, device):
     """The ego clips of data/ego_clips.json for this device with the contract 5 reload clips (data/ego_arms.json):
     Reload replaced, ReloadEmpty appended at the end; events carry ``channel`` (action or rig) and Reload/ReloadEmpty
-    Start/End. Frames laid out again on the timeline."""
+    Start/End. 0.24 (Salvo), appended after them: the fire clips of the device's ``fire`` block (fire_clips) and the
+    named extra events of ``events`` on existing clips (a scope's ScopeOn/ScopeOff). Frames laid out again on the
+    timeline."""
     sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
     import ego_clips
     data = ego_clips.load()
     clips, params = ego_clips.clip_list(data, tool, profile.get("motion"))
     if "ads" in device and "ads" in params:
-        params["ads"] = dict(params["ads"], eye_distance_m=device["ads"]["eye_distance_m"])
+        params["ads"] = dict(params["ads"], eye_distance_m=device["ads"]["eye_distance_m"],
+                             **({"lens_lead_frames": device["ads"]["lens_lead_frames"]}
+                                if "lens_lead_frames" in device["ads"] else {}))
+    if "fire" in device:
+        params["fire_pattern"] = device["fire"]
     reload = device.get("reload")
+    extra = device.get("events", {})
     result = []
     for clip in clips:
         events = [{"name": event["name"], "offset": event["frame"] - clip["frame_start"]} for event in clip["events"]]
-        entry = dict(clip, events=events)
+        events += [{"name": name, "offset": offset} for name, offset in sorted(extra.get(clip["suffix"], {}).items(),
+                                                                                key=lambda item: item[1])]
+        entry = dict(clip, events=sorted(events, key=lambda event: event["offset"]))
         if clip["motion"] == "reload" and reload and "Reload" in reload:
             entry = reload_clip(clip, "Reload", reload["Reload"])
         result.append(entry)
     base = next((clip for clip in clips if clip["motion"] == "reload"), None)
     if reload and "ReloadEmpty" in reload and base is not None:
         result.append(reload_clip(base, "ReloadEmpty", reload["ReloadEmpty"]))
+    fire = next((clip for clip in clips if clip["motion"] == "fire"), None)
+    if "fire" in device and fire is not None:
+        result += fire_clips(fire, device["fire"])
     start = data["timeline"]["start_frame"]
     for clip in result:
         clip["frame_start"], clip["frame_end"] = start, start + clip["length"]
@@ -154,6 +166,65 @@ def clip_list_v5(tool, profile, device):
                            "channel": "rig" if event["name"] in RIG_EVENTS else "action"} for event in clip["events"]]
         start += clip["length"] + 1 + data["timeline"]["gap_frames"]
     return result, params
+
+
+# 0.24 (Salvo): the fire mechanics of a device (data/ego_arms.json devices.<tool>.fire) as clips at the end of the list:
+# auto = held fire, a loop of loop_shots real shots every cycle_frames (a state clip like Charge: Cube Escape starts it at
+# the first shot and stops it when the trigger is released, user decision 22.10.2026); burst = one trigger pull, count
+# shots spacing_frames apart, then BurstEnd (the last shot), Ready (the next pull may start) and Still (the model rests).
+FIRE_CLIPS = {"auto": (("AutoFire", "auto_fire", "rest"), ("AimAutoFire", "aim_auto_fire", "aim")),
+              "burst": (("Burst", "burst", "rest"), ("AimBurst", "aim_burst", "aim"))}
+
+
+def shot_offsets(pattern):
+    """Frames (from the clip start) of the real shots of one fire clip."""
+    if pattern["mode"] == "auto":
+        return [index * pattern["cycle_frames"] for index in range(pattern["loop_shots"])]
+    return [index * pattern["spacing_frames"] for index in range(pattern["count"])]
+
+
+def fire_clips(base, pattern):
+    """The fire clips of ``pattern`` built on the Fire clip ``base`` (its name stem, flags and aim flags of AimFire)."""
+    stem = base["name"][:-len(base["suffix"])]
+    shots = shot_offsets(pattern)
+    result = []
+    for suffix, motion, pose in FIRE_CLIPS[pattern["mode"]]:
+        if pattern["mode"] == "auto":
+            length = pattern["cycle_frames"] * pattern["loop_shots"]
+            events = [{"name": "Shot", "offset": offset} for offset in shots]
+        else:
+            length = pattern["length"]
+            events = [{"name": "Start", "offset": 0}, *({"name": "Shot", "offset": offset} for offset in shots),
+                      {"name": "Move", "offset": 1}, {"name": "BurstEnd", "offset": shots[-1]}, {"name": "Ready", "offset": pattern["ready_frame"]},
+                      {"name": "Still", "offset": pattern["still_frame"]}, {"name": "End", "offset": length}]
+        result.append(dict(base, name=stem + suffix, suffix=suffix, motion=motion, length=length, events=events,
+                           loop=pattern["mode"] == "auto", reticle_free=pose == "rest", interruptible=True,
+                           support_forearm_visible=pose == "aim", shots=shots, stroke_frames=pattern["stroke_frames"],
+                           **{"from": pose, "to": pose}))
+    return result
+
+
+def fire_block(fire, entries, fps):
+    """The device's fire mechanics as contract data (0.24): Cube Escape couples its real shots to them - one shot per Shot
+    event, the burst length and spacing are a property of the subtype, Ready is the release for the next pull."""
+    suffixes = [suffix for suffix, _, _ in FIRE_CLIPS[fire["mode"]]]
+    clips = [entry["name"] for entry in entries if entry["suffix"] in suffixes]
+    interval = fire["cycle_frames"] if fire["mode"] == "auto" else fire["spacing_frames"]
+    block = {"mode": fire["mode"], "clips": clips, "shot_interval_frames": interval,
+             "shot_interval_seconds": round(interval / fps, 6)}
+    if fire["mode"] == "auto":
+        block.update(shots_per_trigger="held", cadence_rpm=fire["cadence_rpm"], loop_shots=fire["loop_shots"],
+                     rule="held fire: start the loop at the first real shot, one real shot per Shot event (Cube Escape's "
+                          "WeaponCadence at cadence_rpm), stop on release or a blocked shot; the loop carries the per-shot "
+                          "kick, so the procedural recoil of the series must not add a second kick for the same shot")
+    else:
+        block.update(shots_per_trigger=fire["count"], ready_frame=fire["ready_frame"],
+                     ready_seconds=round(fire["ready_frame"] / fps, 6), still_frame=fire["still_frame"],
+                     still_seconds=round(fire["still_frame"] / fps, 6),
+                     rule="one trigger pull = shots_per_trigger real shots at the Shot events (each one consumes, traces "
+                          "and flashes); BurstEnd = the last shot, Ready = the next pull may start (not the clip end), "
+                          "Still = the model rests; an interrupted burst fires no further shots")
+    return block
 
 
 def reload_clip(base, suffix, spec):

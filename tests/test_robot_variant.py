@@ -26,7 +26,9 @@ TOOLS = {tool["id"]: tool for tool in catalog()}
 # Cube Escape 0.82 "Sidearm" (Docs/EQUIPMENT.md, length in the hand = Toolgen length x heldScale): the robot variant is this
 # long and is held at heldScale 1.0. The pistol keeps its model (scale 1.1, the cup grip fits).
 CE_LENGTH = {"smg": .52, "assault_rifle": .67, "pulse_rifle": .66, "shotgun": .67, "fusion_rifle": .67, "trace_rifle": .69,
-             "sniper_rifle": .73, "rocket_launcher": .65}
+             "sniper_rifle": .73, "rocket_launcher": .65,
+             # 0.24: CE has no length for the new scout rifle yet; Toolgen's 0.70 keeps CE's class order (trace < scout < sniper)
+             "scout_rifle": .70}
 ROBOT_STAGES = ("robot", "game_robot", "surface_bake_robot")
 
 
@@ -238,7 +240,8 @@ class CoplanarRobotTests(unittest.TestCase):
             with self.subTest(weapon=key):
                 self.assertTrue(all(name.startswith(group) for name, group in groups.items()))
                 self.assertFalse({"Grip", "Drum", "Stock", "Shroud"} & set(groups.values()))
-        self.assertEqual({"StockCell_-1", "StockCell_1"}, set(designs.robot_cells(built("pulse_rifle").geometry).values()))
+        # 0.24: the pulse rifle (KG03 since then) has no energy-cell parts any more; the trace rifle keeps its stock cell
+        self.assertEqual({"StockCell"}, set(designs.robot_cells(built("trace_rifle").geometry).values()))
 
 
 class DecalRefitTests(unittest.TestCase):
@@ -286,10 +289,11 @@ class DecalRefitTests(unittest.TestCase):
                         self.assertAlmostEqual(life_aspect, robot_aspect, places=6)
 
     def test_a_decal_on_the_squashed_stock_moves_inward_before_it_shrinks(self):
-        fit, to_life, to_model = designs.ROBOT["pulse_rifle"], *self.maps(designs.ROBOT["pulse_rifle"])
-        anchor = next(a for a in designs.DECALS["pulse_rifle"] if a["part"] == "Chassis")
-        kit = built("pulse_rifle")
-        life_box = primitive_bounds(*kit.geometry["Chassis"])
+        # 0.24: the pulse rifle's Chassis decal went into KG03's mask regions; the fusion rifle's Body reaches into its stock
+        fit, to_life, to_model = designs.ROBOT["fusion_rifle"], *self.maps(designs.ROBOT["fusion_rifle"])
+        anchor = next(a for a in designs.DECALS["fusion_rifle"] if a["part"] == "Body")
+        kit = built("fusion_rifle")
+        life_box = primitive_bounds(*kit.geometry["Body"])
         box = (designs.robot_point(fit, life_box[0]), designs.robot_point(fit, life_box[1]))
         moved = decals.refit_rect(anchor, box, to_life, to_model, fit["cross"])
         u0, v0, u1, v1 = moved["rect"]

@@ -245,8 +245,9 @@ def build_contract5(tool, work, ego, arms_contract, rig_report, files, base_cont
                                "assembly: Shoulder_<S> (location and rotation), UpperArm/LowerArm/Hand/finger and thumb "
                                "rotations, the device's Anim_* nodes and the visibility scale of visibility_nodes. Never the "
                                "rig root, Prop_R/Prop_L, the device root or materials. Every clip starts and ends in its "
-                               "named pose (rest = frame 0 of the Use clip, for every node). Loop clips: Idle, Walk, Sprint, "
-                               "AimIdle (last sample = first). Nothing plays by itself.",
+                               "named pose (rest = frame 0 of the Use clip, for every node). Loop clips: "
+                               + ", ".join(entry["suffix"] for entry in entries if entry["loop"])
+                               + " (last sample = first). Nothing plays by itself.",
                       "unity": "Import the clips file Generic with bakeAxisConversion and optimizeGameObjects off; split "
                                "its take with ModelImporter.clipAnimations (firstFrame/lastFrame = take start + "
                                "take_frame_start/take_frame_end). Its node paths are 'assembly': build the prefab as "
@@ -276,6 +277,9 @@ def build_contract5(tool, work, ego, arms_contract, rig_report, files, base_cont
         "event_channels": {"action": "EquipmentActionEvent (default when channel is missing)",
                            "rig": "read only by the support-hand IK (HandOff, HandOn)"},
     })
+    device = ego_arms.load()["devices"].get(tool["id"], {})
+    if "fire" in device:
+        document["fire"] = ego_arms.fire_block(device["fire"], entries, fps)
     document["minimum_consumer"] = dict(document.get("minimum_consumer", {}), shared_arm_rig=ge.SHARED_ARM_CONSUMER)
     document["older_consumers"] = ego_arms.OLDER_CONSUMERS
     document["files"] = {kind: {"path": path.name, "sha256": ge.file_sha256(path)} for kind, path in files.items()}

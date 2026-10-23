@@ -470,14 +470,38 @@ def _uv_array(mesh, name):
     return values.reshape(-1, 2)
 
 
-def _face_angles(mesh):
-    """Direction (radians) of each face's first UV1 edge, NaN for degenerate edges."""
+# 0.24: the float32 UV of an edge this short turns by up to ~0.2 degrees in packing alone (the robot scout rifle's
+# squashed charging handle measured 1.03 degrees on edges near 1e-6); a face whose longest edge is shorter is not measured
+ANGLE_EDGE_MIN = 2e-5
+
+
+def _face_angles(mesh, chosen=None):
+    """Direction (radians) of each face's longest UV1 edge, NaN for degenerate faces (longest edge shorter than
+    ANGLE_EDGE_MIN), and the chosen edge per face. ``chosen`` (the edges of an earlier call) measures exactly those edges
+    again: packing moves and scales islands uniformly, but of two edges of (almost) equal length a new call could pick the
+    other one and report a 90 degree turn."""
     uv = _uv_array(mesh, UV1_NAME)
-    starts = np.empty(len(mesh.polygons), dtype=np.int64)
+    count = len(mesh.polygons)
+    starts = np.empty(count, dtype=np.int64)
+    totals = np.empty(count, dtype=np.int64)
     mesh.polygons.foreach_get("loop_start", starts)
-    delta = uv[starts + 1] - uv[starts]
-    length = np.hypot(delta[:, 0], delta[:, 1])
-    return np.where(length > 1e-7, np.arctan2(delta[:, 1], delta[:, 0]), np.nan)
+    mesh.polygons.foreach_get("loop_total", totals)
+
+    def edge(offset):
+        first = starts + offset % totals
+        second = starts + (offset + 1) % totals
+        delta = uv[second] - uv[first]
+        return delta, np.hypot(delta[:, 0], delta[:, 1])
+
+    if chosen is None:
+        chosen = np.zeros(count, dtype=np.int64)
+        best_length = np.zeros(count)
+        for offset in range(int(totals.max()) if count else 0):
+            _, length = edge(np.full(count, offset))
+            longer = (offset < totals) & (length > best_length)
+            chosen[longer], best_length[longer] = offset, length[longer]
+    delta, length = edge(chosen)
+    return np.where(length > ANGLE_EDGE_MIN, np.arctan2(delta[:, 1], delta[:, 0]), np.nan), chosen
 
 
 def is_unpainted(obj):
@@ -528,7 +552,7 @@ def add_uv1(objects):
         bpy.ops.uv.select_all(action="SELECT")
         bpy.ops.uv.average_islands_scale()
         bpy.ops.object.mode_set(mode="OBJECT")
-        before = {obj.name: _face_angles(obj.data) for obj in painted}
+        before = {obj.name: _face_angles(obj.data) for obj in painted}       # (angles, chosen edges)
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action="SELECT")
         bpy.ops.uv.select_all(action="SELECT")
@@ -538,8 +562,9 @@ def add_uv1(objects):
             raise RuntimeError("UV1 packing failed")
         bpy.ops.object.mode_set(mode="OBJECT")
         for obj in painted:
-            after = _face_angles(obj.data)
-            change = np.abs((after - before[obj.name] + math.pi) % (2 * math.pi) - math.pi)
+            angles, chosen = before[obj.name]
+            after, _ = _face_angles(obj.data, chosen)
+            change = np.abs((after - angles + math.pi) % (2 * math.pi) - math.pi)
             if np.any(np.isfinite(change)):
                 rotation = max(rotation, float(np.degrees(np.nanmax(change))))
             uv = _uv_array(obj.data, UV1_NAME)

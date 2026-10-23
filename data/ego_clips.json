@@ -85,6 +85,7 @@
       "sprint_in_frames": 7,
       "sprint_out_frames": 7,
       "reload": {"out_at": 0.28, "in_at": 0.64, "drop_m": [0.012, -0.095, 0.02], "reach_m": [0.02, -0.006, 0.035]},
+      "ads": {"sight_parts": ["Rahmen_p25"], "sight_mode": "center"},
       "inspect": {"a": {"twist_deg": 27}, "b": {"twist_deg": -11}},
       "idle": {"up_m": 0.001875, "pitch_deg": 0.3125, "roll_deg": 0.1875},
       "walk": {"up_m": 0.001875, "right_m": 0.005, "twist_deg": 1.25, "pitch_deg": 0.4375},
@@ -118,7 +119,7 @@
       "fire_cooldown_s": 0.6,
       "weight": 1.0,
       "reload": {"part": "Anim_EnergyCell", "style": "cell", "out_at": 0.34, "in_at": 0.68, "drop_m": [0, -0.1, 0.025], "latch_m": [-0.015, 0, 0], "reach_m": [0.012, -0.006, 0.06]},
-      "ads": {"sight_parts": ["Sight", "SightGlow"], "sight_mode": "top", "eye_above_m": 0.004},
+      "ads": {"sight_parts": ["Rahmen_p32"], "sight_mode": "center"},
       "inspect": {"a": {"twist_deg": 26}, "b": {"twist_deg": -12}},
       "idle": {"up_m": 0.0015, "pitch_deg": 0.25, "roll_deg": 0.15},
       "walk": {"up_m": 0.0015, "right_m": 0.004, "twist_deg": 1.0, "pitch_deg": 0.35},
@@ -207,6 +208,18 @@
     "flashlight": {
       "lowered": {"twist_deg": 12, "pitch_deg": 5, "right_m": -0.02, "up_m": -0.01},
       "inspect": {"a": {"twist_deg": 18}, "b": {"twist_deg": -14}}
+    },
+    "scout_rifle": {
+      "fire_cooldown_s": 0.35,
+      "weight": 1.0,
+      "ads_frames": 9,
+      "reload": {"out_at": 0.3, "in_at": 0.66, "drop_m": [0, -0.1, 0.02], "reach_m": [0.014, -0.006, 0.035]},
+      "ads": {"sight_parts": ["Gehaeuse_p21"], "sight_mode": "center", "breath_scale": 0.3},
+      "inspect": {"a": {"twist_deg": 25}, "b": {"twist_deg": -16}},
+      "idle": {"up_m": 0.0015, "pitch_deg": 0.25, "roll_deg": 0.15},
+      "walk": {"up_m": 0.0015, "right_m": 0.004, "twist_deg": 1.0, "pitch_deg": 0.35},
+      "sprint": {"twist_deg": 12.0, "pitch_deg": 1, "right_m": -0.025, "bob_up_m": 0.002, "bob_right_m": 0.004, "bob_twist_deg": 1.2},
+      "lowered": {"twist_deg": 10.0, "pitch_deg": 1, "right_m": -0.02}
     }
   }
 }

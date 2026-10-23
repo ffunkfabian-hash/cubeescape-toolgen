@@ -1,2 +1,2 @@
-VERSION = "0.23.0"
-CODENAME = "Livery"
+VERSION = "0.24.0"
+CODENAME = "Salvo"

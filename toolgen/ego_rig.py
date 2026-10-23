@@ -50,6 +50,7 @@ RIG_EVENTS = ego_arms.RIG_EVENTS
 SWAP_TOLERANCE_M = .002
 CURL_STEPS = 60
 CURL_LEAD = .25                      # each joint further out starts curling this share of the sweep later
+AIM_MOTIONS = ("aim_in", "aim_idle", "aim_fire", "aim_out")
 
 
 # --------------------------------------------------------------------------------------------- data
@@ -841,7 +842,8 @@ def properties(root, arms_root, spec, settings, state, clips, hand_parts):
     root["ce_hand_style"] = "shared ego arm rig (contract 5), three gripping fingers and thumb"
     root["ce_contract"] = 5
     root["toolgen_ego_clips"] = json.dumps({"timeline_start": clips[0]["frame_start"], "timeline_end": clips[-1]["frame_end"],
-                                            "reload_part": "Anim_Magazine" if hand_parts else None, "clips": clips,
+                                            "reload_part": (next(iter(hand_parts["parts"].values()))["source"].name if hand_parts
+                                                            else None), "clips": clips,
                                             "rig": {"id": state["rig"]["id"], "version": state["rig"]["version"],
                                                     "hash": state["hash"]},
                                             "assembly_root": arms_root.name,
@@ -940,7 +942,11 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
                     proximal_visible.append([key, frame, side, aspect])
                 if screen_points(elbow, frustum, near)[2].any():
                     elbow_visible.append([key, frame, side, aspect])
-            if side == "R" or not free:
+            # 0.24: a scope's aim clips may let the named hands leave the frame (devices.<tool>.ads.hands_may_leave, user
+            # decision 22.10.2026: the scope sits close to the eye like Dead Man's Tale)
+            scope_free = (clip is not None and clip["motion"] in AIM_MOTIONS
+                          and side in device.get("ads", {}).get("hands_may_leave", ()))
+            if (side == "R" or not free) and not scope_free:
                 fingers, thumb, _ = hand_link_meshes(state, side)
                 for name, links in [*((f"finger {index}", chain) for index, chain in enumerate(fingers)), ("thumb", thumb)]:
                     # in every aspect (16:9 and 16:10): a finger only inside the wider frame is missing in 16:10
@@ -1079,14 +1085,45 @@ def event_checks(clips, device):
             if missing:
                 failures.append(f"{clip['name']}: missing events {missing}")
                 continue
-            order = ["HandOff", "MagOut", "MagIn", *(["Chamber"] if "Chamber" in frames else []), "HandOn"]
+            order = [*(["Move"] if "Move" in frames else []), "HandOff", "MagOut", "MagIn",
+                     *(["Chamber"] if "Chamber" in frames else []), "HandOn"]
             values = [frames[name] for name in order]
             if any(a >= b for a, b in zip(values, values[1:])) or frames["Ready"] < frames["MagIn"]:
-                failures.append(f"{clip['name']}: event order {frames} (strictly HandOff < MagOut < MagIn (< Chamber) < HandOn)")
+                failures.append(f"{clip['name']}: event order {frames} (strictly (Move <) HandOff < MagOut < MagIn "
+                                f"(< Chamber) < HandOn)")
+            # 0.24: Ready (the real release) and Still (the model rests) are separate markers; the clip end is neither
+            if "Still" in frames and not frames["Ready"] < frames["Still"] < frames["End"]:
+                failures.append(f"{clip['name']}: Ready < Still < End expected, got {frames}")
             repeated = sorted({name for name in names if names.count(name) > 1})
             if repeated:
                 failures.append(f"{clip['name']}: events more than once {repeated}")
+        elif clip.get("shots"):
+            failures += fire_event_failures(clip, device["fire"])
+        failures += [f"{clip['name']}: extra event {name} at {offset} outside the clip"
+                     for name, offset in device.get("events", {}).get(clip["suffix"], {}).items()
+                     if not 0 <= offset <= clip["length"]]
     return {"failures": failures, "clips": result}
+
+
+def fire_event_failures(clip, pattern):
+    """0.24: a fire clip carries one Shot per real shot of the device's pattern, in order; a burst adds BurstEnd at its
+    last shot, Ready (the next pull) after it and Still (the model rests) before the clip end."""
+    start = clip["frame_start"]
+    shots = [event["frame"] - start for event in clip["events"] if event["name"] == "Shot"]
+    failures = []
+    if shots != ego_arms.shot_offsets(pattern):
+        failures.append(f"{clip['name']}: Shot at {shots}, the pattern says {ego_arms.shot_offsets(pattern)}")
+    if pattern["mode"] == "auto":
+        if not clip["loop"] or clip["length"] != pattern["cycle_frames"] * pattern["loop_shots"]:
+            failures.append(f"{clip['name']}: held fire is a loop of whole cycles")
+        return failures
+    frames = {event["name"]: event["frame"] - start for event in clip["events"] if event["name"] != "Shot"}
+    if not shots or frames.get("BurstEnd") != shots[-1]:
+        failures.append(f"{clip['name']}: BurstEnd {frames.get('BurstEnd')} is not the last Shot {shots[-1:]}")
+    if not shots or not (frames.get("Start") == 0 == shots[0] and frames.get("Move") == 1
+                         and shots[-1] < frames["Ready"] < frames["Still"] < frames["End"] == clip["length"]):
+        failures.append(f"{clip['name']}: Start = first Shot, Move 1, last Shot < Ready < Still < End expected, got {frames}")
+    return failures
 
 
 def swap_checks(scene, clips, device, hand_parts):

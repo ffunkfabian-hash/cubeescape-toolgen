@@ -50,7 +50,10 @@ CHANNELS = {"MT_Primary": "Primary", "MT_Secondary": "Secondary", "MT_Accent": "
 DECAL_FACES = {"left": "+x", "right": "-x", "front": "-y", "back": "+y", "top": "+z", "bottom": "-z"}
 # Toolgen nodes of parts by their label where moving_parts has none (Toolgen's convention: the reload clip moves
 # Anim_Magazine, data/ego_clips.json reload.part).
-LABEL_NODES = {"Magazin": "Anim_Magazine"}
+LABEL_NODES = {"Magazin": "Anim_Magazine", "Energiezelle": "Anim_EnergyCell"}   # 0.24: KG03's energy cell p18 is its magazine
+# 0.24: Toolgen nodes of single parts of one sheet (a design decision, not a spec value): KG06 draws no bolt, so its Use clip
+# pulls the trigger p12 - the one part that moves with every shot (the viewer needs visible motion in the world model)
+PART_NODES = {"KG06": {"p12": "Anim_Trigger"}}
 COPLANAR_GAP_M = .0005
 COPLANAR_ANGLE_DEGREES = 1.0
 COPLANAR_MIN_OVERLAP_M2 = 1e-6
@@ -320,14 +323,14 @@ def bevel_width(vertices):
 
 
 # ---------------------------------------------------------------------------------------------------- the plan
-def look(part):
+def look(part, sheet=None):
     return (part["label"], part["channel"], part["material"], bool(part["emissive"]), bool(part["sight"]),
-            (part.get("moving") or {}).get("toolgen_node"))
+            (part.get("moving") or {}).get("toolgen_node") or PART_NODES.get(sheet, {}).get(part["id"]))
 
 
-def node_of(part):
+def node_of(part, sheet=None):
     moving = part.get("moving") or {}
-    return moving.get("toolgen_node") or LABEL_NODES.get(part["label"])
+    return (moving.get("toolgen_node") or PART_NODES.get(sheet, {}).get(part["id"]) or LABEL_NODES.get(part["label"]))
 
 
 def plan(spec):
@@ -337,7 +340,7 @@ def plan(spec):
     parts = [part for part in spec["parts"] if not part["glass"]]
     groups, order = {}, []
     for part in parts:
-        key = look(part) if not is_closed(part["mesh"]["faces"]) else ("closed", part["id"])
+        key = look(part, spec["sheet"]["id"]) if not is_closed(part["mesh"]["faces"]) else ("closed", part["id"])
         if key not in groups:
             groups[key] = []
             order.append(key)
@@ -355,7 +358,8 @@ def plan(spec):
             merged.append([p["id"] for p in members])
         meshes.append({"name": first["name"], "ids": [p["id"] for p in members], "label": first["label"],
                        "channel": first["channel"], "material": CHANNELS[first["channel"]], "surface": first["material"],
-                       "glow": bool(first["emissive"]), "sight": bool(first["sight"]), "node": node_of(first),
+                       "glow": bool(first["emissive"]), "sight": bool(first["sight"]),
+                       "node": node_of(first, spec["sheet"]["id"]),
                        "vertices": vertices, "faces": faces, "hard": hard})
     fixes = resolve_coplanar(meshes)
     window = spec["sight"].get("socket_reticle_m") if spec["sight"].get("present") else None

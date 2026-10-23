@@ -24,7 +24,7 @@ def clips_of(tool_id, tool=None):
 
 class ClipListTests(unittest.TestCase):
     def test_weapons_and_tools_get_their_clip_sets(self):
-        self.assertEqual(9, len(WEAPONS))
+        self.assertEqual(10, len(WEAPONS))      # 0.24: the scout rifle
         for tool_id in TOOLS:
             clips, _ = clips_of(tool_id)
             suffixes = [clip["suffix"] for clip in clips]

@@ -276,6 +276,398 @@
         "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
       }
     },
+    "smg": {
+      "timing_note": "Reload: Cube Escape design after the named Destiny 2 examples Extraordinary Rendition and IKELOS_SMG (motiongen docs/destiny2.md, rows „Maschinenpistole (Extraordinary Rendition …) vollständiges Nachladen“ and „(IKELOS_SMG_V1.0.2 …)“, no z- anchor): MagOut 0.35 s after the first move (measured) -> frame 8; MagIn 1.07 s there, 0.92 s here (designed: grip magazine, no charging handle on KG06); Ready 1.33 s, Still 1.54 s (designed). Held fire 720/min = 2 frames at 24/s (designed on the 24/s grid; Huckleberry and IKELOS 750/min menu values).",
+      "tool_scale": 1.0,
+      "gap_m": 0.001,
+      "grip": {
+        "R": {
+          "center": [0.0, 0.003, 0.0],
+          "palm": [1.0, -0.25, 0.0],
+          "axis": [0.0, -0.117, 0.993],
+          "pose": "trigger",
+          "trigger_finger": true
+        },
+        "L": {
+          "mode": "support",
+          "support_grip": "vertical",
+          "center": [0.0, -0.2365, 0.016],
+          "palm": [-1.0, 0.0, 0.0],
+          "axis": [0.0, 0.0, -1.0],
+          "pose": "grip"
+        }
+      },
+      "hand_parts": {
+        "HandMag_L": {
+          "source": "Anim_Magazine",
+          "grip": "mag"
+        }
+      },
+      "reload": {
+        "grips": {
+          "mag": {
+            "center": [0.0, 0.005, -0.063],
+            "palm": [0.0, 0.0, 1.0],
+            "axis": [0.0, 1.0, 0.0],
+            "pose": "mag_hold"
+          }
+        },
+        "Reload": {
+          "length": 40,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 8,
+            "MagIn": 22,
+            "HandOn": 28,
+            "Ready": 32,
+            "Still": 37
+          },
+          "weapon": [
+            [0, {}],
+            [9, {"roll_deg": -24, "pitch_deg": 14, "right_m": -0.01, "up_m": 0.02}],
+            [23, {"roll_deg": -24, "pitch_deg": 14, "right_m": -0.01, "up_m": 0.02}],
+            [27, {"roll_deg": -16, "pitch_deg": 8, "right_m": -0.008, "up_m": 0.014}],
+            [37, {}]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [6, {"from": "support", "device_m": [0.04, 0.0, -0.03]}],
+            [7, {"from": "mag", "device_m": [0.0, 0.0, -0.05]}],
+            [8, "mag"],
+            [12, {"from": "mag", "device_m": [0.0, 0.0, -0.14]}],
+            [16, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [18, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [20, {"from": "mag", "device_m": [0.0, 0.0, -0.06]}],
+            [22, "mag"],
+            [23, {"from": "mag", "device_m": [0.0, 0.0, -0.03]}],
+            [25, {"from": "support", "device_m": [0.05, 0.0, -0.06]}],
+            [27, {"from": "support", "device_m": [0.04, 0.0, 0.0]}],
+            [28, "support"]
+          ],
+          "fingers": [
+            [0, "grip"],
+            [5, "grip"],
+            [6, "open"],
+            [8, "mag_hold"],
+            [22, "mag_hold"],
+            [23, "open"],
+            [27, "open"],
+            [28, "grip"]
+          ]
+        }
+      },
+      "arm": {
+        "R": {
+          "rise": 27,
+          "yaw": 6,
+          "upper": [-0.3, 0.95, 0.15]
+        },
+        "L": {
+          "forearm": [-0.3, -0.2, 0.93],
+          "upper": [0.3, 0.95, 0.05]
+        }
+      },
+      "ads": {
+        "eye_distance_m": 0.72,
+        "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
+      },
+      "fire": {
+        "mode": "auto",
+        "cadence_rpm": 720,
+        "cycle_frames": 2,
+        "loop_shots": 6,
+        "kick_share": 0.35,
+        "sway_deg": 0.15,
+        "stroke_frames": 3,
+        "note": "held fire: AutoFire/AimAutoFire loop one real shot every cycle_frames (720/min at 24/s); Cube Escape starts the loop at the first shot and stops it on release"
+      }
+    },
+    "pulse_rifle": {
+      "timing_note": "Reload: after the named example Gridskipper (motiongen docs/destiny2.md, row „Impulsgewehr (Gridskipper): ADS ein …, vollständiges Nachladen mit leerem Magazin“, no z- anchor; empty from the hip: out +0.44 s, in +1.15 s, hip +1.60 s, still +1.65 s, measured) -> MagOut 11, MagIn 28, Ready 38, Still 40 (derived, 24/s). Burst: 3 shots 2 frames apart (0.083 s; Gridskipper z-gridskipper-salve 0.067 s, wallah ADS 3 shots in 0.15 s: derived to the 24/s grid), Ready 10 (0.42 s; Gridskipper burst to burst 0.383-0.433 s, derived), Still 12 (0.5 s; Gridskipper back after about 0.35 s from the last shot, derived).",
+      "tool_scale": 0.744,
+      "gap_m": 0.001,
+      "grip": {
+        "R": {
+          "center": [0.0, 0.003, 0.0],
+          "palm": [1.0, -0.25, 0.0],
+          "axis": [0.0, -0.165, 0.986],
+          "pose": "trigger",
+          "trigger_finger": true
+        },
+        "L": {
+          "mode": "support",
+          "support_grip": "vertical",
+          "center": [0.0, -0.2721, 0.0242],
+          "palm": [-1.0, 0.0, 0.0],
+          "axis": [0.0, 0.0, -1.0],
+          "pose": "grip"
+        }
+      },
+      "hand_parts": {
+        "HandCell_L": {
+          "source": "Anim_EnergyCell",
+          "grip": "cell"
+        }
+      },
+      "reload": {
+        "grips": {
+          "cell": {
+            "center": [0.0, -0.2, 0.03],
+            "palm": [0.0, 0.0, 1.0],
+            "axis": [0.0, -1.0, 0.0],
+            "pose": "mag_hold"
+          }
+        },
+        "Reload": {
+          "length": 42,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 11,
+            "MagIn": 28,
+            "HandOn": 34,
+            "Ready": 38,
+            "Still": 40
+          },
+          "weapon": [
+            [0, {}],
+            [11, {"roll_deg": -15, "pitch_deg": 2, "right_m": -0.01, "up_m": -0.03}],
+            [29, {"roll_deg": -15, "pitch_deg": 2, "right_m": -0.01, "up_m": -0.03}],
+            [33, {"roll_deg": -8, "pitch_deg": 1, "right_m": -0.006, "up_m": -0.015}],
+            [40, {}]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [7, {"from": "support", "device_m": [0.04, 0.0, -0.03]}],
+            [9, {"from": "cell", "device_m": [0.03, 0.0, -0.05]}],
+            [11, "cell"],
+            [15, {"from": "cell", "device_m": [0.03, 0.0, -0.13]}],
+            [19, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [22, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [25, {"from": "cell", "device_m": [0.0, 0.0, -0.05]}],
+            [28, "cell"],
+            [29, {"from": "cell", "device_m": [0.0, 0.0, -0.05]}],
+            [30, {"from": "cell", "device_m": [0.05, -0.03, -0.07]}],
+            [32, {"from": "support", "device_m": [0.06, 0.0, -0.03]}],
+            [33, {"from": "support", "device_m": [0.03, 0.0, -0.03]}],
+            [34, "support"]
+          ],
+          "fingers": [
+            [0, "grip"],
+            [5, "grip"],
+            [7, "open"],
+            [11, "mag_hold"],
+            [28, "mag_hold"],
+            [29, "open"],
+            [33, "open"],
+            [34, "grip"]
+          ]
+        }
+      },
+      "arm": {
+        "R": {
+          "rise": 27,
+          "yaw": 6,
+          "upper": [-0.3, 0.95, 0.15]
+        },
+        "L": {
+          "forearm": [-0.3, -0.2, 0.93],
+          "upper": [0.3, 0.95, 0.05]
+        }
+      },
+      "ads": {
+        "eye_distance_m": 0.7,
+        "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
+      },
+      "fire": {
+        "mode": "burst",
+        "count": 3,
+        "spacing_frames": 2,
+        "length": 14,
+        "ready_frame": 10,
+        "still_frame": 12,
+        "build_share": 0.9,
+        "flick_share": 0.35,
+        "drift_yaw_deg": 0.8,
+        "stroke_frames": 3,
+        "note": "one trigger pull = count real shots spacing_frames apart (the burst length is a property of the subtype; a 4-shot burst is a later named subtype); BurstEnd = last shot, Ready = the next pull may start, Still = the model rests"
+      }
+    },
+    "scout_rifle": {
+      "timing_note": "Reload after the named example Tone Patrol (motiongen docs/destiny2.md, row „Scout-Gewehr (Tone Patrol …): Hüfte, Einzelschuss, ADS ein, Nachladen“, no z- anchor; about 1.7-1.85 s, the magazine swap not resolvable): Still 41 = 1.71 s (derived), MagOut 9, MagIn 24, Ready 36 (designed); ReloadEmpty adds the left charging handle (sheet: „Ladehebel links zurückziehen“, Chamber 31, designed). ADS in 9 frames (Tone Patrol 0.37 s, derived); ADS out: the lens picture first (ScopeOff), the model one frame later (Dead Man's Tale, row „Scout-Gewehr (Dead Man's Tale …): Zielfernrohr aus“: lens 2, model 8 frames at 60/s, derived).",
+      "tool_scale": 0.66,
+      "gap_m": 0.001,
+      "grip": {
+        "R": {
+          "center": [0.0, 0.003, 0.0],
+          "palm": [1.0, -0.25, 0.0],
+          "axis": [0.0, -0.14, 0.99],
+          "pose": "trigger",
+          "trigger_finger": true
+        },
+        "L": {
+          "mode": "support",
+          "center": [0.0, -0.3921, 0.1165],
+          "palm": [0.5, 0.0, 0.866],
+          "axis": [0.0, 1.0, 0.0],
+          "pose": "underhand"
+        }
+      },
+      "hand_parts": {
+        "HandMag_L": {
+          "source": "Anim_Magazine",
+          "grip": "mag"
+        }
+      },
+      "reload": {
+        "grips": {
+          "mag": {
+            "center": [0.0, -0.224, 0.0],
+            "palm": [-0.4, 0.917, 0.0],
+            "axis": [-0.6, 0.0, -1.0],
+            "pose": "mag_hold"
+          },
+          "bolt": {
+            "center": [0.0355, -0.1135, 0.1375],
+            "palm": [-1.0, 0.0, -0.15],
+            "axis": [0.0, -1.0, 0.0],
+            "pose": "pinch"
+          }
+        },
+        "Reload": {
+          "length": 44,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 9,
+            "MagIn": 24,
+            "HandOn": 31,
+            "Ready": 36,
+            "Still": 41
+          },
+          "weapon": [
+            [0, {}],
+            [10, {"roll_deg": -18, "pitch_deg": 10, "right_m": -0.012, "up_m": 0.014}],
+            [25, {"roll_deg": -18, "pitch_deg": 10, "right_m": -0.012, "up_m": 0.014}],
+            [29, {"roll_deg": -8, "pitch_deg": 4, "right_m": -0.006, "up_m": 0.008}],
+            [41, {}]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [6, {"from": "support", "device_m": [0.0, 0.0, -0.03]}],
+            [8, {"from": "support", "device_m": [0.0, 0.03, -0.06]}],
+            [9, "mag"],
+            [13, {"from": "mag", "device_m": [0.03, 0.0, -0.13]}],
+            [17, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [19, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [22, {"from": "mag", "device_m": [0.0, 0.0, -0.045]}],
+            [24, "mag"],
+            [25, {"from": "mag", "device_m": [0.0, -0.03, -0.03]}],
+            [26, {"from": "mag", "device_m": [0.0, -0.05, -0.07]}],
+            [28, {"from": "support", "device_m": [0.02, 0.0, -0.05]}],
+            [30, {"from": "support", "device_m": [0.03, 0.0, -0.02]}],
+            [31, "support"]
+          ],
+          "fingers": [
+            [0, "underhand"],
+            [5, "underhand"],
+            [7, "open"],
+            [9, "mag_hold"],
+            [24, "mag_hold"],
+            [25, "open"],
+            [30, "open"],
+            [31, "underhand"]
+          ]
+        },
+        "ReloadEmpty": {
+          "length": 52,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 9,
+            "MagIn": 24,
+            "Chamber": 31,
+            "HandOn": 39,
+            "Ready": 44,
+            "Still": 49
+          },
+          "weapon": [
+            [0, {}],
+            [10, {"roll_deg": -18, "pitch_deg": 10, "right_m": -0.012, "up_m": 0.014}],
+            [24, {"roll_deg": -18, "pitch_deg": 10, "right_m": -0.012, "up_m": 0.014}],
+            [28, {"roll_deg": -12, "pitch_deg": 6, "yaw_deg": -4, "right_m": -0.006, "up_m": 0.01}],
+            [34, {"roll_deg": -10, "pitch_deg": 4, "right_m": -0.004, "up_m": 0.008}],
+            [49, {}]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [6, {"from": "support", "device_m": [0.0, 0.0, -0.03]}],
+            [8, {"from": "support", "device_m": [0.0, 0.03, -0.06]}],
+            [9, "mag"],
+            [13, {"from": "mag", "device_m": [0.03, 0.0, -0.13]}],
+            [17, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [19, {"from": "support", "camera_m": [0.06, 0.06, -0.34]}],
+            [22, {"from": "mag", "device_m": [0.0, 0.0, -0.045]}],
+            [24, "mag"],
+            [25, {"from": "mag", "device_m": [0.0, -0.03, -0.03]}],
+            [26, {"from": "mag", "device_m": [0.06, -0.02, -0.06]}],
+            [27, {"from": "bolt", "device_m": [0.05, 0.0, -0.04]}],
+            [28, "bolt"],
+            [31, {"from": "bolt", "device_m": [0.0, 0.04, 0.0]}],
+            [33, {"from": "bolt", "device_m": [0.025, 0.04, 0.0]}],
+            [35, {"from": "bolt", "device_m": [0.06, 0.04, -0.07]}],
+            [36, {"from": "bolt", "device_m": [0.08, 0.02, -0.1]}],
+            [37, {"from": "support", "device_m": [0.03, 0.0, -0.07]}],
+            [39, "support"]
+          ],
+          "fingers": [
+            [0, "underhand"],
+            [5, "underhand"],
+            [7, "open"],
+            [9, "mag_hold"],
+            [24, "mag_hold"],
+            [25, "open"],
+            [27, "open"],
+            [28, "pinch"],
+            [32, "pinch"],
+            [33, "open"],
+            [38, "open"],
+            [39, "underhand"]
+          ],
+          "bolt": {
+            "node": "Anim_Bolt",
+            "keys": [[28, 0.0], [31, 0.04], [33, 0.0]],
+            "axis": [0.0, 1.0, 0.0]
+          }
+        }
+      },
+      "arm": {
+        "R": {
+          "rise": 27,
+          "yaw": 6,
+          "upper": [-0.3, 0.95, 0.15]
+        },
+        "L": {
+          "forearm": [-0.3, -0.2, 0.93],
+          "upper": [0.3, 0.95, 0.05]
+        }
+      },
+      "ads": {
+        "eye_distance_m": 0.12,
+        "lens_lead_frames": 1,
+        "hands_may_leave": ["R"],
+        "note": "scope close to the eye (game metres): 0.12 m, the eyepiece covers about 45 % of the picture height (0.31 m, Cube Escape's trace rifle profile: 13 %; Dead Man's Tale: eyepiece frame about 65 %); user decision 22.10.2026 after comparison pictures, with the grip hand allowed to leave the frame in the aim clips (hands_may_leave); the lens picture leaves lens_lead_frames before the model (AimOut ScopeOff)"
+      },
+      "events": {
+        "AimIn": {"ScopeOn": 7},
+        "AimOut": {"ScopeOff": 0, "Move": 1}
+      }
+    },
     "portal_emitter": {
       "tool_scale": 0.357,
       "gap_m": 0.001,

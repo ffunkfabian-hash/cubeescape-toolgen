@@ -219,13 +219,14 @@ class RecordingKit:
 REST_GEOMETRY = {
     'pistol': '068ac572f7c3c781168955d0aa0b036ad1673bfef4f9ae78fb218083b5b56f86',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
     'assault_rifle': '3c0902cc5ea557e84be6543a8d60d87d7e372eedd4456b17af41882507d7b1c5',   # 0.18.0: concept KG02 claude-v0.15 (mesh bounds incl. lever p32, Socket_Reticle)
-    'pulse_rifle': 'e6278e3e0c567ef6f0a74d1ae826c7141497ad5f1490c45e5c3f9410b481a702',
+    'pulse_rifle': 'ca5840a4ffe60abb50274efb63aa22b0e48d693615fbdf95e8fe5327d7a1d41d',   # 0.24.0: concept KG03 claude-v0.15.1
     'shotgun': 'cf77d8ee2ffe99348fb8234929c40d1e81bb96e63e7602fe4fd0f89ae81c2746',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
     'sniper_rifle': '5f741e3dfbbea47ac37bbd07f024625968ac5a1c88cf1a926b3713e62ebc725a',   # 0.11.0: open eyepiece; 0.12.0: handguard glow raised
-    'smg': '07483640e905bf3b6463b7a903b4642ef6479b4680b3bb630e277326b8fd42bc',
+    'smg': 'ee13ce33853098f1a2e644ad1a672fc6fe5d5782393b3fca54097c7a5274ae7b',   # 0.24.0: concept KG06 claude-v0.15.1, support at the foregrip p09 (correction)
     'fusion_rifle': 'c916097c33cf27457430636e8b6e0ac3675be2ead2e1ec5c729b118c9ad27f06',
     'trace_rifle': '69a7fd1966b6fad42c12f65c42cfe3db097e00d07d86ddc467b235f1d0ca3da1',   # 0.11.0: open eyepiece; 0.12.0: glow and stock accent raised
     'rocket_launcher': 'ba6f02a8ad6c993dee3fbe1f5ba24beae0285e562be1da1a89208f47370d8675',
+    'scout_rifle': '9cbb6e3262fdca1073b31aa89f7b64ac035febffdeb5f45987d2b594e9dbe237',   # 0.24.0: new, concept KG11 claude-v0.15.1
 }
 
 
@@ -242,9 +243,11 @@ class ReloadGeometryTests(unittest.TestCase):
                                  set(kit.sockets))
 
     def test_reload_pivot_has_visible_parts_and_keeps_use_nodes(self):
-        expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazin_p07", "pulse_rifle": "EnergyCell",
-                    "shotgun": "ForeEnd", "sniper_rifle": "MagBox", "smg": "Drum",
-                    "fusion_rifle": "PowerCellCore", "trace_rifle": "Magazine", "rocket_launcher": "Hatch"}
+        # 0.24: pulse rifle, SMG and scout rifle from their concept sheets (energy cell p18, grip magazine p11, box magazine p11)
+        expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazin_p07", "pulse_rifle": "Energiezelle_p18",
+                    "shotgun": "ForeEnd", "sniper_rifle": "MagBox", "smg": "Magazin_p11",
+                    "fusion_rifle": "PowerCellCore", "trace_rifle": "Magazine", "rocket_launcher": "Hatch",
+                    "scout_rifle": "Magazin_p11"}
         for tool, spec in designs.DESIGNS.items():
             kit = RecordingKit(spec)
             spec["build"](kit)

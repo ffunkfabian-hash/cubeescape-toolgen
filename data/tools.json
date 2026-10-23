@@ -110,12 +110,16 @@
       "materials": "equipment_channels",
       "robot": "CubeEscape_PulseRifle_Robot",
       "hold": {
-        "grip_tilt_degrees": 14,
+        "grip_tilt_degrees": 9.48,
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "holo",
-        "eye_distance_m": 0.357
-      }
+        "eye_distance_m": 0.357,
+        "reticle_socket": "Socket_Reticle"
+      },
+      "concept": "KG03",
+      "game_contract": "5",
+      "animation_group": 1
     },
     {
       "id": "shotgun",
@@ -177,12 +181,16 @@
       "materials": "equipment_channels",
       "robot": "CubeEscape_SubmachineGun_Robot",
       "hold": {
-        "grip_tilt_degrees": 18,
+        "grip_tilt_degrees": 6.71,
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "reflex",
-        "eye_distance_m": 0.421
-      }
+        "eye_distance_m": 0.421,
+        "reticle_socket": "Socket_Reticle"
+      },
+      "concept": "KG06",
+      "game_contract": "5",
+      "animation_group": 1
     },
     {
       "id": "fusion_rifle",
@@ -220,13 +228,6 @@
       "element": "arc",
       "materials": "equipment_channels",
       "robot": "CubeEscape_TraceRifle_Robot",
-      "renamed_from": {
-        "id": "scout_rifle",
-        "asset": "CubeEscape_ScoutRifle",
-        "robot": "CubeEscape_ScoutRifle_Robot",
-        "clip_stem": "ScoutRifle",
-        "since": "0.17.0"
-      },
       "hold": {
         "grip_tilt_degrees": 12,
         "two_handed": true,
@@ -257,6 +258,33 @@
         "sight_kind": "iron",
         "eye_distance_m": 0.453
       }
+    },
+    {
+      "id": "scout_rifle",
+      "label": "Scout-Gewehr",
+      "folder": "Scoutgewehr",
+      "asset": "CubeEscape_Scout",
+      "world": "create_weapon.py",
+      "fps": "create_weapon_fps.py",
+      "verify": "verify_weapon.py",
+      "animation": "animate_weapon.py",
+      "clip": "Scout_Use",
+      "fps_clip": "Scout_Use",
+      "element": "energy",
+      "materials": "equipment_channels",
+      "robot": "CubeEscape_Scout_Robot",
+      "hold": {
+        "grip_tilt_degrees": 8.04,
+        "two_handed": true,
+        "support_grip": "underhand",
+        "sight_kind": "scope",
+        "eye_distance_m": 0.221,
+        "eye_radius_m": 0.00825,
+        "reticle_socket": "Socket_Reticle"
+      },
+      "concept": "KG11",
+      "game_contract": "5",
+      "animation_group": 1
     }
   ]
 }

@@ -241,42 +241,12 @@ def assault_rifle(k):
 
 
 # ------------------------------------------------------------------------------------------------ 3 pulse rifle
+
+
 def pulse_rifle(k):
-    """Bullpup pulse rifle: one chassis from muzzle shroud to shoulder, energy cell behind the grip, glowing pulse coils."""
-    zb = .075
-    grip(k, .095, .036, .046, ribs=3)
-    k.slab('Chassis', [(-.20, .055), (-.165, .105), (.08, .112), (.20, .108), (.315, .098), (.33, .060), (.315, -.02),
-                       (.235, -.04), (.125, -.04), (.065, .022), (-.20, .022)], .052, 'Primary', bevel=.008)
-    k.slab('ChassisPanel', [(-.12, .035), (.04, .035), (.04, .09), (-.12, .09)], .056, 'Secondary', bevel=.004)
-    for side in (-1, 1):
-        k.glow('ChassisGlow_%d' % side, (side * .0285, .09, .102), (.002, .17, .006))
-    k.box('CellWell', (0, .18, -.035), (.040, .070, .020), 'Secondary', .005)
-    mag = k.pivot('Anim_EnergyCell', (0, .18, -.03))
-    magazine(k, 'EnergyCell', [(.145, -.03), (.215, -.03), (.215, -.100), (.145, -.100)], .034, glow_height=.04, parent=mag)
-    for side in (-1, 1):
-        k.glow('CellWindow_%d' % side, (side * .0175, .18, -.065), (.002, .040, .040), parent=mag)
-    trigger_group(k, -.060, -.010, .0135, .040)   # 0.12.0: trigger bottom 0.5 mm below the chassis bottom (z-fighting)
-    k.box('Buttpad', (0, .335, .030), (.052, .014, .130), 'Detail', .004)
-    k.cyl('Shroud', (0, -.29, zb), .030, .19, 'Primary', n=32, bevel=.003)
-    k.cyl('ShroudCore', (0, -.25, zb), .024, .26, 'Secondary', n=28)
-    for i, y in enumerate((-.27, -.32, -.37)):
-        k.tube('PulseCoil_%d' % i, (0, y, zb), .0335, .026, .010, k.glow_material, n=32)
-    k.cyl('Barrel', (0, -.43, zb), .010, .13, 'Metal', n=20)
-    k.tube('MuzzleCup', (0, -.50, zb), .026, .012, .040, 'Secondary', n=28)
-    k.cyl('MuzzleCore', (0, -.516, zb), .010, .004, k.glow_material, n=20, bevel=.0005)
-    for side in (-1, 1):
-        k.box('MuzzleFin_%d' % side, (side * .030, -.49, zb), (.006, .05, .020), 'Metal', .002)
-    k.box('Sight', (0, 0, .135), (.026, .075, .030), 'Secondary', .006)
-    k.glow('SightGlow', (0, 0, .1515), (.012, .05, .003))
-    k.box('FrontPost', (0, -.17, .122), (.008, .012, .020), 'Metal', .002)
-    cell = k.pivot('Anim_Cell', (0, -.075, .128))
-    k.box('TopCell', (0, -.075, .128), (.040, .090, .016), 'Primary', .004, parent=cell)
-    k.glow('TopCellGlow', (0, -.075, .1375), (.020, .060, .002), parent=cell)
-    pulse_rifle_modules(k)
-    k.socket('Socket_Hand', (0, 0, 0))
-    k.socket('Socket_Muzzle', (0, -.522, zb))
-    k.socket('Socket_SupportHand', (0, -.235, zb))
-    k.socket('Socket_CenterOfMass', (0, .06, .06))
+    """Pulse rifle (0.24): concept KG03, variant G (data/concepts/KG03.geo.json), holo sight VS02 open, foregrip p40,
+    pulse cube p17 under Anim_Cell, energy cell p18 under Anim_EnergyCell."""
+    concept_build(k, 'pulse_rifle')
 
 
 # -------------------------------------------------------------------------------------------------- 4 shotgun
@@ -356,41 +326,12 @@ def sniper_rifle(k):
 
 
 # ----------------------------------------------------------------------------------------------------- 6 SMG
+
+
 def smg(k):
-    """Submachine gun: compact body, drum magazine with glowing hub, short shroud, folded stock, red-dot sight."""
-    zb = .056
-    grip(k, .090, .034, .044, ribs=3)
-    k.box('Body', (0, -.05, .052), (.048, .24, .056), 'Primary', .010)
-    k.box('BodyPlate', (0, -.05, .082), (.034, .22, .006), 'Secondary', .002)
-    trigger_group(k, -.062, -.008, .010, .036)
-    mag = k.pivot('Anim_Magazine', (0, -.125, .016))
-    k.cyl('Drum', (0, -.125, -.030), .049, .044, 'Secondary', axis='x', n=32, bevel=.004, parent=mag)
-    for side in (-1, 1):
-        k.cyl('DrumCap_%d' % side, (side * .0245, -.125, -.030), .040, .006, 'Primary', axis='x', n=32, bevel=.002, parent=mag)
-    k.cyl('DrumHub', (0, -.125, -.030), .018, .054, k.glow_material, axis='x', n=24, bevel=.001, parent=mag)
-    k.box('DrumMount', (0, -.125, .016), (.040, .044, .018), 'Secondary', .004)
-    k.box('BodyRear', (0, .095, .056), (.040, .05, .044), 'Secondary', .006)
-    k.box('Stock', (0, .15, .056), (.036, .10, .040), 'Primary', .008)
-    k.box('StockPad', (0, .205, .050), (.040, .012, .090), 'Detail', .003)
-    for side in (-1, 1):
-        k.box('StockStrut_%d' % side, (side * .022, .16, .036), (.006, .08, .012), 'Metal', .002)
-    k.cyl('Shroud', (0, -.255, zb), .028, .16, 'Secondary', n=28, bevel=.003)
-    side_vents(k, 'ShroudVent', -.23, .022, 4, zb + .026, 0.0, (.014, .008, .003))
-    k.tube('ShroudRing_0', (0, -.205, zb), .0295, .024, .008, k.glow_material, n=28)
-    k.tube('ShroudRing_1', (0, -.325, zb), .0295, .024, .008, k.glow_material, n=28)
-    k.cyl('Barrel', (0, -.345, zb), .009, .06, 'Metal', n=18)
-    muzzle_device(k, -.38, zb, .017, .05, rings=2)
-    k.box('Sight', (0, -.02, .102), (.028, .060, .028), 'Secondary', .006)
-    k.glow('SightGlow', (0, -.02, .1175), (.012, .04, .002))
-    k.box('FrontPost', (0, -.17, .092), (.008, .012, .018), 'Metal', .002)
-    bolt = k.pivot('Anim_Bolt', (0, 0, .060))
-    k.box('BoltCover', (.0255, -.03, .060), (.006, .075, .022), 'Metal', .003, parent=bolt)
-    k.cyl('BoltKnob', (.031, .00, .062), .007, .010, 'Secondary', axis='x', n=12, bevel=.001, parent=bolt)
-    smg_modules(k, mag)
-    k.socket('Socket_Hand', (0, 0, 0))
-    k.socket('Socket_Muzzle', (0, -.407, zb))
-    k.socket('Socket_SupportHand', (0, -.20, zb))
-    k.socket('Socket_CenterOfMass', (0, -.05, .04))
+    """Submachine gun (0.24): concept KG06, variant G (data/concepts/KG06.geo.json), reflex sight VS06 (closed frame, open
+    window), grip magazine p11 under Anim_Magazine; KG06 draws no bolt, Anim_Bolt stays an empty pivot."""
+    concept_build(k, 'smg')
 
 
 # ------------------------------------------------------------------------------------------------ 7 fusion rifle
@@ -505,6 +446,14 @@ def rocket_launcher(k):
     k.socket('Socket_CenterOfMass', (0, -.1, .08))
 
 
+# ------------------------------------------------------------------------------------------------ 10 scout rifle
+def scout_rifle(k):
+    """Scout rifle (0.24, new tool; the id scout_rifle named the trace rifle until 0.16): concept KG11, variant G
+    (data/concepts/KG11.geo.json), precision scope VS03 (glass not built), box magazine p11 under Anim_Magazine, left
+    charging handle p05 under Anim_Bolt."""
+    concept_build(k, 'scout_rifle')
+
+
 # ---------------------------------------------------------------------------------------------- per-weapon modules
 # Additions of 0.8.0 (Gunmetal) on top of the 0.7 bodies: sockets, pivots, clip and the grip/support parts are unchanged.
 def pistol_modules(k, slide, mag):
@@ -522,19 +471,6 @@ def pistol_modules(k, slide, mag):
     r = k.tilt(k.grip_tilt)
     y, z = along(k, 0, -.102 / 2 - .0125)
     accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r, parent=mag)
-
-
-def pulse_rifle_modules(k):
-    """Pulse rifle: side burst readout, twin rear energy cells, chassis heat sink, accent stripes, shroud cap."""
-    side_armor(k, 'NoseArmor', [(-.195, .036), (-.135, .036), (-.124, .062), (-.140, .098), (-.190, .098)], .026)
-    display(k, 'BurstDisplay', (.0286, -.045, .062), (.0016, .050, .020), 'x', bars=3)
-    display(k, 'SightDisplay', (0, .0383, .137), (.018, .0016, .012), 'y', bars=3)
-    for side in (-1, 1):
-        energy_cell(k, 'StockCell_%d' % side, (side * .029, .245, .040), .009, .090)
-        accent(k, 'ChassisAccent_%d' % side, (side * .0266, -.150, .030), (.002, .080, .006))
-    heat_sink(k, 'ChassisFin', (0, .220, .1165), 5, .025, (.040, .006, .008))
-    k.tube('ShroudCap', (0, -.192, .075), .034, .024, .012, 'Metal', n=32)
-    panel(k, 'ChassisPlate', (.0275, .140, .080), (.0025, .07, .030))
 
 
 def shotgun_modules(k):
@@ -567,18 +503,6 @@ def sniper_rifle_modules(k):
     for side in (-1, 1):
         accent(k, 'StockAccent_%d' % side, (side * .0212, .33, .020), (.002, .050, .030))
         panel(k, 'ReceiverPanel_%d' % side, (side * .0228, .040, .066), (.0025, .06, .024))
-
-
-def smg_modules(k, mag):
-    """SMG: side readout, top arc cell, drum bolts, shroud spine, stock accent."""
-    display(k, 'AmmoDisplay', (.0246, .046, .052), (.0016, .030, .016), 'x', bars=3)
-    energy_cell(k, 'ArcCell', (.012, -.110, .0875), .006, .050)
-    k.bolts('DrumBolt', [(.0278, -.125 + .028 * math.cos(a), -.030 + .028 * math.sin(a))
-                         for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4)], radius=.003, depth=.003, parent=mag)
-    k.box('ShroudSpine', (0, -.255, .0855), (.010, .14, .006), 'Secondary', .0015)
-    accent(k, 'StockAccent', (0, .150, .0765), (.020, .060, .002))
-    for side in (-1, 1):
-        panel(k, 'BodyPanel_%d' % side, (side * .0245, -.125, .062), (.0025, .06, .020))
 
 
 def fusion_rifle_modules(k, fins, cell):
@@ -623,10 +547,17 @@ def slide_keys(*pairs):
     return [(1, 0)] + list(pairs) + [(97, 0)]
 
 
-def sight_rule(kind, parts, mode, tool_scale, above=0.0):
+def sight_rule(kind, parts, mode, tool_scale, above=0.0, rear_parts=(), eye_part=None):
     """Line of sight for sight.py in world-model metres: ``above`` (ads.eye_above_m) is a first-person value, divided by
-    the weapon's tool_scale (data/viewmodels.json)."""
-    return {'kind': kind, 'parts': list(parts), 'mode': mode, 'above_m': above / tool_scale}
+    the weapon's tool_scale (data/viewmodels.json). 0.24, concept sights: ``rear_parts`` end the line at their rear face
+    (the rear ring or eyecup of the sheet's Socket_Sight) without moving it off the window, ``eye_part`` puts Socket_Eye
+    of a scope without its eye glass at the front face of that part instead of the centre of ScopeEyeLens."""
+    rule = {'kind': kind, 'parts': list(parts), 'mode': mode, 'above_m': above / tool_scale}
+    if rear_parts:
+        rule['rear_parts'] = list(rear_parts)
+    if eye_part:
+        rule['eye_part'] = eye_part
+    return rule
 
 
 DESIGNS = {
@@ -651,11 +582,13 @@ DESIGNS = {
     },
     'pulse_rifle': {
         'asset': 'CubeEscape_PulseRifle', 'clip': 'PulseRifle_Use', 'class': 'pulse_rifle', 'element': 'void',
-        'grip_tilt_degrees': 14, 'grip_part': 'Grip', 'support_part': 'Shroud',
-        'view_center': (0, -.09, .05), 'view_scale': .95, 'trigger': 'FireAction', 'build': pulse_rifle,
-        'fire_frame': 14, 'sight': sight_rule('holo', ('Sight', 'SightGlow'), 'top', .744, .004),
+        'concept': 'KG03.geo.json', 'grip_tilt_degrees': 9.48, 'grip_part': 'Griff_p02', 'support_part': 'Vordergriff_p40',
+        'view_center': (0, -.17, .09), 'view_scale': 1.05, 'trigger': 'FireAction', 'build': pulse_rifle,
+        # holo sight VS02 with an open window like KG02 (glass way A): the line runs through the window frame
+        'fire_frame': 14, 'sight': sight_rule('holo', ('Rahmen_p32',), 'center', .744),
+        # the pulse cube p17 times the burst on its axles (sheet: three pulses per trigger pull), one stroke per pulse
         'use_clip': [{'node': 'Anim_Cell', 'channel': 'location', 'axis': 1,
-                      'keys': slide_keys((14, 0), (15, .026), (17, 0), (18, 0), (19, .026), (21, 0), (22, 0), (23, .026), (25, 0))}],
+                      'keys': slide_keys((14, 0), (15, .012), (17, 0), (18, 0), (19, .012), (21, 0), (22, 0), (23, .012), (25, 0))}],
     },
     'shotgun': {
         'asset': 'CubeEscape_Shotgun', 'clip': 'Shotgun_Use', 'class': 'shotgun', 'element': 'solar', 'grip_tilt_degrees': 15,
@@ -677,11 +610,21 @@ DESIGNS = {
     },
     'smg': {
         'asset': 'CubeEscape_SubmachineGun', 'clip': 'SubmachineGun_Use', 'class': 'smg', 'element': 'energy',
-        'grip_tilt_degrees': 18, 'grip_part': 'Grip', 'support_part': 'Shroud',
-        'view_center': (0, -.08, .03), 'view_scale': .75, 'trigger': 'FireAction', 'build': smg,
-        'fire_frame': 14, 'sight': sight_rule('reflex', ('Sight', 'SightGlow'), 'top', 1.02, .012),
+        # support: the unlabelled foregrip p09 under the shroud (named correction of Socket_SupportHand, corrections.json)
+        'concept': 'KG06.geo.json', 'grip_tilt_degrees': 6.71, 'grip_part': 'Griff_p10', 'support_part': 'Part_p09',
+        'view_center': (0, -.07, .07), 'view_scale': .80, 'trigger': 'FireAction', 'build': smg,
+        # reflex sight VS06: closed frame, open window (glass way A); the line runs through the window frame and ends at
+        # the rear ring p29 (the sheet's Socket_Sight)
+        'fire_frame': 14, 'sight': sight_rule('reflex', ('Rahmen_p25',), 'center', 1.02, rear_parts=('Rueckring_p29',)),
+        # Anim_Bolt: KG06 draws no bolt (moving_parts parts null, "Mechanik im Gehäuse nicht gezeichnet"); the node stays
+        # (contract) as an empty pivot, like KG02 before formgen added its charging handle. 0.24: the visible motion is the
+        # trigger p12 under Anim_Trigger (concept_spec.PART_NODES), pulled 6 mm at the shot and let go
         'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
-                      'keys': slide_keys((14, 0), (15, .032), (17, 0), (18, 0), (19, .032), (21, 0), (22, 0), (23, .032), (25, 0))}],
+                      'keys': slide_keys((14, 0), (15, .032), (17, 0), (18, 0), (19, .032), (21, 0), (22, 0), (23, .032), (25, 0))},
+                     {'node': 'Anim_Trigger', 'channel': 'location', 'axis': 1,
+                      # at rest until frame 13 (the ego Fire clips start there: first_person.clip_keys replays the stroke
+                      # with every shot only for a part at rest at that frame)
+                      'keys': slide_keys((13, 0), (14, .006), (24, .006), (28, 0))}],
     },
     'fusion_rifle': {
         'asset': 'CubeEscape_FusionRifle', 'clip': 'FusionRifle_Use', 'class': 'fusion_rifle', 'element': 'void',
@@ -707,6 +650,23 @@ DESIGNS = {
         'fire_frame': 14, 'sight': sight_rule('iron', ('Targeting', 'TargetingGlow'), 'top', .6, .004),
         'use_clip': [{'node': 'Anim_Hatch', 'channel': 'rotation', 'axis': 0, 'keys': slide_keys((30, 0), (40, -30), (62, -30), (72, 0))}],
     },
+    # 0.24: new tool (KG11); the id scout_rifle named the trace rifle until 0.16, its old asset/clip names stay with the
+    # trace rifle's renamed_from map, so this design takes CubeEscape_Scout / Scout_ (user decision 22.10.2026)
+    'scout_rifle': {
+        'asset': 'CubeEscape_Scout', 'clip': 'Scout_Use', 'class': 'scout_rifle', 'element': 'energy',
+        'concept': 'KG11.geo.json', 'grip_tilt_degrees': 8.04, 'grip_part': 'Griff_p06', 'support_part': 'Handschutz_p13',
+        'view_center': (0, -.21, .10), 'view_scale': 1.30, 'trigger': 'FireAction', 'build': scout_rifle,
+        # precision scope VS03, glass not built (glass way A): the line runs along the tube's axis to the eyecup p45 (the
+        # sheet's Socket_Sight); Socket_Eye sits where the omitted eye glass p50 was (front face of the eyecup; spec
+        # Socket_Eye 0.75 mm further ahead)
+        'fire_frame': 14, 'sight': sight_rule('scope', ('Gehaeuse_p21',), 'center', .66, rear_parts=('Augenmuschel_p45',),
+                                              eye_part='Augenmuschel_p45'),
+        # semi-automatic: the bolt runs back in the housing, the left charging handle p05 shows the stroke (like KG02,
+        # 50 mm); 55 mm so the robot variant, squashed to slope 0.16 between grip and magazine, still moves it 8.6 mm (with
+        # 35 mm the robot game model showed 26 changed pixels in the viewer test, below its 30)
+        'use_clip': [{'node': 'Anim_Bolt', 'channel': 'location', 'axis': 1,
+                      'keys': slide_keys((14, 0), (16, .055), (22, .006), (28, 0))}],
+    },
 }
 
 
@@ -724,17 +684,14 @@ def decal(part, face, rect, image, channel, rotation=0):
 
 # Decals of the concept sheet "Waffen Texturen 1-9" (Toolgen 0.13 Enamel): baked into the weight maps by surface_bake.py.
 # A weapon built from a formgen concept sheet has none here: the sheet's own decals are its mask regions (0.23 Livery,
-# surface_bake.design_anchors; the assault rifle's two 0.13 decals on Gehaeuse_p09/Handschutz_p11 went into KG02's 63).
+# surface_bake.design_anchors; the assault rifle's two 0.13 decals on Gehaeuse_p09/Handschutz_p11 went into KG02's 63; 0.24: the
+# pulse rifle's and the SMG's into the 11 of KG03 and the 54 of KG06).
 DECALS = {
     'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
                decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
-    'pulse_rifle': [decal('Chassis', '+x', (.735, .53, .803, .767), 'tech_ring', 'Emission'),
-                    decal('Shroud', '+x', (.06, .45, .22, .7), 'tech_bars', 'Accent')],
     'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
                 decal('BarrelShroud', '+x', (.033, .175, .167, .41), 'hazard_stripes', 'Accent')],
     'sniper_rifle': [decal('Receiver', '+x', (.233, .348, .333, .63), 'serial_s07', 'Accent')],
-    'smg': [decal('Shroud', '+x', (.094, .375, .281, .643), 'arrows_chevron', 'Accent'),
-            decal('DrumCap_1', '+x', (.41, .41, .59, .59), 'arrow_triangle', 'Secondary')],
     'fusion_rifle': [decal('Body', '+x', (.577, .217, .654, .55), 'research', 'Emission'),
                      decal('Handguard', '+x', (.25, .37, .5, .63), 'fusion_px7', 'Secondary')],
     'trace_rifle': [decal('Handguard', '+x', (.077, .34, .231, .66), 'tech_lines', 'Energy')],
@@ -875,15 +832,18 @@ ROBOT = {
     # 0.18 KG02: the grip is 93 mm deep (zone +-50 mm keeps it unbent), support at the rear bottom of the magazine well p08
     'assault_rifle': robot_fit(.67, 1.5, [(.3132, .11), (-.14, -.09), (-.6208, -.56)], (0, -.14, .050), 'Part_p08',
                                ('Gehaeuse_p09',), 'Lauf_p13', grip_zone=.05),
-    'pulse_rifle': robot_fit(.66, 1.55, [(.342, .11), (-.10, -.09), (-.52, -.55)], (0, -.10, .035), 'Chassis',
-                             ('Chassis',), 'Barrel'),
+    # 0.24 KG03: support at the rear of the energy cell p18 (the magazine of the sheet), the grip (88 mm deep) in a +-45 mm zone
+    'pulse_rifle': robot_fit(.66, 1.5, [(.2542, .11), (-.165, -.095), (-.6078, -.55)], (0, -.165, .040), 'Energiezelle_p18',
+                             ('Gehaeuse_p06',), 'Muendung_p22', grip_zone=.045),
     'shotgun': robot_fit(.67, 1.35, [(.389, .11), (-.10, -.09), (-.515, -.56)], (0, -.10, .035), 'Receiver',
                          ('Receiver',), 'BarrelShroud'),
     'sniper_rifle': robot_fit(.73, 1.45, [(.434, .11), (-.10, -.09), (-.701, -.62)], (0, -.10, .036), 'Chassis',
                               ('Receiver', 'Chassis'), 'Barrel'),
-    # SMG: the drum keeps its round side (slope = cross from the trigger guard to the drum's front); its barrel is the shroud
-    'smg': robot_fit(.52, 1.35, [(.211, .11), (-.072, -.072), (-.178, -.215), (-.406, -.41)], (0, -.085, .030), 'Body',
-                     ('Body', 'BodyPlate'), 'Shroud'),
+    # 0.24 KG06: support under the front of the housing p04, just ahead of the trigger guard (the grip holds the magazine);
+    # the shroud and muzzle stretch a little to the CE length; the trigger p12 (the Use clip's moving part) keeps slope
+    # 0.75 up to y -0.076 (at 0.46 its decimated LOD1 folded: UV1 tangents 81 % aligned, verify_surface wants 90 %)
+    'smg': robot_fit(.52, 1.35, [(.2357, .11), (-.076, -.081), (-.13, -.095), (-.3803, -.41)], (0, -.13, .054), 'Gehaeuse_p04',
+                     ('Gehaeuse_p04',), 'Laufmantel_p06'),
     # fusion rifle: the sight post (0.6 mm off a rail slot at y -0.12) sits where the map is almost 1:1
     'fusion_rifle': robot_fit(.67, 1.35, [(.359, .11), (-.11, -.08), (-.135, -.1025), (-.601, -.56)], (0, -.12, .040), 'Handguard',
                               ('Body', 'BodyDark'), 'Core'),
@@ -892,6 +852,13 @@ ROBOT = {
                              ('Receiver', 'ReceiverTop', 'TopRail'), 'Barrel'),
     'rocket_launcher': robot_fit(.65, 1.15, [(.2, .11), (-.10, -.09), (-.525, -.54)], (0, -.10, .040), 'Tube',
                                  ('Tube',), 'Tube'),
+    # 0.24 KG11 (new): CE names no length for a scout rifle yet (spec robot_fit.applies false); 0.70 m keeps the class order
+    # of CE's EquipmentCatalogTests (trace rifle 0.69 < scout < sniper rifle 0.73); support at the rear face of the box
+    # magazine p11 (the magazine well p10 sits 6 cm high: 0.137 m from the grip, out of reach), the grip (92 mm deep) in
+    # a +-45 mm zone (with 50 mm the charging handle's stroke shrank to 3.7 mm, below the Use clip's 4 mm), cross 1.6
+    # for a barrel of at least 3 cm
+    'scout_rifle': robot_fit(.70, 1.6, [(.2923, .11), (-.192, -.095), (-.7077, -.59)], (0, -.192, .035), 'Magazin_p11',
+                             ('Gehaeuse_p03',), 'Lauf_p14', grip_zone=.045),
 }
 
 
