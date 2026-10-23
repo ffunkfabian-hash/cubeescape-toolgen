@@ -418,6 +418,7 @@ def main():
                     "socket_surface": None, "sockets_on_tool_required": False, "max_renderers": ge.MAX_RENDERERS_VIEWMODEL,
                     "sample_frames": [1]}
         ge.check_budget(checks, document)
+        ge.check_zero_area(checks, [*renderers, *lods])
         checks.add("device_without_arms", not [obj.name for item in roots for obj in tree(item)
                                                if obj.name.startswith(("UpperArm_", "LowerArm_", "WristYoke_", "Hand_", "Fingers_",
                                                                        "Thumb_", "Viewmodel_", "Shoulder_"))],

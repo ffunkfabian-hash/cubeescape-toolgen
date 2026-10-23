@@ -374,7 +374,7 @@ class HoldContractTests(unittest.TestCase):
                 self.assertEqual(tool["hold"]["sight_kind"], hold["sight_kind"])
                 self.assertEqual("Socket_Eye" if hold["sight_kind"] == "scope" else None, hold["eye_socket"])
                 self.assertEqual(tool["hold"].get("eye_radius_m"), hold["eye_radius_m"])
-                self.assertEqual(tool["hold"]["eye_distance_m"], hold["ads_eye_distance_m"])
+                self.assertEqual(ego_clips.ads_eye_distance_m(tool), hold["ads_eye_distance_m"])
         old = ge.hold_block({"hold": {"grip_tilt_degrees": 14, "two_handed": True}})
         self.assertNotIn("sight_socket", old, "tools without a sight keep the 0.10 hold block")
 
@@ -391,19 +391,33 @@ class SightTests(unittest.TestCase):
     # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
     # heavy 0.30, trace rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
     # Cube Escape 0.75 aims with these distances (CE ads.eye_distance_m / hip.scale, table in CE Docs/versions/0.75.md;
-    # Toolgen 0.13 adopted them so the ADS QA checks the real pose).
-    EYE = {"pistol": .40, "assault_rifle": .379, "pulse_rifle": .357, "shotgun": .65, "sniper_rifle": .221, "smg": .421,
-           "fusion_rifle": .40, "trace_rifle": .221, "rocket_launcher": .453,
-           # 0.24: no CE profile for the new scout rifle yet; the scope class distance of the sniper and trace rifle
-           "scout_rifle": .221}
+    # Toolgen 0.13 adopted them so the ADS QA checks the real pose). Toolgen 0.24 patch (user decision 23.10.2026, Cube
+    # Escape 0.112 aims with data/ego_arms.json devices.<tool>.ads.eye_distance_m): a device with an ads block there has ONE
+    # distance, that one, and no hold.eye_distance_m in tools.json; the table keeps the CE profile for the others.
+    EYE = {"pistol": .40, "shotgun": .65, "sniper_rifle": .221, "fusion_rifle": .40, "trace_rifle": .221,
+           "rocket_launcher": .453}
+    EGO_ADS = {"assault_rifle": .62, "pulse_rifle": .70, "smg": .72, "scout_rifle": .12}
+
+    def eye_distance(self, key):
+        return ego_clips.ads_eye_distance_m(WEAPONS[key])
 
     def test_sight_kinds_and_eye_distances(self):
         for key, tool in WEAPONS.items():
             with self.subTest(weapon=key):
                 self.assertEqual(self.KINDS[key], tool["hold"]["sight_kind"])
                 self.assertEqual(self.KINDS[key], designs.DESIGNS[key]["sight"]["kind"])
-                self.assertEqual(self.EYE[key], tool["hold"]["eye_distance_m"])
+                self.assertEqual(self.EYE.get(key, self.EGO_ADS.get(key)), self.eye_distance(key))
                 self.assertIn(tool["hold"]["sight_kind"], sight.SIGHT_KINDS)
+
+    def test_one_eye_distance_per_device(self):
+        """Two truths were one too many (CE 0.112): devices with an ads block take it from ego_arms.json only."""
+        devices = json.loads((ROOT / "data/ego_arms.json").read_text())["devices"]
+        for key, tool in WEAPONS.items():
+            with self.subTest(weapon=key):
+                has_block = isinstance(devices.get(key), dict) and "ads" in devices[key]
+                self.assertEqual(key in self.EGO_ADS, has_block)
+                self.assertEqual(not has_block, "eye_distance_m" in tool["hold"],
+                                 "tools.json keeps hold.eye_distance_m only for devices without an ego_arms ads block")
 
     def test_design_rule_is_the_aim_idle_line(self):
         data = ego_clips.load()

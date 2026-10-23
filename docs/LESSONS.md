@@ -9,6 +9,7 @@
 - **Dezimierung triangulierte und setzte UV-Markierungen nebenbei** → unter Budget macht `reduce_to_budget` beides selbst, sonst fehlen Tangenten und UV1 ([Quelle](TECHNIK.md#erfahrungen))
 - **Objektsuche kappte Namen am ersten Punkt** → Millimeterzahlen im Namen, volle Namen, nur numerische Blender-Suffixe ([Quelle](TECHNIK.md#gestaltung-und-bogen-fix))
 - **Render-Limits gingen bei `open_mainfile` verloren** → Sample-/Thread-Vorgaben als persistente Handler setzen ([Quelle](TECHNIK.md#cache-und-worker))
+- **Fase neben Coplanar-Lücke ließ Dreiecke ohne Fläche (KG11: 16, Unity verwirft sie, 8640 → 8624)** → `dissolve_degenerate` nach der Fase; Geometrie-QA zählt sie (`mesh_check`, 1e-11 m²) ([Quelle](../CHANGELOG.md))
 
 ## UV/Bake/Oberflächen
 - **Pixelkonstanten sind in Wahrheit UV- oder Kartengrößen** → vor jeder Auflösungsänderung jede Konstante einer Klasse zuordnen; ungebackene Golden als `stale` markieren, nie raten ([Quelle](versions/0.16.md))
@@ -42,6 +43,7 @@
 - **Clip-Wege über Knickstellen der Verformung falsch skaliert (94,5 statt 58,8 mm)** → verschobene Position abbilden, nicht die Steigung ([Quelle](TECHNIK.md#erfahrungen))
 - **Unbeschrifteter Vordergriff (KG06 p09): Spec-Anker lag auf dem Laufmantel darüber** → Blattbild ansehen, benannte Korrektur, an formgen melden ([Quelle](versions/0.24.md))
 - **Roboter-Stauchung zwischen Griff und Stütze (Steigung 0,1) drückte den Use-Weg unter 4 mm und unter die Viewer-Schwelle** → Griffzone und Weg zusammen wählen ([Quelle](versions/0.24.md))
+- **Zwei Augenabstände (tools.json gegen ego_arms.json): die ADS-QA prüfte die falsche Pose** → eine Zahl je Gerät, `ego_clips.ads_eye_distance_m`, ein ego_arms-Block gewinnt ([Quelle](UNITY_EINBAU.md))
 
 ## Viewer und Determinismus
 - **Stauchen schrumpft Dekor-Abstände → Z-Fighting (1,4–1,6 px)** → Koplanar-Regel auf verformten Flächen, feine Zonen 1:1 lassen, danach `test_determinism.py --runs 16` ([Quelle](TECHNIK.md#erfahrungen))

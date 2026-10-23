@@ -505,8 +505,9 @@ Neu ist nur Angehängtes; Clipnamen, Anker und Knoten der übrigen Geräte bleib
   (gebackene Arme verlassen den Bildausschnitt); die alten Modelle: `git checkout v0.23.0`.
 - **Augenabstand beim Zielen:** Toolgens Ego-Lage (`devices.<tool>.ads.eye_distance_m`) MP 0,72 m und Impulsgewehr 0,70 m (drei Greiffinger
   + Daumen im Bild), Scout **0,12 m** – das Okular deckt etwa 45 % der Bildhöhe, in den Ziel-Clips darf die Griffhand das Bild verlassen
-  (`ads.hands_may_leave`; Entscheidung des Nutzers 22.10.2026 nach Vergleichsbildern 0,31 / 0,12 / 0,08 m). `hold.ads_eye_distance_m`
-  (CE-Profilwert) bleibt 0,421 / 0,357 / 0,221 – dieselbe Lücke wie bei KG02 (0,379 gegen 0,645 in CE 0.106), Abgleich im CE-Einbau.
+  (`ads.hands_may_leave`; Entscheidung des Nutzers 22.10.2026 nach Vergleichsbildern 0,31 / 0,12 / 0,08 m). Seit dem Patch vom 23.10.2026 ist das
+  die **einzige** Zahl: `hold.ads_eye_distance_m` und die ADS-QA übernehmen sie für jedes Gerät mit `ads`-Block (auch KG02: 0,62 statt 0,379);
+  `hold.eye_distance_m` in `tools.json` gibt es nur noch für Geräte ohne solchen Block (CE-0.75-Profil).
 
 ## Prüfen
 

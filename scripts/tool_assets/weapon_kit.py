@@ -23,6 +23,7 @@ from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
 import concept_kit
+import mesh_check
 import sight
 import weapon_designs
 from weapon_gif import FRAMES
@@ -205,6 +206,9 @@ def world(key):
     if concept:
         sight_report['concept'] = concept_sight_check(concept, sight_report, fit_report)
     qa = HELPER['validate']()
+    qa['zero_area_triangles'] = sum(mesh_check.zero_area_triangles(obj.data) for obj in STATE['OBJECTS'] if obj.type == 'MESH')
+    if qa['zero_area_triangles']:
+        raise RuntimeError('Triangles without area: %d' % qa['zero_area_triangles'])
     qa.update(tags=['tool', 'weapon', spec['class'], spec['element'], 'handheld', 'robot-classic', 'white-shell'],
               pivot='asset root = grip centre (Socket_Hand); forward -Y, up +Z',
               integration='visual asset only; no ammunition, damage or rules (Cube Escape tool in hand)',
@@ -468,6 +472,9 @@ def fps(key):
     objects.append(socket)
     STATE.update(ASSET=name, OBJECTS=objects, ROOT=root, GEO=geo)
     qa = HELPER['validate']()
+    qa['zero_area_triangles'] = sum(mesh_check.zero_area_triangles(obj.data) for obj in STATE['OBJECTS'] if obj.type == 'MESH')
+    if qa['zero_area_triangles']:
+        raise RuntimeError('Triangles without area: %d' % qa['zero_area_triangles'])
     qa.update(variant='first_person_large', enlargement=ENLARGEMENT,
               tags=['tool', 'weapon', spec['class'], spec['element'], 'handheld', 'robot-classic', 'first-person-large'],
               pivot='camera attachment at origin; all export object scales are 1',

@@ -812,7 +812,7 @@ def build(directory, spec, profile):
         report["ego_clips"]["hand_touch_limit_m"] = touch_limit
     report["ads_target"] = None
     if spec.get("hold") and scene.objects.get("Socket_Sight") is not None:
-        report["ads_target"] = ads_target_report(scene, root, arms, settings, spec["hold"]["eye_distance_m"],
+        report["ads_target"] = ads_target_report(scene, root, arms, settings, ego_clips.ads_eye_distance_m(spec),
                                                  support_hand.name if support_hand else None)
         print("ADS_TARGET", tool, json.dumps({key: report["ads_target"][key] for key in
                                               ("eye_distance_m", "passed", "eye_distance_range_m", "centre_hit",

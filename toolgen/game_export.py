@@ -63,6 +63,7 @@ except ImportError:  # unit tests import the pure helpers with the system Python
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
 import ego_clips  # noqa: E402 - pure Python, needs the tool_assets path
+import mesh_check  # noqa: E402 - same path
 import mesh_order  # noqa: E402 - same path; bmesh only inside Blender
 import surface as surface_maps  # noqa: E402 - same folder (toolgen/), pure helpers plus the UV1 step
 PALETTE_PATH = ROOT / "data/game_palette.json"
@@ -1166,7 +1167,7 @@ def hold_block(tool):
                                     "sight window on the line of sight; the window carries no glass (user decision "
                                     "20.10.2026), tint and reticle are the consumer's overlay there."}
                    if hold.get("reticle_socket") else {}),
-                "ads_eye_distance_m": hold["eye_distance_m"],
+                "ads_eye_distance_m": ego_clips.ads_eye_distance_m(tool),
                 "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
                               "optic, eyepiece of a scope). Only its position is contract: the empty's own rotation in "
                               "an imported FBX keeps Blender's axes (measured in Cube Escape 0.75: its forward points "
@@ -1383,6 +1384,7 @@ def check_blend(checks, path, source, expected, palette):
     lod0_tris = sum(triangles(obj.data) for obj in renderers)
     lod1_tris = sum(triangles(obj.data) for obj in lods)
     ratio = lod1_tris / lod0_tris
+    check_zero_area(checks, [*renderers, *lods])
     depsgraph = bpy.context.evaluated_depsgraph_get()
     lod_errors = {}
     for obj in lods:
@@ -1403,6 +1405,14 @@ def check_blend(checks, path, source, expected, palette):
                lod0_triangles=lod0_tris, lod1_triangles=lod1_tris, ratio=round(ratio, 4), range=LOD1_RANGE,
                parts=lod_errors)
     return [obj.name for obj in renderers], [obj.name for obj in lods]
+
+
+def check_zero_area(checks, objects):
+    """No triangle without area on the exported renderers and LODs (Unity's import drops them; see mesh_check)."""
+    flat = {obj.name: mesh_check.zero_area_triangles(obj.data) for obj in objects}
+    flat = {name: count for name, count in flat.items() if count}
+    checks.add("zero_area_triangles", not flat, triangles=sum(flat.values()), meshes=flat,
+               note="Unity's import drops triangles without area (Cube Escape 0.112: KG11 8640 -> 8624)")
 
 
 def check_framing(checks, scene, source, expected, renderers):
@@ -1496,7 +1506,7 @@ def check_ads(checks, work, contract, tool):
     checks.add("ads_target_pose", centred and on_line and view_ok and bool(ads["eye_distance_range_m"]),
                centre_clear=(ads or {}).get("centre_clear"), centre_hit=(ads or {}).get("centre_hit"),
                model_top_above_centre=(ads or {}).get("model_top_above_centre"),
-               eye_distance_m=hold["eye_distance_m"], profile_distance_passed=bool(ads) and ads["passed"],
+               eye_distance_m=ego_clips.ads_eye_distance_m(tool), profile_distance_passed=bool(ads) and ads["passed"],
                eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
                failures_at_profile_distance=(ads or {}).get("failures", ["qa_viewmodel.json has no ads_target"]),
                sight_socket_on_aim_line=on_line)
