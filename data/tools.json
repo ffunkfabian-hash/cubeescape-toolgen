@@ -89,7 +89,6 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "holo",
-        "eye_distance_m": 0.379,
         "reticle_socket": "Socket_Reticle"
       },
       "concept": "KG02",
@@ -114,7 +113,6 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "holo",
-        "eye_distance_m": 0.357,
         "reticle_socket": "Socket_Reticle"
       },
       "concept": "KG03",
@@ -185,7 +183,6 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "reflex",
-        "eye_distance_m": 0.421,
         "reticle_socket": "Socket_Reticle"
       },
       "concept": "KG06",
@@ -278,7 +275,6 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "scope",
-        "eye_distance_m": 0.221,
         "eye_radius_m": 0.00825,
         "reticle_socket": "Socket_Reticle"
       },

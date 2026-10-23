@@ -708,7 +708,7 @@ Zulieferung T1, T2, T3, T5 und T6 für Cube Escape 0.72 „Sightline“ (vormals
 - **Prüfung je Clipbild (T6).** `hand_touch_m` jetzt in jedem Bild jedes Ego-Clips (`ego_clips.clips[].hand_touch_max_m`, Grenze
   `touch_tolerance_m` = 8 mm; die Stützhand im Reload-Fenster `detached` zählt nicht); Handgelenk ≤ 55° je Bild wie seit 0.8.0.
 - **ADS-Zielpose (T6).** Toolgen rechnet die Zielpose von Cube Escape selbst (Konzept › 5.3): das ganze Ego-Modell in der Ruhepose
-  (Bild 1) starr so bewegt, dass `Socket_Sight` auf der Kameraachse im Abstand `hold.eye_distance_m` liegt (Cube-Escape-Profilklassen:
+  (Bild 1) starr so bewegt, dass `Socket_Sight` auf der Kameraachse im Abstand `ego_clips.ads_eye_distance_m(tool)` liegt (`devices.<tool>.ads.eye_distance_m` aus `ego_arms.json`, sonst `hold.eye_distance_m`; Cube-Escape-Profilklassen:
   sidearm 0,30, rifle 0,26, submachine_gun 0,24, shotgun 0,28, sniper 0,22, heavy 0,30, Spurgewehr 0,20 m) und entlang des Blicks
   zeigt, Maßstab 1. Geprüft beim eingestellten Viewmodel-Sichtfeld für 16:9 und 16:10: Visier in der Bildmitte, die drei Greiffinger und
   der Daumen jeder Hand im Bild, proximale Unterarmhälften unter dem Bild (der Stützarm wird wie in den Ziel-Clips nur gemessen,

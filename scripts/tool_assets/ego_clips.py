@@ -25,9 +25,19 @@ import ego_weapon_motions
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = ROOT / "data/ego_clips.json"
+ARMS_PATH = ROOT / "data/ego_arms.json"
 AXES = ("pitch", "yaw", "roll", "twist", "right", "up", "back")
 POSES = ("rest", "aim", "sprint", "lowered")
 KINDS = ("weapon", "tool")
+
+
+def ads_eye_distance_m(tool, arms_path=ARMS_PATH):
+    """The one aim-down-sights eye distance of a tool (game metres). A device with an ``ads`` block in data/ego_arms.json
+    (Toolgen 0.24 patch; user decision 23.10.2026: Cube Escape 0.112 uses these) takes it from there; every other tool keeps
+    ``hold.eye_distance_m`` of data/tools.json (the Cube Escape 0.75 profile)."""
+    device = json.loads(Path(arms_path).read_text())["devices"].get(tool.get("id"))
+    ads = device.get("ads") if isinstance(device, dict) else None
+    return ads["eye_distance_m"] if ads else tool["hold"]["eye_distance_m"]
 
 
 def load(path=DATA_PATH):

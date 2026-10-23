@@ -2,6 +2,8 @@
 
 ## 0.24.0 – Salvo (22.10.2026)
 
+**Patch 23.10.2026 (KG11 + Augenabstand, aus Cube Escape 0.112):** (1) Scout-Gewehr: 16 Dreiecke ohne Fläche (Montageringe p55/p60, Fase neben der Coplanar-Lücke) entfallen – `concept_kit.make` löst nach der Fase Degeneriertes auf (8640 → 8624 Dreiecke, wie Unity sie importiert); Geometrie-QA zählt Dreiecke ohne Fläche (`mesh_check`, `qa_geometry.json` › `zero_area_triangles`, Prüfung `zero_area_triangles` in jedem `qa_game*.json`) und ist bei einem Fund rot. (2) Ein Augenabstand je Gerät: wo `data/ego_arms.json` › `devices.<tool>.ads` einen Wert hat (Sturm-, Impulsgewehr, MP, Scout: 0,62 / 0,70 / 0,72 / 0,12 m), gilt nur dieser – für `hold.ads_eye_distance_m` und die ADS-QA; `hold.eye_distance_m` entfällt dort in `tools.json`. Vertragsformat unverändert.
+
 Gruppe 1 der Animationsvorgabe (Nexogen#1 6273351409, Freigabe 6315231014): Maschinenpistole (KG06), Impulsgewehr (KG03, Holo) und das
 neue Scout-Gewehr (`scout_rifle` ← KG11, Asset `CubeEscape_Scout`, Clips `Scout_*`) als Konzeptmodelle aus formgen `claude-v0.15.1` auf
 Vertrag 5 mit Roboter-Variante. Neue Clips am Ende: MP `AutoFire`/`AimAutoFire` (Zustandsschleife, ein `Shot` je echtem Schuss, 720/min),

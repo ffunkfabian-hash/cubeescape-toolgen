@@ -17,6 +17,7 @@ import concept_spec
 import mesh_order
 
 SEGMENTS = 2
+DEGENERATE_M = 1e-6            # edges shorter and faces thinner than this (m) collapse after the bevel
 
 
 def make(kit, mesh, parent, state):
@@ -36,6 +37,9 @@ def make(kit, mesh, parent, state):
                                      affect='EDGES', clamp_overlap=True)
             for face in result["faces"]:
                 face.smooth = True
+        # a bevel next to a coplanar-gap shift leaves collapsed corners (KG11 rings: 16 triangles of area 0 in the game
+        # export, which Unity drops at import): dissolve what has no length or area before anything is triangulated
+        bmesh.ops.dissolve_degenerate(bm, dist=DEGENERATE_M, edges=bm.edges)
         bm.normal_update()
     # n-gons (the spec's faces are planar n-gons, also concave) become triangles: tangents on UV1 need tris and quads
     # (an under-budget model is not decimated, which would triangulate them), and concave faces shade wrongly otherwise;
