@@ -234,8 +234,9 @@ def catalog():
 
 
 def former_ids(tools=None):
-    """Former ids --tool still accepts (tools.json ``renamed_from``, 0.17: scout_rifle -> trace_rifle), as long as no tool
-    carries the id again (it is reserved for another tool later, then the alias ends)."""
+    """Former ids --tool still accepts (tools.json ``renamed_from``; 0.17-0.23: scout_rifle -> trace_rifle), as long as no
+    tool carries the id again (then the alias ends; 0.24: the scout rifle KG11 carries scout_rifle, the trace rifle's
+    renamed_from went)."""
     tools = catalog() if tools is None else tools
     current = {tool["id"] for tool in tools}
     return {tool["renamed_from"]["id"]: tool["id"] for tool in tools

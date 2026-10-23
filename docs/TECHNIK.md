@@ -860,6 +860,41 @@ Verträge der Vertrag-4-Geräte gleich bleiben (`data/viewmodels.json` und `data
 - **Sichtprüfung in der Cloud:** `BLENDER_WORKBENCH` rendert im bpy-Modul headless (EGL-Warnungen sind harmlos) in ~0,1 s je Bild – gut für
   Kontaktbögen beim Gestalten; die Abnahmebilder bleiben Cycles/Eevee auf dem Mac.
 
+### Gruppe 1: MP, Impuls- und Scout-Gewehr (0.24.0 Salvo)
+
+Vertrag: [UNITY_EINBAU](UNITY_EINBAU.md) › Gruppe 1. Bericht mit Herkunft je Festlegung: [versions/0.24.md](versions/0.24.md).
+
+- **Modelle:** `smg` ← KG06, `pulse_rifle` ← KG03, neu `scout_rifle` ← KG11 (Ordner `scripts/tool_assets/Scoutgewehr/`, Asset
+  `CubeEscape_Scout`), alle aus `claude-v0.15.1` mit Weapon-Spec (Stufe B ohne Code). `concept_spec.LABEL_NODES` hängt „Energiezelle“
+  (KG03 p18) unter `Anim_EnergyCell`. KG06 zeichnet keinen Verschluss (`Anim_Bolt` leer wie früher KG02); `concept_spec.PART_NODES`
+  hängt seinen Abzug p12 unter `Anim_Trigger`, den der Use-Clip zieht (der Viewer verlangt sichtbare Bewegung im Weltmodell). Visierlinie: `sight_rule`
+  kennt `rear_parts` (hinterer Ring/Augenmuschel = `Socket_Sight` des Blatts, ohne die Linie vom Fenster zu nehmen) und für ein
+  Zielfernrohr ohne Okularglas `eye_part` (`Socket_Eye` an dessen Vorderfläche, 1 mm vor dem Blattwert).
+- **Roboter:** Stütze am Ende der Energiezelle (KG03), vor dem Abzugsbügel unter dem Gehäuse (KG06), an der Rückseite des Kastenmagazins
+  (KG11; der Magazinschacht liegt 6 cm hoch, 0,137 m vom Griff). Zwischen Griffzone und Stütze ist die Achse stark gestaucht (Steigung
+  0,1–0,2); der Use-Weg des Scout-Ladehebels braucht dafür 55 mm und eine Griffzone von ±45 mm (am Roboter 8,6 mm; mit 35 mm zeigte
+  das Roboter-Spielmodell im Viewer-Test nur 26 statt 30 bewegte Pixel).
+- **Gerätedaten (`data/ego_arms.json` › `devices`):** senkrechte Vordergriffe (MP, Impuls) greift die linke Hand wie einen Pistolengriff
+  (`palm` −X, `axis` −Z, `pose` `grip`); den Zellengriff von unten mit dem Daumen nach hinten (nach vorn stieß er an den Vordergriff, von der
+  Seite hob der Ellbogen ins Bild). `timing_note` je Gerät nennt die benannten Destiny-Beispiele. Linkes Handgelenk an den Vordergriffen
+  54,5° (Grenze 55°).
+- **Feuerclips:** `ego_arms.fire_clips` hängt sie aus `devices.<tool>.fire` ans Ende (`auto`: `AutoFire`/`AimAutoFire`, Schleife aus
+  `loop_shots` × `cycle_frames`; `burst`: `Burst`/`AimBurst`). Bewegung in `ego_clips` (`auto_fire`: Kick je Schuss, Rückkehr vor dem
+  nächsten, ein langsames Wiegen über die Schleife; `burst`: Aufbau ohne Rückkehr zwischen den Schüssen plus Kick je Schuss, Drift
+  rechts, Ruhe an `still_frame`). Mechanik (`first_person.clip_keys`): jeder Schuss spielt den Hub des Use-Clips ab dem Schussbild für
+  `stroke_frames` (Pulswürfel, Bolzen). `ego_rig.fire_event_failures` prüft `Shot` je Muster, `BurstEnd` = letzter Schuss,
+  `Ready` < `Still` < `End`; Nachladen zusätzlich `Move` < `HandOff` und `Ready` < `Still` < `End`.
+- **Zielfernrohr:** `devices.scout_rifle.events` hängt `ScopeOn`/`ScopeOff`/`Move` an `AimIn`/`AimOut`, `ads.lens_lead_frames` hält die
+  Zielpose ein Bild, während das Linsenbild geht (`ego_clips.aim_out`). Augenabstand 0,12 m (Okular ≈ 45 % der Bildhöhe); in den
+  Ziel-Clips darf die Griffhand das Bild verlassen (`ads.hands_may_leave`, `ego_rig.AIM_MOTIONS`) – die einzige Ausnahme der Bildregel,
+  Entscheidung des Nutzers nach Vergleichsbildern (mit der Regel lag das Okular bei 0,60 m klein in der Mitte, der Schaft vor der Kamera).
+- **Spiel-Export:** Block `fire`, `minimum_consumer.group_1_clips`, Schleifen im Regeltext aus den Clips; Handteil-Quelle als
+  `reload_part` (KG03: `Anim_EnergyCell`). `merge_boxes` fasst nie zwei Boxen zusammen, deren gemeinsame Box eine Öffnungsprobe enthielte
+  (die Roboter-MP schloss ihr Reflexfenster beim Zusammenfassen auf 6 Kollider); bestehende Kollider ändern sich dadurch nicht (dort deckte
+  keine Zusammenfassung eine Probe). `surface._face_angles` misst die UV1-Drehung je Fläche an ihrer längsten Kante – vor und nach dem Packen **dieselbe** Kante
+  (bei gleich langen Kanten wählte eine neue Wahl sonst die andere und meldete 90°) – und nur, wenn sie ≥ 2e-5 ist (Packer-Rauschen an
+  gestauchten Teilen; Codex sol: die erste Kante allein ließ gedrehte Flächen mit kurzer erster Kante durch).
+
 ## Grenzen
 
 Blender-Reimport und SceneKit-Bilder belegen keine Unity- oder Gameplay-Abnahme. Die Drehung der Anker-Leerobjekte ist kein

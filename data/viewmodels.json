@@ -390,27 +390,27 @@
     },
     "pulse_rifle": {
       "hand": [
-        -0.22,
-        -0.55,
-        -0.17
+        -0.21,
+        -0.537,
+        -0.176
       ],
       "roll_degrees": 5,
       "support": true,
       "support_socket": "Socket_SupportHand",
       "support_grip": "underhand",
       "support_radius": [
-        0.03,
-        0.03
+        0.059,
+        0.0242
       ],
       "support_roll_degrees": 35,
       "grip_radius": [
-        0.021,
-        0.023
+        0.0227,
+        0.0341
       ],
       "tool_scale": 0.744,
       "hand_rotation_degrees": {
         "R": [
-          14,
+          9.48,
           0,
           0
         ]
@@ -418,17 +418,11 @@
       "head": {
         "anchor": "Socket_Muzzle",
         "parts": [
-          "SM_PG_PulseCoil",
-          "SM_PG_Shroud",
-          "SM_PG_MuzzleCup",
-          "SM_PG_MuzzleCore",
-          "SM_PG_MuzzleFin",
-          "SM_PG_Barrel"
-        ],
-        "limits": {
-          "head_min_unoccluded_fraction": 0.3,
-          "head_min_screen_fraction": 0.001
-        }
+          "SM_PG_Muendung_p22",
+          "SM_PG_Part_p21",
+          "SM_PG_Part_p20",
+          "SM_PG_Part_p19"
+        ]
       },
       "aim_target_m": [
         0.3,
@@ -455,14 +449,14 @@
         },
         "L": {
           "forearm": [
-            -0.4,
-            -0.4,
-            0.82
+            -0.3,
+            -0.2,
+            0.93
           ],
           "upper": [
             0.3,
             0.95,
-            0.15
+            0.05
           ],
           "max_wrist_bend_degrees": 55
         }
@@ -624,27 +618,27 @@
     },
     "smg": {
       "hand": [
-        -0.22,
-        -0.55,
-        -0.17
+        -0.21,
+        -0.537,
+        -0.176
       ],
       "roll_degrees": 5,
       "support": true,
       "support_socket": "Socket_SupportHand",
       "support_grip": "underhand",
       "support_radius": [
-        0.029,
-        0.029
+        0.0373,
+        0.0213
       ],
       "support_roll_degrees": 35,
       "grip_radius": [
-        0.02,
-        0.023
+        0.0192,
+        0.0286
       ],
       "tool_scale": 1.02,
       "hand_rotation_degrees": {
         "R": [
-          18,
+          6.71,
           0,
           0
         ]
@@ -652,17 +646,10 @@
       "head": {
         "anchor": "Socket_Muzzle",
         "parts": [
-          "SM_PG_Barrel",
-          "SM_PG_MuzzleBrake",
-          "SM_PG_MuzzleGlow",
-          "SM_PG_MuzzleRing",
-          "SM_PG_FrontPost",
-          "SM_PG_Shroud"
-        ],
-        "limits": {
-          "head_min_unoccluded_fraction": 0.3,
-          "head_min_screen_fraction": 0.001
-        }
+          "SM_PG_Laufmantel_p06",
+          "SM_PG_Part_p07",
+          "SM_PG_Part_p08"
+        ]
       },
       "aim_target_m": [
         0.3,
@@ -689,14 +676,14 @@
         },
         "L": {
           "forearm": [
-            -0.4,
-            -0.4,
-            0.82
+            -0.3,
+            -0.2,
+            0.93
           ],
           "upper": [
             0.3,
             0.95,
-            0.15
+            0.05
           ],
           "max_wrist_bend_degrees": 55
         }
@@ -926,6 +913,80 @@
             0.3,
             0.95,
             0.15
+          ],
+          "max_wrist_bend_degrees": 55
+        }
+      }
+    },
+    "scout_rifle": {
+      "hand": [
+        -0.21,
+        -0.537,
+        -0.176
+      ],
+      "roll_degrees": 5,
+      "support": true,
+      "support_socket": "Socket_SupportHand",
+      "support_grip": "underhand",
+      "support_radius": [
+        0.0338,
+        0.0192
+      ],
+      "support_roll_degrees": 35,
+      "grip_radius": [
+        0.0266,
+        0.0372
+      ],
+      "tool_scale": 0.66,
+      "hand_rotation_degrees": {
+        "R": [
+          8.04,
+          0,
+          0
+        ]
+      },
+      "head": {
+        "anchor": "Socket_Muzzle",
+        "parts": [
+          "SM_PG_Muendungsbremse_p15",
+          "SM_PG_Lauf_p14",
+          "SM_PG_Part_p16",
+          "SM_PG_Handschutz_p13"
+        ]
+      },
+      "aim_target_m": [
+        0.3,
+        -2,
+        -0.25
+      ],
+      "motion": {
+        "fire_frame": 14,
+        "kick_m": 0.016,
+        "pitch_degrees": 3.5,
+        "recovery_frames": 13
+      },
+      "touch_tolerance_m": 0.008,
+      "arm_pose": {
+        "R": {
+          "forearm_rise_degrees": 27,
+          "forearm_yaw_degrees": 6,
+          "upper": [
+            -0.3,
+            0.95,
+            0.15
+          ],
+          "max_wrist_bend_degrees": 55
+        },
+        "L": {
+          "forearm": [
+            -0.3,
+            -0.2,
+            0.93
+          ],
+          "upper": [
+            0.3,
+            0.95,
+            0.05
           ],
           "max_wrist_bend_degrees": 55
         }

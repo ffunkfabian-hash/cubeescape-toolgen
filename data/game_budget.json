@@ -14,7 +14,8 @@
     "smg": 7500,
     "fusion_rifle": 10000,
     "trace_rifle": 9000,
-    "rocket_launcher": 10000
+    "rocket_launcher": 10000,
+    "scout_rifle": 9000
   },
   "robot": {
     "assault_rifle": 15000,
@@ -24,7 +25,8 @@
     "smg": 15000,
     "fusion_rifle": 15000,
     "trace_rifle": 15000,
-    "rocket_launcher": 15000
+    "rocket_launcher": 15000,
+    "scout_rifle": 15000
   },
   "viewmodel": {
     "portal_emitter": 20000,
@@ -39,6 +41,7 @@
     "smg": 19000,
     "fusion_rifle": 20000,
     "trace_rifle": 20000,
-    "rocket_launcher": 20000
+    "rocket_launcher": 20000,
+    "scout_rifle": 20000
   }
 }

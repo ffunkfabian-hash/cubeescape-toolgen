@@ -34,7 +34,8 @@ Reads ``<work>/<asset>.blend`` (the world model of ``data/tools.json``) and writ
   with the block ``robot`` (measures of ``qa_geometry_robot.json``), ``qa_game_robot.json``, ``preview_game_robot.png``.
   Same anchors, same hold block and the world triangle budget.
 * ``renamed_from`` (Toolgen 0.17, every format, additive): a renamed tool (tools.json ``renamed_from``; trace_rifle, until
-  0.16 scout_rifle) names its former id, asset, robot and clip stem and the old-to-new ``map`` for the consumer's move.
+  0.16 scout_rifle, written 0.17-0.23) names its former id, asset, robot and clip stem and the old-to-new ``map`` for the
+  consumer's move; the block goes once a tool carries the former id again (0.24: the scout rifle KG11).
 * ``minimum_consumer`` (Toolgen 0.17, every contract): the package's two consumer requirements apart, the 2048 first-person
   maps (Cube Escape 0.96) and the renamed tool ids (the Cube Escape version with the trace_rifle migration).
 
@@ -105,12 +106,14 @@ OPENING_PROBES = {
     "bow": [("Socket_Hand", "Socket_Nock", .5, (0.0, 0.0, 0.0)), ("Socket_Hand", "Socket_Nock", .75, (0.0, 0.0, 0.0)),
             ("Socket_Nock", None, 0.0, (0.0, -.05, .235)), ("Socket_Nock", None, 0.0, (0.0, -.05, -.365))],
 }
-# The nine weapons: the line of fire in front of the muzzle stays free of colliders.
+# The nine weapons and the scout rifle (0.24): the line of fire in front of the muzzle stays free of colliders.
 for _weapon in ("pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle", "trace_rifle",
-                "rocket_launcher"):
+                "rocket_launcher", "scout_rifle"):
     OPENING_PROBES[_weapon] = [("Socket_Muzzle", None, 0.0, (0.0, -.03, 0.0)), ("Socket_Muzzle", None, 0.0, (0.0, -.10, 0.0))]
 # Toolgen 0.18: the open window of a concept sight (no glass, user decision 20.10.2026) stays free: its centre on the line.
-OPENING_PROBES["assault_rifle"].append(("Socket_Reticle", None, 0.0, (0.0, 0.0, 0.0)))
+# 0.24: likewise the holo window of KG03 and the reflex window of KG06; a scope (KG11) is a closed tube in the hull, no probe.
+for _weapon in ("assault_rifle", "pulse_rifle", "smg"):
+    OPENING_PROBES[_weapon].append(("Socket_Reticle", None, 0.0, (0.0, 0.0, 0.0)))
 # Element glow source of the weapon kit (scripts/tool_assets/weapon_kit.py, Kit.glow_material) per element.
 ELEMENT_SOURCES = {"kinetic": "PG_Kinetic", "energy": "PG_Cyan", "solar": "PG_Amber", "void": "PG_Void", "arc": "PG_Arc"}
 # Blender (Z up, front -Y) -> Unity (Y up, front +Z): FBX axis_forward -Z / axis_up Y imported with Unity's
@@ -367,12 +370,13 @@ def box_rotation(box):
     return [[axes[j][i] for j in range(3)] for i in range(3)]
 
 
-def merge_boxes(items, max_boxes, min_fill=MERGE_FILL, slack=.0005, limits=None):
+def merge_boxes(items, max_boxes, min_fill=MERGE_FILL, slack=.0005, limits=None, free=()):
     """Few boxes that follow the model. ``items`` holds (box, points, material volume) triples. Contained boxes are
     dropped (their volume counts for the container), then the pair whose common box is filled best is merged while
     that box stays at least ``min_fill`` full, or while there are more than ``max_boxes``. Openings stay free
     because a box across them is mostly empty. The score uses the box corners, a merged box is fitted tightly
-    to the points of both."""
+    to the points of both. 0.24: a pair whose common box would hold one of the ``free`` points (the opening probes in
+    this space) is never merged - forced merges under max_boxes closed KG06's sight window on the robot variant."""
     def prune(entries):
         kept = []
         for entry in sorted(entries, key=lambda e: box_volume(e[0]), reverse=True):
@@ -394,13 +398,19 @@ def merge_boxes(items, max_boxes, min_fill=MERGE_FILL, slack=.0005, limits=None)
             cache[key] = min(1.0, (a[2] + b[2]) / volume) if volume > 0 else 1.0
         return cache[key]
 
+    def covers(a, b):
+        box = fit_box(box_corners(a[0]) + box_corners(b[0]), limits=limits)
+        return any(point_in_box(point, box) for point in free)
+
     while len(items) > 1:
         best = None
         for i in range(len(items)):
             for j in range(i + 1, len(items)):
                 fill = score(items[i], items[j])
-                if best is None or fill > best[0]:
+                if (best is None or fill > best[0]) and not (free and covers(items[i], items[j])):
                     best = (fill, i, j)
+        if best is None:
+            break
         fill, i, j = best
         if len(items) <= max_boxes and fill < min_fill:
             break
@@ -650,10 +660,24 @@ def part_boxes(obj, space, depsgraph, limits):
         bm.free()
 
 
-def collision_boxes(root, groups, scene):
+def probe_points(root, probes):
+    """The opening probes (OPENING_PROBES entries) as points in the root's space at the current frame."""
+    inverse = root.matrix_world.inverted()
+    found = {obj.name: inverse @ obj.matrix_world.translation for obj in tree(root)}
+    points = []
+    for first, second, factor, offset in probes:
+        if first in found and (second is None or second in found):
+            a = found[first]
+            points.append(tuple(a.lerp(found[second], factor) + Vector(offset) if second else a + Vector(offset)))
+    return points
+
+
+def collision_boxes(root, groups, scene, probes=()):
     """Boxes per collision space from the actual LOD0 parts. Glow geometry and visibility-animated visuals
-    (the loaded arrow) get no collision, like Cube Escape's import (glow parts never collide)."""
+    (the loaded arrow) get no collision, like Cube Escape's import (glow parts never collide). The root space keeps the
+    opening ``probes`` free (0.24)."""
     set_frame(scene, scene.frame_start)
+    free = probe_points(root, probes)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     spaces, limits = {}, {}
     model = [obj for obj in tree(root) if obj.type == "MESH"]
@@ -674,7 +698,8 @@ def collision_boxes(root, groups, scene):
     colliders = []
     for space_name, boxes in spaces.items():
         limit = COLLIDER_LIMITS["root" if space_name == root.name else "moving"]
-        for center, axes, half in merge_boxes(boxes, limit, limits=limits[space_name]):
+        for center, axes, half in merge_boxes(boxes, limit, limits=limits[space_name],
+                                              free=free if space_name == root.name else ()):
             half = [max(value, MIN_COLLIDER_SIZE_M / 2) for value in half]
             rotation = box_rotation((center, axes, half))
             colliders.append({"type": "box", "part": None if space_name == root.name else space_name,
@@ -1063,15 +1088,28 @@ SHARED_ARM_CONSUMER = ("Cube Escape 0.106 „Knuckleline“ (E2 of the arm rebui
                        "Older package for Cube Escape 0.104 and before: python3 toolgen/generate_tools.py --contract 4")
 
 
+# Toolgen 0.24 (Salvo): group 1 of the animation brief (Nexogen#1 § 5, § 6, § 8; tools.json ``animation_group`` 1) - fire
+# clips, the scout rifle and the separate markers; Cube Escape 0.112 builds them (reserved by Sightline, 23.10.2026).
+GROUP_1_CONSUMER = ("Cube Escape 0.112 (the version that builds group 1 of the animation brief after the pattern of 0.103 "
+                    "„Salvo“): the clips AutoFire/AimAutoFire (held fire, a state loop) and "
+                    "Burst/AimBurst (three real shots), the block fire, the scout rifle (new tool scout_rifle with "
+                    "ReloadEmpty and the scope markers ScopeOn/ScopeOff) and the markers Move/Still. Cube Escape 0.106 to "
+                    "0.111 read the package (ToolgenAssets skips clip states it does not know, ClipEventsOf reads every "
+                    "event) but play none of the new clips; copy scout_rifle/ only into the version that adds the weapon.")
+
+
 def consumer_block(tool=None, contract=CONTRACT_FORMAT):
     """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the package's requirements, kept apart; 0.18 adds
-    ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon), 0.19 ``shared_arm_rig`` (contract 5)."""
+    ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon), 0.19 ``shared_arm_rig`` (contract 5), 0.24
+    ``group_1_clips`` (the tools of group 1 of the animation brief, every contract of theirs)."""
     block = {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER,
              "triangle_budgets": BUDGET_CONSUMER}
     if tool and tool.get("concept"):
         block["concept_models"] = CONCEPT_CONSUMER
     if contract >= 5:
         block["shared_arm_rig"] = SHARED_ARM_CONSUMER
+    if tool and tool.get("animation_group") == 1:
+        block["group_1_clips"] = GROUP_1_CONSUMER
     return block
 
 
@@ -1477,6 +1515,16 @@ def collider_box(collider):
     return (data["center"], data["axes"], data["half_extents"])
 
 
+def collider_overflow(colliders):
+    """Collision spaces with more boxes than COLLIDER_LIMITS (0.24: merge_boxes stops rather than close an opening probe, so
+    the limit is checked here): {space: count}."""
+    counts = {}
+    for collider in colliders:
+        counts[collider["part"] or "root"] = counts.get(collider["part"] or "root", 0) + 1
+    return {space: count for space, count in counts.items()
+            if count > COLLIDER_LIMITS["root" if space == "root" else "moving"]}
+
+
 def check_colliders(checks, contract, source, tool_id):
     bounds = source["bounds"][source["frames"][0]]
     matrices = source["matrices"][source["frames"][0]]
@@ -1498,8 +1546,10 @@ def check_colliders(checks, contract, source, tool_id):
         probes.append({"between": [first, second, factor], "offset_m": list(offset), "point": [round(v, 5) for v in point], "blocked_by": blocked})
     sizes_ok = all(min(c["size"]) > 0 and abs(sum(q * q for q in c["rotation"]) - 1) < 1e-4
                    for c in contract["colliders"])
-    checks.add("collision", bool(contract["colliders"]) and sizes_ok and not outside
+    over = collider_overflow(contract["colliders"])
+    checks.add("collision", bool(contract["colliders"]) and sizes_ok and not outside and not over
                and not any(probe["blocked_by"] for probe in probes),
+               over_limit=over, limits=COLLIDER_LIMITS,
                shapes=len(contract["colliders"]), rotated=sum(c["rotation"] != [0.0, 0.0, 0.0, 1.0]
                                                               for c in contract["colliders"]),
                outside_bounds=outside, max_outside_m=round(worst, 6), slack_m=COLLIDER_SLACK_M,
@@ -1825,7 +1875,7 @@ def export(work, tool, palette, budget, viewmodel=False, contract=CONTRACT_FORMA
         "mesh_count": len(meshes), "node_count": len(tree(root)),
         "triangles": sum(triangles(obj.data) for obj in meshes)})
     source_clip_name = str(root.get("ce_action_clip", clip_name)) if clip_name else None
-    colliders = [] if viewmodel else collision_boxes(root, groups, scene)
+    colliders = [] if viewmodel else collision_boxes(root, groups, scene, OPENING_PROBES.get(tool["id"], []))
     # Build: drop the presentation rig, UV1 (contract 4), palette, merge, LOD1.
     keep_only(scene, root)
     uv1_info = None

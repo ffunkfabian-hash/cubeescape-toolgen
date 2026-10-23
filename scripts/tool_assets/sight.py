@@ -33,12 +33,16 @@ def line(bounds, rule):
     assert len(parts) == len(rule["parts"]), ("sight parts not found", rule["parts"], parts)
     low = [min(bounds[name][0][axis] for name in parts) for axis in range(3)]
     high = [max(bounds[name][1][axis] for name in parts) for axis in range(3)]
+    rear_parts = (*REAR_PARTS.get(rule["kind"], ()), *rule.get("rear_parts", ()))   # 0.24: a concept sight's rear ring
     rear = max([high[1], *(corners[1][1] for name, corners in bounds.items()
-                           if name.removeprefix("SM_PG_") in REAR_PARTS.get(rule["kind"], ()))])
+                           if name.removeprefix("SM_PG_") in rear_parts)])
     x = (low[0] + high[0]) / 2
     z = high[2] + rule["above_m"] if rule["mode"] == "top" else (low[2] + high[2]) / 2
     eye = None
-    if rule["kind"] == "scope":
+    if rule["kind"] == "scope" and rule.get("eye_part"):
+        # 0.24: a concept scope has no eye glass (glass way A); the eye sits at the front face of the eyecup
+        eye = (x, next(corners for name, corners in bounds.items() if name.removeprefix("SM_PG_") == rule["eye_part"])[0][1], z)
+    elif rule["kind"] == "scope":
         lens = next(corners for name, corners in bounds.items() if name.removeprefix("SM_PG_") == EYE_LENS)
         eye = (x, (lens[0][1] + lens[1][1]) / 2, z)
     return {"sight": (x, rear, z), "eye": eye, "parts": parts}

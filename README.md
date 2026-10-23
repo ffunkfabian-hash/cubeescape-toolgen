@@ -2,7 +2,7 @@
 
 Zentraler Repo-Einstieg: [Nexogen](https://github.com/ffunkfabian-hash/cubeescape-nexogen) – Repo-Links, Zuständigkeiten, Abhängigkeiten und Live-Status über die Status-CLI im Nexogen-Repo. Globale Regeln dort, Fachwissen und Prüfbelege hier.
 
-**0.17.0 · Retrace.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
+**0.24.0 · Salvo.** Blender-Generator und nativer Mac-Viewer für die ausgearbeiteten Cube-Escape-Werkzeuge,
 mit Spiel-Export für Unity. Oberfläche und Prüfablauf folgen [Robogen](https://github.com/ffunkfabian-hash/cubeescape-robogen):
 große 3D-Ansicht, rechte Seitenleiste, Aktionssteuerung, Looks und Teststufen mit geteiltem Stufen-Cache. Gemeinsame Agentenregeln kommen aus
 [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools).
@@ -98,7 +98,8 @@ Magnetgreifer-C#-Player enthält historische Kompilierungsnachweise, keine Unity
 - `data/viewmodels.json`: Ego-Haltungen, Handgrößen, Viewmodel-Sichtfeld und Herkunft des Robogen-Mitt-Vertrags.
 - `data/game_palette.json`: matte Spielpalette mit Cube-Escape-Materialnamen; `data/game_budget.json`: LOD0-Dreiecksbudgets.
 - `data/concepts/`: Konzeptblätter von cubeescape-formgen (geometry-spec 1) mit Herkunft (`provenance.json`) und benannten
-  Toolgen-Korrekturen (`corrections.json`); Import nur mit `scripts/import_concepts.py`, Pilot Sturmgewehr = KG02 (0.18).
+  Toolgen-Korrekturen (`corrections.json`); Import nur mit `scripts/import_concepts.py`; Sturmgewehr = KG02 (0.18), seit 0.24 auch
+  Maschinenpistole = KG06, Impulsgewehr = KG03 und das neue Scout-Gewehr = KG11 (Gruppe 1 der Animationsvorgabe, Vertrag 5).
 - `toolgen/`: gemeinsame Pipeline (`generate_tools.py`, Stufenliste `STAGES`), Stufen-Cache (`toolcache.py`), Spiel-Export
   (`game_export.py`) und Binärexport; [CLI-Details](toolgen/README.md).
 - `scripts/`: `testplan.py` (Prüfweg aus dem Diff), `heavy_lock.py` (gemeinsame Sperre), `check_output.sh`, `check_docs.py`.

@@ -19,31 +19,36 @@ Loops dürfen an jedem Frame mit kurzer Überblendung verlassen werden. Bei `int
 Events sind relativ zum Clipstart angegeben.
 In den Ziel-Clips (AimIn, AimIdle, AimFire, AimOut) darf der Unterarm der Stützhand sichtbar sein (`support_forearm_visible`, Entscheidung des Nutzers 16.10.2026); sonst bleiben die Ellbogenhälften der Unterarme außerhalb des Bildes.
 Vertrag 5 (0.19, Sturmgewehr und Portalkanone, `data/ego_arms.json`): alle Clips, der Use-Clip zuerst, liegen in `<Asset>_FPS_Game_Clips.fbx` und bewegen die gemeinsame Armkette; das Sturmgewehr hat eigene `Reload`/`ReloadEmpty` (Start/End und die Rig-Ereignisse `HandOff`/`HandOn`, Kanal „rig“, markiert mit ⟂). Einbau: docs/UNITY_EINBAU.md › Vertrag 5.
+Gruppe 1 der Animationsvorgabe (0.24, Vertrag 5): MP, Impuls- und Scout-Gewehr mit eigenem Nachladen (`Move` = erste Bewegung, `Ready` = Freigabe, `Still` = ruhig), am Ende angehängt MP `AutoFire`/`AimAutoFire` (Zustandsschleife, ein `Shot` je echtem Schuss), Impuls `Burst`/`AimBurst` (drei `Shot`, `BurstEnd`), Scout `ReloadEmpty` und die Zielfernrohr-Marker `ScopeOn`/`ScopeOff`. Einbau: docs/UNITY_EINBAU.md › Gruppe 1.
 
 ## Clips je Klasse
 
 Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht besitzt.
 
-| Suffix | Pistole | Maschinenpistole | Sturmgewehr | Spurgewehr | Impulsgewehr | Schrotflinte | Fusionsgewehr | Scharfschützengewehr | Raketenwerfer | Werkzeuge (Portalkanone / Magnetgreifer / Taschenlampe / Bogen) | Loop | Von → nach | Fadenkreuz frei | Unterbrechbar | Events (Frames je Werkzeug unten) |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Use | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | Nein | rest → rest | Ja | Ja | Fire, Grab, Switch; Bogen: eigene Marker |
-| Idle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 / 72 / 72 / 72 | Ja | rest → rest | Ja | Ja | — |
-| Walk | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 / 32 / 32 / 32 | Ja | rest → rest | Ja | Ja | FootL, FootR |
-| SprintIn | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | rest → sprint | Ja | Ja | — |
-| Sprint | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 / 20 / 20 / 20 | Ja | sprint → sprint | Ja | Ja | FootL, FootR |
-| SprintOut | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 / 8 / 8 / 8 | Nein | sprint → rest | Ja | Ja | Ready |
-| Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot, Fire |
-| AimIn | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
-| AimIdle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | — / — / — / — | Ja | aim → aim | Nein | Ja | — |
-| AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot, Fire |
-| AimOut | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
-| Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
-| Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
-| Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
-| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | — |
-| Reload | 42 | 48 | 40 | 56 | 56 | 64 | 60 | 64 | 78 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
-| ReloadEmpty | — | — | 46 | — | — | — | — | — | — | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, HandOff, MagOut, MagIn, Chamber, HandOn, Ready, End |
-| Charge | — | — | — | — | — | — | 18 | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
+| Suffix | Pistole | Maschinenpistole | Sturmgewehr | Spurgewehr | Impulsgewehr | Schrotflinte | Fusionsgewehr | Scharfschützengewehr | Raketenwerfer | Scout-Gewehr | Werkzeuge (Portalkanone / Magnetgreifer / Taschenlampe / Bogen) | Loop | Von → nach | Fadenkreuz frei | Unterbrechbar | Events (Frames je Werkzeug unten) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Use | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | 97 | Nein | rest → rest | Ja | Ja | Fire, Grab, Switch; Bogen: eigene Marker |
+| Idle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 / 72 / 72 / 72 | Ja | rest → rest | Ja | Ja | — |
+| Walk | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 / 32 / 32 / 32 | Ja | rest → rest | Ja | Ja | FootL, FootR |
+| SprintIn | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 | 8 / 8 / 8 / 8 | Nein | rest → sprint | Ja | Ja | — |
+| Sprint | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 / 20 / 20 / 20 | Ja | sprint → sprint | Ja | Ja | FootL, FootR |
+| SprintOut | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 | 8 / 8 / 8 / 8 | Nein | sprint → rest | Ja | Ja | Ready |
+| Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot, Fire |
+| AimIn | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | 9 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
+| AimIdle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | — / — / — / — | Ja | aim → aim | Nein | Ja | — |
+| AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot, Fire |
+| AimOut | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | 9 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
+| Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
+| Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
+| Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
+| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | — |
+| Reload | 42 | 40 | 40 | 56 | 42 | 64 | 60 | 64 | 78 | 44 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
+| AutoFire | — | 12 | — | — | — | — | — | — | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | Shot, Shot, Shot, Shot, Shot, Shot |
+| AimAutoFire | — | 12 | — | — | — | — | — | — | — | — | — / — / — / — | Ja | aim → aim | Nein | Ja | Shot, Shot, Shot, Shot, Shot, Shot |
+| ReloadEmpty | — | — | 46 | — | — | — | — | — | — | 52 | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, HandOff, MagOut, MagIn, Chamber, HandOn, Ready, End |
+| Burst | — | — | — | — | 14 | — | — | — | — | — | — / — / — / — | Nein | rest → rest | Ja | Ja | Start, Shot, Shot, Shot, Move, BurstEnd, Ready, Still, End |
+| AimBurst | — | — | — | — | 14 | — | — | — | — | — | — / — / — / — | Nein | aim → aim | Nein | Ja | Start, Shot, Shot, Shot, Move, BurstEnd, Ready, Still, End |
+| Charge | — | — | — | — | — | — | 18 | — | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
 
 ## Clips je Werkzeug und Waffe
 
@@ -87,7 +92,9 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `SubmachineGun_Holster` | 395–403 | 0.33 | Holstered 8 |
 | `SubmachineGun_Inspect_A` | 407–503 | 4.00 | — |
 | `SubmachineGun_Inspect_B` | 507–603 | 4.00 | — |
-| `SubmachineGun_Reload` | 607–655 | 2.00 | MagOut 13, MagIn 31, Ready 48 |
+| `SubmachineGun_Reload` | 607–647 | 1.67 | Start 0, Move 1, HandOff⟂ 2, MagOut 8, MagIn 22, HandOn⟂ 28, Ready 32, Still 37, End 40 |
+| `SubmachineGun_AutoFire` | 651–663 | 0.50 | Shot 0, Shot 2, Shot 4, Shot 6, Shot 8, Shot 10 |
+| `SubmachineGun_AimAutoFire` | 667–679 | 0.50 | Shot 0, Shot 2, Shot 4, Shot 6, Shot 8, Shot 10 |
 
 ### Sturmgewehr (`assault_rifle`)
 
@@ -151,7 +158,9 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `PulseRifle_Holster` | 413–421 | 0.33 | Holstered 8 |
 | `PulseRifle_Inspect_A` | 425–521 | 4.00 | — |
 | `PulseRifle_Inspect_B` | 525–621 | 4.00 | — |
-| `PulseRifle_Reload` | 625–681 | 2.33 | MagOut 19, MagIn 38, Ready 56 |
+| `PulseRifle_Reload` | 625–667 | 1.75 | Start 0, Move 1, HandOff⟂ 2, MagOut 11, MagIn 28, HandOn⟂ 34, Ready 38, Still 40, End 42 |
+| `PulseRifle_Burst` | 671–685 | 0.58 | Start 0, Shot 0, Shot 2, Shot 4, Move 1, BurstEnd 4, Ready 10, Still 12, End 14 |
+| `PulseRifle_AimBurst` | 689–703 | 0.58 | Start 0, Shot 0, Shot 2, Shot 4, Move 1, BurstEnd 4, Ready 10, Still 12, End 14 |
 
 ### Schrotflinte (`shotgun`)
 
@@ -237,6 +246,28 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `RocketLauncher_Inspect_A` | 509–605 | 4.00 | — |
 | `RocketLauncher_Inspect_B` | 609–705 | 4.00 | — |
 | `RocketLauncher_Reload` | 709–787 | 3.25 | MagOut 27, MagIn 55, Ready 78 |
+
+### Scout-Gewehr (`scout_rifle`)
+
+| Clip | Frames auf der Zeitleiste | Sekunden | Events (Frame im Clip) |
+|---|---:|---:|---|
+| `Scout_Use` | 1–97 | 4.00 | Fire 13 |
+| `Scout_Idle` | 101–173 | 3.00 | — |
+| `Scout_Walk` | 177–209 | 1.33 | FootL 0, FootR 16 |
+| `Scout_SprintIn` | 213–221 | 0.33 | — |
+| `Scout_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
+| `Scout_SprintOut` | 249–257 | 0.33 | Ready 8 |
+| `Scout_Fire` | 261–269 | 0.33 | Shot 0, Fire 0 |
+| `Scout_AimIn` | 273–282 | 0.38 | ScopeOn 7, Aimed 9 |
+| `Scout_AimIdle` | 286–358 | 3.00 | — |
+| `Scout_AimFire` | 362–370 | 0.33 | Shot 0, Fire 0 |
+| `Scout_AimOut` | 374–383 | 0.38 | ScopeOff 0, Move 1 |
+| `Scout_Draw` | 387–399 | 0.50 | Ready 12 |
+| `Scout_Holster` | 403–411 | 0.33 | Holstered 8 |
+| `Scout_Inspect_A` | 415–511 | 4.00 | — |
+| `Scout_Inspect_B` | 515–611 | 4.00 | — |
+| `Scout_Reload` | 615–659 | 1.83 | Start 0, Move 1, HandOff⟂ 2, MagOut 9, MagIn 24, HandOn⟂ 31, Ready 36, Still 41, End 44 |
+| `Scout_ReloadEmpty` | 663–715 | 2.17 | Start 0, Move 1, HandOff⟂ 2, MagOut 9, MagIn 24, Chamber 31, HandOn⟂ 39, Ready 44, Still 49, End 52 |
 
 ### Portalkanone (`portal_emitter`)
 

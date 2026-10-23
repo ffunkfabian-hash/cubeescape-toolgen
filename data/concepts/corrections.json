@@ -13,6 +13,17 @@
           "since": "0.18.0"
         }
       }
+    },
+    "KG06": {
+      "anchors": {
+        "Socket_SupportHand": {
+          "spec_m": [0.0, -0.2546, 0.1002],
+          "toolgen_m": [0.0, -0.2365, 0.031],
+          "reason": "Der Vordergriff p09 unter dem Laufmantel (im Blatt gezeichnet und in der Bedienung genannt: „mit dem Vordergriff das Gehäuse gegen Hochschlagen stützen“) trägt keine Bezeichnung; der Spec-Anker liegt deshalb mittig auf dem Laufmantel p06 darüber, wo die Stützhand am Vordergriff anstieße. Toolgen-Wert: Mitte von p09",
+          "decision": "Toolgen 0.24 (Salvo), benannte Korrektur nach der Regel von KG02; an formgen gemeldet (Bezeichnung „Vordergriff“ für p09)",
+          "since": "0.24.0"
+        }
+      }
     }
   }
 }

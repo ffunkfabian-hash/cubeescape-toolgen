@@ -12,9 +12,9 @@ verändert; Toolgen-Dateien und Werte stehen in [TECHNIK](TECHNIK.md) › Spiel-
 | Ego-Modell (Hände, Arme, Werkzeug) | `<Asset>_FPS_Game.fbx/.glb/.blend` | `unity_contract_fps.json` (Renderer, LOD, Clip, `viewmodel`) |
 | Viewmodel-Kamera | `viewmodel_camera.json` | vertikales FOV, Near Clip, geprüfte Werte |
 | Maskenkarten (Vertrag 4, standard/full) | `<Asset>_Game_{W0,W1,Fields,Normal}.png`, `<Asset>_FPS_Game_*.png` | Block `surface` in beiden Verträgen |
-| Weltmodell in der Roboterhand (0.14, acht Gewehre, Vertrag 4) | `<Asset>_Robot_Game.fbx/.glb/.blend`, `<Asset>_Robot_Game_*.png` | `unity_contract_robot.json` (wie `unity_contract.json`, dazu Block `robot`) |
+| Weltmodell in der Roboterhand (0.14, acht Gewehre; 0.24 dazu das Scout-Gewehr; Vertrag 4) | `<Asset>_Robot_Game.fbx/.glb/.blend`, `<Asset>_Robot_Game_*.png` | `unity_contract_robot.json` (wie `unity_contract.json`, dazu Block `robot`) |
 | Gemeinsame Ego-Arme (0.19, Vertrag 5, ein Paket je Lauf) | `ego_arms/CubeEscape_EgoArms_Game.fbx/.glb/.blend` | `ego_arms/unity_contract_arms.json` (Rig, Fingerposen, Look) |
-| Ego-Gerät ohne Arme (Vertrag 5: Sturmgewehr, Portalkanone) | `<Asset>_FPS_Game.*` (Gerät), `<Asset>_FPS_Game_Clips.*` (Zusammensetzung, alle Clips) | `unity_contract_fps.json` `format` 5 (unten › Vertrag 5) |
+| Ego-Gerät ohne Arme (Vertrag 5: Sturmgewehr, Portalkanone; ab 0.24 MP, Impuls-, Scout-Gewehr) | `<Asset>_FPS_Game.*` (Gerät), `<Asset>_FPS_Game_Clips.*` (Zusammensetzung, alle Clips) | `unity_contract_fps.json` `format` 5 (unten › Vertrag 5) |
 
 Materialien: nur die Palettenmaterialien aus `data/game_palette.json` (je Weltmodell höchstens 6, je Ego-Modell höchstens 7);
 die neun Waffen tragen ab Vertrag 2 stattdessen die Ausrüstungs-Slots `MT_<Kanal>` (siehe „Ausrüstungs-Slots“ unten).
@@ -48,6 +48,13 @@ Karten sind sonst gleich. Jeder Vertrag des Werkzeugs trägt den Block `renamed_
 `map` alt → neu): Der Abnehmer ersetzt jeden Schlüssel von `map` durch seinen Wert in Ordner-, Datei-, Prefab- und Clipnamen und verschiebt
 die Dateien samt `.meta` (GUIDs bleiben, Verweise in Szenen und Assets halten). Spielstände und Kataloge, die die alte ID speichern, bilden
 `scout_rifle` → `trace_rifle` ab, solange es kein anderes Werkzeug `scout_rifle` gibt; danach gehört die ID dem Scout-Gewehr (KG11).
+**Ab 0.24.0 (Salvo) trägt das Scout-Gewehr (KG11) die ID `scout_rifle`:** der Block `renamed_from` des Spurgewehrs entfällt (Regel von 0.17:
+sobald ein Werkzeug die alte ID trägt, geht die Abbildung – sonst verschöbe ein Abnehmer, der sie noch anwendet, den neuen Ordner
+`scout_rifle/` zum Spurgewehr). Die alten Namen `CubeEscape_ScoutRifle`, `CubeEscape_ScoutRifle_Robot` und `ScoutRifle_` bleiben unbenutzt;
+das Scout-Gewehr heißt `CubeEscape_Scout`, `CubeEscape_Scout_Robot`, Clips `Scout_*` (Entscheidung des Nutzers 22.10.2026), damit keine
+alte `.meta`/GUID eines Spurgewehr-Stands auf das neue Modell zeigt. Cube Escape bildet `scout_rifle` → `trace_rifle` nur hinter der
+0.98-Grenze ab (`SaveSystem`, `LevelMigrator`, `EquipmentDesignMigrator`, `ViewmodelOverrides` Format 1); der Ordner `scout_rifle/` gehört erst
+in die Cube-Escape-Version, die das Scout-Gewehr einbaut (`minimum_consumer.group_1_clips`: Cube Escape 0.112).
 **Mindestversionen des Pakets ab 0.17.0, getrennt** (jeder Vertrag, Block `minimum_consumer`): `first_person_maps_2048` – Ego-Karten 2048²
 brauchen **Cube Escape 0.96 „Pinpoint“**; `renamed_tool_ids` – die neuen Namen brauchen **Cube Escape 0.98 „Recast“** mit der Migration
 `scout_rifle` → `trace_rifle` (Briefkasten cubeescape-rules#3). **Cube Escape 0.96 und älter lesen das 0.17-Paket nicht** (Ordner und Prefabs
@@ -455,6 +462,51 @@ Magazintausch an derselben Stelle; Fingerposen ohne Berührung nicht benachbarte
 (`hand_self_contacts`); **kein Eindringen** der Hand ins Gerät dieses Bilds (`penetration`: bewegte Teile, ausgeblendete Teile weg,
 `HandMag_L` dabei); seitliche Handgelenkneigung gemessen (`wrist_side_max_degrees`, ohne Grenze). Der Arm-Reimport prüft Eltern und Lage
 auch der 26 Renderer. Mac-Abnahme: `docs/versions/0.19.md` › Mac-Abnahme.
+
+## Gruppe 1 der Animationsvorgabe (0.24.0 Salvo, Vertrag 5 additiv)
+
+Maschinenpistole (`smg` ← KG06), Impulsgewehr (`pulse_rifle` ← KG03) und das neue Scout-Gewehr (`scout_rifle` ← KG11) sind Konzeptmodelle aus
+formgen `claude-v0.15.1` auf Vertrag 5 mit Roboter-Variante (Vorgabe Nexogen#1 Kommentar 6273351409 § 5, § 6, § 8; Gruppenfreigabe 6315231014).
+Neu ist nur Angehängtes; Clipnamen, Anker und Knoten der übrigen Geräte bleiben.
+
+- **Clips am Ende der Liste** (nach `Reload`/`ReloadEmpty`):
+  - MP: **`AutoFire`** und **`AimAutoFire`** – gehaltenes Dauerfeuer als **Zustandsschleife** (Entscheidung des Nutzers 22.10.2026),
+    12 Bilder mit 6 echten Schüssen, `Shot` alle 2 Bilder (720/min bei 24/s). CE startet die Schleife am ersten echten Schuss und stoppt
+    beim Loslassen oder bei gesperrtem Schuss; die Schleife trägt den Impuls je Schuss, der prozedurale Serienrückstoß darf denselben
+    Schuss nicht noch einmal stoßen (Vorgabe § 4: eine Ursache, eine Bewegung).
+  - Impulsgewehr: **`Burst`** und **`AimBurst`** – eine Salve aus **3 Impulsen** je Abzug (Entscheidung des Nutzers; eine 4er-Salve ist
+    ein späterer benannter Untertyp): `Start` 0 · `Shot` 0, 2, 4 · `Move` 1 · `BurstEnd` 4 (letzter Schuss) · `Ready` 10 (nächste Salve frei) ·
+    `Still` 12 (Modell ruht) · `End` 14. Jeder Schuss stößt einzeln, die Salve baut ohne Rückkehr zwischen den Schüssen auf und
+    wandert leicht nach rechts (Gridskipper).
+  - Scout-Gewehr: **`ReloadEmpty`** (Ladehebel links, `Chamber`) und Zielfernrohr-Marker (unten).
+- **Block `fire`** (neu, nur Geräte mit Feuermuster): `mode` (`auto`/`burst`), `clips`, `shot_interval_frames`/`_seconds`,
+  `shots_per_trigger` (`held` bzw. 3), `cadence_rpm` 720 (MP), `ready_frame`/`still_frame` (Salve), `rule`. Die Salvenlänge ist ein
+  Merkmal des Geräts (Daten in `data/ego_arms.json` › `devices.<tool>.fire`), kein Clipparameter: CE koppelt seine echten Schüsse an
+  die `Shot`-Ereignisse (Verbrauch, Spur, Blitz je Schuss; Vorgabe § 6, Wirkungskette 1 und 4).
+- **Getrennte Marker (Vorgabe § 8):** Eingabe = `Start` (Bild 0), erste Bewegung = **`Move`**, Funktionsereignisse (`Shot`, `MagOut`,
+  `MagIn`, `Chamber`), **`Ready`** = tatsächliche Freigabe, **`Still`** = Modell ruht, `End` = Clipende (keine Freigabe). `Move`/`Still`
+  tragen die Nachladeclips der drei Geräte und die Salve; der Use-Clip und die Clips aus `data/ego_clips.json` bleiben wie bisher.
+- **Zielfernrohr (Scout, Glasweg A wie die übrigen Konzeptvisiere: kein Glas, CE behält seine Render-Texture-Technik):** `AimIn`
+  `ScopeOn` 7 (Linsenbild an, vor `Aimed` 9), `AimOut` `ScopeOff` 0 und `Move` 1 – das Linsenbild geht zuerst, das Modell ein Bild später
+  (Dead Man's Tale). `Socket_Eye` liegt an der Vorderfläche der Augenmuschel p45, wo das nicht gebaute Okularglas p50 saß (1 mm vor dem
+  Blattwert), `Socket_Reticle` am Objektiv; die Röhre ist im Kollisionsquader, eine Öffnungsprobe gibt es dort nicht.
+- **Neuer Knoten `Anim_Trigger` (nur MP):** KG06 zeichnet keinen Verschluss (`Anim_Bolt` bleibt leer); der Use-Clip zieht den Abzug
+  `SM_PG_Abzug_p12` 6 mm (Bild 12–28), damit der Schuss am Weltmodell sichtbar ist. `action_contract.moving_nodes` nennt beide Knoten.
+- **Nachladen nach Bauweise:** MP Griffmagazin (`Reload` 40, kein `ReloadEmpty`: KG06 zeichnet keinen Verschluss), Impulsgewehr
+  Energiezelle unter dem Käfig (`Reload` 42, Handteil **`HandCell_L`** statt `HandMag_L`, `ego_clips.reload_part` `Anim_EnergyCell`, kein
+  `ReloadEmpty`), Scout Kastenmagazin vor dem Abzug (`Reload` 44, `ReloadEmpty` 52 mit `Chamber` 31, `Anim_Bolt` 4 cm).
+- **Stützhand:** MP und Impulsgewehr greifen ihren **senkrechten Vordergriff** (`grip.L` `pose` `grip`, `support_grip` im Gerät
+  `vertical`; `hold.support_grip` bleibt `underhand`, CEs Wortschatz), das Scout-Gewehr den Handschutz von unten. KG06: benannte
+  Korrektur `Socket_SupportHand` auf die Mitte des unbeschrifteten Vordergriffs p09 (`data/concepts/corrections.json`).
+- **Mindestversion:** `minimum_consumer.group_1_clips` (alle Verträge der drei Geräte) – **Cube Escape 0.112** (von Sightline für den Einbau von
+  Gruppe 1 nach dem Muster 0.103 „Salvo“ reserviert). Cube Escape 0.106–0.111 liest die Pakete (unbekannte Clip-Zustände überspringt `ToolgenAssets`,
+  `ClipEventsOf` liest jedes Ereignis), spielt aber keinen neuen Clip; den Ordner `scout_rifle/` erst mit dieser Version kopieren.
+  `shared_arm_rig`/`triangle_budgets`: Cube Escape 0.106. **Rückweg `--contract 4`** ist für die drei Konzeptmodelle nicht abgestimmt
+  (gebackene Arme verlassen den Bildausschnitt); die alten Modelle: `git checkout v0.23.0`.
+- **Augenabstand beim Zielen:** Toolgens Ego-Lage (`devices.<tool>.ads.eye_distance_m`) MP 0,72 m und Impulsgewehr 0,70 m (drei Greiffinger
+  + Daumen im Bild), Scout **0,12 m** – das Okular deckt etwa 45 % der Bildhöhe, in den Ziel-Clips darf die Griffhand das Bild verlassen
+  (`ads.hands_may_leave`; Entscheidung des Nutzers 22.10.2026 nach Vergleichsbildern 0,31 / 0,12 / 0,08 m). `hold.ads_eye_distance_m`
+  (CE-Profilwert) bleibt 0,421 / 0,357 / 0,221 – dieselbe Lücke wie bei KG02 (0,379 gegen 0,645 in CE 0.106), Abgleich im CE-Einbau.
 
 ## Prüfen
 

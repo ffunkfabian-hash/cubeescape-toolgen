@@ -500,6 +500,22 @@ class MergeBoxesTests(unittest.TestCase):
         self.assertEqual(1, len(boxes))
         self.assertAlmostEqual(8 * .5 * .1 * .1, ge.box_volume(boxes[0]), places=6)
 
+    def test_a_free_point_is_never_covered_by_a_merge(self):
+        """0.24: an opening probe (free point) between two parts stops the merge even under the box limit; the QA then names
+        the space over its limit (collider_overflow) instead of a closed opening."""
+        parts = [item(cuboid((-.9, 0, 0), (.1, .1, .1))), item(cuboid((.9, 0, 0), (.1, .1, .1)))]
+        boxes = ge.merge_boxes(parts, max_boxes=1, free=[(0, 0, 0)])
+        self.assertEqual(2, len(boxes))
+        self.assertFalse(any(ge.point_in_box((0, 0, 0), box) for box in boxes))
+        self.assertEqual(1, len(ge.merge_boxes(parts, max_boxes=1, free=[(0, .5, 0)])), "a point off the common box allows it")
+
+    def test_collider_overflow_names_spaces_over_their_limit(self):
+        root = [{"part": None}] * ge.COLLIDER_LIMITS["root"]
+        moving = [{"part": "Anim_Bolt"}] * (ge.COLLIDER_LIMITS["moving"] + 1)
+        self.assertEqual({}, ge.collider_overflow(root))
+        self.assertEqual({"root": ge.COLLIDER_LIMITS["root"] + 1}, ge.collider_overflow(root + [{"part": None}]))
+        self.assertEqual({"Anim_Bolt": ge.COLLIDER_LIMITS["moving"] + 1}, ge.collider_overflow(root + moving))
+
     def test_box_limit_forces_a_merge_even_across_a_gap(self):
         boxes = ge.merge_boxes([item(cuboid((-.9, 0, 0), (.1, .1, .1))), item(cuboid((.9, 0, 0), (.1, .1, .1)))], max_boxes=1)
         self.assertEqual(1, len(boxes))

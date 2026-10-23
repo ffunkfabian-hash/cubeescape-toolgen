@@ -14,7 +14,7 @@ import ego_arms
 
 
 WEAPON_ORDER = ("pistol", "smg", "assault_rifle", "trace_rifle", "pulse_rifle",
-                "shotgun", "fusion_rifle", "sniper_rifle", "rocket_launcher")
+                "shotgun", "fusion_rifle", "sniper_rifle", "rocket_launcher", "scout_rifle")
 TOOL_ORDER = ("portal_emitter", "magnet_gripper", "flashlight", "bow")
 
 
@@ -97,7 +97,11 @@ def render_markdown(data, result):
               "(`support_forearm_visible`, Entscheidung des Nutzers 16.10.2026); sonst bleiben die Ellbogenhälften der Unterarme außerhalb des Bildes.",
               "Vertrag 5 (0.19, Sturmgewehr und Portalkanone, `data/ego_arms.json`): alle Clips, der Use-Clip zuerst, liegen in "
               "`<Asset>_FPS_Game_Clips.fbx` und bewegen die gemeinsame Armkette; das Sturmgewehr hat eigene `Reload`/`ReloadEmpty` "
-              "(Start/End und die Rig-Ereignisse `HandOff`/`HandOn`, Kanal „rig“, markiert mit ⟂). Einbau: docs/UNITY_EINBAU.md › Vertrag 5.", ""]
+              "(Start/End und die Rig-Ereignisse `HandOff`/`HandOn`, Kanal „rig“, markiert mit ⟂). Einbau: docs/UNITY_EINBAU.md › Vertrag 5.",
+              "Gruppe 1 der Animationsvorgabe (0.24, Vertrag 5): MP, Impuls- und Scout-Gewehr mit eigenem Nachladen (`Move` = erste "
+              "Bewegung, `Ready` = Freigabe, `Still` = ruhig), am Ende angehängt MP `AutoFire`/`AimAutoFire` (Zustandsschleife, ein `Shot` "
+              "je echtem Schuss), Impuls `Burst`/`AimBurst` (drei `Shot`, `BurstEnd`), Scout `ReloadEmpty` und die Zielfernrohr-Marker "
+              "`ScopeOn`/`ScopeOff`. Einbau: docs/UNITY_EINBAU.md › Gruppe 1.", ""]
     lines += ["## Clips je Klasse", "", "Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht besitzt.", ""]
     tool_heading = "Werkzeuge (" + " / ".join(result[x]["tool"]["label"] for x in TOOL_ORDER) + ")"
     headings = ["Suffix", *[result[x]["tool"]["label"] for x in WEAPON_ORDER], tool_heading, "Loop", "Von → nach",

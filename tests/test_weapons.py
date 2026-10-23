@@ -59,8 +59,9 @@ def build_calls(key):
 
 class CatalogTests(unittest.TestCase):
     def test_nine_weapons_without_the_bow(self):
+        # 0.24: the scout rifle (KG11) is the tenth weapon
         self.assertEqual({"pistol", "assault_rifle", "pulse_rifle", "shotgun", "sniper_rifle", "smg", "fusion_rifle",
-                          "trace_rifle", "rocket_launcher"}, set(WEAPONS))
+                          "trace_rifle", "rocket_launcher", "scout_rifle"}, set(WEAPONS))
         self.assertEqual(set(WEAPONS), set(designs.DESIGNS))
         self.assertNotIn("bow", WEAPONS)
 
@@ -190,8 +191,9 @@ class ViewmodelProfileTests(unittest.TestCase):
                 self.assertTrue(profile["support"])
                 self.assertEqual("Socket_SupportHand", profile["support_socket"])
                 self.assertEqual(2, len(profile["support_radius"]))
-                # 0.18: the concept KG02's handguard is 9 cm tall (spec support.radius_m half height 44.7 mm)
-                self.assertTrue(all(.015 <= value <= .045 for value in profile["support_radius"]))
+                # 0.18: the concept KG02's handguard is 9 cm tall (spec support.radius_m half height 44.7 mm); 0.24: KG03's
+                # vertical foregrip p40 is 11.8 cm long (half height 59 mm; only the contract 4 way back reads the radius)
+                self.assertTrue(all(.015 <= value <= .06 for value in profile["support_radius"]))
 
     def test_support_hand_grips_from_below(self):
         """0.8.0: relaxed underhand support (palm under the handguard, thumb on the camera side) on every rifle; 0.10.0: the
@@ -385,13 +387,15 @@ class SightTests(unittest.TestCase):
     """T1 (Cube Escape 0.72 Sightline): Socket_Sight / Socket_Eye follow the AimIdle line of sight of data/ego_clips.json."""
     # 0.18: the assault rifle carries the holo sight VS02 of its concept KG02 (formgen sight_kind; was reflex)
     KINDS = {"pistol": "iron", "assault_rifle": "holo", "pulse_rifle": "holo", "shotgun": "iron", "sniper_rifle": "scope",
-             "smg": "reflex", "fusion_rifle": "energy", "trace_rifle": "scope", "rocket_launcher": "iron"}
+             "smg": "reflex", "fusion_rifle": "energy", "trace_rifle": "scope", "rocket_launcher": "iron", "scout_rifle": "scope"}
     # Cube Escape 0.72 profile classes: sidearm 0.30, rifle 0.26, submachine_gun 0.24, shotgun 0.28, sniper 0.22,
     # heavy 0.30, trace rifle 0.20 (FIRST_PERSON_EQUIPMENT.md 20, T6).
     # Cube Escape 0.75 aims with these distances (CE ads.eye_distance_m / hip.scale, table in CE Docs/versions/0.75.md;
     # Toolgen 0.13 adopted them so the ADS QA checks the real pose).
     EYE = {"pistol": .40, "assault_rifle": .379, "pulse_rifle": .357, "shotgun": .65, "sniper_rifle": .221, "smg": .421,
-           "fusion_rifle": .40, "trace_rifle": .221, "rocket_launcher": .453}
+           "fusion_rifle": .40, "trace_rifle": .221, "rocket_launcher": .453,
+           # 0.24: no CE profile for the new scout rifle yet; the scope class distance of the sniper and trace rifle
+           "scout_rifle": .221}
 
     def test_sight_kinds_and_eye_distances(self):
         for key, tool in WEAPONS.items():
@@ -414,7 +418,12 @@ class SightTests(unittest.TestCase):
                     self.assertTrue(all(any(marker in part for marker in ads["sight_markers"]) for part in rule["parts"]))
                 if rule["mode"] == "top":
                     self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * scale, places=12)
-                if rule["kind"] == "scope":       # eye lens inside the open eyepiece, radius in first-person metres
+                if rule["kind"] == "scope" and designs.DESIGNS[key].get("concept"):
+                    # 0.24: a concept scope (glass not built): the eye radius of the sheet in first-person metres
+                    spec = concept_spec.load(designs.DESIGNS[key]["concept"])
+                    self.assertAlmostEqual(round(spec["sight"]["eye_radius_m"] * scale, 6), tool["hold"]["eye_radius_m"], places=6)
+                    self.assertEqual("center", rule["mode"])
+                elif rule["kind"] == "scope":       # eye lens inside the open eyepiece, radius in first-person metres
                     radius = {"sniper_rifle": .020, "trace_rifle": .015}[key] * designs.EYE_LENS * scale
                     self.assertAlmostEqual(radius, tool["hold"]["eye_radius_m"], places=6)
                     self.assertEqual("center", rule["mode"])

@@ -22,6 +22,8 @@
 - **Gemeinsame Daten in `viewmodels.json`/`game_budget.json` ändern alle Schlüssel** → neue Daten für wenige Werkzeuge in eigene Datei (`data/ego_arms.json`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Rechtecke als Teil-Box-Bruchteile verzerren bei Verformung** → Mitte abbilden, Größe gleichmäßig skalieren (`decals.refit_rect`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Ein Hüllquader je Ring schließt Visierfenster** → Öffnungen per Probe prüfen, rahmende Teile ohne Kollider ([Quelle](TECHNIK.md#erfahrungen))
+- **UV1-Drehmessung an Kanten um 1e-6 (gestauchte Roboterteile) maß 1° Packer-Rauschen** → längste Kante je Fläche, vorher und nachher dieselbe, unter 2e-5 nicht messen ([Quelle](versions/0.24.md))
+- **Erzwungenes Zusammenfassen auf 6 Kollider schloss das Reflexfenster der MP-Roboterform** → Öffnungsproben beim Zusammenfassen freihalten, nicht nur danach prüfen ([Quelle](versions/0.24.md))
 
 ## Cache, Zeiten, Sperren
 - **`standard` aller 13 Werkzeuge: 43,5 min (2 Worker), `full` rund 52 min** → vor großem Lauf Version heben und `tools.json` finalisieren; Warm-Lauf nur 0,5–2 s ([Quelle](TECHNIK.md#cache-und-worker))
@@ -38,6 +40,8 @@
 - **Handgelenk ≤ 55° verlangt schmaleres Sichtfeld** → Gerätegrenzen aus der Messung, nicht aus dem Wunsch ([Quelle](ENTSCHEIDUNGEN.md))
 - **Stützhand des Roboters reicht nur 0,10 m vor `Socket_Hand`** → eigene Form statt Maßstab; Verformung des fertigen Designs statt Neumodell ([Quelle](TECHNIK.md#erfahrungen))
 - **Clip-Wege über Knickstellen der Verformung falsch skaliert (94,5 statt 58,8 mm)** → verschobene Position abbilden, nicht die Steigung ([Quelle](TECHNIK.md#erfahrungen))
+- **Unbeschrifteter Vordergriff (KG06 p09): Spec-Anker lag auf dem Laufmantel darüber** → Blattbild ansehen, benannte Korrektur, an formgen melden ([Quelle](versions/0.24.md))
+- **Roboter-Stauchung zwischen Griff und Stütze (Steigung 0,1) drückte den Use-Weg unter 4 mm und unter die Viewer-Schwelle** → Griffzone und Weg zusammen wählen ([Quelle](versions/0.24.md))
 
 ## Viewer und Determinismus
 - **Stauchen schrumpft Dekor-Abstände → Z-Fighting (1,4–1,6 px)** → Koplanar-Regel auf verformten Flächen, feine Zonen 1:1 lassen, danach `test_determinism.py --runs 16` ([Quelle](TECHNIK.md#erfahrungen))
@@ -51,3 +55,4 @@
 - **Umbenennen verschiebt GUIDs beim Abnehmer** → `renamed_from` im Vertrag mitliefern, kein Doppelbau ([Quelle](UNITY_EINBAU.md))
 - **Vertragsformate nur additiv, Mindestfassung des Abnehmers nennen** → z. B. `minimum_consumer`, CE 0.94 für Ego 2048² ([Quelle](versions/0.16.md))
 - **Blender-Reimport/SceneKit ersetzen keine Unity-Abnahme** → Offenes im Bericht nennen, Spielpassung prüft Cube Escape ([Quelle](TECHNIK.md#grenzen))
+- **Wiedervergebene ID (`scout_rifle`): Alias-Abbildung und alte Asset-/Clipnamen zeigen sonst aufs neue Modell** → `renamed_from` weg, neue Namen ohne alte Schlüssel ([Quelle](UNITY_EINBAU.md))

@@ -1,8 +1,8 @@
 # Gemeinsame Toolgen-Pipeline
 
-`python3 toolgen/generate_tools.py --tier quick|standard|full` erzeugt alle dreizehn ausgearbeiteten Werkzeuge (Portalkanone, Magnetgreifer, Taschenlampe, Bogen und die neun Waffen).
-`--tool portal_emitter|magnet_gripper|flashlight|bow|pistol|assault_rifle|pulse_rifle|shotgun|sniper_rifle|smg|fusion_rifle|trace_rifle|rocket_launcher` ist wiederholbar; `--output` wählt den Ordner, `--blender` ein Programm.
-Frühere IDs (`tools.json` › `renamed_from`, 0.17: `scout_rifle` → `trace_rifle`) nimmt `--tool` mit Warnung an, bis ein Werkzeug sie wieder trägt.
+`python3 toolgen/generate_tools.py --tier quick|standard|full` erzeugt alle vierzehn ausgearbeiteten Werkzeuge (Portalkanone, Magnetgreifer, Taschenlampe, Bogen, die neun Waffen und seit 0.24 das Scout-Gewehr).
+`--tool portal_emitter|magnet_gripper|flashlight|bow|pistol|assault_rifle|pulse_rifle|shotgun|sniper_rifle|smg|fusion_rifle|trace_rifle|rocket_launcher|scout_rifle` ist wiederholbar; `--output` wählt den Ordner, `--blender` ein Programm.
+Frühere IDs (`tools.json` › `renamed_from`) nimmt `--tool` mit Warnung an, bis ein Werkzeug sie wieder trägt; `scout_rifle` (0.17–0.23 Alias des Spurgewehrs) ist seit 0.24 das Scout-Gewehr.
 `build_toolset.py --tool <ID> [--output ...] [--force]` bleibt als Kompatibilitätseinstieg für Quick.
 Der frühere einfache Portal-Worker und die zweite Viewer-Implementierung sind entfernt.
 

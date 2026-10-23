@@ -439,6 +439,14 @@ def clip_keys(owner, clips, fire_start, fire_scale=1.0, rest_frame=97):
             # a part away from rest at the shot belongs to the charge (fusion fins, coil): it rests through Fire
             if clip["motion"] in ("fire", "aim_fire") and abs(curve.evaluate(fire_start) - rest) < 1e-6:
                 values = [(start + offset, curve.evaluate(fire_start + offset * fire_scale)) for offset in range(clip["length"] + 1)]
+            elif clip.get("shots") and abs(curve.evaluate(fire_start) - rest) < 1e-6:
+                # 0.24: every real shot of a fire clip (AutoFire, Burst; toolgen/ego_arms.fire_clips) replays the Use clip's
+                # stroke from its shot frame for stroke_frames, then the part rests until the next shot
+                values = []
+                for offset in range(clip["length"] + 1):
+                    since = offset - max(shot for shot in clip["shots"] if shot <= offset)
+                    values.append((start + offset, curve.evaluate(fire_start + 1 + min(since, clip["stroke_frames"]))))
+                values[-1] = (end, rest)
             else:
                 values = [(start, rest), (end, rest)]
             for frame, value in values:

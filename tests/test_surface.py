@@ -1,5 +1,6 @@
 """Contract 4 surface data: channel table, PNG format, raster rules and the surface_bake stage (no Blender)."""
 import json
+import math
 import struct
 import sys
 import tempfile
@@ -275,6 +276,64 @@ class StageTests(unittest.TestCase):
             with patch("generate_tools.valid_package", return_value=True):
                 assemble_package(work, tool, "quick", "cpu", [], [], "key")
             self.assertFalse(json.loads((work / "manifest.json").read_text())["surface"]["included"])
+
+
+
+@unittest.skipUnless(HAVE_NUMPY, "numpy (Blender's Python) needed for the UV1 angles")
+class FaceAngleTests(unittest.TestCase):
+    """0.24 (Codex sol): the UV1 turn check measures each face's longest edge, not the first one (a short first edge must
+    not hide a turned face)."""
+
+    class Mesh:
+        def __init__(self, uv, starts, totals):
+            self.uv, self.starts, self.totals = uv, starts, totals
+            self.loops = list(range(len(uv)))
+            self.polygons = self.Polygons(starts, totals)
+            self.uv_layers = {surface.UV1_NAME: self.Layer(uv)}
+
+        class Polygons(list):
+            def __init__(self, starts, totals):
+                super().__init__(range(len(starts)))
+                self.values = {"loop_start": starts, "loop_total": totals}
+
+            def foreach_get(self, name, target):
+                target[:] = self.values[name]
+
+        class Layer:
+            def __init__(self, uv):
+                self.data = FaceAngleTests.Mesh.Data(uv)
+
+        class Data:
+            def __init__(self, uv):
+                self.uv = uv
+
+            def __len__(self):
+                return len(self.uv)
+
+            def foreach_get(self, name, target):
+                target[:] = [value for point in self.uv for value in point]
+
+    def test_longest_edge_measures_a_face_with_a_short_first_edge(self):
+        triangle = [(0.0, 0.0), (1e-6, 0.0), (0.0, .1)]               # first edge 1e-6, then long edges
+        turned = [(0.0, 0.0), (0.0, 1e-6), (-.1, 0.0)]                # the same triangle turned by 90 degrees
+        before, chosen = surface._face_angles(self.Mesh(triangle, [0], [3]))
+        after, _ = surface._face_angles(self.Mesh(turned, [0], [3]), chosen)
+        self.assertTrue(math.isfinite(before[0]))
+        change = abs((after[0] - before[0] + math.pi) % (2 * math.pi) - math.pi)
+        self.assertAlmostEqual(90.0, math.degrees(change), places=4)
+
+    def test_a_degenerate_face_is_not_measured(self):
+        tiny = [(0.0, 0.0), (1e-6, 0.0), (0.0, 1e-6)]
+        self.assertTrue(math.isnan(surface._face_angles(self.Mesh(tiny, [0], [3]))[0][0]))
+
+    def test_an_equal_edge_is_measured_again_not_swapped(self):
+        """A square island: four equal edges; the second call measures the edge of the first, so moving and scaling the
+        island (packing) reads 0 degrees, not 90."""
+        square = [(0.0, 0.0), (.1, 0.0), (.1, .1), (0.0, .1)]
+        packed = [(.5 + .2 * u, .3 + .2 * v) for u, v in square]
+        before, chosen = surface._face_angles(self.Mesh(square, [0], [4]))
+        after, _ = surface._face_angles(self.Mesh(packed, [0], [4]), chosen)
+        self.assertAlmostEqual(0.0, abs(after[0] - before[0]), places=5)
 
 
 if __name__ == "__main__":

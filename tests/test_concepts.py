@@ -49,11 +49,15 @@ class ProvenanceTests(unittest.TestCase):
             self.assertEqual(record["releases"][entry["release"]]["files"][sheet], entry["sha256"])
 
     def test_every_concept_weapon_has_its_sheet(self):
-        self.assertEqual({"assault_rifle": "KG02"}, designs.DESIGN_PICK)
+        # 0.24 Salvo: group 1 of the animation brief (MP, pulse, scout rifle) from claude-v0.15.1
+        self.assertEqual({"assault_rifle": "KG02", "pulse_rifle": "KG03", "smg": "KG06", "scout_rifle": "KG11"},
+                         designs.DESIGN_PICK)
         imported = concept_spec.provenance(FOLDER)["imported"]
         for tool_id, sheet in designs.DESIGN_PICK.items():
             with self.subTest(tool=tool_id):
-                self.assertEqual(tool_id, imported[sheet]["toolgen_id"])
+                # formgen claude-v0.15.1 names no Toolgen id for the new type KG11 (weapon spec toolgen_status
+                # not_connected); Toolgen takes scout_rifle (reported to formgen)
+                self.assertEqual(None if sheet == "KG11" else tool_id, imported[sheet]["toolgen_id"])
                 self.assertEqual("G", imported[sheet]["variant"])     # formgen plan decision 1 (19.10.2026)
                 self.assertEqual(sheet, TOOLS[tool_id]["concept"])
 

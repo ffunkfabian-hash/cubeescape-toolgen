@@ -239,9 +239,64 @@ def charge(u, n, p):
 
 
 def aim_out(u, n, p):
-    t = u / n
+    """ADS out; a scope (``ads.lens_lead_frames``, 0.24) holds the aim while the lens picture goes first (ScopeOff), the
+    model follows (Dead Man's Tale: lens 2, model 8 frames at 60/s)."""
+    lead = p["ads"].get("lens_lead_frames", 0)
+    t = max(0.0, u - lead) / (n - lead)
     amount = 1 - smooth(t)
     return pose(aim=amount, follow=aim_follow(p, amount), up=-.003 * math.sin(math.pi * t))
+
+
+# 0.24 (Salvo): fire clips of a device's fire pattern (data/ego_arms.json devices.<tool>.fire, toolgen/ego_arms.fire_clips).
+def kick(t, rise, recovery):
+    """One shot's model impulse 0..1, ``t`` frames after the shot: up in ``rise`` frames, back to 0 at ``recovery``."""
+    return envelope(t, ((0, 0), (rise, 1), (recovery, 0))) if 0 <= t <= recovery else 0.0
+
+
+def shot_pose(p, amount, scale=1.0):
+    """The Use clip's recoil direction (viewmodel profile ``motion``) at ``amount`` of one shot."""
+    motion = p["motion"]
+    return pose(pitch=motion["pitch_degrees"] * amount * scale, roll=motion.get("yaw_degrees", 0) * amount * scale,
+                back=motion["kick_m"] * amount * scale, up=.004 * amount * scale)
+
+
+def auto_fire(u, n, p, scale=1.0):
+    """Held fire (loop): every cycle one real shot whose kick returns before the next (a steady rhythm, no drift and no
+    reset of the whole pose per shot), plus one slow sway over the loop; rest pose at both ends."""
+    pattern = p["fire_pattern"]
+    cycle = pattern["cycle_frames"]
+    amount = kick(u % cycle if u < n else 0, 1, cycle) * pattern["kick_share"]
+    result = shot_pose(p, amount, scale)
+    sway = math.sin(2 * math.pi * u / n) * pattern["sway_deg"] * scale
+    result.update(yaw=result["yaw"] + sway, roll=result["roll"] - sway * .5)
+    return result
+
+
+def aim_auto_fire(u, n, p):
+    return dict(auto_fire(u, n, p, p["ads"]["recoil_scale"]), aim=1.0, follow=aim_follow(p, 1))
+
+
+def burst_amount(u, pattern):
+    """The burst's model impulse: each shot flicks (back before the next), the series builds without a return between
+    the shots and settles at ``still_frame`` (Gridskipper: no return inside the burst, back after about 0.35 s)."""
+    shots = [index * pattern["spacing_frames"] for index in range(pattern["count"])]
+    build = sum(kick(u - shot, 1, pattern["still_frame"] - shot) for shot in shots) / pattern["count"]
+    flick = sum(kick(u - shot, 1, pattern["spacing_frames"]) for shot in shots)
+    return pattern["build_share"] * build + pattern["flick_share"] * flick
+
+
+def burst(u, n, p, scale=1.0):
+    pattern = p["fire_pattern"]
+    amount = burst_amount(u, pattern)
+    result = shot_pose(p, amount, scale)
+    # the burst drifts right and settles back (Gridskipper: +5.1 % right after the third shot)
+    result["yaw"] -= pattern["drift_yaw_deg"] * scale * burst_amount(u, dict(pattern, flick_share=0, build_share=1))
+    last = pattern["spacing_frames"] * (pattern["count"] - 1)
+    return dict(result, trigger=trigger(max(0, u - last), n - last, p) if u >= last else 0.0)
+
+
+def aim_burst(u, n, p):
+    return dict(burst(u, n, p, p["ads"]["recoil_scale"]), aim=1.0, follow=aim_follow(p, 1))
 
 
 def lowered_pose(p, factor):
@@ -262,7 +317,8 @@ def holster(u, n, p):
 MOTIONS = {"idle": idle, "walk": walk, "sprint_in": sprint_in, "sprint": sprint, "sprint_out": sprint_out,
            "fire": fire, "aim_in": aim_in, "aim_idle": aim_idle, "aim_fire": aim_fire, "aim_out": aim_out,
            "draw": draw, "holster": holster, "charge": charge, "inspect_a": ego_weapon_motions.inspect_a,
-           "inspect_b": ego_weapon_motions.inspect_b, "reload": ego_weapon_motions.reload}
+           "inspect_b": ego_weapon_motions.inspect_b, "reload": ego_weapon_motions.reload,
+           "auto_fire": auto_fire, "aim_auto_fire": aim_auto_fire, "burst": burst, "aim_burst": aim_burst}
 
 
 def pose_at(clip, frame, params):
