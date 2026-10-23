@@ -427,6 +427,9 @@ def main():
         checks.add("socket_hand_at_origin", max(abs(v) for v in socket["blender"]["location"]) <= 1e-4,
                    location=socket["blender"]["location"])
         anchor_test(checks, document, {"attach_matrix": attach, "prop_r_rest": prop_rest, "rest_anchors": rest_anchors})
+        if tool.get("hold", {}).get("sight_kind"):
+            # 0.25: the ADS block like contract 4 (ego_rig's ads_target of the AimIdle clip, user decision 23.10.2026)
+            report["ads"] = ge.check_ads(checks, work, document, tool)
         for kind in ("glb", "fbx"):
             try:
                 ge.check_import(checks, kind, files[kind], source, expected)

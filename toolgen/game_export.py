@@ -1099,10 +1099,19 @@ GROUP_1_CONSUMER = ("Cube Escape 0.112 (the version that builds group 1 of the a
                     "event) but play none of the new clips; copy scout_rifle/ only into the version that adds the weapon.")
 
 
+# Toolgen 0.25 (user decision 23.10.2026, sight sizes like Destiny 2): the new hold.ads_eye_distance_m of every weapon
+ADS_SIGHT_CONSUMER = ("Cube Escape 0.114 „Loupe“ (profile values and limits for sight sizes like Destiny 2): "
+                      "hold.ads_eye_distance_m is 0.041-0.264 m now, the aim clips of contract 5 stand there and the ADS "
+                      "rule needs no hand in the frame. Cube Escape 0.113 and older read the package unchanged (the value "
+                      "is a reference, the game aims at its own profile distance, which keeps its 0.1 m lower limit), but "
+                      "the contract 5 aim clips bring the sight that close.")
+
+
 def consumer_block(tool=None, contract=CONTRACT_FORMAT):
     """Top-level ``minimum_consumer`` of every contract (Toolgen 0.17): the package's requirements, kept apart; 0.18 adds
     ``triangle_budgets`` (every tool) and ``concept_models`` (a concept weapon), 0.19 ``shared_arm_rig`` (contract 5), 0.24
-    ``group_1_clips`` (the tools of group 1 of the animation brief, every contract of theirs)."""
+    ``group_1_clips`` (the tools of group 1 of the animation brief, every contract of theirs), 0.25 ``ads_sight_size``
+    (every tool with a sight)."""
     block = {"first_person_maps_2048": surface_maps.EGO_MAPS_CONSUMER, "renamed_tool_ids": RENAMED_CONSUMER,
              "triangle_budgets": BUDGET_CONSUMER}
     if tool and tool.get("concept"):
@@ -1111,6 +1120,8 @@ def consumer_block(tool=None, contract=CONTRACT_FORMAT):
         block["shared_arm_rig"] = SHARED_ARM_CONSUMER
     if tool and tool.get("animation_group") == 1:
         block["group_1_clips"] = GROUP_1_CONSUMER
+    if tool and tool.get("hold", {}).get("sight_kind"):
+        block["ads_sight_size"] = ADS_SIGHT_CONSUMER
     return block
 
 
@@ -1477,7 +1488,8 @@ def check_budget(checks, contract):
 
 def check_ads(checks, work, contract, tool):
     """Aim down sights (Cube Escape 0.72, T6): Socket_Sight (and Socket_Eye for scopes) in the contract with the tool's
-    rotation, and the ADS target pose of the authored model (qa_viewmodel.json ads_target: framing, near clip, wrists) passed.
+    rotation, and the ADS target pose of the authored model (qa_viewmodel.json ads_target: centre, near plane, wrists)
+    passed. Contract 4 (game_export) and contract 5 (game_export_rig: ego_rig's ads_target of the AimIdle clip) alike.
     Returns the block for qa_game_fps.json ``ads``."""
     hold = tool["hold"]
     anchors = {anchor["name"]: anchor for anchor in contract["anchors"]}
@@ -1495,22 +1507,23 @@ def check_ads(checks, work, contract, tool):
                socket_eye=bool(eye), sight_to_eye_m=distance, eye_radius_m=hold.get("eye_radius_m"))
     qa = json.loads((work / "qa_viewmodel.json").read_text())
     ads = qa.get("ads_target")
-    # Binding: the sight reaches the screen centre, the centre ray is free (or meets the scope's eye lens), the model
-    # stays within 25 % of the screen height above the centre at the profile distance (Cube Escape 0.72) and some eye
-    # distance keeps the framing rule. Whether the game profile's distance (hold.eye_distance_m) keeps the finger
-    # framing is reported (ads.passed) for Cube Escape to tune, not binding.
+    # Binding (Toolgen 0.25, user decision 23.10.2026: sight sizes like Destiny 2, no hand needs to stay in the frame while
+    # aiming): at the device's one eye distance (ego_clips.ads_eye_distance_m) the sight reaches the screen centre, the
+    # centre ray is free (or meets the scope's eye lens) and no part of weapon or arms lies between the camera and the near
+    # plane inside the view (ads.passed); Socket_Sight sits on the AimIdle line. Fingers, forearms and the model's top
+    # above the centre are reported, not binding.
     centred = bool(ads) and all(max(abs(value - .5) for value in entry["sight_screen"]) <= .002
                                 for entry in ads["configurations"])
-    on_line = bool((qa.get("ego_clips", {}).get("sight_socket") or {}).get("ok"))
-    view_ok = bool(ads) and ads["centre_clear"] and ads["model_top_ok"]
-    checks.add("ads_target_pose", centred and on_line and view_ok and bool(ads["eye_distance_range_m"]),
+    line = qa.get("ego_clips", {}).get("sight_socket") or (ads or {}).get("sight_socket_line")     # contract 4 or 5
+    on_line = bool((line or {}).get("ok"))
+    checks.add("ads_target_pose", centred and on_line and bool(ads) and ads["passed"],
                centre_clear=(ads or {}).get("centre_clear"), centre_hit=(ads or {}).get("centre_hit"),
+               near_plane_cuts=(ads or {}).get("near_plane_cuts"), hands_in_frame=(ads or {}).get("hands_in_frame"),
                model_top_above_centre=(ads or {}).get("model_top_above_centre"),
-               eye_distance_m=ego_clips.ads_eye_distance_m(tool), profile_distance_passed=bool(ads) and ads["passed"],
-               eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
+               eye_distance_m=ego_clips.ads_eye_distance_m(tool), eye_distance_range_m=(ads or {}).get("eye_distance_range_m"),
                failures_at_profile_distance=(ads or {}).get("failures", ["qa_viewmodel.json has no ads_target"]),
                sight_socket_on_aim_line=on_line)
-    return ads and dict(ads, sight_kind=hold["sight_kind"], sight_socket_on_aim_line=qa.get("ego_clips", {}).get("sight_socket"),
+    return ads and dict(ads, sight_kind=hold["sight_kind"], sight_socket_on_aim_line=line,
                         source="qa_viewmodel.json ads_target (authored model; the game model keeps the same anchors and "
                                "meshes within viewmodel_framing's tolerance)")
 

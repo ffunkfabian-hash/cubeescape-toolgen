@@ -106,9 +106,19 @@ class RenamedFromTests(unittest.TestCase):
         # 0.19: the contract format joins the call (contract 5 adds shared_arm_rig)
         self.assertIn('"minimum_consumer": consumer_block(tool, contract)', inspect.getsource(ge.build_contract))
         # 0.18: a concept weapon adds its own requirement, the others keep exactly the two
-        self.assertEqual({"first_person_maps_2048", "renamed_tool_ids", "triangle_budgets", "concept_models"},
-                         set(ge.consumer_block(TOOLS["assault_rifle"])))
-        self.assertEqual(block, ge.consumer_block(TOOLS["pistol"]))
+        self.assertEqual({"first_person_maps_2048", "renamed_tool_ids", "triangle_budgets", "concept_models", "ads_sight_size"},
+                         set(ge.consumer_block(TOOLS["assault_rifle"])))       # 0.25: + ads_sight_size (a sight)
+        self.assertEqual(block, ge.consumer_block(TOOLS["flashlight"]))
+        # 0.25: every tool with a sight names the CE version of the Destiny sight sizes (ADS eye distances)
+        for tool_id, tool in TOOLS.items():
+            with self.subTest(tool=tool_id):
+                found = ge.consumer_block(tool).get("ads_sight_size")
+                if tool.get("hold", {}).get("sight_kind"):
+                    self.assertTrue(found.startswith("Cube Escape 0.114 „Loupe“"))
+                else:
+                    self.assertIsNone(found)
+        self.assertEqual(block, {key: value for key, value in ge.consumer_block(TOOLS["pistol"]).items()
+                                 if key != "ads_sight_size"})
         self.assertIn("v0.17.2", ge.consumer_block(TOOLS["assault_rifle"])["concept_models"])
         # 0.24: the three tools of group 1 (tools.json animation_group 1) name the CE version that builds their clips
         for tool_id in ("smg", "pulse_rifle", "scout_rifle"):

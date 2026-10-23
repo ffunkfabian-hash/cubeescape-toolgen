@@ -67,7 +67,7 @@
         "two_handed": true,
         "support_grip": "cup",
         "sight_kind": "iron",
-        "eye_distance_m": 0.4
+        "eye_distance_m": 0.209
       }
     },
     {
@@ -138,7 +138,7 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "iron",
-        "eye_distance_m": 0.65
+        "eye_distance_m": 0.264
       }
     },
     {
@@ -160,7 +160,7 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "scope",
-        "eye_distance_m": 0.221,
+        "eye_distance_m": 0.053,
         "eye_radius_m": 0.011232
       }
     },
@@ -208,7 +208,7 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "energy",
-        "eye_distance_m": 0.4
+        "eye_distance_m": 0.1
       }
     },
     {
@@ -230,7 +230,7 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "scope",
-        "eye_distance_m": 0.221,
+        "eye_distance_m": 0.041,
         "eye_radius_m": 0.008748
       }
     },
@@ -253,7 +253,7 @@
         "two_handed": true,
         "support_grip": "underhand",
         "sight_kind": "iron",
-        "eye_distance_m": 0.453
+        "eye_distance_m": 0.169
       }
     },
     {

@@ -1,5 +1,21 @@
 # Änderungen
 
+## 0.25.0 – Ocular (23.10.2026)
+
+Visiergröße im Zielmodus wie Destiny 2 (Entscheidung des Nutzers 23.10.2026, Messung im Spiel: Cube Escape 0.114 „Loupe“). Je Visierart
+eine Zielgröße in % der Bildhöhe bei 1470×956, Viewmodel-FOV fest 46,69°: Holo/Reflex 30 %, Kimme ≈ 18 %, Zielfernrohr 65 %, Energie
+nach Augenmaß. **Augenabstände** (eine Zahl je Gerät, `hold.ads_eye_distance_m`): Vertrag 5 `ego_arms.json` Sturm 0,134, Impuls 0,138,
+MP 0,202, Scout 0,053 m (bisher 0,62 / 0,70 / 0,72 / 0,12); Vertrag 4 `tools.json` (CE-Wert ÷ `hip.scale`) Pistole 0,209, Schrotflinte 0,264,
+Raketenwerfer 0,169, Fusion 0,100, Scharfschütze 0,053, Spur 0,041 m (bisher 0,40 / 0,65 / 0,453 / 0,40 / 0,221 / 0,221). **Bildregel nur
+außerhalb des ADS:** in den Ziel-Clips (`ego_rig.AIM_MOTIONS`, jetzt mit `AimAutoFire`/`AimBurst`) und in der ADS-Zielpose gelten Finger-
+und Unterarmregel nicht mehr, `ads.hands_may_leave` entfällt; verbindlich sind dort Bildmitte frei (Scopes: Okularlinse), Visier auf der
+Achse und **keine Nahebenen-Schnitte** (`scripts/tool_assets/ads_view.py`, reines numpy mit Tests: Waffe und Arme zwischen Kamera und 0,03-m-Ebene im Bild); die
+25-%-Grenze über der Mitte ist nur noch Messwert, `eye_distance_range_m`/`eye_distance_intervals_m` nennen die Abstände der neuen Regel (0,02–0,80 m). Vertrag 5
+liefert den ADS-Block jetzt auch (`qa_viewmodel.json` › `ads_target`, `qa_game_fps.json` › `ads`, Prüfung `ads_target_pose`); seine
+Ziel-Clips messen den Augenabstand bis `Socket_Sight` wie Cube Escape (bisher bis zur Mitte der Visierteile, `Socket_Sight` lag um
+die halbe Visiertiefe näher). Vertragsformat
+unverändert; neu `minimum_consumer.ads_sight_size` = Cube Escape 0.114 „Loupe“. Bericht: [docs/versions/0.25.md](docs/versions/0.25.md).
+
 ## 0.24.0 – Salvo (22.10.2026)
 
 **Patch 23.10.2026 (KG11 + Augenabstand, aus Cube Escape 0.112):** (1) Scout-Gewehr: 16 Dreiecke ohne Fläche (Montageringe p55/p60, Fase neben der Coplanar-Lücke) entfallen – `concept_kit.make` löst nach der Fase Degeneriertes auf (8640 → 8624 Dreiecke, wie Unity sie importiert); Geometrie-QA zählt Dreiecke ohne Fläche (`mesh_check`, `qa_geometry.json` › `zero_area_triangles`, Prüfung `zero_area_triangles` in jedem `qa_game*.json`) und ist bei einem Fund rot. (2) Ein Augenabstand je Gerät: wo `data/ego_arms.json` › `devices.<tool>.ads` einen Wert hat (Sturm-, Impulsgewehr, MP, Scout: 0,62 / 0,70 / 0,72 / 0,12 m), gilt nur dieser – für `hold.ads_eye_distance_m` und die ADS-QA; `hold.eye_distance_m` entfällt dort in `tools.json`. Vertragsformat unverändert.

@@ -272,8 +272,8 @@
         }
       },
       "ads": {
-        "eye_distance_m": 0.62,
-        "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
+        "eye_distance_m": 0.134,
+        "note": "sight on the camera axis this far ahead (game metres): the holo window covers about 30 % of the picture height (outer frame; Destiny 2 rule, user decision 23.10.2026; Cube Escape 0.114 measured 29.9 %); while aiming no hand needs to stay in the frame (ego_rig.AIM_MOTIONS)"
       }
     },
     "smg": {
@@ -370,8 +370,8 @@
         }
       },
       "ads": {
-        "eye_distance_m": 0.72,
-        "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
+        "eye_distance_m": 0.202,
+        "note": "sight on the camera axis this far ahead (game metres): the reflex window covers about 30 % of the picture height (outer frame; Destiny 2 rule, user decision 23.10.2026; Cube Escape 0.114 measured 30.1 %); while aiming no hand needs to stay in the frame (ego_rig.AIM_MOTIONS)"
       },
       "fire": {
         "mode": "auto",
@@ -479,8 +479,8 @@
         }
       },
       "ads": {
-        "eye_distance_m": 0.7,
-        "note": "sight on the camera axis this far ahead (game metres); the grip hand's three fingers stay in the frame"
+        "eye_distance_m": 0.138,
+        "note": "sight on the camera axis this far ahead (game metres): the holo window covers about 30 % of the picture height (outer frame; Destiny 2 rule, user decision 23.10.2026; Cube Escape 0.114 measured 29.9 %); while aiming no hand needs to stay in the frame (ego_rig.AIM_MOTIONS)"
       },
       "fire": {
         "mode": "burst",
@@ -658,10 +658,9 @@
         }
       },
       "ads": {
-        "eye_distance_m": 0.12,
+        "eye_distance_m": 0.053,
         "lens_lead_frames": 1,
-        "hands_may_leave": ["R"],
-        "note": "scope close to the eye (game metres): 0.12 m, the eyepiece covers about 45 % of the picture height (0.31 m, Cube Escape's trace rifle profile: 13 %; Dead Man's Tale: eyepiece frame about 65 %); user decision 22.10.2026 after comparison pictures, with the grip hand allowed to leave the frame in the aim clips (hands_may_leave); the lens picture leaves lens_lead_frames before the model (AimOut ScopeOff)"
+        "note": "scope close to the eye (game metres): the eyepiece covers about 65 % of the picture height (outer ring, lens about 33 %; Destiny 2 Dead Man's Tale, user decision 23.10.2026; Cube Escape 0.114 measured 65.1 %). The 0.24 value 0.12 m was chosen for an eyepiece of 45 % estimated in Blender; the game showed 28.7 %. The lens picture leaves lens_lead_frames before the model (AimOut ScopeOff)"
       },
       "events": {
         "AimIn": {"ScopeOn": 7},

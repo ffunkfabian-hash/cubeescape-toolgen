@@ -33,7 +33,8 @@ description: Prüfe Toolgen-Generatoren, Blender-Exporte, Animationen, Cache und
    und ab Standard `qa_viewmodel_roundtrip.json` prüfen. Der Regler „Sichtfeld“ und `--fov` gehören zur Ego-Prüfung. Griff-/Zughand in Ruhe, voll gespannt und beim Nachgreifen
    ansehen. Verbindliche Gestaltung: `docs/TECHNIK.md` › Hände und Bewegungsgefühl. Genau vier Finger pro Hand (drei Greiffinger plus
    ein Daumen), Fingersegmente nicht als zusätzliche Finger lesbar, natürliche Händigkeit (linkes/rechtes Handgelenk auf seiner Griffseite,
-   niemals um 180° drehen, nur um Finger zu zeigen), Hände vollständig, höchstens halbe Unterarme; keine Ellenbogen/Oberarme im Bild.
+   niemals um 180° drehen, nur um Finger zu zeigen), Hände vollständig, höchstens halbe Unterarme; keine Ellenbogen/Oberarme im Bild –
+   außer beim Zielen (Ziel-Clips, ADS-Zielpose: keine Hände nötig, dafür Bildmitte frei und nichts vor der Nahebene, seit 0.25).
    Handwurzel mittig hinter der Handfläche (+Y), nicht unterhalb der Fingerreihe (−Z); Bogen und Griffhand
    bewegen sich beim Spannen/Schuss gemeinsam. Unterarm-Mesh nicht am sichtbaren Ende abschneiden: kontinuierlich über den Bildrand führen. Die proximale
    Hälfte über alle 97 Frames außerhalb prüfen. Bogen-/Handmaß gemeinsam abstimmen; Gliedlängen niemals aus
