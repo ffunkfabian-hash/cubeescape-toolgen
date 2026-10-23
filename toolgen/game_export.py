@@ -1089,9 +1089,9 @@ SHARED_ARM_CONSUMER = ("Cube Escape 0.106 „Knuckleline“ (E2 of the arm rebui
 
 
 # Toolgen 0.24 (Salvo): group 1 of the animation brief (Nexogen#1 § 5, § 6, § 8; tools.json ``animation_group`` 1) - fire
-# clips, the scout rifle and the separate markers; the Cube Escape version that builds them is not reserved yet.
-GROUP_1_CONSUMER = ("Cube Escape „offen“ (the version that builds group 1 of the animation brief after the pattern of 0.103 "
-                    "„Salvo“, not reserved yet): the clips AutoFire/AimAutoFire (held fire, a state loop) and "
+# clips, the scout rifle and the separate markers; Cube Escape 0.112 builds them (reserved by Sightline, 23.10.2026).
+GROUP_1_CONSUMER = ("Cube Escape 0.112 (the version that builds group 1 of the animation brief after the pattern of 0.103 "
+                    "„Salvo“): the clips AutoFire/AimAutoFire (held fire, a state loop) and "
                     "Burst/AimBurst (three real shots), the block fire, the scout rifle (new tool scout_rifle with "
                     "ReloadEmpty and the scope markers ScopeOn/ScopeOff) and the markers Move/Still. Cube Escape 0.106 to "
                     "0.111 read the package (ToolgenAssets skips clip states it does not know, ClipEventsOf reads every "

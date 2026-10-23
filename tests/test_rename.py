@@ -113,6 +113,9 @@ class RenamedFromTests(unittest.TestCase):
         # 0.24: the three tools of group 1 (tools.json animation_group 1) name the CE version that builds their clips
         for tool_id in ("smg", "pulse_rifle", "scout_rifle"):
             self.assertIn("group_1_clips", ge.consumer_block(TOOLS[tool_id], 5), tool_id)
+            # 0.24: Sightline reserved Cube Escape 0.112 for building group 1 (no longer „offen“)
+            self.assertTrue(ge.consumer_block(TOOLS[tool_id], 5)["group_1_clips"].startswith("Cube Escape 0.112 "), tool_id)
+            self.assertNotIn("offen", ge.consumer_block(TOOLS[tool_id], 5)["group_1_clips"])
         self.assertNotIn("group_1_clips", ge.consumer_block(TOOLS["assault_rifle"], 5))
         report = {"provenance": {"variant": "G", "release": "claude-v0.14", "sha256": "x"},
                   "source": {"format": "f", "format_version": 1, "repository": "r", "commit": "c", "asset": "a",

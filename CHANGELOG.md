@@ -6,7 +6,7 @@ Gruppe 1 der Animationsvorgabe (Nexogen#1 6273351409, Freigabe 6315231014): Masc
 neue Scout-Gewehr (`scout_rifle` ← KG11, Asset `CubeEscape_Scout`, Clips `Scout_*`) als Konzeptmodelle aus formgen `claude-v0.15.1` auf
 Vertrag 5 mit Roboter-Variante. Neue Clips am Ende: MP `AutoFire`/`AimAutoFire` (Zustandsschleife, ein `Shot` je echtem Schuss, 720/min),
 Impuls `Burst`/`AimBurst` (3 Impulse, `BurstEnd`/`Ready`/`Still`), Scout `ReloadEmpty` (`Chamber`) und Zielfernrohr-Marker `ScopeOn`/`ScopeOff`;
-Nachladen je Bauweise mit getrennten Markern `Move`/`Ready`/`Still`; Vertragsblock `fire`, `minimum_consumer.group_1_clips` („offen“).
+Nachladen je Bauweise mit getrennten Markern `Move`/`Ready`/`Still`; Vertragsblock `fire`, `minimum_consumer.group_1_clips` = Cube Escape 0.112 (von Sightline für den Einbau reserviert).
 `renamed_from` des Spurgewehrs entfällt (die ID gehört dem Scout); KG06-Stützhand als benannte Korrektur am Vordergriff p09; Kollider halten
 Öffnungsproben auch beim Zusammenfassen frei. Bericht: [docs/versions/0.24.md](docs/versions/0.24.md).
 

@@ -54,7 +54,7 @@ sobald ein Werkzeug die alte ID trägt, geht die Abbildung – sonst verschöbe 
 das Scout-Gewehr heißt `CubeEscape_Scout`, `CubeEscape_Scout_Robot`, Clips `Scout_*` (Entscheidung des Nutzers 22.10.2026), damit keine
 alte `.meta`/GUID eines Spurgewehr-Stands auf das neue Modell zeigt. Cube Escape bildet `scout_rifle` → `trace_rifle` nur hinter der
 0.98-Grenze ab (`SaveSystem`, `LevelMigrator`, `EquipmentDesignMigrator`, `ViewmodelOverrides` Format 1); der Ordner `scout_rifle/` gehört erst
-in die Cube-Escape-Version, die das Scout-Gewehr einbaut (`minimum_consumer.group_1_clips`).
+in die Cube-Escape-Version, die das Scout-Gewehr einbaut (`minimum_consumer.group_1_clips`: Cube Escape 0.112).
 **Mindestversionen des Pakets ab 0.17.0, getrennt** (jeder Vertrag, Block `minimum_consumer`): `first_person_maps_2048` – Ego-Karten 2048²
 brauchen **Cube Escape 0.96 „Pinpoint“**; `renamed_tool_ids` – die neuen Namen brauchen **Cube Escape 0.98 „Recast“** mit der Migration
 `scout_rifle` → `trace_rifle` (Briefkasten cubeescape-rules#3). **Cube Escape 0.96 und älter lesen das 0.17-Paket nicht** (Ordner und Prefabs
@@ -498,8 +498,8 @@ Neu ist nur Angehängtes; Clipnamen, Anker und Knoten der übrigen Geräte bleib
 - **Stützhand:** MP und Impulsgewehr greifen ihren **senkrechten Vordergriff** (`grip.L` `pose` `grip`, `support_grip` im Gerät
   `vertical`; `hold.support_grip` bleibt `underhand`, CEs Wortschatz), das Scout-Gewehr den Handschutz von unten. KG06: benannte
   Korrektur `Socket_SupportHand` auf die Mitte des unbeschrifteten Vordergriffs p09 (`data/concepts/corrections.json`).
-- **Mindestversion:** `minimum_consumer.group_1_clips` (alle Verträge der drei Geräte) – Cube Escape „offen“ (die Version, die Gruppe 1
-  nach dem Muster 0.103 „Salvo“ einbaut). Cube Escape 0.106–0.111 liest die Pakete (unbekannte Clip-Zustände überspringt `ToolgenAssets`,
+- **Mindestversion:** `minimum_consumer.group_1_clips` (alle Verträge der drei Geräte) – **Cube Escape 0.112** (von Sightline für den Einbau von
+  Gruppe 1 nach dem Muster 0.103 „Salvo“ reserviert). Cube Escape 0.106–0.111 liest die Pakete (unbekannte Clip-Zustände überspringt `ToolgenAssets`,
   `ClipEventsOf` liest jedes Ereignis), spielt aber keinen neuen Clip; den Ordner `scout_rifle/` erst mit dieser Version kopieren.
   `shared_arm_rig`/`triangle_budgets`: Cube Escape 0.106. **Rückweg `--contract 4`** ist für die drei Konzeptmodelle nicht abgestimmt
   (gebackene Arme verlassen den Bildausschnitt); die alten Modelle: `git checkout v0.23.0`.
