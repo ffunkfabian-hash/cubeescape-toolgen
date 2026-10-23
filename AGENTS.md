@@ -51,7 +51,7 @@ einmal täglich auf `main`, vom Nutzer oder `launchd` gestartet, nie als Workflo
 Nutzerwunsch). Konfiguration: `.ce-repo.json`. **Keine eingebettete Werkzeugkopie (0.26):** `./ce` ist der Lader, `.ce-repo.json` ›
 `tools_version` nennt den gepinnten Stand von `ce-agent-tools`; `./ce tools where` liefert den Werkzeugordner, `./ce tools pin <Commit>` hebt
 den Stand, `./ce tools fetch` füllt den Cache. Eigene Skripte beziehen Werkzeugmodule über `scripts/shared_tools.py` (`use("ce_docs")`),
-nie über einen Pfad; `scripts/heavy_lock.py` ist nur die Weiterleitung. Aufräumen: `./ce tidy` (`.ce-repo.json` › `tidy`: Stufen-Ausgaben `output/_*`).
+nie über einen Pfad (Rest eines alten Checkouts: `rm -rf scripts/ce_tools` nach dem Pull); `scripts/heavy_lock.py` ist nur die Weiterleitung. Aufräumen: `./ce tidy` (`.ce-repo.json` › `tidy`: Stufen-Ausgaben `output/_*`).
 Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
 
 Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing/SKILL.md).

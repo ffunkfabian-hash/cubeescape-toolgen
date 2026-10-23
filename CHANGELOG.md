@@ -6,7 +6,7 @@ Keine eingebettete Werkzeugkopie mehr (Nutzerentscheidung 23.10.2026, wie Motion
 entfernt, `./ce` ist der Lader und `.ce-repo.json` › `tools_version` pinnt `ce-agent-tools` 0.21.0 „Courier“ (96d6e90). Eigene Verweise
 (`check_docs.py`, `verify_output.py`, `heavy_lock.py`, `tests/test_contract_schema.py`) laufen über `scripts/shared_tools.py` (`./ce tools where`);
 `./check`, `./release`, `.mcp.json` (`./ce search serve`) und `check.yml` (Action `ce-tools`) ebenso; `.ce-repo.json` › `tidy` für `output/_*`.
-Kein Format-, Modell- oder Vertragsänderung. Bericht: [docs/versions/0.26.md](docs/versions/0.26.md).
+Reste eines bestehenden Checkouts (ignorierter `scripts/ce_tools/__pycache__`) nach dem Pull mit `rm -rf scripts/ce_tools` entfernen. Keine Format-, Modell- oder Vertragsänderung. Bericht: [docs/versions/0.26.md](docs/versions/0.26.md).
 
 ## 0.25.0 – Ocular (23.10.2026)
 

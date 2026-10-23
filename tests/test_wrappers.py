@@ -54,7 +54,9 @@ class Wrappers(unittest.TestCase):
         return subprocess.run(list(argv), cwd=self.repo, env=self.env, capture_output=True, text=True)
 
     def test_no_embedded_copy_is_left(self):
-        self.assertFalse(os.path.exists(os.path.join(ROOT, "scripts", "ce_tools")))
+        # tracked files only: an ignored __pycache__ of old runs may survive a pull in an existing checkout
+        tracked = subprocess.run(["git", "ls-files", "scripts/ce_tools"], cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(tracked.stdout.strip(), "", tracked.stderr)
         with open(os.path.join(ROOT, ".ce-repo.json")) as fh:
             config = json.load(fh)
         self.assertIn("tools_version", config)
