@@ -22,6 +22,7 @@ PALETTE = {'armor': (.66, .685, .72), 'mech': (.075, .08, .092),
            'metal': (.38, .395, .42), 'eye': (.02, .62, .95),
            'visor': (.006, .007, .01), 'accent': (1., .38, .05)}
 MATS, OBJECTS = {}, []
+DEGENERATE_M = 1e-6  # edges shorter and faces thinner than this (m) collapse after the bevel
 
 
 def require(ok, message):
@@ -66,6 +67,9 @@ def mesh(name, bm, loc, mat, parent, bevel=0, segments=3, coll=None):
         edges=[e for e in bm.edges if e.is_manifold and e.calc_face_angle()>.7]
         bmesh.ops.bevel(bm, geom=edges, offset=bevel,
                         segments=segments, profile=.5, affect='EDGES', clamp_overlap=True)
+        # a bevel wider than the part (fletching: 6 mm on 2.5 mm) leaves collapsed corners, triangles of area 0 that
+        # Unity drops at import (game export check zero_area_triangles): dissolve them before anything is triangulated
+        bmesh.ops.dissolve_degenerate(bm, dist=DEGENERATE_M, edges=bm.edges)
         bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     # Long thin tubes facing -Z can receive inward winding from the normal
     # solver. Explicitly choose the positive-volume orientation before UVs.

@@ -9,7 +9,7 @@
 - **Dezimierung triangulierte und setzte UV-Markierungen nebenbei** → unter Budget macht `reduce_to_budget` beides selbst, sonst fehlen Tangenten und UV1 ([Quelle](TECHNIK.md#erfahrungen))
 - **Objektsuche kappte Namen am ersten Punkt** → Millimeterzahlen im Namen, volle Namen, nur numerische Blender-Suffixe ([Quelle](TECHNIK.md#gestaltung-und-bogen-fix))
 - **Render-Limits gingen bei `open_mainfile` verloren** → Sample-/Thread-Vorgaben als persistente Handler setzen ([Quelle](TECHNIK.md#cache-und-worker))
-- **Fase neben Coplanar-Lücke ließ Dreiecke ohne Fläche (KG11: 16, Unity verwirft sie, 8640 → 8624)** → `dissolve_degenerate` nach der Fase; Geometrie-QA zählt sie (`mesh_check`, 1e-11 m²) ([Quelle](../CHANGELOG.md))
+- **Fase neben Coplanar-Lücke ließ Dreiecke ohne Fläche (KG11: 16, Unity verwirft sie, 8640 → 8624)** → `dissolve_degenerate` nach der Fase, auch im Bogen (`bow_geometry`: Fase breiter als das Teil, Befiederung); Geometrie-QA zählt sie (`mesh_check`, 1e-11 m²) ([Quelle](../CHANGELOG.md))
 
 ## UV/Bake/Oberflächen
 - **Pixelkonstanten sind in Wahrheit UV- oder Kartengrößen** → vor jeder Auflösungsänderung jede Konstante einer Klasse zuordnen; ungebackene Golden als `stale` markieren, nie raten ([Quelle](versions/0.16.md))
