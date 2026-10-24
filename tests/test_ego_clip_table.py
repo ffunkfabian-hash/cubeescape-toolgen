@@ -26,8 +26,9 @@ class EgoClipTableTests(unittest.TestCase):
     def test_clip_counts_by_kind(self):
         for tool_id in ego_clip_table.WEAPON_ORDER:
             # 0.11.0: the fusion rifle adds its Charge loop (T3); 0.19: the contract 5 assault rifle its ReloadEmpty; 0.24:
-            # the scout rifle its ReloadEmpty, the SMG AutoFire/AimAutoFire, the pulse rifle Burst/AimBurst
-            extra = {"fusion_rifle": 1, "assault_rifle": 1, "scout_rifle": 1, "smg": 2, "pulse_rifle": 2}
+            # the scout rifle its ReloadEmpty, the SMG AutoFire/AimAutoFire, the pulse rifle Burst/AimBurst; 0.27 the pistol
+            # ReloadEmpty, FireLast, AimFireLast and the state SlideLocked
+            extra = {"fusion_rifle": 1, "assault_rifle": 1, "scout_rifle": 1, "smg": 2, "pulse_rifle": 2, "pistol": 4}
             self.assertEqual(len(self.tools[tool_id]["clips"]), 15 + extra.get(tool_id, 0), tool_id)
         for tool_id in ego_clip_table.TOOL_ORDER:
             # 0.15.0: Inspect_B for the three ego tools, not the bow
@@ -38,8 +39,9 @@ class EgoClipTableTests(unittest.TestCase):
         for tool_id, item in self.tools.items():
             loops = {clip["suffix"] for clip in item["clips"] if clip["loop"]}
             wanted = expected if tool_id in ego_clip_table.WEAPON_ORDER else expected - {"AimIdle"}
-            # state loops (user decisions): the fusion rifle's Charge, 0.24 the SMG's held fire (22.10.2026)
-            states = {"fusion_rifle": {"Charge"}, "smg": {"AutoFire", "AimAutoFire"}}.get(tool_id, set())
+            # state loops (user decisions): the fusion rifle's Charge, 0.24 the SMG's held fire (22.10.2026), 0.27 the
+            # pistol's slide lock (24.10.2026)
+            states = {"fusion_rifle": {"Charge"}, "smg": {"AutoFire", "AimAutoFire"}, "pistol": {"SlideLocked"}}.get(tool_id, set())
             self.assertEqual(loops, wanted | states, tool_id)
 
 

@@ -697,6 +697,552 @@
           "upper": [0.3, 0.95, 0.05]
         }
       }
+    },
+    "pistol": {
+      "timing_note": "Pistol KG01 (Toolgen 0.27 Sidearm, user decisions 24.10.2026, docs/ENTSCHEIDUNGEN.md): semi-automatic 360/min = Ready 4 frames after the Shot at 24/s (Cube Escape FIRST_PERSON_EQUIPMENT.md sidearm 260-491 RPM), magazine 15 (proposal, CE 12-20). Reload after motiongen docs/destiny2.md (sidearm reload 1.1-1.2 s, two clips, no z- anchor): Reload Ready 26 = 1.08 s, ReloadEmpty Ready 36 = 1.5 s with the overhand rack (Chamber 25); MagOut/MagIn and Still designed. Inspect_B with a short press-check (slide 8 mm back on the model, designed: an ego inspect is not documented for Destiny).",
+      "tool_scale": 1.5,
+      "gap_m": 0.001,
+      "grip": {
+        "R": {
+          "center": [0.0, 0.003, 0.0],
+          "palm": [1.0, -0.25, 0.0],
+          "axis": [0.0, -0.111, 0.994],
+          "pose": "trigger",
+          "trigger_finger": true
+        },
+        "L": {
+          "mode": "cup",
+          "support_grip": "cup",
+          "center": [0.0, 0.0018, -0.0159],
+          "palm": [-1.0, -0.25, 0.0],
+          "axis": [0.0, 0.111, -0.994],
+          "pose": "cup"
+        }
+      },
+      "hand_parts": {
+        "HandMag_L": {
+          "source": "Anim_Magazine",
+          "grip": "mag"
+        }
+      },
+      "reload": {
+        "grips": {
+          "mag": {
+            "center": [0.0, 0.0034, -0.0466],
+            "palm": [0.0, 0.0, 1.0],
+            "axis": [0.0, 1.0, 0.0],
+            "pose": "mag_hold"
+          },
+          "rack": {
+            "center": [0.0, 0.02, 0.068],
+            "palm": [-1.0, 0.0, 0.0],
+            "axis": [0.0, -1.0, 0.0],
+            "pose": "wrap"
+          },
+          "press": {
+            "center": [0.0, 0.02, 0.068],
+            "palm": [-1.0, 0.0, 0.0],
+            "axis": [0.0, -1.0, 0.0],
+            "pose": "pinch"
+          }
+        },
+        "Reload": {
+          "length": 32,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 8,
+            "MagIn": 17,
+            "HandOn": 22,
+            "Ready": 26,
+            "Still": 29
+          },
+          "weapon": [
+            [
+              0,
+              {}
+            ],
+            [
+              8,
+              {
+                "roll_deg": -18,
+                "pitch_deg": 16,
+                "right_m": 0.01,
+                "up_m": 0.055
+              }
+            ],
+            [
+              18,
+              {
+                "roll_deg": -18,
+                "pitch_deg": 16,
+                "right_m": 0.01,
+                "up_m": 0.055
+              }
+            ],
+            [
+              22,
+              {
+                "roll_deg": -9,
+                "pitch_deg": 7,
+                "right_m": -0.005,
+                "up_m": 0.008
+              }
+            ],
+            [
+              29,
+              {}
+            ]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [
+              6,
+              {
+                "from": "mag",
+                "device_m": [0.02, 0.0, -0.03]
+              }
+            ],
+            [8, "mag"],
+            [
+              10,
+              {
+                "from": "mag",
+                "device_m": [0.02, 0.0, -0.12]
+              }
+            ],
+            [
+              12,
+              {
+                "from": "support",
+                "camera_m": [0.06, 0.06, -0.3]
+              }
+            ],
+            [
+              13,
+              {
+                "from": "support",
+                "camera_m": [0.06, 0.06, -0.3]
+              }
+            ],
+            [
+              15,
+              {
+                "from": "mag",
+                "device_m": [0.0, 0.0, -0.05]
+              }
+            ],
+            [17, "mag"],
+            [
+              18,
+              {
+                "from": "mag",
+                "device_m": [0.02, 0.0, -0.03]
+              }
+            ],
+            [
+              20,
+              {
+                "from": "support",
+                "device_m": [0.05, 0.0, -0.02]
+              }
+            ],
+            [
+              21,
+              {
+                "from": "support",
+                "device_m": [0.02, 0.0, 0.0]
+              }
+            ],
+            [22, "support"]
+          ],
+          "fingers": [
+            [0, "cup"],
+            [5, "cup"],
+            [6, "open"],
+            [8, "mag_hold"],
+            [17, "mag_hold"],
+            [18, "open"],
+            [20, "open"],
+            [22, "cup"]
+          ]
+        },
+        "ReloadEmpty": {
+          "length": 43,
+          "events": {
+            "Move": 1,
+            "HandOff": 2,
+            "MagOut": 8,
+            "MagIn": 17,
+            "Chamber": 26,
+            "HandOn": 32,
+            "Ready": 36,
+            "Still": 40
+          },
+          "weapon": [
+            [
+              0,
+              {}
+            ],
+            [
+              8,
+              {
+                "roll_deg": -18,
+                "pitch_deg": 16,
+                "right_m": 0.01,
+                "up_m": 0.055
+              }
+            ],
+            [
+              18,
+              {
+                "roll_deg": -18,
+                "pitch_deg": 16,
+                "right_m": 0.01,
+                "up_m": 0.055
+              }
+            ],
+            [
+              22,
+              {
+                "roll_deg": -10,
+                "pitch_deg": 8,
+                "yaw_deg": -6,
+                "right_m": -0.008,
+                "up_m": 0.012
+              }
+            ],
+            [
+              27,
+              {
+                "roll_deg": -8,
+                "pitch_deg": 5,
+                "right_m": -0.005,
+                "up_m": 0.008
+              }
+            ],
+            [
+              40,
+              {}
+            ]
+          ],
+          "left": [
+            [0, "support"],
+            [5, "support"],
+            [
+              6,
+              {
+                "from": "mag",
+                "device_m": [0.02, 0.0, -0.03]
+              }
+            ],
+            [8, "mag"],
+            [
+              10,
+              {
+                "from": "mag",
+                "device_m": [0.02, 0.0, -0.12]
+              }
+            ],
+            [
+              12,
+              {
+                "from": "support",
+                "camera_m": [0.06, 0.06, -0.3]
+              }
+            ],
+            [
+              13,
+              {
+                "from": "support",
+                "camera_m": [0.06, 0.06, -0.3]
+              }
+            ],
+            [
+              15,
+              {
+                "from": "mag",
+                "device_m": [0.0, 0.0, -0.05]
+              }
+            ],
+            [17, "mag"],
+            [
+              18,
+              {
+                "from": "mag",
+                "device_m": [0.03, 0.0, -0.03]
+              }
+            ],
+            [
+              19,
+              {
+                "from": "mag",
+                "device_m": [0.07, 0.0, -0.03]
+              }
+            ],
+            [
+              20,
+              {
+                "from": "rack",
+                "device_m": [0.05, 0.0462, -0.02]
+              }
+            ],
+            [
+              22,
+              {
+                "from": "rack",
+                "device_m": [0.0, 0.0462, 0.0]
+              }
+            ],
+            [
+              25,
+              {
+                "from": "rack",
+                "device_m": [0.0, 0.0504, 0.0]
+              }
+            ],
+            [
+              26,
+              {
+                "from": "rack",
+                "device_m": [0.02, 0.0604, 0.0]
+              }
+            ],
+            [
+              28,
+              {
+                "from": "rack",
+                "device_m": [0.05, 0.0804, -0.02]
+              }
+            ],
+            [
+              30,
+              {
+                "from": "support",
+                "device_m": [0.05, 0.0, -0.02]
+              }
+            ],
+            [
+              31,
+              {
+                "from": "support",
+                "device_m": [0.02, 0.0, 0.0]
+              }
+            ],
+            [32, "support"]
+          ],
+          "fingers": [
+            [0, "cup"],
+            [5, "cup"],
+            [6, "open"],
+            [8, "mag_hold"],
+            [17, "mag_hold"],
+            [18, "open"],
+            [21, "open"],
+            [22, "wrap"],
+            [25, "wrap"],
+            [26, "open"],
+            [30, "open"],
+            [32, "cup"]
+          ],
+          "bolt": {
+            "node": "Anim_Slide",
+            "axis": [0.0, 1.0, 0.0],
+            "grip": "rack",
+            "keys": [
+              [0, 0.0462],
+              [22, 0.0462],
+              [25, 0.0504],
+              [26, 0.0504],
+              [27, 0.0]
+            ]
+          }
+        }
+      },
+      "inspect": {
+        "Inspect_B": {
+          "length": 96,
+          "shoulder_follow": 0.3,
+          "events": {
+            "Move": 1,
+            "HandOff": 30,
+            "PressCheck": 44,
+            "HandOn": 60,
+            "Still": 90
+          },
+          "weapon": [
+            [
+              0,
+              {}
+            ],
+            [
+              18,
+              {
+                "twist_deg": -20,
+                "pitch_deg": 3,
+                "right_m": -0.015,
+                "up_m": 0.01
+              }
+            ],
+            [
+              30,
+              {
+                "twist_deg": -20,
+                "pitch_deg": 3,
+                "right_m": -0.015,
+                "up_m": 0.01
+              }
+            ],
+            [
+              40,
+              {
+                "twist_deg": 8,
+                "pitch_deg": 8,
+                "right_m": -0.015,
+                "up_m": 0.02
+              }
+            ],
+            [
+              56,
+              {
+                "twist_deg": 8,
+                "pitch_deg": 8,
+                "right_m": -0.015,
+                "up_m": 0.02
+              }
+            ],
+            [
+              70,
+              {
+                "twist_deg": -6,
+                "pitch_deg": 2,
+                "right_m": -0.01,
+                "up_m": 0.006
+              }
+            ],
+            [
+              90,
+              {}
+            ]
+          ],
+          "left": [
+            [0, "support"],
+            [33, "support"],
+            [
+              35,
+              {
+                "from": "support",
+                "device_m": [0.04, 0.0, 0.0]
+              }
+            ],
+            [
+              36,
+              {
+                "from": "press",
+                "device_m": [0.04, 0.0, -0.02]
+              }
+            ],
+            [38, "press"],
+            [
+              44,
+              {
+                "from": "press",
+                "device_m": [0.0, 0.0168, 0.0]
+              }
+            ],
+            [
+              48,
+              {
+                "from": "press",
+                "device_m": [0.0, 0.0168, 0.0]
+              }
+            ],
+            [51, "press"],
+            [
+              54,
+              {
+                "from": "press",
+                "device_m": [0.04, 0.0, -0.02]
+              }
+            ],
+            [
+              57,
+              {
+                "from": "support",
+                "device_m": [0.05, 0.0, -0.02]
+              }
+            ],
+            [
+              59,
+              {
+                "from": "support",
+                "device_m": [0.02, 0.0, 0.0]
+              }
+            ],
+            [60, "support"]
+          ],
+          "fingers": [
+            [0, "cup"],
+            [33, "cup"],
+            [35, "open"],
+            [37, "open"],
+            [38, "pinch"],
+            [51, "pinch"],
+            [53, "open"],
+            [58, "open"],
+            [60, "cup"]
+          ],
+          "bolt": {
+            "node": "Anim_Slide",
+            "axis": [0.0, 1.0, 0.0],
+            "grip": "press",
+            "keys": [
+              [0, 0.0],
+              [38, 0.0],
+              [44, 0.0168],
+              [48, 0.0168],
+              [51, 0.0]
+            ]
+          }
+        }
+      },
+      "fire": {
+        "mode": "semi",
+        "cadence_rpm": 360,
+        "ready_frame": 4,
+        "still_frame": 7,
+        "magazine_rounds": 15,
+        "note": "semi-automatic: one real shot per trigger pull at the Shot event; Ready 4 frames later (360/min at 24/s, user decision 24.10.2026), Still 7, Fire 8 frames; magazine_rounds is a proposal (Cube Escape decides)"
+      },
+      "slide_lock": {
+        "node": "Anim_Slide",
+        "axis": [0.0, 1.0, 0.0],
+        "locked_m": 0.0462,
+        "fire_keys": [
+          [0, 0.0],
+          [1, 0.0504],
+          [2, 0.0462]
+        ],
+        "state_length": 24,
+        "note": "slide lock (user decision 24.10.2026, 4 A): FireLast/AimFireLast leave the slide 22 mm back on the model (46 mm in the game picture), the state SlideLocked holds it, ReloadEmpty closes it at Chamber (game metres along the device axis, +Y towards the shooter)"
+      },
+      "arm": {
+        "R": {
+          "rise": 27,
+          "yaw": 6,
+          "upper": [-0.3, 0.95, 0.15]
+        },
+        "L": {
+          "forearm": [-0.55, -0.3, 0.78],
+          "upper": [0.3, 0.95, 0.05]
+        }
+      },
+      "ads": {
+        "eye_distance_m": 0.209,
+        "provisional": true,
+        "note": "provisional until formgen's iron sights (KG01 patch, user decision 24.10.2026 1 B): the pistol carries no sight yet, its line runs over the slide top (weapon_designs.py pistol sight); the value of 0.25 (Cube Escape profile 0.334 / 1.6, rear sight about 18 % of the picture height) stays until Toolgen measures the rear sight"
+      }
     }
   }
 }

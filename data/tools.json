@@ -63,12 +63,14 @@
       "element": "solar",
       "materials": "equipment_channels",
       "hold": {
-        "grip_tilt_degrees": 14,
+        "grip_tilt_degrees": 6.39,
         "two_handed": true,
         "support_grip": "cup",
-        "sight_kind": "iron",
-        "eye_distance_m": 0.209
-      }
+        "sight_kind": "iron"
+      },
+      "concept": "KG01",
+      "game_contract": "5",
+      "animation_group": 2
     },
     {
       "id": "assault_rifle",

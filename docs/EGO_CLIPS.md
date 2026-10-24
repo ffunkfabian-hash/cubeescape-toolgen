@@ -33,19 +33,22 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | SprintIn | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 | 8 / 8 / 8 / 8 | Nein | rest → sprint | Ja | Ja | — |
 | Sprint | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 | 20 / 20 / 20 / 20 | Ja | sprint → sprint | Ja | Ja | FootL, FootR |
 | SprintOut | 8 | 7 | 8 | 8 | 8 | 10 | 10 | 11 | 12 | 8 | 8 / 8 / 8 / 8 | Nein | sprint → rest | Ja | Ja | Ready |
-| Fire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | rest → rest | Ja | Ja | Shot, Fire |
+| Fire | 8 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | rest → rest | Ja | Ja | Start, Shot, Fire, Move, Ready, Still, End |
 | AimIn | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | 9 | — / — / — / — | Nein | rest → aim | Nein | Ja | Aimed |
 | AimIdle | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | 72 | — / — / — / — | Ja | aim → aim | Nein | Ja | — |
-| AimFire | 14 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | aim → aim | Nein | Ja | Shot, Fire |
+| AimFire | 8 | 7 | 9 | 19 | 14 | 28 | 36 | 36 | 48 | 8 | — / — / — / — | Nein | aim → aim | Nein | Ja | Start, Shot, Fire, Move, Ready, Still, End |
 | AimOut | 8 | 7 | 8 | 9 | 8 | 9 | 9 | 12 | 12 | 9 | — / — / — / — | Nein | aim → rest | Nein | Ja | — |
 | Draw | 9 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 / 12 / 12 / 12 | Nein | lowered → rest | Ja | Nein | Ready |
 | Holster | 7 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 / 8 / 8 / 8 | Nein | rest → lowered | Ja | Nein | Holstered |
 | Inspect_A | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / 96 | Nein | rest → rest | Nein | Ja | — |
-| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | — |
-| Reload | 42 | 40 | 40 | 56 | 42 | 64 | 60 | 64 | 78 | 44 | — / — / — / — | Nein | rest → rest | Nein | Ja | MagOut, MagIn, Ready |
+| Inspect_B | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 | 96 / 96 / 96 / — | Nein | rest → rest | Nein | Ja | Start, Move, HandOff, PressCheck, HandOn, Still, End |
+| Reload | 32 | 40 | 40 | 56 | 42 | 64 | 60 | 64 | 78 | 44 | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, Move, HandOff, MagOut, MagIn, HandOn, Ready, Still, End |
+| ReloadEmpty | 43 | — | 46 | — | — | — | — | — | — | 52 | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, Move, HandOff, MagOut, MagIn, Chamber, HandOn, Ready, Still, End |
+| FireLast | 8 | — | — | — | — | — | — | — | — | — | — / — / — / — | Nein | rest → rest | Ja | Ja | Start, Shot, Fire, Move, SlideLock, Ready, Still, End |
+| AimFireLast | 8 | — | — | — | — | — | — | — | — | — | — / — / — / — | Nein | aim → aim | Nein | Ja | Start, Shot, Fire, Move, SlideLock, Ready, Still, End |
+| SlideLocked | 24 | — | — | — | — | — | — | — | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | — |
 | AutoFire | — | 12 | — | — | — | — | — | — | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | Shot, Shot, Shot, Shot, Shot, Shot |
 | AimAutoFire | — | 12 | — | — | — | — | — | — | — | — | — / — / — / — | Ja | aim → aim | Nein | Ja | Shot, Shot, Shot, Shot, Shot, Shot |
-| ReloadEmpty | — | — | 46 | — | — | — | — | — | — | 52 | — / — / — / — | Nein | rest → rest | Nein | Ja | Start, HandOff, MagOut, MagIn, Chamber, HandOn, Ready, End |
 | Burst | — | — | — | — | 14 | — | — | — | — | — | — / — / — / — | Nein | rest → rest | Ja | Ja | Start, Shot, Shot, Shot, Move, BurstEnd, Ready, Still, End |
 | AimBurst | — | — | — | — | 14 | — | — | — | — | — | — / — / — / — | Nein | aim → aim | Nein | Ja | Start, Shot, Shot, Shot, Move, BurstEnd, Ready, Still, End |
 | Charge | — | — | — | — | — | — | 18 | — | — | — | — / — / — / — | Ja | rest → rest | Ja | Ja | ChargeCycle |
@@ -62,16 +65,20 @@ Längen sind Frame-Intervalle; `—` bedeutet, dass die Klasse den Clip nicht be
 | `Pistol_SprintIn` | 213–221 | 0.33 | — |
 | `Pistol_Sprint` | 225–245 | 0.83 | FootL 0, FootR 10 |
 | `Pistol_SprintOut` | 249–257 | 0.33 | Ready 8 |
-| `Pistol_Fire` | 261–275 | 0.58 | Shot 0, Fire 0 |
-| `Pistol_AimIn` | 279–287 | 0.33 | Aimed 8 |
-| `Pistol_AimIdle` | 291–363 | 3.00 | — |
-| `Pistol_AimFire` | 367–381 | 0.58 | Shot 0, Fire 0 |
-| `Pistol_AimOut` | 385–393 | 0.33 | — |
-| `Pistol_Draw` | 397–406 | 0.38 | Ready 9 |
-| `Pistol_Holster` | 410–417 | 0.29 | Holstered 7 |
-| `Pistol_Inspect_A` | 421–517 | 4.00 | — |
-| `Pistol_Inspect_B` | 521–617 | 4.00 | — |
-| `Pistol_Reload` | 621–663 | 1.75 | MagOut 12, MagIn 27, Ready 42 |
+| `Pistol_Fire` | 261–269 | 0.33 | Start 0, Shot 0, Fire 0, Move 1, Ready 4, Still 7, End 8 |
+| `Pistol_AimIn` | 273–281 | 0.33 | Aimed 8 |
+| `Pistol_AimIdle` | 285–357 | 3.00 | — |
+| `Pistol_AimFire` | 361–369 | 0.33 | Start 0, Shot 0, Fire 0, Move 1, Ready 4, Still 7, End 8 |
+| `Pistol_AimOut` | 373–381 | 0.33 | — |
+| `Pistol_Draw` | 385–394 | 0.38 | Ready 9 |
+| `Pistol_Holster` | 398–405 | 0.29 | Holstered 7 |
+| `Pistol_Inspect_A` | 409–505 | 4.00 | — |
+| `Pistol_Inspect_B` | 509–605 | 4.00 | Start 0, Move 1, HandOff⟂ 30, PressCheck 44, HandOn⟂ 60, Still 90, End 96 |
+| `Pistol_Reload` | 609–641 | 1.33 | Start 0, Move 1, HandOff⟂ 2, MagOut 8, MagIn 17, HandOn⟂ 22, Ready 26, Still 29, End 32 |
+| `Pistol_ReloadEmpty` | 645–688 | 1.79 | Start 0, Move 1, HandOff⟂ 2, MagOut 8, MagIn 17, Chamber 26, HandOn⟂ 32, Ready 36, Still 40, End 43 |
+| `Pistol_FireLast` | 692–700 | 0.33 | Start 0, Shot 0, Fire 0, Move 1, SlideLock 2, Ready 4, Still 7, End 8 |
+| `Pistol_AimFireLast` | 704–712 | 0.33 | Start 0, Shot 0, Fire 0, Move 1, SlideLock 2, Ready 4, Still 7, End 8 |
+| `Pistol_SlideLocked` | 716–740 | 1.00 | — |
 
 ### Maschinenpistole (`smg`)
 

@@ -48,6 +48,7 @@ PENETRATION_STEP_M = .0005
 VISIBLE_FRACTION = .5                # proximal forearm half stays out of the frame
 FOREARM_LAG = (2, .3)                 # servo: the forearm direction keeps this share of its target two frames earlier
 RIG_EVENTS = ego_arms.RIG_EVENTS
+CHOREOGRAPHY = ego_arms.CHOREOGRAPHY_MOTIONS    # clips whose left hand leaves its grip (reload, 0.27 the press-check)
 SWAP_TOLERANCE_M = .002
 CURL_STEPS = 60
 CURL_LEAD = .25                      # each joint further out starts curling this share of the sweep later
@@ -284,6 +285,28 @@ def close_hand(state, side, hand_matrix, device_bvh, start, limits, skip=()):
     return angles, shift
 
 
+def cup_surface(state, root, grip_r, closed_r):
+    """Device and grip hand as one BVH (device root at the origin): Hand_R placed on its grip with its closed fingers, the
+    surface a cup-gripping left hand meets. Hand_R keeps its rest basis afterwards."""
+    nodes = state["nodes"]
+    hand = nodes["Hand_R"]
+    basis = hand.matrix_basis.copy()
+    hand.matrix_world = grip_r
+    set_fingers(nodes, state["rig"], "R", closed_r["fingers"], closed_r["thumb"])
+    bpy.context.view_layer.update()
+    fingers, thumb, palm = hand_link_meshes(state, "R")
+    surface = world_bvh([*device_meshes(root), palm, *thumb, *(link for links in fingers for link in links)])
+    hand.matrix_basis = basis
+    bpy.context.view_layer.update()
+    return surface
+
+
+def grip_hand_bvh(state, device_inverse):
+    """The grip hand's renderers of this frame in the device root's frame (the cup grip's second surface)."""
+    fingers, thumb, palm = hand_link_meshes(state, "R")
+    return world_bvh([palm, *thumb, *(link for links in fingers for link in links)], device_inverse)
+
+
 def thumb_blocked(state, side, thumb, device_bvh, limits):
     """True while no swing of the open thumb along the palm keeps its base link out of the device."""
     low, high = limits["thumb"]["out"]
@@ -378,16 +401,16 @@ def v5_clips(tool, profile, device):
 
 
 def ego_values(clip, frame, params, device):
-    if clip["motion"] != "reload5":
+    if clip["motion"] not in CHOREOGRAPHY:
         return ego_clips.pose_at(clip, frame, params)
-    spec = device["reload"][clip["choreography"]]
+    spec = ego_arms.choreography(device, clip)
     u = frame - clip["frame_start"]
     a, b, t = interpolate(spec["weapon"], u)
     blend = mix(a, b, t)
     values = ego_clips.pose()
     for axis in ego_clips.AXES:
         values[axis] = blend.get(axis + "_deg", blend.get(axis + "_m", 0.0))
-    values["follow"] = params["reload"].get("shoulder_follow", .35)
+    values["follow"] = spec.get("shoulder_follow", params["reload"].get("shoulder_follow", .35))
     return values
 
 
@@ -479,9 +502,14 @@ def build(directory, tool_id):
     grips, closed, pushes = {}, {}, {}
     for side in ego_arms.SIDES:
         entry = device["grip"][side]
-        grips[side] = grip_matrix(entry, bvh, nodes, side, gap, factor)
+        surface = bvh
+        if side == "L" and entry.get("mode") == "cup":
+            # 0.27 cup grip (pistol): the left hand closes around the right one - the grip hand in its closed pose is part
+            # of the surface the support hand meets
+            surface = cup_surface(state, root, grips["R"], closed["R"])
+        grips[side] = grip_matrix(entry, surface, nodes, side, gap, factor)
         start = ego_arms.pose_angles(rig, "open", side)
-        closed[side], shift = close_hand(state, side, grips[side], bvh, start, rig["limits_degrees"])
+        closed[side], shift = close_hand(state, side, grips[side], surface, start, rig["limits_degrees"])
         grips[side] = Matrix.Translation(shift) @ grips[side]
         pushes[side] = round(shift.length, 4)
     extra = {}
@@ -636,8 +664,8 @@ def frame_plan(frame, clip, spec, profile, device, params, aim, pivot, pose, gri
         open_pose = finger_poses["L"]["regrip"]
         t = values["regrip"]
         fingers["L"] = [[(1 - t) * a + t * b for a, b in zip(fa, fb)] for fa, fb in zip(fingers["L"], open_pose["fingers"])]
-    if clip is not None and clip["motion"] == "reload5":
-        choreography = device["reload"][clip["choreography"]]
+    if clip is not None and clip["motion"] in CHOREOGRAPHY:
+        choreography = ego_arms.choreography(device, clip)
         u = frame - clip["frame_start"]
         events = choreography["events"]
         hands["L"] = left_hand(choreography["left"], u, world, pose, grips, extra)
@@ -751,11 +779,13 @@ def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, d
     previous = {}
     swap = {}
     for clip in clips:
-        if clip["motion"] == "reload5":
-            events = device["reload"][clip["choreography"]]["events"]
+        if clip["motion"] in CHOREOGRAPHY and "MagOut" in ego_arms.choreography(device, clip)["events"]:
+            events = ego_arms.choreography(device, clip)["events"]
             swap[clip["name"]] = (clip["frame_start"] + events["MagOut"], clip["frame_start"] + events["MagIn"])
-    bolt_specs = {clip["name"]: device["reload"][clip["choreography"]].get("bolt") for clip in clips
-                  if clip["motion"] == "reload5"}
+    # device parts a clip moves itself: a choreography's bolt (ReloadEmpty's charging handle or slide, the press-check) and,
+    # 0.27, the slide of the slide-lock clips (ego_arms.slide_lock_clips)
+    bolt_specs = {clip["name"]: (ego_arms.choreography(device, clip).get("bolt") if clip["motion"] in CHOREOGRAPHY
+                                 else clip.get("slide_keys")) for clip in clips}
     # rest locations once, before any frame is posed (frame_set would reset the posed values of a frame)
     scene.frame_set(1)
     bolt_rest = {spec["node"]: scene.objects[spec["node"]].location.copy() for spec in bolt_specs.values() if spec}
@@ -785,7 +815,7 @@ def key_frames(scene, state, root, hand_parts, plan, rest_arm, lengths, clips, d
             shoulder = elbow + upper * upper_m
             ego_arms.place_chain(nodes, side, shoulder, elbow, hand_matrix)
             set_fingers(nodes, rig, side, item["fingers"][side], item["thumbs"][side])
-        if clip is not None and clip["motion"] == "reload5":
+        if clip is not None and clip["motion"] in CHOREOGRAPHY:
             bpy.context.view_layer.update()
             parts = [*device_meshes(root), *(device_meshes(hand_parts["root"]) if hand_parts else [])]
             live = world_bvh([obj for obj in parts if obj.matrix_world.to_scale().x > .01])
@@ -892,7 +922,7 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
     # grips and the finger guard works (Codex sol 0.19: a cut on a skipped frame passed)
     sample = sorted(set(frames[::2]) | {clip["frame_start"] for clip in clips} | {clip["frame_end"] for clip in clips}
                     | {event["frame"] for clip in clips for event in clip["events"]}
-                    | {frame for clip in clips if clip["motion"] == "reload5"
+                    | {frame for clip in clips if clip["motion"] in CHOREOGRAPHY
                        for frame in range(clip["frame_start"], clip["frame_end"] + 1)})
     blend = 3
     for frame in sample:
@@ -924,14 +954,21 @@ def validate(scene, state, root, hand_parts, plan, clips, settings, device, rig,
             if residual > CARDAN_TOLERANCE_DEGREES:
                 failures.append(f"{key} frame {frame}: wrist {side} is no cardan turn ({residual:.2f} deg off its axes)")
             cut = hand_penetration(state, side, live, device_inverse)
+            cup = side == "L" and device["grip"]["L"].get("mode") == "cup"
+            if cup:
+                # 0.27: the cup-gripping left hand touches the grip hand and never cuts into it
+                grip_hand = grip_hand_bvh(state, device_inverse)
+                cut += [name + " (grip hand)" for name in hand_penetration(state, side, grip_hand, device_inverse)]
             if cut:
                 penetrating.append([key, frame, side, cut[:4]])
             touching = ego_arms.hand_contacts(state, side)
             if touching:
                 self_contacts.append([key, frame, side, touching[:2]])
-            free = side == "L" and clip is not None and clip["motion"] == "reload5" and in_window(clip, frame, device, blend)
+            free = side == "L" and clip is not None and clip["motion"] in CHOREOGRAPHY and in_window(clip, frame, device, blend)
             if not free:
                 distance = hand_touch(state, side, bvh_local, device_inverse)
+                if cup:
+                    distance = min(distance, hand_touch(state, side, grip_hand, device_inverse))
                 per_clip[key]["hand_touch_max_m"][side] = max(per_clip[key]["hand_touch_max_m"][side], round(distance, 5))
                 if distance > touch[side]:
                     touch[side], touch_frames[side] = distance, frame
@@ -1131,7 +1168,7 @@ def world_bvh_local(root):
 
 
 def in_window(clip, frame, device, blend):
-    events = device["reload"][clip["choreography"]]["events"]
+    events = ego_arms.choreography(device, clip)["events"]
     u = frame - clip["frame_start"]
     return events["HandOff"] + blend < u < events["HandOn"]
 
@@ -1160,12 +1197,51 @@ def event_checks(clips, device):
             repeated = sorted({name for name in names if names.count(name) > 1})
             if repeated:
                 failures.append(f"{clip['name']}: events more than once {repeated}")
+        elif clip["motion"] == "inspect5":
+            failures += inspect_event_failures(clip)
         elif clip.get("shots"):
             failures += fire_event_failures(clip, device["fire"])
+        elif device.get("fire", {}).get("mode") == "semi" and clip["motion"] in ("fire", "aim_fire"):
+            failures += semi_event_failures(clip, device["fire"])
         failures += [f"{clip['name']}: extra event {name} at {offset} outside the clip"
                      for name, offset in device.get("events", {}).get(clip["suffix"], {}).items()
                      if not 0 <= offset <= clip["length"]]
     return {"failures": failures, "clips": result}
+
+
+def inspect_event_failures(clip):
+    """0.27: an inspect choreography (press-check): the left hand leaves after Move and is back before Still; every named
+    event of the choreography lies between HandOff and HandOn; Still < End = the clip end."""
+    frames = {event["name"]: event["frame"] - clip["frame_start"] for event in clip["events"]}
+    names = [event["name"] for event in clip["events"]]
+    failures = []
+    missing = [name for name in ("Start", "Move", *RIG_EVENTS, "Still", "End") if name not in frames]
+    if missing:
+        return [f"{clip['name']}: missing events {missing}"]
+    inner = [name for name in frames if name not in ("Start", "Move", *RIG_EVENTS, "Still", "End")]
+    if not (frames["Start"] == 0 < frames["Move"] < frames["HandOff"] < frames["HandOn"] < frames["Still"] < frames["End"]
+            == clip["length"]) or any(not frames["HandOff"] < frames[name] < frames["HandOn"] for name in inner):
+        failures.append(f"{clip['name']}: Start 0 < Move < HandOff < (events) < HandOn < Still < End expected, got {frames}")
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    if repeated:
+        failures.append(f"{clip['name']}: events more than once {repeated}")
+    return failures
+
+
+def semi_event_failures(clip, pattern):
+    """0.27: a semi-automatic fire clip (Fire, AimFire, FireLast, AimFireLast): Start = Shot = 0, Move 1, Ready at the
+    pattern's ready_frame (the cadence), Still, End = the clip end; FireLast/AimFireLast add SlideLock before Ready."""
+    frames = {event["name"]: event["frame"] - clip["frame_start"] for event in clip["events"]}
+    shots = [event["frame"] - clip["frame_start"] for event in clip["events"] if event["name"] == "Shot"]
+    failures = []
+    if shots != [0] or not (frames.get("Start") == 0 and frames.get("Move") == 1
+                            and frames.get("Ready") == pattern["ready_frame"] and frames.get("Still") == pattern["still_frame"]
+                            and pattern["ready_frame"] < pattern["still_frame"] <= frames.get("End", -1) == clip["length"]):
+        failures.append(f"{clip['name']}: Shot = Start 0, Move 1, Ready {pattern['ready_frame']} < Still "
+                        f"{pattern['still_frame']} <= End = length expected, got {frames} shots {shots}")
+    if clip["suffix"].endswith("FireLast") and not 1 <= frames.get("SlideLock", -1) < frames.get("Ready", 0):
+        failures.append(f"{clip['name']}: SlideLock between Move and Ready expected, got {frames}")
+    return failures
 
 
 def fire_event_failures(clip, pattern):
@@ -1196,7 +1272,7 @@ def swap_checks(scene, clips, device, hand_parts):
     for clip in clips:
         if clip["motion"] != "reload5":
             continue
-        events = device["reload"][clip["choreography"]]["events"]
+        events = ego_arms.choreography(device, clip)["events"]
         for event in ("MagOut", "MagIn"):
             frame = clip["frame_start"] + events[event]
             for name, entry in hand_parts["parts"].items():

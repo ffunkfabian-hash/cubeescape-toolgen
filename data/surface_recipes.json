@@ -28,10 +28,9 @@
       },
       "decals_note": "Symbole, Nummern",
       "relief": {
-        "GripShell*": {"type": "knurl", "size_mm": 2.2, "direction": "z", "across": "y", "strength": 0.7},
-        "GripCore": {"type": "knurl", "size_mm": 2.2, "direction": "z", "across": "x", "strength": 0.5},
-        "GripRib*": {"type": "grooves", "size_mm": 1.4, "direction": "x", "strength": 0.6},
-        "SlideBody": {"type": "seams", "size_mm": 48, "width_mm": 0.8, "direction": "y", "strength": 0.9},
+        "Griff_p00": {"type": "knurl", "size_mm": 2.2, "direction": "z", "across": "y", "strength": 0.7},
+        "Schlitten_p06": {"type": "seams", "size_mm": 48, "width_mm": 0.8, "direction": "y", "strength": 0.9},
+        "Rahmen_p05": {"type": "seams", "size_mm": 56, "width_mm": 0.8, "direction": "y", "strength": 0.7},
         "@Metal": {"type": "brushed", "size_mm": 0.6, "direction": "y", "strength": 0.35}
       }
     },

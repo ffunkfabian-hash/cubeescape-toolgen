@@ -908,6 +908,37 @@ Vertrag: [UNITY_EINBAU](UNITY_EINBAU.md) › Gruppe 1. Bericht mit Herkunft je F
   (bei gleich langen Kanten wählte eine neue Wahl sonst die andere und meldete 90°) – und nur, wenn sie ≥ 2e-5 ist (Packer-Rauschen an
   gestauchten Teilen; Codex sol: die erste Kante allein ließ gedrehte Flächen mit kurzer erster Kante durch).
 
+### Gruppe 2: Pistole (0.27.0 Sidearm)
+
+Vertrag: [UNITY_EINBAU](UNITY_EINBAU.md) › Gruppe 2. Bericht mit Herkunft je Festlegung: [versions/0.27.md](versions/0.27.md).
+
+- **Modell:** `pistol` ← KG01 (`claude-v0.15.1`, Geo und Spec gleich golden). **Weglassen** ist eine benannte Korrektur
+  (`corrections.json` › `omit_parts`): `concept_spec.load` liefert das Blatt ohne die genannten Teile, ohne ihre Aufkleber und Koplanar-
+  Notizen; nennt die Korrektur ein `sight_id`, muss es das Visier des Blatts sein (sonst neue Prüfung), und `sight.present` wird false mit der
+  `sight_kind` der Korrektur. KG01: VS01 p13–p26 und Schiene p12 entfallen (Entscheidung 1 B). `PART_NODES` hängt die Leiste p09 auf dem
+  Schlitten unter `Anim_Slide` (das Blatt bewegt nur p06; beim Schlittenfang hinge sie sonst in der Luft). Ein Anker, den das Blatt nicht
+  ableitet (`position_m` null), wird von einer Korrektur mit `spec_m` null gesetzt (Becher-Griff: `Socket_SupportHand`).
+- **Vorläufige Visierlinie:** `sight_rule('iron', (Schlitten_p06, Part_p09), 'top', 2.1, .012)` – Toolgens Eisenvisier-Regel über dem
+  Schlitten, endend an seiner Rückfläche; Vertrag 5 rechnet `eye_above_m` im Spielbild, darum teilt die Regel durch `tool_scale × rig.scale`
+  (2,1), nicht durch das `tool_scale` aus `viewmodels.json` (Test `test_design_rule_is_the_aim_idle_line`). `ads.provisional` in
+  `ego_arms.json` setzt `hold.ads_provisional`.
+- **Becher-Griff (Vertrag 5):** `grip.L.mode` `cup` – `ego_rig.cup_surface` setzt die rechte Hand geschlossen auf ihren Griff und baut aus
+  Gerät **und** Griffhand eine BVH; der Strahl der linken Hand (`palm` −X von links, `axis` = −Griffachse: Kleinfingerseite nach unten, Daumen
+  nach oben) trifft sie, die Finger schließen darauf. Die QA misst den Kontakt der linken Hand gegen Gerät oder Griffhand und meldet jedes
+  Eindringen in die Griffhand (`grip_hand_bvh`).
+- **Choreografierte Clips verallgemeinert:** `reload5` (Nachladen) und neu `inspect5` (`devices.<tool>.inspect.<Suffix>` ersetzt den Clip, die
+  Griffe stehen in `reload.grips`); `ego_arms.choreography` liefert den Block, der Magazintausch nur, wo `MagOut` vorkommt. Ein `bolt` kann
+  `grip` nennen (die Hand, die ihn zieht); bewegte Teile eines Clips (`bolt` der Choreografie oder `slide_keys` der Fang-Clips) setzt
+  `ego_rig.key_frames` je Bild, `first_person.clip_keys` lässt diese Bereiche aus.
+- **Halbautomatik und Schlittenfang:** Feuermuster `semi` (`ego_arms.semi_events`: `Start`, `Move` 1, `Ready`, `Still`, `End` an
+  `Fire`/`AimFire`); `slide_lock` hängt `FireLast`/`AimFireLast` (Bewegung `fire`/`aim_fire`, Schlitten `fire_keys` bis `locked_m`) und den
+  Zustand `SlideLocked` (`ego_clips.slide_locked` = Ruhepose, `mask` `Anim_Slide`) an. `ego_rig.semi_event_failures`/`inspect_event_failures`
+  prüfen die Marker. `Fire` ist 8 Bilder lang (`fire_cooldown_s` 0,34 der Klasse), `Ready` 4 ist die Kadenz.
+- **Gestaltung:** Hüfte tief rechts (`viewmodels.json` Hand (−0,23; −0,62; −0,215), Ziel (0,2; −2,2; −0,2), Rollen 8°, Rückstoß-Erholung 12
+  Bilder). Press-Check und Ladegriff greifen den Schlitten **hinten seitlich** (Handfläche von links): von oben (Überhandgriff) deckte der
+  linke Unterarm die ganze Waffe ab, vorn am Schlitten kam die halbe Unterarmlänge ins Bild. Rückwege zum Becher-Griff von links außen mit
+  Zwischenpunkt; die Finger schließen erst im letzten Bild (der offene Daumen schnitt sonst in den Rahmen).
+
 ## Grenzen
 
 Blender-Reimport und SceneKit-Bilder belegen keine Unity- oder Gameplay-Abnahme. Die Drehung der Anker-Leerobjekte ist kein

@@ -1138,6 +1138,11 @@ def concept_block(tool, report):
                             for item in report.get("corrections", [])],
             "sight_window": "open: the sight glass is not built (user decision 20.10.2026); tint and reticle are the "
                             "consumer's overlay at Socket_Reticle",
+            **({"omitted": {**report["omitted"],
+                            "note": "0.27: these parts of the sheet are not built (named correction); the weapon carries "
+                                    "no sight of the sheet, Socket_Reticle is absent and hold.ads_provisional says the "
+                                    "line of sight waits for formgen's iron sights"}}
+               if report.get("omitted") else {}),
             "minimum_consumer": CONCEPT_CONSUMER}
 
 
@@ -1179,6 +1184,12 @@ def hold_block(tool):
                                     "20.10.2026), tint and reticle are the consumer's overlay there."}
                    if hold.get("reticle_socket") else {}),
                 "ads_eye_distance_m": ego_clips.ads_eye_distance_m(tool),
+                **({"ads_provisional": True,
+                    "ads_provisional_note": "0.27: the weapon has no sight yet (pistol KG01: iron sights from formgen "
+                                            "pending, user decision 24.10.2026); Socket_Sight marks a provisional line "
+                                            "over the slide top and ads_eye_distance_m is not yet measured on a rear "
+                                            "sight - aim with it, but expect both to change with the sight"}
+                   if ego_clips.ads_provisional(tool) else {}),
                 "sight_note": "Socket_Sight lies on the line of sight at the rear of the sight (rear notch, rear of the "
                               "optic, eyepiece of a scope). Only its position is contract: the empty's own rotation in "
                               "an imported FBX keeps Blender's axes (measured in Cube Escape 0.75: its forward points "

@@ -1,7 +1,7 @@
 {
   "format": "toolgen/concept-corrections",
   "format_version": 1,
-  "note": "Named Toolgen corrections on top of the imported concept sheets (scripts/tool_assets/concept_spec.py applies them). Each entry names the spec value it replaces; when formgen changes that value the loader refuses the correction until it is reviewed again.",
+  "note": "Named Toolgen corrections on top of the imported concept sheets (scripts/tool_assets/concept_spec.py applies them). Each entry names the spec value it replaces; when formgen changes that value the loader refuses the correction until it is reviewed again. 0.27: ``omit_parts`` leaves named parts of a sheet out (concept_spec.omit_parts; with ``sight_id`` the sheet's sight).",
   "sheets": {
     "KG02": {
       "anchors": {
@@ -23,6 +23,25 @@
           "decision": "Toolgen 0.24 (Salvo), benannte Korrektur nach der Regel von KG02; an formgen gemeldet (Bezeichnung „Vordergriff“ für p09)",
           "since": "0.24.0"
         }
+      }
+    },
+    "KG01": {
+      "anchors": {
+        "Socket_SupportHand": {
+          "spec_m": null,
+          "toolgen_m": [0.01, 0.0018, -0.0159],
+          "reason": "Becher-Griff: das Blatt nennt keine Stützhand am Modell (support.part null, „die Stützhand umfasst die Griffhand“); Toolgen-Wert wie die Pistole seit 0.10: linke Griffseite (Außenfläche von p00, x 0,010), 16 mm unter der Griffmitte entlang der Griffachse (Neigung 6,39°)",
+          "decision": "Toolgen 0.27 (Sidearm), Regel der Pistole seit 0.10.0 (Becher-Griff, Destiny); Cube Escape kennt ihn als Weapons.CupGrip",
+          "since": "0.27.0"
+        }
+      },
+      "omit_parts": {
+        "parts": ["p12", "p13", "p14", "p15", "p16", "p17", "p18", "p19", "p20", "p21", "p22", "p23", "p24", "p25", "p26"],
+        "sight_id": "VS01",
+        "sight_kind": "iron",
+        "reason": "Reflexvisier VS01 (p13–p26) und seine Schiene p12 (im Weapon-Spec „rail added“ für VS01, ersetzt Kimme und Korn) entfallen: Kimme und Korn statt VS01; Toolgen baut kein Visier nach, die Visiergeometrie liefert formgen per Patch an KG01. Bis dahin trägt die Pistole kein Visier, die Visierlinie ist vorläufig (weapon_designs.py › pistol › sight)",
+        "decision": "Nutzer 24.10.2026 (Vorlage Toolgen 0.27, Frage 1 B; docs/ENTSCHEIDUNGEN.md)",
+        "since": "0.27.0"
       }
     }
   }

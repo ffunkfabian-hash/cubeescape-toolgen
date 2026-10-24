@@ -217,7 +217,7 @@ class RecordingKit:
 # 0.13.0: seven weapons glow in the concept sheet's colour (element, user 17.10.2026); only the glow material name changes,
 # the geometry digest with the old element is unchanged (checked when the digests were updated).
 REST_GEOMETRY = {
-    'pistol': '068ac572f7c3c781168955d0aa0b036ad1673bfef4f9ae78fb218083b5b56f86',   # 0.10.0: Socket_SupportHand at the grip; 0.12.0: hammer accent 0.5 mm wider per side
+    'pistol': '83d409a1396e5bfeb2a5d454a03945c45e5c184b71d1679aeb71b8d926f8e4d2',   # 0.27.0: concept KG01 claude-v0.15.1 without VS01 and p12 (omit_parts), Socket_SupportHand a correction
     'assault_rifle': '3c0902cc5ea557e84be6543a8d60d87d7e372eedd4456b17af41882507d7b1c5',   # 0.18.0: concept KG02 claude-v0.15 (mesh bounds incl. lever p32, Socket_Reticle)
     'pulse_rifle': 'ca5840a4ffe60abb50274efb63aa22b0e48d693615fbdf95e8fe5327d7a1d41d',   # 0.24.0: concept KG03 claude-v0.15.1
     'shotgun': 'cf77d8ee2ffe99348fb8234929c40d1e81bb96e63e7602fe4fd0f89ae81c2746',   # 0.12.0: StockAccent raised off the stock inset (z-fighting)
@@ -238,13 +238,15 @@ class ReloadGeometryTests(unittest.TestCase):
             with self.subTest(tool=tool):
                 self.assertEqual(REST_GEOMETRY[tool], kit.geometry_digest())
                 self.assertEqual((0, 0, 0), kit.sockets["Socket_Hand"])
-                concept = {"Socket_Reticle"} if spec.get("concept") else set()     # 0.18: the open window's centre
+                # 0.18: the open window's centre; 0.27: not for a concept weapon whose sheet sight is omitted (KG01)
+                concept = {"Socket_Reticle"} if spec.get("concept") and tool != "pistol" else set()
                 self.assertEqual({"Socket_Hand", "Socket_SupportHand", "Socket_Muzzle", "Socket_CenterOfMass"} | concept,
                                  set(kit.sockets))
 
     def test_reload_pivot_has_visible_parts_and_keeps_use_nodes(self):
-        # 0.24: pulse rifle, SMG and scout rifle from their concept sheets (energy cell p18, grip magazine p11, box magazine p11)
-        expected = {"pistol": "MagBaseplate", "assault_rifle": "Magazin_p07", "pulse_rifle": "Energiezelle_p18",
+        # 0.24: pulse rifle, SMG and scout rifle from their concept sheets (energy cell p18, grip magazine p11, box magazine p11);
+        # 0.27: the pistol from KG01 (magazine base p01)
+        expected = {"pistol": "Magazin_p01", "assault_rifle": "Magazin_p07", "pulse_rifle": "Energiezelle_p18",
                     "shotgun": "ForeEnd", "sniper_rifle": "MagBox", "smg": "Magazin_p11",
                     "fusion_rifle": "PowerCellCore", "trace_rifle": "Magazine", "rocket_launcher": "Hatch",
                     "scout_rifle": "Magazin_p11"}

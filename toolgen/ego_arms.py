@@ -130,8 +130,10 @@ def clip_list_v5(tool, profile, device):
     """The ego clips of data/ego_clips.json for this device with the contract 5 reload clips (data/ego_arms.json):
     Reload replaced, ReloadEmpty appended at the end; events carry ``channel`` (action or rig) and Reload/ReloadEmpty
     Start/End. 0.24 (Salvo), appended after them: the fire clips of the device's ``fire`` block (fire_clips) and the
-    named extra events of ``events`` on existing clips (a scope's ScopeOn/ScopeOff). Frames laid out again on the
-    timeline."""
+    named extra events of ``events`` on existing clips (a scope's ScopeOn/ScopeOff). 0.27 (Sidearm): an ``inspect``
+    choreography replaces its Inspect clip like Reload (the pistol's press-check), a ``semi`` fire block marks Fire and
+    AimFire (semi_events), a ``slide_lock`` block appends FireLast, AimFireLast and the state SlideLocked
+    (slide_lock_clips). Frames laid out again on the timeline."""
     sys.path.insert(0, str(ROOT / "scripts/tool_assets"))
     import ego_clips
     data = ego_clips.load()
@@ -143,22 +145,32 @@ def clip_list_v5(tool, profile, device):
     if "fire" in device:
         params["fire_pattern"] = device["fire"]
     reload = device.get("reload")
+    inspect = device.get("inspect", {})
     extra = device.get("events", {})
+    semi = device.get("fire", {}).get("mode") == "semi"
     result = []
     for clip in clips:
         events = [{"name": event["name"], "offset": event["frame"] - clip["frame_start"]} for event in clip["events"]]
         events += [{"name": name, "offset": offset} for name, offset in sorted(extra.get(clip["suffix"], {}).items(),
                                                                                 key=lambda item: item[1])]
+        if semi and clip["motion"] in ("fire", "aim_fire"):
+            marks = semi_events(device["fire"], clip["length"])
+            events = marks[:1] + events + marks[1:]           # Start first, then Shot (both at frame 0)
         entry = dict(clip, events=sorted(events, key=lambda event: event["offset"]))
         if clip["motion"] == "reload" and reload and "Reload" in reload:
             entry = reload_clip(clip, "Reload", reload["Reload"])
+        if clip["suffix"] in inspect:
+            entry = reload_clip(clip, clip["suffix"], inspect[clip["suffix"]], "inspect5")
         result.append(entry)
     base = next((clip for clip in clips if clip["motion"] == "reload"), None)
     if reload and "ReloadEmpty" in reload and base is not None:
         result.append(reload_clip(base, "ReloadEmpty", reload["ReloadEmpty"]))
     fire = next((clip for clip in clips if clip["motion"] == "fire"), None)
-    if "fire" in device and fire is not None:
+    if "fire" in device and fire is not None and not semi:
         result += fire_clips(fire, device["fire"])
+    if "slide_lock" in device and fire is not None:
+        aim_fire = next(clip for clip in result if clip["motion"] == "aim_fire")
+        result += slide_lock_clips(next(clip for clip in result if clip["motion"] == "fire"), aim_fire, device["slide_lock"])
     start = data["timeline"]["start_frame"]
     for clip in result:
         clip["frame_start"], clip["frame_end"] = start, start + clip["length"]
@@ -207,6 +219,16 @@ def fire_clips(base, pattern):
 def fire_block(fire, entries, fps):
     """The device's fire mechanics as contract data (0.24): Cube Escape couples its real shots to them - one shot per Shot
     event, the burst length and spacing are a property of the subtype, Ready is the release for the next pull."""
+    if fire["mode"] == "semi":
+        clips = [entry["name"] for entry in entries if entry["suffix"] in ("Fire", "AimFire", "FireLast", "AimFireLast")]
+        interval = fire["ready_frame"]
+        return {"mode": "semi", "clips": clips, "shots_per_trigger": 1, "cadence_rpm": fire["cadence_rpm"],
+                "shot_interval_frames": interval, "shot_interval_seconds": round(interval / fps, 6),
+                "ready_frame": interval, "ready_seconds": round(interval / fps, 6), "still_frame": fire["still_frame"],
+                "still_seconds": round(fire["still_frame"] / fps, 6), "magazine_rounds": fire["magazine_rounds"],
+                "rule": "one real shot per trigger pull at the Shot event (frame 0); the next pull may start at Ready "
+                        "(cadence_rpm on the 24/s grid), restarting Fire from frame 0 with a short crossfade; Still = the "
+                        "model rests, End = the clip end; magazine_rounds is a proposal (Cube Escape decides)"}
     suffixes = [suffix for suffix, _, _ in FIRE_CLIPS[fire["mode"]]]
     clips = [entry["name"] for entry in entries if entry["suffix"] in suffixes]
     interval = fire["cycle_frames"] if fire["mode"] == "auto" else fire["spacing_frames"]
@@ -227,13 +249,86 @@ def fire_block(fire, entries, fps):
     return block
 
 
-def reload_clip(base, suffix, spec):
+def reload_clip(base, suffix, spec, motion="reload5"):
+    """A choreographed clip (the left hand leaves its grip between HandOff and HandOn): Reload/ReloadEmpty (``reload5``)
+    and, 0.27, an Inspect with a press-check (``inspect5``, data/ego_arms.json devices.<tool>.inspect)."""
     stem = base["name"][:-len(base["suffix"])]
     events = [{"name": "Start", "offset": 0}]
     events += [{"name": name, "offset": frame} for name, frame in sorted(spec["events"].items(), key=lambda item: item[1])]
     events.append({"name": "End", "offset": spec["length"]})
-    return dict(base, name=stem + suffix, suffix=suffix, motion="reload5", length=spec["length"], events=events,
+    return dict(base, name=stem + suffix, suffix=suffix, motion=motion, length=spec["length"], events=events,
                 choreography=suffix)
+
+
+CHOREOGRAPHY_MOTIONS = ("reload5", "inspect5")
+
+
+def choreography(device, clip):
+    """The choreography block of a choreographed clip: devices.<tool>.reload.<suffix> or .inspect.<suffix>."""
+    return device["reload" if clip["motion"] == "reload5" else "inspect"][clip["choreography"]]
+
+
+# 0.27 (Sidearm): a semi-automatic device (fire mode ``semi``, the pistol at 360/min) - one real shot per trigger pull. Fire
+# and AimFire keep their Shot at 0 and gain the markers of the animation brief § 8: Move (first motion), Ready (the next
+# pull may start: the cadence, not the clip end), Still (the model rests), End.
+def semi_events(pattern, length):
+    return [{"name": "Start", "offset": 0}, {"name": "Move", "offset": 1}, {"name": "Ready", "offset": pattern["ready_frame"]},
+            {"name": "Still", "offset": pattern["still_frame"]}, {"name": "End", "offset": length}]
+
+
+# 0.27: the slide lock (user decision 24.10.2026, 4 A): the last round's shot (FireLast/AimFireLast, the Fire clips' motion)
+# leaves the slide back, the state SlideLocked holds it there (a loop that only Anim_Slide reads, like AimIdle an exception
+# of the return rule), ReloadEmpty starts locked and closes the slide at Chamber. Appended at the end of the clip list.
+SLIDE_LOCK_CLIPS = (("FireLast", "fire"), ("AimFireLast", "aim_fire"))
+SLIDE_LOCK_STATE = "SlideLocked"
+
+
+def slide_lock_clips(fire, aim_fire, lock):
+    result = []
+    for (suffix, motion), base in zip(SLIDE_LOCK_CLIPS, (fire, aim_fire)):
+        stem = base["name"][:-len(base["suffix"])]
+        events = [event for event in base["events"] if event["name"] not in ("Start", "End")]
+        events = [{"name": "Start", "offset": 0}, *events, {"name": "SlideLock", "offset": lock["fire_keys"][-1][0]},
+                  {"name": "End", "offset": base["length"]}]
+        result.append(dict(base, name=stem + suffix, suffix=suffix, motion=motion,
+                           events=sorted(events, key=lambda event: event["offset"]), slide_keys=slide_keys(lock, suffix,
+                                                                                                          base["length"])))
+    stem = fire["name"][:-len(fire["suffix"])]
+    length = lock["state_length"]
+    result.append(dict(fire, name=stem + SLIDE_LOCK_STATE, suffix=SLIDE_LOCK_STATE, motion="slide_locked", length=length,
+                       loop=True, reticle_free=True, interruptible=True, support_forearm_visible=False, events=[],
+                       slide_keys=slide_keys(lock, SLIDE_LOCK_STATE, length), mask=[lock["node"]],
+                       **{"from": "rest", "to": "rest"}))
+    return result
+
+
+def slide_keys(lock, suffix, length):
+    """Keys [frame, offset in game metres along ``axis``] of the slide in a slide-lock clip: FireLast/AimFireLast run
+    ``fire_keys`` (back with the shot, caught at ``locked_m``) and hold, SlideLocked holds ``locked_m``."""
+    if suffix == SLIDE_LOCK_STATE:
+        keys = [[0, lock["locked_m"]], [length, lock["locked_m"]]]
+    else:
+        keys = [list(key) for key in lock["fire_keys"]] + [[length, lock["fire_keys"][-1][1]]]
+    return {"node": lock["node"], "axis": lock["axis"], "keys": keys}
+
+
+def slide_lock_block(lock, entries, fps):
+    """The slide lock as contract data (0.27): which clips leave the slide back, the state that holds it, how
+    ReloadEmpty frees it."""
+    names = {entry["suffix"]: entry["name"] for entry in entries}
+    return {"node": lock["node"], "axis_device": lock["axis"], "locked_m": lock["locked_m"],
+            "lock_clips": [names[suffix] for suffix, _ in SLIDE_LOCK_CLIPS], "state": names[SLIDE_LOCK_STATE],
+            "release": {"clip": names.get("ReloadEmpty"), "event": "Chamber", "own_track": True,
+                        "interrupted_before_event": names[SLIDE_LOCK_STATE]},
+            "rule": "the last round fires FireLast (AimFireLast while aiming) instead of Fire: the slide stays back from "
+                    "SlideLock on; from then play the state " + names[SLIDE_LOCK_STATE] + " (a loop) on Anim_Slide only "
+                    "(mask: node) over whatever clip the arms play - idling, walking, aiming, sprinting, inspecting - but "
+                    "not over ReloadEmpty: that clip carries the slide itself (it starts back at locked_m, the left hand "
+                    "pulls it to the full stroke and lets it run home at Chamber), so stop the overlay when ReloadEmpty "
+                    "starts; if ReloadEmpty is interrupted before Chamber the slide is still locked (overlay again), from "
+                    "Chamber on it is forward; Reload (rounds left) keeps the slide forward; "
+                    + str(round(lock["locked_m"] * 1000, 1)) + " mm back in the game picture (device frame +Y = towards "
+                    "the shooter)"}
 
 
 # --------------------------------------------------------------------------------------------- finger poses

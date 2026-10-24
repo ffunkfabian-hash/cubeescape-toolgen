@@ -364,6 +364,10 @@ def concept_sight_check(concept, found, fit_report):
     """The line of sight of the frame parts (sight.py, the AimIdle line) against the spec's sight point
     (sight.socket_sight_rear_m): Socket_Sight is set on the line, the two must agree within SIGHT_TOLERANCE_M (life-size
     model; the robot variant compares the deformed point)."""
+    if 'Socket_Sight' not in concept['sockets']:
+        # 0.27: the sheet's sight is omitted (corrections.json omit_parts, KG01 VS01): no sight point to compare
+        return {'spec_socket_sight_m': None, 'note': 'sheet sight omitted (named correction); the line follows the design '
+                                                     'rule over ' + ', '.join(found['parts'])}
     expected = Vector(concept['sockets']['Socket_Sight'])
     if fit_report is not None:
         return {'spec_socket_sight_m': list(expected), 'note': 'robot variant: the line follows the deformed frame'}
