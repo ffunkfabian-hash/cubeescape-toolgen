@@ -194,37 +194,10 @@ def accent(k, name, center, size, parent=None, rot=None):
 
 # ----------------------------------------------------------------------------------------------------- 1 pistol
 def pistol(k):
-    """Sidearm: one-handed, short slide that cycles back, glowing slide strips and magazine windows."""
-    grip(k, .102, .034, .044, ribs=4)
-    r = k.tilt(k.grip_tilt)
-    for side in (-1, 1):
-        y, z = along(k, .0, -.030)
-        k.glow('MagWindow_%d' % side, (side * .0225, y, z), (.002, .016, .036), rot=r)
-    k.box('Frame', (0, -.045, .034), (.030, .165, .020), 'Secondary', .006)
-    k.box('FrameRail', (0, -.108, .026), (.020, .060, .008), 'Metal', .002)
-    trigger_group(k, -.071, -.011, .008, .036)
-    k.box('Hammer', (0, .060, .0696), (.010, .014, .016), 'Secondary', .003)   # 0.12.0: bottom 0.6 mm off the slide display glass
-    slide = k.pivot('Anim_Slide', (0, -.045, .062))
-    k.box('SlideBody', (0, -.045, .062), (.036, .205, .034), 'Primary', .008, parent=slide)
-    k.box('SlideTop', (0, -.045, .082), (.016, .190, .007), 'Secondary', .003, parent=slide)
-    k.box('SlideNose', (0, -.140, .060), (.030, .014, .030), 'Secondary', .004, parent=slide)
-    for i in range(4):
-        k.box('SlideSerration_%d' % i, (0, .030 + i * .010, .062), (.0385, .004, .026), 'Secondary', .001, parent=slide)
-    for side in (-1, 1):
-        k.glow('SlideStripe_%d' % side, (side * .0185, -.062, .066), (.002, .105, .007), parent=slide)
-    k.box('FrontSight', (0, -.128, .0825), (.006, .012, .010), 'Metal', .002, parent=slide)
-    for side in (-1, 1):
-        k.box('RearSight_%d' % side, (side * .009, .040, .0825), (.006, .010, .010), 'Metal', .002, parent=slide)
-    k.cyl('Barrel', (0, -.158, .062), .0095, .036, 'Metal', n=20)
-    k.tube('MuzzleRing', (0, -.171, .062), .0125, .0065, .008, 'Secondary', n=24)
-    mag = k.pivot('Anim_Magazine', (0, *along(k, 0, -.0635)))
-    pistol_modules(k, slide, mag)
-    k.socket('Socket_Hand', (0, 0, 0))
-    k.socket('Socket_Muzzle', (0, -.176, .062))
-    # 0.10.0: two-handed cup grip (Destiny): the left hand wraps the right one from below left, its centre at the grip's
-    # left side, below the right hand (was the frame in front of the trigger guard, (0, -.05, .034), in 0.7-0.9).
-    k.socket('Socket_SupportHand', (.017, *along(k, 0, -.016)))
-    k.socket('Socket_CenterOfMass', (0, -.02, .03))
+    """Pistol (0.27): concept KG01, variant G (data/concepts/KG01.geo.json) without its reflex sight VS01 and rail p12
+    (named correction omit_parts: iron sights from formgen, user decision 24.10.2026); slide p06 and its rib p09 under
+    Anim_Slide, magazine base p01 under Anim_Magazine; cup grip (no support part, Socket_SupportHand a named correction)."""
+    concept_build(k, 'pistol')
 
 
 # ----------------------------------------------------------------------------------------------- 2 assault rifle
@@ -456,23 +429,6 @@ def scout_rifle(k):
 
 # ---------------------------------------------------------------------------------------------- per-weapon modules
 # Additions of 0.8.0 (Gunmetal) on top of the 0.7 bodies: sockets, pivots, clip and the grip/support parts are unchanged.
-def pistol_modules(k, slide, mag):
-    """Sidearm: compensator with accent, rear ammo readout on the slide, exposed side cell, slide panels, baseplate."""
-    k.box('SlideCompensator', (0, -.137, .0785), (.026, .020, .009), 'Secondary', .002, parent=slide)
-    accent(k, 'SlideCompensatorAccent', (0, -.137, .0837), (.014, .016, .0015), parent=slide)
-    for side in (-1, 1):
-        panel(k, 'SlidePanel_%d' % side, (side * .0182, -.072, .052), (.0025, .07, .010), 'Secondary', parent=slide)
-    display(k, 'SlideDisplay', (0, .0582, .066), (.020, .0016, .013), 'y', bars=3, parent=slide)
-    for i in range(3):
-        k.box('SlideRib_%d' % i, (0, -.105 - i * .009, .0858), (.011, .0035, .0016), 'Detail', 0, parent=slide)
-    energy_cell(k, 'FrameCell', (.0152, -.098, .033), .0058, .040)
-    k.bolts('FrameBolt', [(.0152, -.03, .034), (.0152, -.128, .030)], radius=.0028, depth=.003)
-    accent(k, 'HammerAccent', (0, .060, .0775), (.011, .010, .0015))   # 0.12.0: 0.5 mm over each hammer side
-    r = k.tilt(k.grip_tilt)
-    y, z = along(k, 0, -.102 / 2 - .0125)
-    accent(k, 'MagBaseplate', (0, y, z), (.036, .046, .005), rot=r, parent=mag)
-
-
 def shotgun_modules(k):
     """Shotgun: side shell carrier with two shells, rear readout, receiver solar cell, shroud bands and rib, stock accent."""
     k.box('ShellCarrier', (.0250, .100, .052), (.004, .050, .036), 'Secondary', .001)
@@ -562,12 +518,17 @@ def sight_rule(kind, parts, mode, tool_scale, above=0.0, rear_parts=(), eye_part
 
 DESIGNS = {
     'pistol': {
-        'asset': 'CubeEscape_Pistol', 'clip': 'Pistol_Use', 'class': 'sidearm', 'element': 'solar', 'grip_tilt_degrees': 14,
-        'grip_part': 'Grip', 'support_part': 'Grip', 'view_center': (0, -.04, .02), 'view_scale': .50,
-        'trigger': 'FireAction', 'build': pistol,
-        'fire_frame': 14, 'sight': sight_rule('iron', ('FrontSight', 'RearSight_-1', 'RearSight_1'), 'top', 1.35, .012),
+        'asset': 'CubeEscape_Pistol', 'clip': 'Pistol_Use', 'class': 'sidearm', 'element': 'solar',
+        # cup grip: the left hand wraps the right one (no support part on the sheet, Socket_SupportHand on the grip's left)
+        'concept': 'KG01.geo.json', 'grip_tilt_degrees': 6.39, 'grip_part': 'Griff_p00', 'support_part': 'Griff_p00',
+        'view_center': (0, -.08, .02), 'view_scale': .55, 'trigger': 'FireAction', 'build': pistol,
+        # provisional line until formgen's iron sights (KG01 patch): Toolgen's iron rule (eye_above_m over the top) over the
+        # slide p06 and its rib p09, ending at the slide's rear face where the rear sight will sit; no sight geometry. Contract
+        # 5: first-person metres are the game picture, the model scaled by tool_scale 1.5 x rig scale 1.4 (data/ego_arms.json)
+        'fire_frame': 14, 'sight': sight_rule('iron', ('Schlitten_p06', 'Part_p09'), 'top', 2.1, .012),
+        # semi-automatic: the slide p06 (and its rib p09) runs back 24 mm at the shot and forward again
         'use_clip': [{'node': 'Anim_Slide', 'channel': 'location', 'axis': 1,
-                      'keys': slide_keys((14, 0), (16, .034), (24, .004), (30, 0))}],
+                      'keys': slide_keys((14, 0), (15, .024), (17, .006), (18, 0))}],
     },
     'assault_rifle': {
         'asset': 'CubeEscape_AssaultRifle', 'clip': 'AssaultRifle_Use', 'class': 'assault_rifle', 'element': 'arc',
@@ -687,8 +648,6 @@ def decal(part, face, rect, image, channel, rotation=0):
 # surface_bake.design_anchors; the assault rifle's two 0.13 decals on Gehaeuse_p09/Handschutz_p11 went into KG02's 63; 0.24: the
 # pulse rifle's and the SMG's into the 11 of KG03 and the 54 of KG06).
 DECALS = {
-    'pistol': [decal('SlideBody', '+x', (.655, .2, .745, .74), 'symbol_diamond', 'Accent'),
-               decal('Frame', '+x', (.41, .15, .506, .85), 'number_01', 'Primary')],
     'shotgun': [decal('SidePlate_1', '+x', (.667, .31, .8, .69), 'warning_triangle', 'Accent'),
                 decal('BarrelShroud', '+x', (.033, .175, .167, .41), 'hazard_stripes', 'Accent')],
     'sniper_rifle': [decal('Receiver', '+x', (.233, .348, .333, .63), 'serial_s07', 'Accent')],

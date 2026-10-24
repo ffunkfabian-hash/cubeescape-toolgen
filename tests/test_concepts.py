@@ -49,8 +49,8 @@ class ProvenanceTests(unittest.TestCase):
             self.assertEqual(record["releases"][entry["release"]]["files"][sheet], entry["sha256"])
 
     def test_every_concept_weapon_has_its_sheet(self):
-        # 0.24 Salvo: group 1 of the animation brief (MP, pulse, scout rifle) from claude-v0.15.1
-        self.assertEqual({"assault_rifle": "KG02", "pulse_rifle": "KG03", "smg": "KG06", "scout_rifle": "KG11"},
+        # 0.24 Salvo: group 1 of the animation brief (MP, pulse, scout rifle) from claude-v0.15.1; 0.27 Sidearm: the pistol
+        self.assertEqual({"assault_rifle": "KG02", "pulse_rifle": "KG03", "smg": "KG06", "scout_rifle": "KG11", "pistol": "KG01"},
                          designs.DESIGN_PICK)
         imported = concept_spec.provenance(FOLDER)["imported"]
         for tool_id, sheet in designs.DESIGN_PICK.items():
@@ -96,6 +96,46 @@ class LoaderTests(unittest.TestCase):
     def test_a_file_without_provenance_is_refused(self):
         with self.assertRaises(concept_spec.ConceptError):
             concept_spec.load("KG05.geo.json")
+
+
+class OmitTests(unittest.TestCase):
+    """0.27 Sidearm: a named omit_parts correction leaves parts of a sheet out (KG01: the reflex sight VS01 and its rail p12,
+    user decision 24.10.2026 „Kimme/Korn statt VS01“)."""
+
+    def test_kg01_is_built_without_its_reflex_sight(self):
+        spec = concept_spec.load("KG01.geo.json")
+        entry = concept_spec.corrections("KG01")["omit_parts"]
+        ids = {part["id"] for part in spec["parts"]}
+        self.assertFalse(ids & set(entry["parts"]))
+        self.assertEqual(12, len(ids))
+        self.assertEqual({"present": False, "kind": "iron", "omitted_id": "VS01"}, spec["sight"])
+        self.assertTrue(all(decal["part"] in ids for decal in spec["decals"]))
+        self.assertTrue(all(set(pair["parts"]) <= ids for pair in spec["checks"]["coplanar"]))
+        found = concept_spec.layout("KG01.geo.json", ["Anim_Slide"])
+        self.assertNotIn("Socket_Reticle", found["sockets"])
+        self.assertNotIn("Socket_Sight", found["sockets"])
+        self.assertEqual(entry["parts"], found["report"]["omitted"]["parts"])
+        # the slide's rib p09 rides with the slide (PART_NODES), the cup grip's support anchor is a named correction
+        nodes = {mesh["name"]: mesh["node"] for mesh in found["meshes"]}
+        self.assertEqual("Anim_Slide", nodes["SM_PG_Part_p09"])
+        self.assertEqual("Anim_Slide", nodes["SM_PG_Schlitten_p06"])
+        self.assertEqual([0.01, 0.0018, -0.0159], found["sockets"]["Socket_SupportHand"])
+        self.assertEqual("iron", concept_spec.hold(spec)["sight_kind"])
+
+    def test_a_changed_sheet_needs_a_new_review(self):
+        spec = json.loads((FOLDER / "KG01.geo.json").read_text())
+        folder = Path(tempfile.mkdtemp())
+        corrections = json.loads((FOLDER / concept_spec.CORRECTIONS).read_text())
+        (folder / concept_spec.CORRECTIONS).write_text(json.dumps(corrections))
+        concept_spec.omit_parts(spec, folder)                  # the sheet as imported passes
+        other = dict(spec, sight=dict(spec["sight"], id="VS02"))
+        with self.assertRaises(concept_spec.ConceptError):
+            concept_spec.omit_parts(other, folder)
+        fewer = dict(spec, parts=[part for part in spec["parts"] if part["id"] != "p20"])
+        with self.assertRaises(concept_spec.ConceptError):
+            concept_spec.omit_parts(fewer, folder)
+        # a sheet without the correction stays as it is
+        self.assertIs(concept_spec.load("KG02.geo.json")["sight"]["present"], True)
 
 
 class ImportTests(unittest.TestCase):

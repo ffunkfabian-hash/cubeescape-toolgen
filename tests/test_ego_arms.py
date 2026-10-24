@@ -74,7 +74,7 @@ class DeviceDataTests(unittest.TestCase):
     def test_pilots_are_the_contract_5_tools(self):
         tools = {tool["id"]: tool for tool in catalog()}
         # 0.19 pilots; 0.24 Salvo: group 1 of the animation brief (SMG, pulse rifle, scout rifle)
-        self.assertEqual({"assault_rifle", "portal_emitter", "smg", "pulse_rifle", "scout_rifle"}, set(DEVICES))
+        self.assertEqual({"assault_rifle", "portal_emitter", "smg", "pulse_rifle", "scout_rifle", "pistol"}, set(DEVICES))
         self.assertEqual(set(DEVICES), rig_devices())
         self.assertEqual({tool for tool, entry in tools.items() if game_contract(entry) >= RIG_CONTRACT}, set(DEVICES))
 
@@ -131,9 +131,11 @@ class DeviceDataTests(unittest.TestCase):
             if "reload" in device:
                 with self.subTest(tool=tool):
                     self.reload_paths(device["reload"])
+                    # 0.27: an inspect choreography (the pistol's press-check) follows the same path rules
+                    self.reload_paths(device.get("inspect", {}), list(device.get("inspect", {})))
 
-    def reload_paths(self, reload):
-        for name in [key for key in ("Reload", "ReloadEmpty") if key in reload]:
+    def reload_paths(self, reload, names=("Reload", "ReloadEmpty")):
+        for name in [key for key in names if key in reload]:
             spec = reload[name]
             for track in ("left", "fingers"):
                 frames = [frame for frame, _ in spec[track]]
@@ -144,10 +146,15 @@ class DeviceDataTests(unittest.TestCase):
                     self.assertGreater(b - a, 1, f"{name}: no clearance key between {grip_a} and {grip_b}")
             bolt = spec.get("bolt")
             if bolt:
+                # the hand holds the part (its grip: "bolt", 0.27 the bolt's own "grip") through every pull; a part let go
+                # may run home by itself (the pistol's slide snaps forward after Chamber)
+                grip = bolt.get("grip", "bolt")
                 held = [frame for frame, key in spec["left"]
-                        if key == "bolt" or (isinstance(key, dict) and key["from"] == "bolt")]
-                self.assertLessEqual(min(held), bolt["keys"][0][0])
-                self.assertGreaterEqual(max(held), bolt["keys"][-1][0])
+                        if key == grip or (isinstance(key, dict) and key["from"] == grip)]
+                pulls = [(a, b) for (a, va), (b, vb) in zip(bolt["keys"], bolt["keys"][1:]) if vb > va]
+                self.assertTrue(pulls, name)
+                self.assertLessEqual(min(held), pulls[0][0])
+                self.assertGreaterEqual(max(held), pulls[-1][1])
 
     def test_reload_times_cite_a_named_destiny_example(self):
         self.assertIn("Chroma Rush", DATA["devices"]["note"])
@@ -266,6 +273,88 @@ class FireClipTests(unittest.TestCase):
         self.assertIn("Chamber", [event["name"] for event in clips["ReloadEmpty"]["events"]])
 
 
+class SidearmClipTests(unittest.TestCase):
+    """0.27 Sidearm: the pistol KG01 - semi-automatic Fire markers, the slide lock clips and the press-check (user decisions
+    24.10.2026)."""
+
+    def clips(self):
+        return FireClipTests.clips(self, "pistol")
+
+    def frames(self, clip):
+        return {event["name"]: event["frame"] - clip["frame_start"] for event in clip["events"]}
+
+    def test_semi_automatic_fire_has_ready_at_the_cadence(self):
+        fire = DEVICES["pistol"]["fire"]
+        self.assertEqual(("semi", 360, 15), (fire["mode"], fire["cadence_rpm"], fire["magazine_rounds"]))
+        self.assertEqual(60 * 24 // fire["cadence_rpm"], fire["ready_frame"])     # 360/min = 4 frames at 24/s
+        for suffix in ("Fire", "AimFire", "FireLast", "AimFireLast"):
+            clip = self.clips()[suffix]
+            frames = self.frames(clip)
+            with self.subTest(clip=suffix):
+                self.assertEqual("Start", clip["events"][0]["name"])
+                self.assertEqual([0], [event["frame"] - clip["frame_start"] for event in clip["events"]
+                                       if event["name"] == "Shot"])
+                self.assertEqual((0, 1, 4, 7, clip["length"]),
+                                 (frames["Start"], frames["Move"], frames["Ready"], frames["Still"], frames["End"]))
+        entries = [{"name": clip["name"], "suffix": suffix} for suffix, clip in self.clips().items()]
+        block = ego_arms.fire_block(fire, entries, 24)
+        self.assertEqual(("semi", 1, 4), (block["mode"], block["shots_per_trigger"], block["shot_interval_frames"]))
+        self.assertEqual(["Pistol_Fire", "Pistol_AimFire", "Pistol_FireLast", "Pistol_AimFireLast"], block["clips"])
+
+    def test_slide_lock_clips_come_last_and_hold_the_slide(self):
+        lock = DEVICES["pistol"]["slide_lock"]
+        clips = self.clips()
+        self.assertEqual(["FireLast", "AimFireLast", "SlideLocked"], list(clips)[-3:], "new clips only at the end")
+        self.assertEqual(["Reload", "ReloadEmpty"], [s for s in clips if s.startswith("Reload")])
+        for suffix in ("FireLast", "AimFireLast"):
+            keys = clips[suffix]["slide_keys"]["keys"]
+            self.assertEqual(0.0, keys[0][1])
+            self.assertEqual(lock["locked_m"], keys[-1][1])
+            self.assertEqual(clips[suffix]["length"], keys[-1][0])
+            self.assertEqual(keys[-2][0], self.frames(clips[suffix])["SlideLock"])
+        state = clips["SlideLocked"]
+        self.assertTrue(state["loop"])
+        self.assertEqual(["Anim_Slide"], state["mask"])
+        self.assertEqual([[0, lock["locked_m"]], [state["length"], lock["locked_m"]]], state["slide_keys"]["keys"])
+        # ReloadEmpty starts with the slide back and closes it right after Chamber
+        empty = DEVICES["pistol"]["reload"]["ReloadEmpty"]
+        self.assertEqual(lock["locked_m"], empty["bolt"]["keys"][0][1])
+        self.assertEqual(0.0, empty["bolt"]["keys"][-1][1])
+        self.assertLessEqual(empty["events"]["Chamber"], empty["bolt"]["keys"][-1][0])
+        block = ego_arms.slide_lock_block(lock, [{"name": clip["name"], "suffix": suffix} for suffix, clip in clips.items()], 24)
+        # Codex sol 0.27: the overlay stops when ReloadEmpty starts (its own slide track), an interruption before Chamber
+        # leaves the slide locked
+        self.assertEqual(("Pistol_SlideLocked", {"clip": "Pistol_ReloadEmpty", "event": "Chamber", "own_track": True,
+                                                 "interrupted_before_event": "Pistol_SlideLocked"}),
+                         (block["state"], block["release"]))
+        self.assertIn("not over ReloadEmpty", block["rule"])
+
+    def test_reload_times_follow_the_decision(self):
+        reload = DEVICES["pistol"]["reload"]
+        self.assertAlmostEqual(1.1, reload["Reload"]["events"]["Ready"] / 24, delta=.05)        # Reload about 1.1 s
+        self.assertAlmostEqual(1.5, reload["ReloadEmpty"]["events"]["Ready"] / 24, delta=.05)   # ReloadEmpty about 1.5 s
+
+    def test_press_check_is_an_inspect_choreography(self):
+        clip = self.clips()["Inspect_B"]
+        spec = DEVICES["pistol"]["inspect"]["Inspect_B"]
+        self.assertEqual("inspect5", clip["motion"])
+        self.assertIs(spec, ego_arms.choreography(DEVICES["pistol"], clip))
+        frames = self.frames(clip)
+        self.assertLess(frames["HandOff"], frames["PressCheck"])
+        self.assertLess(frames["PressCheck"], frames["HandOn"])
+        travel = max(value for _, value in spec["bolt"]["keys"])
+        scale = DEVICES["pistol"]["tool_scale"] * RIG["scale"]
+        self.assertAlmostEqual(.008, travel / scale, places=4)               # 8 mm on the model (decision 5 A)
+        self.assertEqual(96, clip["length"])
+        self.assertEqual("inspect_a", self.clips()["Inspect_A"]["motion"])   # the other side stays the class motion
+
+    def test_cup_grip(self):
+        grip = DEVICES["pistol"]["grip"]
+        self.assertEqual(("cup", "cup"), (grip["L"]["mode"], grip["L"]["support_grip"]))
+        # thumbs up the grip: the left hand's axis (little-finger side) runs down the right hand's axis
+        self.assertAlmostEqual(-1.0, sum(a * b for a, b in zip(grip["L"]["axis"], grip["R"]["axis"])), places=3)
+
+
 class PipelineTests(unittest.TestCase):
     def tool(self, tool_id):
         return next(tool for tool in catalog() if tool["id"] == tool_id)
@@ -301,7 +390,7 @@ class PipelineTests(unittest.TestCase):
                 self.assertEqual(old, new)                         # same entry, same stage keys
         self.assertEqual(tools, with_contract(tools, None))
         with self.assertRaises(ValueError):
-            with_contract([self.tool("pistol")], 5)
+            with_contract([self.tool("shotgun")], 5)          # 0.27: the pistol is a contract 5 device now
 
     def test_arm_package_joins_contract_5_runs(self):
         self.assertEqual(ARMS, with_arms(catalog(), None)[0])

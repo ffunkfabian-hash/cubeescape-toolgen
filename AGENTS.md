@@ -27,7 +27,8 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
 - Das Spielprojekt Cube Escape wird aus diesem Repo nicht verändert. Unity-Spielverhalten bleibt dort.
 - Keine Animation läuft automatisch. Aktionsclips (Use, Fire, Draw …) laufen einmal und kehren in die Ruhepose zurück; Loop ist
   eine Viewer-Prüfoption. Ausnahme (Nutzer, 16.10.2026): Ego-Zustandsclips Idle, Walk, Sprint, AimIdle (0.9.0), FusionRifle_Charge (0.11.0), SubmachineGun_AutoFire/AimAutoFire
-  (0.24.0, gehaltenes Dauerfeuer, Nutzer 22.10.2026; und was später ausdrücklich als Zustand gilt) dürfen Schleifen sein, weil Cube Escape sie per Zustandslogik startet und stoppt; Autoplay bleibt aus.
+  (0.24.0, gehaltenes Dauerfeuer, Nutzer 22.10.2026), Pistol_SlideLocked (0.27.0, Schlittenfang, nur `Anim_Slide`, Nutzer 24.10.2026; und was später
+  ausdrücklich als Zustand gilt) dürfen Schleifen sein, weil Cube Escape sie per Zustandslogik startet und stoppt; Autoplay bleibt aus.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
 
 ## Wahrheit und Aktualität

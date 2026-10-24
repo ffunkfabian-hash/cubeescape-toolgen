@@ -27,6 +27,10 @@ the spec (docs/TECHNIK.md › Konzeptmodelle, docs/ENTSCHEIDUNGEN.md, 20.10.2026
   (new, additive) from ``sight.socket_reticle_m``; Socket_Eye only for scopes (the spec's eye point of open sights is a
   proposal and equals Socket_Sight). A named correction in ``corrections.json`` replaces an anchor (KG02 Socket_SupportHand,
   user decision 20.10.2026: the first-person framing rule comes before the sheet's measured anchor).
+* **Omitted parts** (0.27, ``corrections.json`` › ``omit_parts``): a named correction leaves parts of the sheet out (KG01: the
+  reflex sight VS01 and its rail, user decision 24.10.2026 „Kimme/Korn statt VS01“, until formgen delivers the iron sight).
+  ``load`` returns the sheet without them: no meshes, no decals on them, no sight block (``sight.present`` false, the
+  correction's ``sight_kind``), so the sight sockets come from the weapon's own sight rule (weapon_designs.py).
 """
 import hashlib
 import json
@@ -53,7 +57,10 @@ DECAL_FACES = {"left": "+x", "right": "-x", "front": "-y", "back": "+y", "top": 
 LABEL_NODES = {"Magazin": "Anim_Magazine", "Energiezelle": "Anim_EnergyCell"}   # 0.24: KG03's energy cell p18 is its magazine
 # 0.24: Toolgen nodes of single parts of one sheet (a design decision, not a spec value): KG06 draws no bolt, so its Use clip
 # pulls the trigger p12 - the one part that moves with every shot (the viewer needs visible motion in the world model)
-PART_NODES = {"KG06": {"p12": "Anim_Trigger"}}
+PART_NODES = {"KG06": {"p12": "Anim_Trigger"},
+              # 0.27: KG01's rib p09 lies on the slide p06 (unlabelled, MT_Detail; the sheet moves only p06): it rides with the
+              # slide, else it would hang in the air over the locked-back slide (slide lock, user decision 24.10.2026)
+              "KG01": {"p09": "Anim_Slide"}}
 COPLANAR_GAP_M = .0005
 COPLANAR_ANGLE_DEGREES = 1.0
 COPLANAR_MIN_OVERLAP_M2 = 1e-6
@@ -95,7 +102,34 @@ def load(file, where=None):
         raise ConceptError(f"{file}: {spec.get('format')} {spec.get('format_version')} is not {FORMAT} {FORMAT_VERSION}")
     if spec["sheet"]["kind"] != "weapon":
         raise ConceptError(f"{file}: sheet kind {spec['sheet']['kind']} is not a weapon")
-    return spec
+    return omit_parts(spec, where)
+
+
+def omit_parts(spec, where=None):
+    """The sheet without the parts of its named ``omit_parts`` correction (0.27): their meshes, the decals on them and the
+    sheet's coplanar notes about them leave the spec; an omitted sight (the correction names its ``sight_id``) leaves
+    ``sight`` with ``present`` false and the correction's ``sight_kind``. The correction must name parts the sheet has and,
+    for a sight, the sheet's current sight id (a changed sheet needs a new review)."""
+    entry = corrections(spec["sheet"]["id"], where).get("omit_parts")
+    if not entry:
+        return spec
+    ids = {part["id"] for part in spec["parts"]}
+    missing = sorted(set(entry["parts"]) - ids)
+    if missing:
+        raise ConceptError(f"{spec['sheet']['id']} omit_parts: {missing} are not parts of the sheet; review "
+                           f"data/concepts/{CORRECTIONS}")
+    if entry.get("sight_id") and spec["sight"].get("id") != entry["sight_id"]:
+        raise ConceptError(f"{spec['sheet']['id']} omit_parts: the sheet's sight is now {spec['sight'].get('id')}, the "
+                           f"correction was made for {entry['sight_id']}; review data/concepts/{CORRECTIONS}")
+    gone = set(entry["parts"])
+    result = dict(spec, parts=[part for part in spec["parts"] if part["id"] not in gone],
+                  decals=[decal for decal in spec.get("decals", []) if decal["part"] not in gone],
+                  checks=dict(spec["checks"], coplanar=[pair for pair in spec["checks"]["coplanar"]
+                                                        if not gone & set(pair["parts"])]),
+                  omitted={"parts": entry["parts"], "reason": entry["reason"], "decision": entry["decision"]})
+    if entry.get("sight_id"):
+        result["sight"] = {"present": False, "kind": entry["sight_kind"], "omitted_id": entry["sight_id"]}
+    return result
 
 
 # ------------------------------------------------------------------------------------------------------- geometry
@@ -369,6 +403,7 @@ def plan(spec):
         low, high = bounds(mesh["vertices"])
         mesh["collision"] = not (mesh["sight"] and window and all(low[i] <= window[i] <= high[i] for i in range(3)))
     report = {"sheet": spec["sheet"]["id"], "glass_omitted": glass, "merged": merged, "coplanar_fixes": fixes,
+              **({"omitted": spec["omitted"]} if "omitted" in spec else {}),
               "meshes": len(meshes), "no_collision": [mesh["name"] for mesh in meshes if not mesh["collision"]],
               "spec_coplanar": spec["checks"]["coplanar"], "decals_outside_part": spec["checks"]["decals_outside_part"]}
     return meshes, report
@@ -385,7 +420,8 @@ def sockets(spec):
         found["Socket_Reticle"] = sight["socket_reticle_m"]
         if sight["kind"] == "scope":
             found["Socket_Eye"] = sight["socket_eye_m"]
-    return {name: [float(c) for c in position] for name, position in found.items()}
+    # 0.27: an anchor the sheet cannot derive (KG01 Socket_SupportHand, cup grip) is null; a named correction sets it
+    return {name: [float(c) for c in position] for name, position in found.items() if position is not None}
 
 
 def hold(spec):
@@ -426,7 +462,9 @@ def apply_corrections(spec, found, where=None):
     applied = []
     for name, entry in sorted(corrections(spec["sheet"]["id"], where).get("anchors", {}).items()):
         current = spec["anchors"][name]["position_m"]
-        if [round(c, 6) for c in current] != [round(c, 6) for c in entry["spec_m"]]:
+        # 0.27: a sheet without the anchor (KG01 Socket_SupportHand: the cup grip has no support part) says null
+        rounded = (lambda value: None if value is None else [round(c, 6) for c in value])
+        if rounded(current) != rounded(entry["spec_m"]):
             raise ConceptError(f"{spec['sheet']['id']} {name}: the spec now says {current}, the correction was made for "
                                f"{entry['spec_m']}; review data/concepts/{CORRECTIONS}")
         found[name] = [float(c) for c in entry["toolgen_m"]]

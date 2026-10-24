@@ -117,7 +117,7 @@ class RenamedFromTests(unittest.TestCase):
                     self.assertTrue(found.startswith("Cube Escape 0.114 „Loupe“"))
                 else:
                     self.assertIsNone(found)
-        self.assertEqual(block, {key: value for key, value in ge.consumer_block(TOOLS["pistol"]).items()
+        self.assertEqual(block, {key: value for key, value in ge.consumer_block(TOOLS["shotgun"]).items()
                                  if key != "ads_sight_size"})
         self.assertIn("v0.17.2", ge.consumer_block(TOOLS["assault_rifle"])["concept_models"])
         # 0.24: the three tools of group 1 (tools.json animation_group 1) name the CE version that builds their clips

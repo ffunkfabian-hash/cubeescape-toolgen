@@ -397,9 +397,10 @@ class SightTests(unittest.TestCase):
     # Toolgen 0.25 (user decision 23.10.2026, sight sizes like Destiny 2 in % of the picture height at 1470x956, viewmodel
     # FOV 46.69 deg: holo/reflex window 30 %, iron rear sight about 18 %, scope eyepiece 65 %, energy by eye; measured in
     # Cube Escape 0.114 Loupe): contract 4 = CE metres / CE hip.scale, contract 5 = CE metres.
-    EYE = {"pistol": .209, "shotgun": .264, "sniper_rifle": .053, "fusion_rifle": .1, "trace_rifle": .041,
+    EYE = {"shotgun": .264, "sniper_rifle": .053, "fusion_rifle": .1, "trace_rifle": .041,
            "rocket_launcher": .169}
-    EGO_ADS = {"assault_rifle": .134, "pulse_rifle": .138, "smg": .202, "scout_rifle": .053}
+    # 0.27: the pistol (contract 5, KG01) keeps its 0.25 value provisionally (ads.provisional) until formgen's iron sights
+    EGO_ADS = {"assault_rifle": .134, "pulse_rifle": .138, "smg": .202, "scout_rifle": .053, "pistol": .209}
 
     def eye_distance(self, key):
         return ego_clips.ads_eye_distance_m(WEAPONS[key])
@@ -426,7 +427,11 @@ class SightTests(unittest.TestCase):
         data = ego_clips.load()
         for key, tool in WEAPONS.items():
             rule, ads = designs.DESIGNS[key]["sight"], ego_clips.class_params(data, key)["ads"]
-            scale = PROFILES[key]["tool_scale"]
+            scale = above_scale = PROFILES[key]["tool_scale"]
+            if int(tool.get("game_contract", 4)) >= 5:
+                # 0.27, contract 5: the eye height is in the game picture, the model scaled by tool_scale x rig.scale
+                arms = json.loads((ROOT / "data/ego_arms.json").read_text())
+                above_scale = arms["devices"][key]["tool_scale"] * arms["rig"]["scale"]
             with self.subTest(weapon=key):
                 self.assertEqual(ads.get("sight_mode", "top"), rule["mode"])
                 if ads.get("sight_parts"):
@@ -434,7 +439,7 @@ class SightTests(unittest.TestCase):
                 else:                       # marker match (pistol, smg): every listed part carries a marker
                     self.assertTrue(all(any(marker in part for marker in ads["sight_markers"]) for part in rule["parts"]))
                 if rule["mode"] == "top":
-                    self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * scale, places=12)
+                    self.assertAlmostEqual(ads["eye_above_m"], rule["above_m"] * above_scale, places=12)
                 if rule["kind"] == "scope" and designs.DESIGNS[key].get("concept"):
                     # 0.24: a concept scope (glass not built): the eye radius of the sheet in first-person metres
                     spec = concept_spec.load(designs.DESIGNS[key]["concept"])
@@ -444,7 +449,7 @@ class SightTests(unittest.TestCase):
                     radius = {"sniper_rifle": .020, "trace_rifle": .015}[key] * designs.EYE_LENS * scale
                     self.assertAlmostEqual(radius, tool["hold"]["eye_radius_m"], places=6)
                     self.assertEqual("center", rule["mode"])
-                elif designs.DESIGNS[key].get("concept"):
+                elif designs.DESIGNS[key].get("concept") and concept_spec.load(designs.DESIGNS[key]["concept"])["sight"]["present"]:
                     # 0.18: a concept sight has an open window (no glass, user decision 20.10.2026): the line runs
                     # through the centre of the window frame, which holds Socket_Reticle
                     self.assertNotIn("eye_radius_m", tool["hold"])
@@ -456,6 +461,7 @@ class SightTests(unittest.TestCase):
                             low, high = concept_spec.bounds(mesh["vertices"])
                             self.assertTrue(all(low[i] <= reticle[i] <= high[i] for i in range(3)))
                 else:
+                    # (0.27: also the pistol KG01, whose sheet sight is omitted: a provisional iron line over the slide)
                     self.assertNotIn("eye_radius_m", tool["hold"])
                     # Cube Escape 0.72: iron, reflex and holo lines run over the top of the housing (free centre)
                     self.assertEqual("top", rule["mode"])

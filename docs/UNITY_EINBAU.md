@@ -534,6 +534,47 @@ Neu ist nur Angehängtes; Clipnamen, Anker und Knoten der übrigen Geräte bleib
   für die Destiny-Größen). 0.113 und älter lesen die Pakete unverändert (`ads_eye_distance_m` ist dort nur Referenz, das Spiel zielt mit
   dem eigenen Profilabstand und dessen Untergrenze 0,1 m), aber die Ziel-Clips von Vertrag 5 bringen das Visier so nah.
 
+## Gruppe 2: Pistole (0.27.0 Sidearm, Vertrag 5 additiv)
+
+Die Pistole `pistol` ist das Konzeptmodell formgen KG01 (`claude-v0.15.1`) auf **Vertrag 5** (vorher Vertrag 4 mit eigenem Modell), ohne
+Roboter-Variante; Asset `CubeEscape_Pistol` und Clipstamm `Pistol_` bleiben (Vorgabe Nexogen#1 Kommentar 6273351409 § 4–8, Entscheidungen
+des Nutzers 24.10.2026 in [ENTSCHEIDUNGEN](ENTSCHEIDUNGEN.md)). Bericht: [versions/0.27.md](versions/0.27.md).
+
+- **Noch ohne Visier (Entscheidung 1 B: Kimme/Korn statt Reflexvisier VS01):** Toolgen baut VS01 (p13–p26) und seine Schiene p12 nicht
+  (benannte Korrektur `omit_parts` in `data/concepts/corrections.json`, Vertrag `concept.omitted`) und baut kein Visier nach; Kimme und Korn
+  liefert formgen per Patch an KG01. Bis dahin: **kein `Socket_Reticle`**, `hold.sight_kind` `iron`, `Socket_Sight` liegt **vorläufig** an der
+  Schlittenrückseite über der Oberkante (Toolgens Eisenvisier-Regel, 12 mm im Spielbild), `hold.ads_eye_distance_m` 0,209 ist der Wert von 0.25
+  und **`hold.ads_provisional` true**. Die Ziel-Clips schauen über den Schlitten; Visiergröße (Kimme ≈ 18 %), ADS-Prüfung der Kimme und die
+  Mindestversion folgen mit dem formgen-Release. Wer die Pistole vorher einbaut, zielt mit diesen Werten und rechnet mit ihrer Änderung.
+- **Becher-Griff im Vertrag-5-Rig:** `grip.L.mode` und `support_ik.mode` **`cup`** – die linke Hand umfasst die rechte von links unten
+  (Daumen nach oben, Finger um die Griffhand); Toolgen legt sie an Griff **und Griffhand** (Kontakt ≤ 8 mm, kein Eindringen in beide).
+  `Socket_SupportHand` (0,010; 0,0018; −0,0159) ist eine benannte Korrektur (das Blatt nennt keine Stützhand). CE kennt `Weapons.CupGrip`.
+- **Halbautomatik 360/min (Entscheidung 2 A):** Block **`fire`** mit `mode` **`semi`**: `shots_per_trigger` 1, `cadence_rpm` 360,
+  `ready_frame` 4 (0,167 s), `still_frame` 7, **`magazine_rounds` 15** (Vorschlag, Entscheidung 3 A; CE legt fest). `Fire`/`AimFire` (8 Bilder)
+  tragen jetzt die Marker § 8: `Start` 0 · `Shot` 0 · `Fire` 0 · `Move` 1 · `Ready` 4 · `Still` 7 · `End` 8. Der nächste Abzug darf ab `Ready`
+  kommen und startet `Fire` neu (kurzer Übergang); `Still` = Modell ruht.
+- **Schlittenfang (Entscheidung 4 A), Clips am Ende der Liste:** **`FireLast`**/**`AimFireLast`** (wie `Fire`/`AimFire`, zusätzlich
+  `SlideLock` 2) für die letzte Patrone: der Schlitten bleibt hinten. **`SlideLocked`** (24 Bilder, **Schleife**, Ruhepose, `mask`
+  `["Anim_Slide"]`) hält ihn: CE liest daraus nur `Anim_Slide` und legt es über jeden anderen Clip (Idle, Walk, Ziel-Clips, Sprint,
+  Inspect) – **nicht über `ReloadEmpty`**: der Clip trägt den Schlitten selbst (beginnt hinten, Zug, Vorlauf bei `Chamber`), die
+  Überlagerung endet mit seinem Start; wird `ReloadEmpty` vor `Chamber` unterbrochen, bleibt der Schlitten gefangen (Überlagerung wieder an).
+  Block **`slide_lock`**: `node`, `axis_device` (+Y = zum Schützen), `locked_m` 0,0462 (22 mm am Modell), `lock_clips`, `state`,
+  `release` (`Pistol_ReloadEmpty` › `Chamber`, `own_track` true, `interrupted_before_event` `Pistol_SlideLocked`), `rule`. Ausnahme der Regel „jeder Clip beginnt und endet in seiner Pose“: nur `Anim_Slide`
+  endet in `FireLast`/`AimFireLast` hinten und beginnt `ReloadEmpty` hinten (Text in `ego_clips.rules`).
+- **Nachladen (Entscheidung 4 A):** `Reload` 32 (`Ready` 26 = 1,08 s; Schlitten bleibt vorn) und **`ReloadEmpty`** 43 (`Ready` 36 = 1,5 s):
+  `Move` 1 · `HandOff`⟂ 2 · `MagOut` 8 · `MagIn` 17 · (`Chamber` 26) · `HandOn`⟂ 22/32 · `Ready` · `Still` 29/40 · `End`. Handteil `HandMag_L`
+  (Magazinboden p01). In `ReloadEmpty` greift die linke Hand den Schlitten hinten seitlich, zieht ihn 4 mm über den Fang und lässt ihn bei
+  `Chamber` vorlaufen.
+- **Inspect (Entscheidung 5 A):** `Inspect_A` zeigt eine Seite (Klassenbewegung), **`Inspect_B`** die andere mit **Press-Check**: die linke
+  Hand verlässt den Becher-Griff (`HandOff`⟂ 30), zieht den Schlitten 8 mm am Modell zurück (`PressCheck` 44), lässt ihn vor und greift
+  wieder (`HandOn`⟂ 60); `Move` 1, `Still` 90, `End` 96. Neu sind dort die Ereignisse `Start`/`Move`/`HandOff`/`PressCheck`/`HandOn`/`Still`/`End`.
+- **Hüfte tief rechts (Entscheidung 6 A):** Mündung bei etwa 58 % / 62 % des Bildes (Vorgabe etwa 60/63 %), Lauf zur Mitte.
+- **Maße:** `device_scale.factor` 2,1 (`tool_scale` 1,5 × 1,4; CE-Regel 1,35 × 1,6 ÷ 1,4 = 1,54); Dreiecke Welt 3 144 / 6 000, Ego-Gerät
+  3 380 / 16 500 (+ Arme 12 000 ≤ 32 000). Anker (Weltmodell, m): `Socket_Muzzle` (0; −0,2053; 0,066), `Socket_SupportHand` (0,010; 0,0018;
+  −0,0159), `Socket_Sight` vorläufig (0; 0,0377; 0,0898), `Socket_CenterOfMass` (0; −0,0394; 0,0454).
+- **Mindestversion:** noch keine eigene (`concept_models` „offen“ wie bei allen Konzeptwaffen); Cube Escape vor dem Einbau liest die neuen
+  Clip-Zustände nicht (unbekannte Zustände überspringt `ToolgenAssets`). Der Einbau (Sightline) setzt Vertrag 5 für die Pistole voraus.
+
 ## Prüfen
 
 Unity-seitig sind offen: Materialzuordnung, LODGroup-Schwellen, Layer/Culling der Viewmodel-Kamera, Z-Fighting mit der Weltkamera

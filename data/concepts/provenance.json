@@ -661,6 +661,21 @@
     }
   },
   "imported": {
+    "KG01": {
+      "file": "KG01.geo.json",
+      "release": "claude-v0.15.1",
+      "sha256": "7023c2647f11d7bf68fd9efc0b4fba35c06d3f9d80ed8d740c4ebfe6e2b3f345",
+      "bytes": 92799,
+      "toolgen_id": "pistol",
+      "variant": "G",
+      "name_de": "Pistole",
+      "imported": "2026-10-24",
+      "spec": {
+        "file": "KG01.spec.json",
+        "sha256": "3547b81a8440b11f53cfa43878480ebccf7c4ae11fb077b32ab18b37ded44c01",
+        "bytes": 76498
+      }
+    },
     "KG02": {
       "file": "KG02.geo.json",
       "release": "claude-v0.15",

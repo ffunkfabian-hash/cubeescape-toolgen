@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.27.0 – Sidearm (24.10.2026)
+
+Gruppe 2 der Animationsvorgabe: die **Pistole** `pistol` ist das Konzeptmodell formgen KG01 (`claude-v0.15.1`) auf **Vertrag 5** (Entscheidungen
+des Nutzers 24.10.2026). **Vorerst ohne Visier:** Reflexvisier VS01 und Schiene p12 entfallen (benannte Korrektur `omit_parts`), Kimme und
+Korn liefert formgen per Patch; `Socket_Sight` und `hold.ads_eye_distance_m` sind vorläufig (`hold.ads_provisional`), kein
+`Socket_Reticle`. **Becher-Griff** im gemeinsamen Arm-Rig (`grip.L.mode` `cup`: die linke Hand schließt um Griff und Griffhand). Clips:
+Halbautomatik 360/min (`fire.mode` `semi`, `Ready` 4, `magazine_rounds` 15 als Vorschlag), **Schlittenfang** mit `FireLast`/`AimFireLast`
+und dem Zustand `SlideLocked` (Schleife, `mask` `Anim_Slide`, Block `slide_lock`), `Reload` ≈ 1,1 s, `ReloadEmpty` ≈ 1,5 s mit `Chamber`,
+`Inspect_B` mit Press-Check (`inspect5`-Choreografie), Hüfte tief rechts; Marker § 8 an allen neuen Clips. Neue Clips nur am Listenende,
+Vertragsformat additiv. Bericht: [docs/versions/0.27.md](docs/versions/0.27.md).
+
 ## 0.26.0 – Unbundled (23.10.2026)
 
 Keine eingebettete Werkzeugkopie mehr (Nutzerentscheidung 23.10.2026, wie Motiongen, Robogen, Cubegen, Formgen): `scripts/ce_tools/` ist

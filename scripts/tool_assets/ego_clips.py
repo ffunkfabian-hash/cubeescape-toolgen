@@ -40,6 +40,13 @@ def ads_eye_distance_m(tool, arms_path=ARMS_PATH):
     return ads["eye_distance_m"] if ads else tool["hold"]["eye_distance_m"]
 
 
+def ads_provisional(tool, arms_path=ARMS_PATH):
+    """0.27: True while a device's aim pose waits for its sight (data/ego_arms.json ``ads.provisional``, the pistol KG01
+    until formgen's iron sights)."""
+    device = json.loads(Path(arms_path).read_text())["devices"].get(tool.get("id"))
+    return bool(isinstance(device, dict) and device.get("ads", {}).get("provisional"))
+
+
 def load(path=DATA_PATH):
     return json.loads(Path(path).read_text())
 
@@ -309,6 +316,12 @@ def aim_burst(u, n, p):
     return dict(burst(u, n, p, p["ads"]["recoil_scale"]), aim=1.0, follow=aim_follow(p, 1))
 
 
+def slide_locked(u, n, p):
+    """0.27: the state SlideLocked (toolgen/ego_arms.slide_lock_clips) - the rest pose; the clip carries the slide held back,
+    Cube Escape reads only that node from it."""
+    return pose()
+
+
 def lowered_pose(p, factor):
     return dict(scaled(p["lowered"], factor), follow=p["lowered"]["shoulder_follow"] * factor)
 
@@ -328,7 +341,8 @@ MOTIONS = {"idle": idle, "walk": walk, "sprint_in": sprint_in, "sprint": sprint,
            "fire": fire, "aim_in": aim_in, "aim_idle": aim_idle, "aim_fire": aim_fire, "aim_out": aim_out,
            "draw": draw, "holster": holster, "charge": charge, "inspect_a": ego_weapon_motions.inspect_a,
            "inspect_b": ego_weapon_motions.inspect_b, "reload": ego_weapon_motions.reload,
-           "auto_fire": auto_fire, "aim_auto_fire": aim_auto_fire, "burst": burst, "aim_burst": aim_burst}
+           "auto_fire": auto_fire, "aim_auto_fire": aim_auto_fire, "burst": burst, "aim_burst": aim_burst,
+           "slide_locked": slide_locked}
 
 
 def pose_at(clip, frame, params):

@@ -135,6 +135,8 @@ def clip_entries(ego, game, take, fps, animated_nodes, use_events):
                         "from_pose": clip["from"], "to_pose": clip["to"], "from": clip["from"], "to": clip["to"],
                         "reticle_free": clip["reticle_free"], "interruptible": clip["interruptible"],
                         "support_forearm_visible": clip["support_forearm_visible"],
+                        # 0.27: a state clip read on its nodes only (SlideLocked: Anim_Slide over every other clip)
+                        **({"mask": clip["mask"]} if clip.get("mask") else {}),
                         "events": [{"name": event["name"], "frame": event["frame"],
                                     "seconds": (event["frame"] - clip["frame_start"]) / fps, "channel": event["channel"]}
                                    for event in clip["events"]],
@@ -280,6 +282,11 @@ def build_contract5(tool, work, ego, arms_contract, rig_report, files, base_cont
     device = ego_arms.load()["devices"].get(tool["id"], {})
     if "fire" in device:
         document["fire"] = ego_arms.fire_block(device["fire"], entries, fps)
+    if "slide_lock" in device:
+        document["slide_lock"] = ego_arms.slide_lock_block(device["slide_lock"], entries, fps)
+        document["ego_clips"]["rules"] += (" Exception (0.27, slide_lock): " + device["slide_lock"]["node"] + " ends "
+                                           "FireLast/AimFireLast back, holds there in SlideLocked and starts ReloadEmpty "
+                                           "back - every other node keeps the rule.")
     document["minimum_consumer"] = dict(document.get("minimum_consumer", {}), shared_arm_rig=ge.SHARED_ARM_CONSUMER)
     document["older_consumers"] = ego_arms.OLDER_CONSUMERS
     document["files"] = {kind: {"path": path.name, "sha256": ge.file_sha256(path)} for kind, path in files.items()}

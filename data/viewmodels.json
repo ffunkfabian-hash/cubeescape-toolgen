@@ -238,11 +238,11 @@
     },
     "pistol": {
       "hand": [
-        -0.2,
-        -0.6,
-        -0.17
+        -0.23,
+        -0.62,
+        -0.215
       ],
-      "roll_degrees": 6,
+      "roll_degrees": 8,
       "support": true,
       "support_socket": "Socket_SupportHand",
       "support_grip": "cup",
@@ -251,18 +251,18 @@
         0.036
       ],
       "grip_radius": [
-        0.022,
-        0.024
+        0.01,
+        0.0202
       ],
       "tool_scale": 1.35,
       "hand_rotation_degrees": {
         "R": [
-          14,
+          6.39,
           0,
           0
         ],
         "L": [
-          14,
+          6.39,
           0,
           0
         ]
@@ -270,25 +270,21 @@
       "head": {
         "anchor": "Socket_Muzzle",
         "parts": [
-          "SM_PG_Barrel",
-          "SM_PG_MuzzleRing",
-          "SM_PG_SlideNose",
-          "SM_PG_FrontSight",
-          "SM_PG_SlideBody",
-          "SM_PG_SlideTop",
-          "SM_PG_SlideStripe"
+          "SM_PG_Kompensator_p11",
+          "SM_PG_Lauf_p10",
+          "SM_PG_Schlitten_p06"
         ]
       },
       "aim_target_m": [
-        0.3,
-        -2,
-        -0.17
+        0.2,
+        -2.2,
+        -0.2
       ],
       "motion": {
         "fire_frame": 14,
         "kick_m": 0.03,
         "pitch_degrees": 4.0,
-        "recovery_frames": 26
+        "recovery_frames": 12
       },
       "touch_tolerance_m": 0.008,
       "arm_pose": {

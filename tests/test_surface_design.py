@@ -252,7 +252,7 @@ class RegionTests(unittest.TestCase):
         self.assertIsNone(base["channels"]["Energy"], "KG02 has no MT_Energy (CE 0.106 finding): every palette leaves it free")
         self.assertTrue(all(item["channels"]["Energy"] is None for item in palettes))
         self.assertEqual(set(surface.CHANNELS), set(base["channels"]))
-        self.assertEqual([], weapon_designs.palettes("pistol"))
+        self.assertEqual([], weapon_designs.palettes("shotgun"))           # 0.27: the pistol is a concept weapon
 
     def test_recipe_block_carries_regions_and_palettes_additively(self):
         entry = RECIPES["weapons"]["assault_rifle"]

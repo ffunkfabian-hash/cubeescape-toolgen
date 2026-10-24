@@ -22,9 +22,8 @@
 - **Blatt-Kanal ≠ Blattbild (KG02-Schiene: dunkelgrau gezeichnet, `MT_Secondary` = beige)** → Kanal des Blatts ist Vertrag; Abweichung an formgen melden, nicht in Toolgen korrigieren ([Quelle](ENTSCHEIDUNGEN.md))
 - **Gemeinsame Daten in `viewmodels.json`/`game_budget.json` ändern alle Schlüssel** → neue Daten für wenige Werkzeuge in eigene Datei (`data/ego_arms.json`) ([Quelle](TECHNIK.md#erfahrungen))
 - **Rechtecke als Teil-Box-Bruchteile verzerren bei Verformung** → Mitte abbilden, Größe gleichmäßig skalieren (`decals.refit_rect`) ([Quelle](TECHNIK.md#erfahrungen))
-- **Ein Hüllquader je Ring schließt Visierfenster** → Öffnungen per Probe prüfen, rahmende Teile ohne Kollider ([Quelle](TECHNIK.md#erfahrungen))
+- **Kollider schlossen Visierfenster (Hüllquader je Ring; Zusammenfassen auf 6 Kollider, MP-Roboter)** → Öffnungen per Probe prüfen, rahmende Teile ohne Kollider, Proben schon beim Zusammenfassen freihalten ([Quelle](TECHNIK.md#erfahrungen), [0.24](versions/0.24.md))
 - **UV1-Drehmessung an Kanten um 1e-6 (gestauchte Roboterteile) maß 1° Packer-Rauschen** → längste Kante je Fläche, vorher und nachher dieselbe, unter 2e-5 nicht messen ([Quelle](versions/0.24.md))
-- **Erzwungenes Zusammenfassen auf 6 Kollider schloss das Reflexfenster der MP-Roboterform** → Öffnungsproben beim Zusammenfassen freihalten, nicht nur danach prüfen ([Quelle](versions/0.24.md))
 
 ## Cache, Zeiten, Sperren
 - **`standard` aller 13 Werkzeuge: 43,5 min (2 Worker), `full` rund 52 min** → vor großem Lauf Version heben und `tools.json` finalisieren; Warm-Lauf nur 0,5–2 s ([Quelle](TECHNIK.md#cache-und-worker))
@@ -43,6 +42,7 @@
 - **Clip-Wege über Knickstellen der Verformung falsch skaliert (94,5 statt 58,8 mm)** → verschobene Position abbilden, nicht die Steigung ([Quelle](TECHNIK.md#erfahrungen))
 - **Unbeschrifteter Vordergriff (KG06 p09): Spec-Anker lag auf dem Laufmantel darüber** → Blattbild ansehen, benannte Korrektur, an formgen melden ([Quelle](versions/0.24.md))
 - **Roboter-Stauchung zwischen Griff und Stütze (Steigung 0,1) drückte den Use-Weg unter 4 mm und unter die Viewer-Schwelle** → Griffzone und Weg zusammen wählen ([Quelle](versions/0.24.md))
+- **Überhandgriff am Pistolenschlitten: der linke Unterarm deckte die ganze Waffe (Press-Check, Ladegriff)** → Schlitten hinten seitlich greifen, Rückweg zum Becher-Griff von außen, Finger erst im letzten Bild schließen ([Quelle](versions/0.27.md))
 - **Zwei Augenabstände prüften die falsche Pose; Scout-Okular in Blender auf 45 % geschätzt, im Spiel 28,7 %** → eine Zahl je Gerät (`ego_clips.ads_eye_distance_m`); Bildanteile im Spiel messen (CE-Testkopie, 1470×956), nicht in Blender schätzen ([Quelle](UNITY_EINBAU.md))
 
 ## Viewer und Determinismus
