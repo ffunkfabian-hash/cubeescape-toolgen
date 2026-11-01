@@ -789,9 +789,8 @@ Gemessen am 15.10.2026: frischer Ausgabeordner `standard` 0,48 s (46 Stufen aus 
 `quick` 0,21 s. Der Bericht `logs/toolgen_report.json` nennt je Stufe Treffer, Bau oder Rendern, Dauer und Log.
 
 **Sperre.** Der Lauf `--tier full` und `scripts/check_output.sh` laufen nacheinander mit Robogen, Cube Escape und Cubegen
-(`scripts/heavy_lock.py`, Sperrdatei `~/Library/Caches/CubeEscape/heavy-run.lock`, Besitzer als JSON-Zeile, `CE_HEAVY_LOCK=0`
-überspringt, `CE_HEAVY_HELD=1` kennzeichnet Kindprozesse des Halters). Der Vertrag ist eine Kopie von Robogens Skript und wird nur
-gemeinsam geändert. Der Befehl läuft in einer eigenen Prozessgruppe; Signale gehen an die ganze Gruppe, die Sperre bleibt,
+(`scripts/heavy_lock.py --resource blender`, Sperrdatei je Ressource `~/Library/Caches/CubeEscape/heavy-blender.lock`; `heavy-run.lock` bleibt als alte Gesamtsperre eine Barriere; Besitzer als JSON-Zeile, `CE_HEAVY_LOCK=0`
+überspringt, `CE_HEAVY_HELD=1` kennzeichnet Kindprozesse des Halters). Das Skript leitet nur auf `heavy_lock.py` der gepinnten Werkzeuge weiter (ce-agent-tools); der Vertrag wird nur dort und gemeinsam mit den anderen Repos geändert. Der Befehl läuft in einer eigenen Prozessgruppe; Signale gehen an die ganze Gruppe, die Sperre bleibt,
 bis die Gruppe leer ist (auch Enkelprozesse wie Blender halten sie). Der Bericht nennt den Zustand unter `heavy_lock`. `scripts/testplan.py` ordnet geänderte Dateien Bereichen zu
 (Doku, Daten, Generator, Pipeline/Cache, Viewer, Tests), nennt den kleinsten Prüfweg samt Zeitschätzung und die betroffenen
 Werkzeuge aus der Quellen-Closure; `--run` führt ihn aus.

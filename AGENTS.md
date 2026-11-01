@@ -37,7 +37,7 @@ Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version u
 `git describe --tags`, `CHANGELOG.md` (App und Berichte übernehmen die Version daraus). Vor Systemarbeit `git worktree list`,
 lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern. Dauerhafte Entscheidungen mit Grund:
 [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
-Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-rules` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
+Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-nexogen` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
 Links darauf).
 **Erfahrungen:** [docs/LESSONS.md](docs/LESSONS.md) (≤ 60 Zeilen, eine Zeile je Lehre, Link zur Langform) wird vor Arbeit gelesen und von
 Schwesterprojekten quergelesen (globale Regel › Erfahrungen festhalten und querlesen); Langform in `docs/TECHNIK.md`, `docs/ENTSCHEIDUNGEN.md`.
@@ -74,7 +74,7 @@ und bei Bildern Samples/Gerät, nicht aus Dateizeiten oder Pfaden; jeder Treffer
 ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Umgebungsbedingungen erfordern `STAGE_SCHEMA`/
 `CACHE_SCHEMA` zu erhöhen oder einen zusätzlichen Schlüssel. Aufbau und Regeln: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
 Schwere Läufe (`--tier full`, Stufe `surface_bake`, `scripts/check_output.sh`, `verify_surface --determinism`) warten auf die
-**Blender-Sperre** `scripts/heavy_lock.py --resource blender` (ce-agent-tools 0.5.0: eine Sperre je Ressource; eine Unity-Regression von
+**Blender-Sperre** `scripts/heavy_lock.py --resource blender` (seit ce-agent-tools 0.5.0: eine Sperre je Ressource; eine Unity-Regression von
 Cube Escape läuft daneben, ein zweiter Blender-Lauf wartet; `CE_HEAVY_LOCK=0` überspringt). Renderings in `quick`/`standard`, GIFs,
 Viewer-Screenshots und Kontaktbögen sind nicht schwer und nehmen keine Sperre. Die Sperre wird nur gemeinsam mit den anderen Repos geändert.
 
