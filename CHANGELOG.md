@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.1 – Patch doku-panorama
+
+Veraltete Doku nach Panorama 5 (nur Markdown): globale Regeln liegen in Nexogen statt `cubeescape-rules`; Sperrbeschreibung in `docs/TECHNIK.md` auf Sperre je Ressource und Weiterleitung an ce-agent-tools umgestellt (`heavy-run.lock` nur noch alte Gesamtsperre).
+
 ## 0.27.0 – Sidearm (24.10.2026)
 
 Gruppe 2 der Animationsvorgabe: die **Pistole** `pistol` ist das Konzeptmodell formgen KG01 (`claude-v0.15.1`) auf **Vertrag 5** (Entscheidungen
