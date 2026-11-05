@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.2 – Patch kern-sweep
+
+Regeln an Kern 1.26 angeglichen (nur Doku und Konfiguration): AGENTS.md ohne Kopien globaler Regeln, Harter Kern eingebunden, Patch/Version statt „Minor +1 je Auftrag“, Sperre über `./ce lock`; hookify `git-nur-auf-wunsch` und `viewer-pruefen` entfernt; `core_paths`, Pin 0.35; LESSONS gekürzt, Langform `docs/LESSONS-lang.md`.
+
 ## 0.27.1 – Patch doku-panorama
 
 Veraltete Doku nach Panorama 5 (nur Markdown): globale Regeln liegen in Nexogen statt `cubeescape-rules`; Sperrbeschreibung in `docs/TECHNIK.md` auf Sperre je Ressource und Weiterleitung an ce-agent-tools umgestellt (`heavy-run.lock` nur noch alte Gesamtsperre).
