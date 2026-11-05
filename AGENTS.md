@@ -1,8 +1,19 @@
 # Toolgen – Regeln für KI-Agenten
 
-Zentraler Repo-Einstieg: [Nexogen](https://github.com/ffunkfabian-hash/cubeescape-nexogen) – Repo-Links, Zuständigkeiten, Abhängigkeiten und Live-Status über die Status-CLI im Nexogen-Repo. Globale Regeln dort, Fachwissen und Prüfbelege hier.
+Zentraler Repo-Einstieg und globale Regeln: [Nexogen](https://github.com/ffunkfabian-hash/cubeescape-nexogen) (Zuständigkeiten, Abhängigkeiten, Live-Status). Fachwissen und Prüfbelege hier.
 
-**Werkzeuge:** `./ce check` · `./ce search query "Begriff"` · `./ce session topics` · `./ce codex quota|judge` · `./ce evidence clip|sheet|still|diff` · `./ce lock unity|blender|gpu -- <Befehl>` · `./ce report --since 7d`.
+## Harter Kern
+
+Quelle: Nexogen `templates/kern.md`, nur dort ändern; gilt auch in Cloud-Sitzungen.
+
+1. Kein Commit direkt auf `main`.
+2. Kein Force-Push, keine überschriebenen Branches oder Tags.
+3. Nichts Fremdes anfassen oder löschen: andere Sitzungen, Worktrees, Stash, Haupt-Checkout.
+4. Merge nach `main` nur mit Ja des Nutzers, außer Patch bis 100 Zeilen ohne Format, Vertrag, Kernpfad bei grünem `merge-check`; Tag, Release, Repo öffentlich machen immer nur mit Ja.
+5. Tests nie löschen oder abschwächen, um grün zu werden.
+6. Keine Zugangsdaten, kein fremdes Material, keine großen Binärdaten nach außen (öffentliche Repos, fremde APIs).
+7. Formate, Verträge und IDs nur mit Migration; IDs sind ewig.
+8. Nichts als fertig melden, was nicht geprüft ist.
 
 ## Projekt
 
@@ -31,29 +42,26 @@ Code, Bezeichner, Kommentare und Log-Ausgaben auf Englisch.
   ausdrücklich als Zustand gilt) dürfen Schleifen sein, weil Cube Escape sie per Zustandslogik startet und stoppt; Autoplay bleibt aus.
 - Modellteile, Materialien, UVs, Einheiten, Hierarchie und bewegliche Anker müssen im FBX-/GLB-Reimport erhalten bleiben.
 
+
 ## Wahrheit und Aktualität
 
 Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version und Stand: `toolgen/version.py`,
-`git describe --tags`, `CHANGELOG.md` (App und Berichte übernehmen die Version daraus). Vor Systemarbeit `git worktree list`,
-lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern. Dauerhafte Entscheidungen mit Grund:
-[docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md). Globale Regeln (Actions-Budget, Unteragenten und Modelle, Kontingent sparen,
-Codex als Unteragent, Versionsberichte): Repo `~/Claude/cubeescape-nexogen` (`~/.claude/CLAUDE.md` und `~/.codex/AGENTS.md` sind
-Links darauf).
-**Erfahrungen:** [docs/LESSONS.md](docs/LESSONS.md) (≤ 60 Zeilen, eine Zeile je Lehre, Link zur Langform) wird vor Arbeit gelesen und von
-Schwesterprojekten quergelesen (globale Regel › Erfahrungen festhalten und querlesen); Langform in `docs/TECHNIK.md`, `docs/ENTSCHEIDUNGEN.md`.
-Schwesterprojekte: Cube Escape `Docs/LESSONS.md`, Robogen/Cubegen/Design `docs/LESSONS.md`.
-Berichte einer Sitzung stehen in `report.md` im Worktree-Wurzelordner (ungetrackt, `.git/info/exclude`).
+`git describe --tags`, `CHANGELOG.md`. Dauerhafte Entscheidungen mit Grund: [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md).
+**Erfahrungen:** [docs/LESSONS.md](docs/LESSONS.md) wird vor Arbeit gelesen; Langform in [docs/LESSONS-lang.md](docs/LESSONS-lang.md), `docs/TECHNIK.md`, `docs/ENTSCHEIDUNGEN.md`.
+
+## Patch und Version
+
+Patch (bis etwa 100 Zeilen Diff ohne Format-, Vertrags- oder Kernsystemänderung): `./ce session patch <kurzname>`, 1–3 Zeilen Changelog, keine neue Minor.
+Version (alles darüber): Minor +1, englischer Name, `./ce session reserve <Name> --about … --model …`; Fortsetzungen behalten die Version.
+Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus. Weg und Richter: Nexogen `templates/regeln-details.md`.
 
 ## Befehle
 
 `./check` (schnell: Doku-/Konfigurationsprüfung und Python-Tests, kein Blender), `./check --full` (Doku plus
 `scripts/check_output.sh`, schwer), `./check --nightly` (0.22: `scripts/nightly.sh` – `--tier full` aller Werkzeuge plus `check_output.sh`,
 einmal täglich auf `main`, vom Nutzer oder `launchd` gestartet, nie als Workflow), `./release` (Trockenlauf: Version, CHANGELOG, Tag, Release-Branch; `--execute` nur auf
-Nutzerwunsch). Konfiguration: `.ce-repo.json`. **Keine eingebettete Werkzeugkopie (0.26):** `./ce` ist der Lader, `.ce-repo.json` ›
-`tools_version` nennt den gepinnten Stand von `ce-agent-tools`; `./ce tools where` liefert den Werkzeugordner, `./ce tools pin <Commit>` hebt
-den Stand, `./ce tools fetch` füllt den Cache. Eigene Skripte beziehen Werkzeugmodule über `scripts/shared_tools.py` (`use("ce_docs")`),
-nie über einen Pfad (Rest eines alten Checkouts: `rm -rf scripts/ce_tools` nach dem Pull); `scripts/heavy_lock.py` ist nur die Weiterleitung. Aufräumen: `./ce tidy` (`.ce-repo.json` › `tidy`: Stufen-Ausgaben `output/_*`).
-Das Plugin meldet vor `git commit` bei geänderten Docs/Skills die Lint-Ergebnisse (nur Warnung).
+Nutzerwunsch). Konfiguration: `.ce-repo.json`. **Keine eingebettete Werkzeugkopie (0.26):** `./ce` ist der Lader (`tools_version` pinnt `ce-agent-tools`).
+Eigene Skripte beziehen Werkzeugmodule über `scripts/shared_tools.py` (`use("ce_docs")`), nie über einen Pfad; `scripts/heavy_lock.py` ist nur die Weiterleitung. Aufräumen: `./ce tidy` (`.ce-repo.json` › `tidy`: Stufen-Ausgaben `output/_*`).
 
 Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing/SKILL.md).
 
@@ -63,41 +71,21 @@ Arbeitsanweisung: [.agents/skills/tg-testing/SKILL.md](.agents/skills/tg-testing
 | `standard` | vor Merge nach `main`, **nur geänderte Werkzeuge** (`--tool`, aus `testplan.py`) | `output/_standard`: zusätzlich unabhängiger Reimport, kleine Renderings (50 %, 12 Samples), Aktions-GIFs, Bake halb (Viewmodel 1024², `preview: true`) |
 | `full` | Nachtlauf auf `main`, Lieferstand, Release | `output`: dieselben Prüfungen, volle Auflösung, 40 Samples, Bake 2048² |
 
-Rendern ist vom Commit gelöst (0.22, globale Regel › Rendern und Prüfen): vor Commit nur `quick` plus gezielte Bilder der geänderten
-Werkzeuge; die vollen Bildstufen, Golden-Hashes und der Determinismus-Test laufen gebündelt im Nachtlauf. Vorher: `standard` aller 13
-Werkzeuge 43,5 min vor jedem Commit (0.16), `surface_bake` 2048² 100–460 s je Werkzeug.
-Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` führt ihn aus). Dann
-`python3 toolgen/generate_tools.py --tier quick`; danach unverändert wiederholen: Cache-Treffer, unveränderte Dateien.
-`--no-cache` umgeht Treffer und erzeugt alles neu. Der Cache ist geteilt (`~/Library/Caches/CubeEscapeToolgen/cache`,
-`TOOLGEN_CACHE`, `TOOLGEN_CACHE_LIMIT_GB`) und arbeitet je Stufe: Schlüssel aus Quellen-Closure, Vorstufen-Hashes, Blender-Version
-und bei Bildern Samples/Gerät, nicht aus Dateizeiten oder Pfaden; jeder Treffer prüft die Datei-Hashes erneut. Eine neue Stufe ist
-ein Eintrag in `STAGES` (`generate_tools.py`); Änderungen an nicht erfassten Umgebungsbedingungen erfordern `STAGE_SCHEMA`/
-`CACHE_SCHEMA` zu erhöhen oder einen zusätzlichen Schlüssel. Aufbau und Regeln: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
-Schwere Läufe (`--tier full`, Stufe `surface_bake`, `scripts/check_output.sh`, `verify_surface --determinism`) warten auf die
-**Blender-Sperre** `scripts/heavy_lock.py --resource blender` (seit ce-agent-tools 0.5.0: eine Sperre je Ressource; eine Unity-Regression von
-Cube Escape läuft daneben, ein zweiter Blender-Lauf wartet; `CE_HEAVY_LOCK=0` überspringt). Renderings in `quick`/`standard`, GIFs,
-Viewer-Screenshots und Kontaktbögen sind nicht schwer und nehmen keine Sperre. Die Sperre wird nur gemeinsam mit den anderen Repos geändert.
 
-**Cloud-Sitzungen** nur für reine Logik (Code ohne Bildbeurteilung, Daten, Doku, `./check`, `--tier quick`); alles mit Bild, Blender oder Viewer
-startet direkt auf dem Mac (globale Regel › Cloud-Sitzungen, 21.10.2026). Cloud-Zeiten werden nicht bewertet.
+Rendern ist vom Commit gelöst (0.22): vor Commit nur `quick` plus gezielte Bilder der geänderten Werkzeuge; die vollen Bildstufen,
+Golden-Hashes und der Determinismus-Test laufen gebündelt im Nachtlauf.
+Zuerst `python3 scripts/testplan.py` (kleinster Prüfweg aus dem Diff, `--run` führt ihn aus). Dann
+`python3 toolgen/generate_tools.py --tier quick`; danach unverändert wiederholen: Cache-Treffer, unveränderte Dateien. `--no-cache` erzeugt alles neu.
+Cache (geteilt, je Stufe, Schlüssel aus Inhalten) und `STAGE_SCHEMA`/`CACHE_SCHEMA`: [docs/TECHNIK.md](docs/TECHNIK.md) › Cache und Worker.
+Schwere Läufe (`--tier full`, Stufe `surface_bake`, `scripts/check_output.sh`, `verify_surface --determinism`) nur unter `./ce lock blender -- <Befehl>`
+(Weiterleitung `scripts/heavy_lock.py`; Regel: Nexogen `templates/regeln-details.md` › Schwere Läufe und Sperren). Renderings in `quick`/`standard`, GIFs,
+Viewer-Screenshots und Kontaktbögen sind nicht schwer und nehmen keine Sperre.
 
 Maximal zwei Worker standardmäßig; Threads werden unter ihnen aufgeteilt. `--workers` und `--threads` dürfen zusammen
 die CPU-Kernzahl nicht überschreiten. Arbeitspakete sind isolierte Blender-Prozesse, Zusammenführung in Katalogreihenfolge.
 `logs/toolgen_report.json` nennt Schritte, Zeiten, Last und Cache-Lage. Zeitband nur gegen denselben Werkzeugumfang,
 dieselbe Stufe, Maschine und Worker-Zahl; schwere Last wird nicht bewertet. Keine Geschwindigkeit ohne diese Angaben behaupten.
-Braucht eine Messung den Rechner für sich: Cube Escapes `pause_sessions.py run -- <Befehl>` verwenden und die Pause im
-Bericht nennen. Den Editor oder Blender des Nutzers nicht beenden.
-
-## Regeln
-
-Jeder neue Auftrag bekommt Minor +1 und einen englischen Namen; Fortsetzungen behalten die Version.
-Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus.
-Vor Systemarbeit `git worktree list`, lokale Änderungen und laufende Prozesse prüfen; laufende Umbauten nicht überlagern.
-Committen, taggen, mergen und pushen nur auf Nutzerwunsch. Haupt-Checkouts nicht ungefragt verändern. Nie Force-Push oder
-nacktes `git stash`. Workflows: Push nur `main`, PR + auf Wunsch `workflow_dispatch`, Doku ignorieren, Concurrency,
-Timeouts, wenige Linux-Jobs; keine Schedules ohne Auftrag. Keine Änderung an gemeinsamen Regeln ohne deren Tests.
-
-Metal-Rendering und Cache-Regeln stehen unten unter „Pipeline-Details“; Viewer-, Plugin- und Hook-Regeln danach.
+Den Editor oder Blender des Nutzers nicht beenden.
 
 ## Definition of Done
 
@@ -120,28 +108,14 @@ ADS – dort seit 0.25 Bildmitte frei, Visier auf der Achse, Nahebene frei, Nutz
 `toolgen/surface.py`, Stufe `surface_bake`): › Spiel-Export, › Oberflächenkarten, Einbau: [docs/UNITY_EINBAU.md](docs/UNITY_EINBAU.md); matte Palette, ein Renderer für statische Teile, Kollision
 am tatsächlichen Modell, Öffnungen frei.
 
-## Plugins und Hooks
 
-Gemeinsame Quelle: [ce-agent-tools](https://github.com/ffunkfabian-hash/ce-agent-tools), Plugin `ce-shared` über
-`.claude/settings.json`. Gemeinsame Regeln nicht kopieren oder abweichend neu implementieren.
-Claude-Code-Plugins sind nicht automatisch Codex-Werkzeuge; alle Agenten befolgen diese Regeln auch ohne Plugin.
+## Hooks und Prüfungen hier
 
-| Plugin / Werkzeug | Einsatz |
-|---|---|
-| `ce-shared` | Force-Push, geteilten Stash, Teleport und Unity auf Checkouts sperren; Profile in `.claude/agent-guard.json` |
-| `hookify` | Repo-Regeln: generierte Ausgaben und Spielprojekt nicht editieren, Viewer prüfen, Teststufe vor Abschluss |
-| `quick-gate-python` | Ruff und reine Python-Tests; Blender-Teststufen bleiben verbindlich |
-| `code-review` | vor Release/Merge; keine Veröffentlichung ohne Nutzerauftrag |
-| `github` / `gh` | Repository, Pull Requests und Releases; Actions lokal zuerst, keine Workflows ohne Auftrag |
-| `engineering` / `design` | Fehlerursachen, Tests, Doku, Prüfung von Oberfläche und Vorschauen |
-| Blender-MCP | **ausdrücklich erwünscht** (Nutzer, 19./20.10.2026; globale Regel › Blender-MCP): ohne Nachfrage, wenn Blender läuft – Modelle, UV, Material, Posen/Clips, Handkontakte, Probe-Bakes prüfen; eigene Szene, nie im Nutzerprojekt; Befunde in der Pipeline beheben, nie `output/` von Hand; Speichern nur über `wm.save_as_mainfile` |
-| Unity / Unity-Perf | erst beim Einbau ins Spiel; dortige Skills und Testkopien verwenden |
-
-Subagent-Definitionen: `.claude/agents/tg-test-runner.md` (prüft, schreibt keinen Code), `tg-doc-keeper.md` (nur Markdown).
-Profile mit dem Wächter aus `ce-agent-tools` prüfen: `python3 scripts/check_rules.py --shared <ce-agent-tools-Pfad>`.
-Diese Definitionen erteilen keinen Auftrag, andere laufende Chats anzuschreiben oder Subagents ungefragt zu starten.
-Cloud-SessionStart übernimmt Robogens Blender-Python-/ImageMagick-Kompatibilität. Swift und native Viewer-Abnahme brauchen
-macOS; Cloud-Läufe siehe › Befehle (Cloud-Sitzungen).
+Plugin `ce-shared` über `.claude/settings.json`; Profile in `.claude/agent-guard.json`. Hookify-Regeln im Repo: `ausgabe-nie-von-hand`,
+`cube-escape-nicht-aendern`, `teststufe-vor-abschluss` (Block vor Abschluss ohne `TOOLGEN_OK`). `git-nur-auf-wunsch` und `viewer-pruefen` sind
+gelöscht (wirkungslose Warnungen; Git-Regeln tragen Harter Kern und Git-Netz). Die Blender-MCP-Regel steht global.
+Subagent-Definitionen: `.claude/agents/tg-test-runner.md` (prüft, schreibt keinen Code), `tg-doc-keeper.md` (nur Markdown); Profile prüfen:
+`python3 scripts/check_rules.py --shared <ce-agent-tools-Pfad>`. Swift und native Viewer-Abnahme brauchen macOS.
 
 ## Pipeline-Details
 

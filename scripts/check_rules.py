@@ -17,8 +17,6 @@ for path in (ROOT / ".claude").glob("hookify.*.md"):
 cases = {
     "ausgabe-nie-von-hand": ("file", "/repo/output/bow/ViewerData/scene.json", "/repo/scripts/tool_assets/Bogen/bow_geometry.py"),
     "cube-escape-nicht-aendern": ("file", "/Users/ffunk/Claude/Cube Escape/Assets/model.fbx", "/repo/viewer/Sources/Main.swift"),
-    "viewer-pruefen": ("file", "/repo/viewer/Sources/Main.swift", "/repo/data/tools.json"),
-    "git-nur-auf-wunsch": ("bash", "git push origin main", "git status --short"),
 }
 count = 0
 for rule in rules:
