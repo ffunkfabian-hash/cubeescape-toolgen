@@ -96,7 +96,7 @@
     "data/ego_clips.json"
   ],
   "tools_version": {
-    "version": "0.37.0",
-    "commit": "f2223440ed268cb874ee52c982935b4d171d2535"
+    "version": "0.40.0",
+    "commit": "0b67cb3f24762f466cb6f57a1c17dbe708616f1f"
   }
 }

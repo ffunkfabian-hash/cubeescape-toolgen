@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.5 – Patch pin40
+
+Pin auf Agent Tools 0.40.0 (`0b67cb3`); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
+
 ## 0.27.4 – Patch pin37
 
 Pin auf Agent Tools 0.37.0 (`f222344`, Pin-Ausnahme in merge-check und `./ce verify` für Repos ohne GitHub-CI); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
