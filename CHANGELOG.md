@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.3 – Patch runde
+
+Trimline-Runde (nur Doku und Konfiguration): Abschnitt „Patch und Version“ in AGENTS.md verweist auf die globale Regel (300 Zeilen, `core_paths`), Hookify-Verlauf entfernt, Pin auf Agent Tools 0.36.2 (`e85688c`); `core_paths` geprüft, unverändert.
+
 ## 0.27.2 – Patch kern-sweep
 
 Regeln an Kern 1.26 angeglichen (nur Doku und Konfiguration): AGENTS.md ohne Kopien globaler Regeln, Harter Kern eingebunden, Patch/Version statt „Minor +1 je Auftrag“, Sperre über `./ce lock`; hookify `git-nur-auf-wunsch` und `viewer-pruefen` entfernt; `core_paths`, Pin 0.35; LESSONS gekürzt, Langform `docs/LESSONS-lang.md`.
