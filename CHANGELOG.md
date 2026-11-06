@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.4 – Patch pin37
+
+Pin auf Agent Tools 0.37.0 (`f222344`, Pin-Ausnahme in merge-check und `./ce verify` für Repos ohne GitHub-CI); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
+
 ## 0.27.3 – Patch runde
 
 Trimline-Runde (nur Doku und Konfiguration): Abschnitt „Patch und Version“ in AGENTS.md verweist auf die globale Regel (300 Zeilen, `core_paths`), Hookify-Verlauf entfernt, Pin auf Agent Tools 0.36.2 (`e85688c`); `core_paths` geprüft, unverändert.
