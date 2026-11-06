@@ -51,9 +51,8 @@ Code ist die Wahrheit, dann README, `docs/TECHNIK.md`, `CHANGELOG.md`. Version u
 
 ## Patch und Version
 
-Patch (bis etwa 100 Zeilen Diff ohne Format-, Vertrags- oder Kernsystemänderung): `./ce session patch <kurzname>`, 1–3 Zeilen Changelog, keine neue Minor.
-Version (alles darüber): Minor +1, englischer Name, `./ce session reserve <Name> --about … --model …`; Fortsetzungen behalten die Version.
-Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus. Weg und Richter: Nexogen `templates/regeln-details.md`.
+Regel und Schwellen global (Patch bis 300 Zeilen ohne Format, Vertrag, Kernpfad; Version = Minor +1): Nexogen `templates/regeln-details.md` › Patch-Aufträge.
+Kernpfade: `.ce-repo.json` › `core_paths`. Führend: `toolgen/version.py`, Changelog; App und Berichte übernehmen die Version daraus.
 
 ## Befehle
 
@@ -112,8 +111,7 @@ am tatsächlichen Modell, Öffnungen frei.
 ## Hooks und Prüfungen hier
 
 Plugin `ce-shared` über `.claude/settings.json`; Profile in `.claude/agent-guard.json`. Hookify-Regeln im Repo: `ausgabe-nie-von-hand`,
-`cube-escape-nicht-aendern`, `teststufe-vor-abschluss` (Block vor Abschluss ohne `TOOLGEN_OK`). `git-nur-auf-wunsch` und `viewer-pruefen` sind
-gelöscht (wirkungslose Warnungen; Git-Regeln tragen Harter Kern und Git-Netz). Die Blender-MCP-Regel steht global.
+`cube-escape-nicht-aendern`, `teststufe-vor-abschluss` (Block vor Abschluss ohne `TOOLGEN_OK`). Die Blender-MCP-Regel steht global.
 Subagent-Definitionen: `.claude/agents/tg-test-runner.md` (prüft, schreibt keinen Code), `tg-doc-keeper.md` (nur Markdown); Profile prüfen:
 `python3 scripts/check_rules.py --shared <ce-agent-tools-Pfad>`. Swift und native Viewer-Abnahme brauchen macOS.
 
