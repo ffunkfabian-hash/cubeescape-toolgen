@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.6 – Patch pin42
+
+Pin auf Agent Tools 0.42.0 (`e1c2ddf`); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
+
 ## 0.27.5 – Patch pin40
 
 Pin auf Agent Tools 0.40.0 (`0b67cb3`); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
