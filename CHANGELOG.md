@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.27.8 – Patch pin44-1
+
+Pin auf Agent Tools 0.44.1 (`d39ccd9`); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
+
 ## 0.27.7 – Patch pin-0431
 
 Pin auf Agent Tools 0.43.1 (`8adca7d`, Postfach per Label `postfach`); nur `.ce-repo.json` › `tools_version` und Lader `ce`.
